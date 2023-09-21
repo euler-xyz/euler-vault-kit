@@ -39,7 +39,7 @@ contract EVaultFactory {
 
     event EVaultCreated(address indexed eVault, address indexed asset, address indexed riskManager);
 
-    event SetEVaultImplementation(address indexed newImplementation, bytes32 moduleGitCommit);
+    event SetEVaultImplementation(address indexed newImplementation);
     event SetUpgradeAdmin(address indexed newUpgradeAdmin);
     event SetGovernorAdmin(address indexed newGovernorAdmin);
     event SetProtocolFeesHolder(address indexed newProtocolFeesHolder);
@@ -124,10 +124,9 @@ contract EVaultFactory {
     function setEVaultImplementation(address newImplementation) external nonReentrant adminOnly {
         if (newImplementation == address(0)) revert E_BadAddress();
 
-        bytes32 moduleGitCommit = EVault(newImplementation).moduleGitCommit();
         eVaultImplementation = newImplementation;
 
-        emit SetEVaultImplementation(newImplementation, moduleGitCommit);
+        emit SetEVaultImplementation(newImplementation);
     }
 
     // Vault registry getters
