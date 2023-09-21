@@ -261,9 +261,10 @@ contract TestERC20 {
         decimals = decimals_;
     }
 
-    function callSelfDestruct() external secured {
-        selfdestruct(payable(address(0)));
-    }
+    // Compiling this function causes deprecation warnings
+    //function callSelfDestruct() external secured {
+    //    selfdestruct(payable(address(0)));
+    //}
 
     function consumeAllGas() internal pure {
         for (; true;) {}
