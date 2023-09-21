@@ -2,40 +2,38 @@
 
 pragma solidity ^0.8.0;
 
-interface ICreator {
-    function getEVaultImplementation() external view returns (address);
+interface IBeacon {
+    function implementation() external view returns (address);
 }
 
 contract EVaultProxy {
-    address immutable creator;
+    // ERC-1967 beacon address slot. bytes32(uint256(keccak256('eip1967.proxy.beacon')) - 1)
+    bytes32 constant BEACON_SLOT = 0xa3f0ad74e5423aebfd80d3ef4346578335a9a72aeaee59ff6cb3582b35133d50;
+
+    address immutable beacon;
     uint immutable metadata1;
     uint immutable metadata2;
-
 
     event Genesis();
 
     constructor(address _asset, uint8 _assetDecimals, address _riskManager) {
-        creator = msg.sender;
+        beacon = msg.sender;
 
         // pack 41 bytes metadata into 2 words
         metadata1 = (uint(uint160(_asset)) << 96) | (uint(_assetDecimals) << 88) | uint(uint160(_riskManager)) >> 72;
         metadata2 = uint(uint160(_riskManager)) << 184;
 
+        // Store the beacon address in ERC-1967 slot for compatibility with block explorers
+        assembly { sstore(BEACON_SLOT, caller()) }
+
         emit Genesis();
-    }
-
-    // External interface
-
-    // Function returning current implementation address for compatibility with block explorers
-    function implementation() external view returns (address) {
-        return ICreator(creator).getEVaultImplementation();
     }
 
     fallback() external {
         uint metadata1_ = metadata1;
         uint metadata2_ = metadata2;
-        // TODO revisit
-        address implementation_ = ICreator(creator).getEVaultImplementation();
+
+        address implementation_ = IBeacon(beacon).implementation();
 
         assembly {
             calldatacopy(0, 0, calldatasize())

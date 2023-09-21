@@ -3,7 +3,7 @@
 pragma solidity ^0.8.0;
 
 import { EVaultProxy } from "./EVaultProxy.sol";
-import { EVault } from "./EVault/EVault.sol";
+import { EVault } from "../EVault/EVault.sol";
 import { IERC20 } from "../Interfaces.sol";
 import { IRiskManager } from "../IRiskManager.sol";
 
@@ -117,6 +117,10 @@ contract EVaultFactory {
 
     // EVault beacon and implementation upgrade
 
+    function implementation() external view returns (address) {
+        return eVaultImplementation;
+    }
+
     function setEVaultImplementation(address newImplementation) external nonReentrant adminOnly {
         if (newImplementation == address(0)) revert E_BadAddress();
 
@@ -124,10 +128,6 @@ contract EVaultFactory {
         eVaultImplementation = newImplementation;
 
         emit SetEVaultImplementation(newImplementation, moduleGitCommit);
-    }
-
-    function getEVaultImplementation() external view returns (address) {
-        return eVaultImplementation;
     }
 
     // Vault registry getters
