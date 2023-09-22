@@ -1,0 +1,3 @@
+testing
+  * ensure initialize can't be invoked on a proxy multiple times
+  * ensure calling initialize on the EVault implementation contract fails/is harmless
