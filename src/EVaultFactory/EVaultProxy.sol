@@ -2,10 +2,6 @@
 
 pragma solidity ^0.8.0;
 
-interface IBeacon {
-    function implementation() external view returns (address);
-}
-
 contract EVaultProxy {
     // ERC-1967 beacon address slot. bytes32(uint256(keccak256('eip1967.proxy.beacon')) - 1)
     bytes32 constant BEACON_SLOT = 0xa3f0ad74e5423aebfd80d3ef4346578335a9a72aeaee59ff6cb3582b35133d50;
@@ -30,17 +26,25 @@ contract EVaultProxy {
     }
 
     fallback() external {
+        address beacon_ = beacon;
         uint metadata1_ = metadata1;
         uint metadata2_ = metadata2;
 
-        address implementation_ = IBeacon(beacon).implementation();
-
         assembly {
+            // fetch implementation address from the beacon
+            mstore(0, 0x5c60da1b00000000000000000000000000000000000000000000000000000000) // implementation() selector
+            let result := staticcall(gas(), beacon_, 0, 4, 0, 32)
+            if eq(result, 0) {
+                returndatacopy(0, 0, returndatasize())
+                revert (0, returndatasize())
+            }
+            let implementation := mload(0)
+
+            // delegatecall to the implementation
             calldatacopy(0, 0, calldatasize())
             mstore(calldatasize(), metadata1_)
             mstore(add(32, calldatasize()), metadata2_)
-
-            let result := delegatecall(gas(), implementation_, 0, add(41, calldatasize()), 0, 0)
+            result := delegatecall(gas(), implementation, 0, add(41, calldatasize()), 0, 0)
             returndatacopy(0, 0, returndatasize())
 
             switch result

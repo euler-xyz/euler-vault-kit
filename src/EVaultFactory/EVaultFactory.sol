@@ -49,6 +49,7 @@ contract EVaultFactory {
     error E_Reentrancy();
     error E_Unauthorized();
     error E_InvalidAsset();
+    error E_Implementation();
     error E_BadAddress();
     error E_RiskManagerHook();
     error E_List();
@@ -94,6 +95,7 @@ contract EVaultFactory {
     /// @return The new EVault address.
     function activateMarket(address asset, address riskManager, bytes memory riskManagerConfig) external nonReentrant returns (address) {
         if (asset == address(this) || asset == address(0)) revert E_InvalidAsset();
+        if (eVaultImplementation == address(0)) revert E_Implementation();
 
         // Deploy and initialize the vault
 
@@ -123,9 +125,7 @@ contract EVaultFactory {
 
     function setEVaultImplementation(address newImplementation) external nonReentrant adminOnly {
         if (newImplementation == address(0)) revert E_BadAddress();
-
         eVaultImplementation = newImplementation;
-
         emit SetEVaultImplementation(newImplementation);
     }
 
@@ -135,13 +135,12 @@ contract EVaultFactory {
         return eVaultsList.length;
     }
 
-    function getEVaultsList(uint startIndex, uint endIndex) external view returns (address[] memory list) {
-        if (startIndex == 0 && endIndex == type(uint).max) {
+    function getEVaultsList(uint startIndex, uint numElements) external view returns (address[] memory list) {
+        if (startIndex == 0 && numElements == type(uint).max) {
             list = eVaultsList;
         } else {
-            uint length = eVaultsList.length;
-            if (startIndex > endIndex || startIndex > length || endIndex > length) revert E_List();
-            uint numElements = endIndex - startIndex + 1;
+            if (startIndex + numElements > eVaultsList.length) revert E_List();
+
             list = new address[](numElements);
             for (uint i; i < numElements;) {
                 list[i] = eVaultsList[startIndex + i];
