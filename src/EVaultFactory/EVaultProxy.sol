@@ -34,7 +34,7 @@ contract EVaultProxy {
             // fetch implementation address from the beacon
             mstore(0, 0x5c60da1b00000000000000000000000000000000000000000000000000000000) // implementation() selector
             let result := staticcall(gas(), beacon_, 0, 4, 0, 32)
-            if eq(result, 0) {
+            if iszero(result) {
                 returndatacopy(0, 0, returndatasize())
                 revert (0, returndatasize())
             }
