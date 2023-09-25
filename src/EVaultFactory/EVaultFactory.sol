@@ -99,7 +99,7 @@ contract EVaultFactory {
 
         // Deploy and initialize the vault
 
-        address proxy = address(new EVaultProxy(asset, IERC20(asset).decimals(), riskManager));
+        address proxy = address(new EVaultProxy(asset, riskManager));
         EVault(proxy).initialize();
 
         // Trigger risk manager hook
