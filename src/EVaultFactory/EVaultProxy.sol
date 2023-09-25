@@ -17,9 +17,9 @@ contract EVaultProxy {
     constructor(address _asset, address _riskManager) {
         beacon = msg.sender;
 
-        // pack 40 bytes metadata into 2 words
-        metadata1 = (uint(uint160(_asset)) << 96) | uint(uint160(_riskManager)) >> 64;
-        metadata2 = uint(uint160(_riskManager)) << 192;
+        // shift addresses to upper bits
+        metadata1 = uint(uint160(_asset)) << 96;
+        metadata2 = uint(uint160(_riskManager)) << 96;
 
         // Store the beacon address in ERC-1967 slot for compatibility with block explorers
         assembly { sstore(BEACON_SLOT, caller()) }
@@ -45,7 +45,7 @@ contract EVaultProxy {
             // delegatecall to the implementation
             calldatacopy(0, 0, calldatasize())
             mstore(calldatasize(), metadata1_)
-            mstore(add(32, calldatasize()), metadata2_)
+            mstore(add(20, calldatasize()), metadata2_)
             result := delegatecall(gas(), implementation, 0, add(40, calldatasize()), 0, 0)
             returndatacopy(0, 0, returndatasize())
 
