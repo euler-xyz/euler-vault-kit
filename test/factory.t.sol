@@ -105,13 +105,12 @@ contract FactoryTest is Test {
 
             address randomUser = vm.addr(5000);
             vm.prank(randomUser);
-            (string memory outputArg, address theMsgSender, address marketAsset, uint8 assetDecimals, address riskManager)
+            (string memory outputArg, address theMsgSender, address marketAsset, address riskManager)
                 = eTST.arbitraryFunction(inputArg);
 
             assertEq(outputArg, inputArg);
             assertEq(theMsgSender, randomUser);
             assertEq(marketAsset, address(asset));
-            assertEq(assetDecimals, 17);
             assertEq(riskManager, address(rm));
         }
     }
