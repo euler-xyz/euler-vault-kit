@@ -10,3 +10,12 @@ contract MockRiskManager {
         success = true;
     }
 }
+
+contract MockRiskManagerFail {
+    constructor() {
+    }
+
+    function onMarketActivation(address, address, address, bytes calldata) external pure returns (bool success) {
+        success = false;
+    }
+}
