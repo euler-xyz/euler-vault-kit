@@ -17,7 +17,7 @@ contract EVaultProxy {
     constructor(address _asset, address _riskManager) {
         beacon = msg.sender;
 
-        // shift addresses to upper bits
+        // Shift addresses to upper bits
         metadata1 = uint(uint160(_asset)) << 96;
         metadata2 = uint(uint160(_riskManager)) << 96;
 
