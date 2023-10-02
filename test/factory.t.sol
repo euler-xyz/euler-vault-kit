@@ -256,7 +256,7 @@ contract FactoryTest is Test, IEvents {
         factory.setProtocolFeesHolder(newProtocolFeesHolder);
     }
 
-    function test_Revert_E_Unauthorized() public {
+    function test_RevertIfUnauthorized() public {
         // Nobody addresses are unauthorised
 
         vm.prank(vm.addr(2000));
@@ -271,7 +271,6 @@ contract FactoryTest is Test, IEvents {
         vm.expectRevert(EVaultFactory.E_Unauthorized.selector);
         factory.setProtocolFeesHolder(address(1));
 
-
         // Only upgradeAdmin can upgrade, only governor can change protocolFeesHolder
         vm.prank(governorAdmin);
         vm.expectRevert(EVaultFactory.E_Unauthorized.selector);
@@ -282,7 +281,7 @@ contract FactoryTest is Test, IEvents {
         factory.setEVaultImplementation(address(1));
     }
 
-    function test_Revert_NonReentrancy() public {
+    function test_RevertIfNonReentrancy_ActivateMarket() public {
         MockEVault mockEvaultImpl = new MockEVault(address(factory), address(1));
         vm.prank(upgradeAdmin);
         factory.setEVaultImplementation(address(mockEvaultImpl));
@@ -295,7 +294,7 @@ contract FactoryTest is Test, IEvents {
 
     }
 
-    function test_Revert_E_InvalidAsset() public {
+    function test_RevertIfInvalidAsset_ActivateMarket() public {
         MockEVault mockEvaultImpl = new MockEVault(address(factory), address(1));
         vm.prank(upgradeAdmin);
         factory.setEVaultImplementation(address(mockEvaultImpl));
@@ -311,7 +310,7 @@ contract FactoryTest is Test, IEvents {
         factory.activateMarket(address(asset), address(rm), "");
     }
 
-    function test_Revert_E_Implementation() public {
+    function test_RevertIfImplementation_ActivateMarket() public {
         address rm = vm.addr(2);
         address asset = vm.addr(1);
 
@@ -319,7 +318,7 @@ contract FactoryTest is Test, IEvents {
         factory.activateMarket(address(asset), address(rm), "");
     }
 
-    function test_Revert_E_BadAddress() public {
+    function test_RevertIfBadAddress() public {
         vm.prank(upgradeAdmin);
         vm.expectRevert(EVaultFactory.E_BadAddress.selector);
         factory.setEVaultImplementation(address(0));
@@ -337,7 +336,7 @@ contract FactoryTest is Test, IEvents {
         factory.setProtocolFeesHolder(address(0));
     }
 
-    function test_Revert_E_RiskManagerHook() public {
+    function test_RevertIfRiskManagerHook_ActivateMarket() public {
         MockEVault mockEvaultImpl = new MockEVault(address(factory), address(1));
         vm.prank(upgradeAdmin);
         factory.setEVaultImplementation(address(mockEvaultImpl));
@@ -349,7 +348,7 @@ contract FactoryTest is Test, IEvents {
         factory.activateMarket(address(asset), address(rm), "");
     }
 
-    function test_Revert_E_List() public {
+    function test_RevertIfErrorList_GetEVaultsList() public {
         // Create and install mock eVault impl
         MockEVault mockEvaultImpl = new MockEVault(address(factory), address(1));
         vm.prank(upgradeAdmin);
