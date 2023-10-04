@@ -180,31 +180,31 @@ abstract contract BaseLogic is CVCClient {
         return uint144(amount);
     }
 
-    function totalsVirtual(MarketCache memory marketCache) private view returns (uint totalAssets, uint totalBalances) {
+    function totalsVirtual(MarketCache memory marketCache) private pure returns (uint totalAssets, uint totalBalances) {
         // adding 1 wei virtual asset and share. See https://docs.openzeppelin.com/contracts/4.x/erc4626#inflation-attack
         totalAssets = marketCache.poolSize + (marketCache.totalBorrows / INTERNAL_DEBT_PRECISION) + 1;
         totalBalances = marketCache.totalBalances + 1;
     }
 
-    function assetsToShares(MarketCache memory marketCache, uint amount) internal view returns (uint) {
+    function assetsToShares(MarketCache memory marketCache, uint amount) internal pure returns (uint) {
         validateExternalAmount(amount);
         (uint totalAssets, uint totalBalances) = totalsVirtual(marketCache);
         return amount * totalBalances / totalAssets;
     }
 
-    function assetsToSharesRoundUp(MarketCache memory marketCache, uint amount) internal view returns (uint) {
+    function assetsToSharesRoundUp(MarketCache memory marketCache, uint amount) internal pure returns (uint) {
         validateExternalAmount(amount);
         (uint totalAssets, uint totalBalances) = totalsVirtual(marketCache);
         return (amount * totalBalances / totalAssets) + (mulmod(amount, totalBalances, totalAssets) != 0 ? 1 : 0);
     }
 
-    function sharesToAssets(MarketCache memory marketCache, uint amount) internal view returns (uint) {
+    function sharesToAssets(MarketCache memory marketCache, uint amount) internal pure returns (uint) {
         validateExternalAmount(amount);
         (uint totalAssets, uint totalBalances) = totalsVirtual(marketCache);
         return amount * totalAssets / totalBalances;
     }
 
-    function sharesToAssetsRoundUp(MarketCache memory marketCache, uint amount) internal view returns (uint) {
+    function sharesToAssetsRoundUp(MarketCache memory marketCache, uint amount) internal pure returns (uint) {
         validateExternalAmount(amount);
         (uint totalAssets, uint totalBalances) = totalsVirtual(marketCache);
         return (amount * totalAssets / totalBalances) + (mulmod(amount, totalAssets, totalBalances) != 0 ? 1 : 0);
@@ -506,7 +506,7 @@ abstract contract BaseLogic is CVCClient {
         }
     }
 
-    function getMarketSnapshot(uint8 operationType, MarketCache memory marketCache) internal view returns (MarketSnapshot memory) {
+    function getMarketSnapshot(uint8 operationType, MarketCache memory marketCache) internal pure returns (MarketSnapshot memory) {
         return MarketSnapshot({
             performedOperations: operationType,
             poolSize: encodeAmount(marketCache.poolSize),
