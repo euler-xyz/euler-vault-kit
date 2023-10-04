@@ -4,7 +4,7 @@ pragma solidity ^0.8.0;
 
 import { EVaultProxy } from "./EVaultProxy.sol";
 import { EVault } from "../EVault/EVault.sol";
-import { IERC20 } from "../Interfaces.sol";
+import { IERC20 } from "../EVault/IEVault.sol";
 import { IRiskManager } from "../IRiskManager.sol";
 
 contract EVaultFactory {
