@@ -20,10 +20,10 @@ contract ReentrancyAttack is IRiskManager {
     }
     // Factory - test modifier nonReentrancy activateMarket
     function onMarketActivation(
-        address creator,
-        address market,
-        address asset,
-        bytes calldata riskManagerConfig
+        address /*creator*/,
+        address /*market*/,
+        address /*asset*/,
+        bytes calldata /*riskManagerConfig*/
     ) external override returns (bool success) {
         IEVaultFactory(factory).activateMarket(asset, address(this), "");
         success = false;
