@@ -2,13 +2,12 @@
 
 pragma solidity ^0.8.0;
 
-import { ERC20Module } from "./modules/ERC20.sol";
-import { ERC4626Module } from "./modules/ERC4626.sol";
-import { BorrowingModule } from "./modules/Borrowing.sol";
-import { LiquidationModule } from "./modules/Liquidation.sol";
-import { AdminModule } from "./modules/Admin.sol";
-
-
+import {ERC20Module} from "./modules/ERC20.sol";
+import {ERC4626Module} from "./modules/ERC4626.sol";
+import {BorrowingModule} from "./modules/Borrowing.sol";
+import {LiquidationModule} from "./modules/Liquidation.sol";
+import {AdminModule} from "./modules/Admin.sol";
+import {BaseModule} from "./shared/BaseModule.sol";
 
 contract EVault is ERC20Module, ERC4626Module, BorrowingModule, LiquidationModule, AdminModule {
     address immutable MODULE_ERC20;
@@ -18,12 +17,14 @@ contract EVault is ERC20Module, ERC4626Module, BorrowingModule, LiquidationModul
     address immutable MODULE_ADMIN;
 
     constructor(
+        address factory,
+        address cvc,
         address MODULE_ERC20_,
         address MODULE_ERC4626_,
         address MODULE_BORROWING_,
         address MODULE_LIQUIDATION_,
         address MODULE_ADMIN_
-    ) {
+    ) BaseModule(factory, cvc) {
         MODULE_ERC20 = MODULE_ERC20_;
         MODULE_ERC4626 = MODULE_ERC4626_;
         MODULE_BORROWING = MODULE_BORROWING_;
@@ -31,7 +32,18 @@ contract EVault is ERC20Module, ERC4626Module, BorrowingModule, LiquidationModul
         MODULE_ADMIN = MODULE_ADMIN_;
     }
 
-    function initialize() external {}
+    function initialize() external {
+        if (msg.sender != factory) revert E_Unauthorized();
+        if (marketStorage.lastInterestAccumulatorUpdate != 0) revert E_Initialized();
+
+        marketStorage.lastInterestAccumulatorUpdate = uint40(block.timestamp);
+        marketStorage.interestAccumulator = INITIAL_INTEREST_ACCUMULATOR;
+        marketStorage.reentrancyLock = REENTRANCYLOCK__UNLOCKED;
+
+        // address dTokenAddress = address(new DToken());
+
+        // emit DTokenCreated(dTokenAddress);
+    }
 
 
     // ----------------- ERC20 -----------------
@@ -89,7 +101,7 @@ contract EVault is ERC20Module, ERC4626Module, BorrowingModule, LiquidationModul
 
 
 
-    // function deposit(uint assets, address receiver) external use(MODULE_ERC4626)  override returns (uint) {}
+    function deposit(uint assets, address receiver) external use(MODULE_ERC4626) override returns (uint) {}
 
     // function mint(uint shares, address receiver) external use(MODULE_ERC4626) override returns (uint) {}
 

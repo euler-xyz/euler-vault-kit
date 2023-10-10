@@ -15,29 +15,29 @@ interface IERC20 {
     // /// @notice Sum of all share balances (non-increasing)
     // function totalSupply() external view returns (uint);
 
-    // /// @notice Balance of a particular account, in internal book-keeping units (non-increasing)
-    // function balanceOf(address account) external view returns (uint);
+    /// @notice Balance of a particular account, in internal book-keeping units (non-increasing)
+    function balanceOf(address account) external view returns (uint);
 
     // /// @notice Retrieve the current allowance
     // /// @param holder The account holding the assets
     // /// @param spender Trusted address
     // function allowance(address holder, address spender) external view returns (uint);
 
-    // /// @notice Transfer eTokens to another address (from sub-account 0)
-    // /// @param to Recipient account
-    // /// @param amount In internal book-keeping units (as returned from balanceOf).
-    // function transfer(address to, uint amount) external returns (bool);
+    /// @notice Transfer eTokens to another address (from sub-account 0)
+    /// @param to Recipient account
+    /// @param amount In internal book-keeping units (as returned from balanceOf).
+    function transfer(address to, uint amount) external returns (bool);
 
     // /// @notice Transfer the full eToken balance of an address to another
     // /// @param from This address must've approved the to address, or be a sub-account of msg.sender
     // /// @param to Recipient account
     // function transferFromMax(address from, address to) external returns (bool);
 
-    // /// @notice Transfer eTokens from one address to another
-    // /// @param from This address must've approved the to address, or be a sub-account of msg.sender
-    // /// @param to Recipient account
-    // /// @param amount In internal book-keeping units (as returned from balanceOf).
-    // function transferFrom(address from, address to, uint amount) external returns (bool);
+    /// @notice Transfer eTokens from one address to another
+    /// @param from This address must've approved the to address, or be a sub-account of msg.sender
+    /// @param to Recipient account
+    /// @param amount In internal book-keeping units (as returned from balanceOf).
+    function transferFrom(address from, address to, uint amount) external returns (bool);
 
     // /// @notice Allow spender to access an amount of your eTokens
     // /// @param spender Trusted address
@@ -94,11 +94,11 @@ interface IERC4626 {
     // /// @return Amount of assets transferred
     // function previewRedeem(uint shares) external view returns (uint);
 
-    // /// @notice Transfer requested amount of underlying tokens from sender to the vault pool in return for shares
-    // /// @param assets In underlying units (use max uint for full underlying token balance)
-    // /// @param receiver An account to receive the shares
-    // /// @return Amount of shares minted
-    // function deposit(uint assets, address receiver) external returns (uint);
+    /// @notice Transfer requested amount of underlying tokens from sender to the vault pool in return for shares
+    /// @param assets In underlying units (use max uint for full underlying token balance)
+    /// @param receiver An account to receive the shares
+    /// @return Amount of shares minted
+    function deposit(uint assets, address receiver) external returns (uint);
 
     // /// @notice Transfer underlying tokens from sender to the vault pool in return for requested amount of shares
     // /// @param shares Amount of share to be minted

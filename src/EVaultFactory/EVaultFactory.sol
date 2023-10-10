@@ -2,10 +2,9 @@
 
 pragma solidity ^0.8.0;
 
-import { EVaultProxy } from "./EVaultProxy.sol";
-import { EVault } from "../EVault/EVault.sol";
-import { IERC20 } from "../Interfaces.sol";
-import { IRiskManager } from "../IRiskManager.sol";
+import {EVaultProxy} from "./EVaultProxy.sol";
+import {IEVault} from "../EVault/IEVault.sol";
+import {IRiskManager} from "../IRiskManager.sol";
 
 contract EVaultFactory {
 
@@ -100,7 +99,7 @@ contract EVaultFactory {
         // Deploy and initialize the vault
 
         address proxy = address(new EVaultProxy(asset, riskManager));
-        EVault(proxy).initialize();
+        IEVault(proxy).initialize();
 
         // Trigger risk manager hook
 

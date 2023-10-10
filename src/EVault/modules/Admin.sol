@@ -2,10 +2,13 @@
 
 pragma solidity ^0.8.0;
 
-import { IAdmin } from "../IEVault.sol";
+import {BaseModule} from "../shared/BaseModule.sol";
+import {IAdmin} from "../IEVault.sol";
 
-abstract contract AdminModule is IAdmin {
+abstract contract AdminModule is BaseModule, IAdmin {
 
 }
 
-contract Admin is AdminModule {}
+contract Admin is AdminModule {
+    constructor(address factory, address cvc) BaseModule(factory, cvc) {}
+}
