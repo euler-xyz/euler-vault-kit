@@ -2,13 +2,15 @@
 
 pragma solidity ^0.8.0;
 
-import {BaseModule} from "../shared/BaseModule.sol";
+import {Base} from "../shared/Base.sol";
 import {ILiquidation} from "../IEVault.sol";
 
-abstract contract LiquidationModule is BaseModule, ILiquidation {
+import "../shared/types/Types.sol";
+
+abstract contract LiquidationModule is ILiquidation, Base {
 
 }
 
 contract Liquidation is LiquidationModule {
-    constructor(address factory, address cvc) BaseModule(factory, cvc) {}
+    constructor(address factory, address cvc) Base(factory, cvc) {}
 }

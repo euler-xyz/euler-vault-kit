@@ -47,9 +47,8 @@ contract EVaultUnitTests is Test {
     }
 
     function test_basicViews() public {
-        assertEq(eTST.name(), "EVault");
-        // assertEq(eTST.name(), "Euler Pool: Test Token");
-        // assertEq(eTST.symbol(), "eTST");
+        assertEq(eTST.name(), "Euler Pool: Test Token");
+        assertEq(eTST.symbol(), "eTST");
     }
 
     function test_deposit() public {

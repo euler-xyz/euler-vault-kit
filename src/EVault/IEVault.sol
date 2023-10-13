@@ -3,14 +3,14 @@
 pragma solidity ^0.8.0;
 
 interface IERC20 {
-     /// @notice Pool name, ie "Euler Pool: DAI"
+    /// @notice Pool name, ie "Euler Pool: DAI"
     function name() external view returns (string memory);
 
-    // /// @notice Pool symbol, ie "eDAI"
-    // function symbol() external view returns (string memory);
+    /// @notice Pool symbol, ie "eDAI"
+    function symbol() external view returns (string memory);
 
-    // /// @notice Decimals, always normalised to 18.
-    // function decimals() external view returns (uint8);
+    /// @notice Decimals, always normalised to 18.
+    function decimals() external view returns (uint8);
 
     // /// @notice Sum of all share balances (non-increasing)
     // function totalSupply() external view returns (uint);
@@ -46,8 +46,8 @@ interface IERC20 {
 }
 
 interface IERC4626 {
-    // /// @notice Vault underlying asset
-    // function asset() external view returns (address);
+    /// @notice Vault underlying asset
+    function asset() external view returns (address);
 
     // /// @notice Total amount of managed assets
     // function totalAssets() external view returns (uint);
@@ -122,14 +122,14 @@ interface IERC4626 {
 }
 
 interface IBorrowing {
-    // /// @notice Sum of all outstanding debts, in underlying units (increases as interest is accrued)
-    // function totalBorrows() external view returns (uint);
+    /// @notice Sum of all outstanding debts, in underlying units (increases as interest is accrued)
+    function totalBorrows() external view returns (uint);
 
-    // /// @notice Sum of all outstanding debts, in underlying units scaled to 27 decimals
-    // function totalBorrowsExact() external view returns (uint);
+    /// @notice Sum of all outstanding debts, in underlying units scaled to 27 decimals
+    function totalBorrowsExact() external view returns (uint);
 
-    // /// @notice Debt owed by a particular account, in underlying units
-    // function debtOf(address account) external view returns (uint);
+    /// @notice Debt owed by a particular account, in underlying units
+    function debtOf(address account) external view returns (uint);
 
     // /// @notice Debt owed by a particular account, in underlying units scaled to 27 decimals
     // function debtOfExact(address account) external view returns (uint);
@@ -195,7 +195,7 @@ interface IBorrowing {
 
     // function checkAccountStatus(address account, address[] calldata collaterals) external returns (bool, bytes memory);
 
-    // function checkVaultStatus() external returns (bool, bytes memory);
+    function checkVaultStatus() external returns (bool, bytes memory);
 }
 
 interface ILiquidation {

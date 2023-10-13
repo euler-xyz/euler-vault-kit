@@ -2,6 +2,8 @@
 
 pragma solidity ^0.8.0;
 
+import "./types/Types.sol";
+
 abstract contract Storage {
 
     // ---------- singleton storage struct ----------
@@ -11,30 +13,30 @@ abstract contract Storage {
     // ----------------------------------------------
 
     struct UserAsset {
-        uint112 balance;
-        uint144 owed;
+        Shares balance;
+        Owed owed;
 
         uint interestAccumulator;
     }
 
     struct MarketSnapshot {
         uint8 performedOperations;
-        uint112 poolSize;
-        uint112 totalBalances;
-        uint112 totalBorrows;
+        Assets poolSize;
+        Assets totalBalances;
+        Assets totalBorrows;
         uint144 interestAccumulator;
     }
 
     struct MarketStorage {
         // Packed slot 5 + 12 + 12 + 2 + 1 = 32
         uint40 lastInterestAccumulatorUpdate;
-        uint96 feesBalance;
+        Fees feesBalance;
         int96 interestRate;
         uint16 interestFee;
         uint8 reentrancyLock;
 
-        uint112 totalBalances;
-        uint144 totalBorrows;
+        Shares totalBalances;
+        Owed totalBorrows;
 
         uint interestAccumulator;
 

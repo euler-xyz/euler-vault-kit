@@ -2,51 +2,63 @@
 
 pragma solidity ^0.8.0;
 
-import {BaseModule} from "../shared/BaseModule.sol";
 import {IERC4626} from "../IEVault.sol";
-import {console2} from "forge-std/Test.sol"; // DEV_MODE
+import {Base} from "../shared/Base.sol";
+import {AssetTransfers} from "../shared/AssetTransfers.sol";
+import {BalanceUtils} from "../shared/BalanceUtils.sol";
+import {Utils} from "../shared/lib/Utils.sol";
 
-abstract contract ERC4626Module is BaseModule, IERC4626 {
+import "../shared/types/Types.sol";
+
+abstract contract ERC4626Module is IERC4626, Base, AssetTransfers, BalanceUtils {
+    using TypesLib for uint;
 
     /// @inheritdoc IERC4626
-    function deposit(uint assets, address receiver) external virtual nonReentrantWithChecks returns (uint shares) {
-        shares = _deposit(CVCAuthenticate(), loadMarketCache(), assets, receiver);
+    function asset() external view virtual returns (address) {
+        (address asset_,) = proxyMetadata();
+        return asset_;
     }
-    function _deposit(address account, MarketCache memory marketCache, uint assets, address receiver) private
+
+    // @inheritdoc IERC4626
+    function deposit(uint assets, address receiver) external virtual nonReentrantWithChecks returns (uint shares) {
+        shares = _deposit(CVCAuthenticate(), loadAndUpdateMarket(), assets, receiver);
+    }
+    function _deposit(address account, MarketCache memory marketCache, uint amount, address receiver) private
         lock(address(0), marketCache, PAUSETYPE__DEPOSIT)
-        returns (uint shares)
+        returns (uint)
     {
+        // TODO defaultTo on address
         if (receiver == address(0)) receiver = account;
 
-        emit RequestDeposit(account, receiver, assets);
+        emit RequestDeposit(account, receiver, amount);
 
-        if (assets == type(uint).max) {
-            assets = callBalanceOf(marketCache, account);
-        }
+        Assets assets = amount == type(uint).max
+            ? Utils.callBalanceOf(marketCache.asset, account).toAssets()
+            : amount.toAssets();
 
-        uint assetsTransferred = pullTokens(marketCache, account, assets);
-
-        // uint assetsTransferred = pullTokens(marketCache, account, validateExternalAmount(assets));
+        Assets assetsTransferred = pullTokens(marketCache, account, assets);
 
         // pullTokens() updates poolSize in the cache, but we need the poolSize before the deposit to determine
         // the internal amount so temporarily reduce it by the amountTransferred (which is size checked within
         // pullTokens()). We can't compute this value before the pull because we don't know how much we'll
         // actually receive (the token might be deflationary).
-
+        Shares shares;
         unchecked {
-            marketCache.poolSize -= assetsTransferred;
-            shares = assetsToShares(marketCache, assetsTransferred);
-            marketCache.poolSize += assetsTransferred;
+            marketCache.poolSize = marketCache.poolSize - assetsTransferred;
+            shares = assetsTransferred.toSharesDown(marketCache);
+            marketCache.poolSize = marketCache.poolSize + assetsTransferred;
         }
 
-        if (shares == 0) revert E_ZeroShares();
+        if (shares.isZero()) revert E_ZeroShares();
 
         increaseBalance(marketCache, receiver, shares);
 
-        emit Deposit(account, receiver, assetsTransferred, shares);
+        emit Deposit(account, receiver, assetsTransferred.toUint(), shares.toUint());
+
+        return shares.toUint();
     }
 }
 
 contract ERC4626 is ERC4626Module {
-    constructor(address factory, address cvc) BaseModule(factory, cvc) {}
+    constructor(address factory, address cvc) Base(factory, cvc) {}
 }

@@ -2,12 +2,15 @@
 
 pragma solidity ^0.8.0;
 
+import {Base} from "./shared/Base.sol";
+import {DToken} from "./DToken.sol";
 import {ERC20Module} from "./modules/ERC20.sol";
 import {ERC4626Module} from "./modules/ERC4626.sol";
 import {BorrowingModule} from "./modules/Borrowing.sol";
 import {LiquidationModule} from "./modules/Liquidation.sol";
 import {AdminModule} from "./modules/Admin.sol";
-import {BaseModule} from "./shared/BaseModule.sol";
+
+import "./shared/Constants.sol";
 
 contract EVault is ERC20Module, ERC4626Module, BorrowingModule, LiquidationModule, AdminModule {
     address immutable MODULE_ERC20;
@@ -24,7 +27,7 @@ contract EVault is ERC20Module, ERC4626Module, BorrowingModule, LiquidationModul
         address MODULE_BORROWING_,
         address MODULE_LIQUIDATION_,
         address MODULE_ADMIN_
-    ) BaseModule(factory, cvc) {
+    ) Base(factory, cvc) {
         MODULE_ERC20 = MODULE_ERC20_;
         MODULE_ERC4626 = MODULE_ERC4626_;
         MODULE_BORROWING = MODULE_BORROWING_;
@@ -40,9 +43,9 @@ contract EVault is ERC20Module, ERC4626Module, BorrowingModule, LiquidationModul
         marketStorage.interestAccumulator = INITIAL_INTEREST_ACCUMULATOR;
         marketStorage.reentrancyLock = REENTRANCYLOCK__UNLOCKED;
 
-        // address dTokenAddress = address(new DToken());
+        address dTokenAddress = address(new DToken()); // TODO deploy from module to free up code space
 
-        // emit DTokenCreated(dTokenAddress);
+        emit DTokenCreated(dTokenAddress);
     }
 
 
@@ -51,9 +54,9 @@ contract EVault is ERC20Module, ERC4626Module, BorrowingModule, LiquidationModul
 
     function name() external view useView(MODULE_ERC20) override returns (string memory) {}
 
-    // function symbol() external view useView(MODULE_ERC20) override returns (string memory) {}
+    function symbol() external view useView(MODULE_ERC20) override returns (string memory) {}
 
-    // function decimals() external view useView(MODULE_ERC20) override returns (uint8) {}
+    function decimals() external view useView(MODULE_ERC20) override returns (uint8) {}
 
     // function totalSupply() external view useView(MODULE_ERC20) override returns (uint) {}
 
@@ -115,11 +118,11 @@ contract EVault is ERC20Module, ERC4626Module, BorrowingModule, LiquidationModul
 
 
 
-    // function totalBorrows() external view useView(MODULE_BORROWING) override returns (uint) {}
+    function totalBorrows() external view useView(MODULE_BORROWING) override returns (uint) {}
 
-    // function totalBorrowsExact() external view useView(MODULE_BORROWING) override returns (uint) {}
+    function totalBorrowsExact() external view useView(MODULE_BORROWING) override returns (uint) {}
 
-    // function debtOf(address account) external view useView(MODULE_BORROWING) override returns (uint) {}
+    function debtOf(address account) external view useView(MODULE_BORROWING) override returns (uint) {}
 
     // function debtOfExact(address account) external view useView(MODULE_BORROWING) override returns (uint) {}
 
