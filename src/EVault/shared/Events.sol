@@ -7,13 +7,7 @@ abstract contract Events {
     event Approval(address indexed owner, address indexed spender, uint value);
     event Transfer(address indexed from, address indexed to, uint value);
     event Deposit(address indexed sender, address indexed owner, uint assets, uint shares);
-    event Withdraw(
-        address indexed sender,
-        address indexed receiver,
-        address indexed owner,
-        uint assets,
-        uint shares
-    );
+    event Withdraw( address indexed sender, address indexed receiver, address indexed owner, uint assets, uint shares);
 
     event DTokenCreated(address indexed dToken);
 

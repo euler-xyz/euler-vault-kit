@@ -31,4 +31,3 @@ uint8 constant PAUSETYPE__BORROW   = 1 << 3;
 uint8 constant PAUSETYPE__REPAY    = 1 << 4;
 uint8 constant PAUSETYPE__WIND     = 1 << 5;
 uint8 constant PAUSETYPE__UNWIND   = 1 << 6;
-
