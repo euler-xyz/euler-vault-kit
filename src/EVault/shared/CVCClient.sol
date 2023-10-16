@@ -7,7 +7,7 @@ import {Events} from "./Events.sol";
 import {Errors} from "./Errors.sol";
 
 import {IERC20} from "../IEVault.sol";
-import {ICVC} from "euler-cvc/src/interfaces/ICreditVaultConnector.sol";
+import {ICVC} from "euler-cvc/interfaces/ICreditVaultConnector.sol";
 
 abstract contract CVCClient is Storage, Events, Errors {
     ICVC immutable cvc;
