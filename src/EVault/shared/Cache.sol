@@ -2,16 +2,18 @@
 
 pragma solidity ^0.8.0;
 
-import "./Storage.sol";
-import "./Errors.sol";
+import {Storage} from "./Storage.sol";
+import {Errors} from "./Errors.sol";
+import {RPow} from "./lib/RPow.sol";
+import {SafeERC20Lib} from "./lib/SafeERC20Lib.sol";
+
 import "./types/Types.sol";
-import "./lib/RPow.sol";
-import "./lib/Utils.sol";
 
 contract Cache is Storage, Errors {
     using TypesLib for uint;
+    using SafeERC20Lib for IERC20;
 
-     function proxyMetadata() internal pure returns (address marketAsset, address riskManager) {
+    function proxyMetadata() internal pure returns (IERC20 marketAsset, IRiskManager riskManager) {
         assembly {
             marketAsset := shr(96, calldataload(sub(calldatasize(), 40)))
             riskManager := shr(96, calldataload(sub(calldatasize(), 20)))
@@ -25,9 +27,7 @@ contract Cache is Storage, Errors {
 
         // Proxy metadata
 
-        (address asset, address riskManager) = proxyMetadata();
-        marketCache.asset = asset;
-        marketCache.riskManager = riskManager;
+        (marketCache.asset, marketCache.riskManager) = proxyMetadata();
 
         // Storage loads
 
@@ -43,7 +43,7 @@ contract Cache is Storage, Errors {
 
         // Derived state
 
-        uint poolSize = Utils.callBalanceOf(marketCache.asset, address(this));
+        uint poolSize = marketCache.asset.callBalanceOf(address(this));
         marketCache.poolSize = (poolSize <= MAX_SANE_AMOUNT ? poolSize : 0).toAssets();
 
         // Update interest  accumulator and fees balance 
@@ -51,17 +51,14 @@ contract Cache is Storage, Errors {
         if (block.timestamp != marketCache.lastInterestAccumulatorUpdate) {
             dirty = true;
 
+            // Compute new values. Use full precision for intermediate results.
+
             uint deltaT = block.timestamp - marketCache.lastInterestAccumulatorUpdate;
-
-            // Compute new values
-
             uint newInterestAccumulator = (RPow.rpow(uint(int(marketCache.interestRate) + 1e27), deltaT, 1e27) * marketCache.interestAccumulator) / 1e27;
 
-            // TODO muldiv?
             uint newTotalBorrows = marketCache.totalBorrows.toUint() * newInterestAccumulator / marketCache.interestAccumulator;
-
             uint newFeesBalance = marketCache.feesBalance.toUint();
-            uint newTotalBalances = Shares.unwrap(marketCache.totalBalances);
+            uint newTotalBalances = marketCache.totalBalances.toUint();
 
             uint feeAmount = (newTotalBorrows - marketCache.totalBorrows.toUint())
                                * marketCache.interestFee

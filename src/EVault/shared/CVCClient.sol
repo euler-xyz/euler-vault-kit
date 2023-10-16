@@ -2,15 +2,12 @@
 
 pragma solidity ^0.8.0;
 
+import {Storage} from "./Storage.sol";
+import {Events} from "./Events.sol";
+import {Errors} from "./Errors.sol";
 
-import "euler-cvc/src/interfaces/ICreditVaultConnector.sol";
-import { IERC20 } from "../IEVault.sol";
-
-import "./Storage.sol";
-import "./Events.sol";
-import "./Errors.sol";
-
-import "./lib/Utils.sol";
+import {IERC20} from "../IEVault.sol";
+import {ICVC} from "euler-cvc/src/interfaces/ICreditVaultConnector.sol";
 
 abstract contract CVCClient is Storage, Events, Errors {
     ICVC immutable cvc;
@@ -19,6 +16,12 @@ abstract contract CVCClient is Storage, Events, Errors {
     constructor(address _cvc) {
         cvc = ICVC(_cvc);
     }
+
+    // function releaseController(address account) internal virtual {
+    //     cvc.disableController(account);
+
+    //     emit ReleaseController(account, address(this));
+    // }
 
     function CVCAuthenticate() internal view returns (address) {
         if (msg.sender == address(cvc)) {
@@ -65,18 +68,12 @@ abstract contract CVCClient is Storage, Events, Errors {
     // function enforceExternalCollateralTransfer(address collateral, uint amount, address from, address receiver) internal returns (bytes memory data) {
     //     bool success;
     //     (success, data) = cvc.impersonate(collateral, from, abi.encodeCall(IERC20.transfer, (receiver, amount)));
-    //     if(!success) Utils.revertBytes(data);
+    //     if(!success) revertBytes(data);
     // }
 
     // function forgiveAccountStatusCheck(address account) internal {
     //     cvc.forgiveAccountStatusCheck(account);
     // }
-
-    function releaseController(address account) internal virtual {
-        cvc.disableController(account);
-
-        emit ReleaseController(account, address(this));
-    }
 
     // function getController(address account) internal view returns (address) {
     //     address[] memory controllers = cvc.getControllers(account);
@@ -101,4 +98,6 @@ abstract contract CVCClient is Storage, Events, Errors {
     // function isAccountStatusCheckDeferred(address account) internal view returns (bool) {
     //     return cvc.isAccountStatusCheckDeferred(account);
     // }
+
+    function revertBytes(bytes memory) internal pure virtual;
 }

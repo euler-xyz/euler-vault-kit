@@ -23,18 +23,18 @@ interface IERC20 {
     // /// @param spender Trusted address
     // function allowance(address holder, address spender) external view returns (uint);
 
-    /// @notice Transfer eTokens to another address (from sub-account 0)
+    /// @notice Transfer eTokens to another address
     /// @param to Recipient account
     /// @param amount In internal book-keeping units (as returned from balanceOf).
     function transfer(address to, uint amount) external returns (bool);
 
     // /// @notice Transfer the full eToken balance of an address to another
-    // /// @param from This address must've approved the to address, or be a sub-account of msg.sender
+    // /// @param from This address must've approved the to address
     // /// @param to Recipient account
     // function transferFromMax(address from, address to) external returns (bool);
 
     /// @notice Transfer eTokens from one address to another
-    /// @param from This address must've approved the to address, or be a sub-account of msg.sender
+    /// @param from This address must've approved the to address
     /// @param to Recipient account
     /// @param amount In internal book-keeping units (as returned from balanceOf).
     function transferFrom(address from, address to, uint amount) external returns (bool);

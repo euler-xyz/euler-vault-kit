@@ -5,7 +5,7 @@ pragma solidity ^0.8.0;
 import {IERC20} from "../../IEVault.sol";
 import {Errors} from "../Errors.sol";
 
-library Utils {
+library SafeERC20Lib {
     // WARNING: Must be very careful with this modifier. It resets the free memory pointer
     // to the value it was when the function started. This saves gas if more memory will
     // be allocated in the future. However, if the memory will be later referenced
@@ -34,20 +34,20 @@ library Utils {
     }
 
 
-    function safeTransferFrom(address token, address from, address to, uint value) internal {
-        (bool success, bytes memory data) = token.call(abi.encodeWithSelector(IERC20.transferFrom.selector, from, to, value));
+    function safeTransferFrom(IERC20 token, address from, address to, uint value) internal {
+        (bool success, bytes memory data) = address(token).call(abi.encodeWithSelector(IERC20.transferFrom.selector, from, to, value));
         if (!success || (data.length != 0 && !abi.decode(data, (bool)))) revertBytes(data);
     }
 
-    function safeTransfer(address token, address to, uint value) internal {
-        (bool success, bytes memory data) = token.call(abi.encodeWithSelector(IERC20.transfer.selector, to, value));
+    function safeTransfer(IERC20 token, address to, uint value) internal {
+        (bool success, bytes memory data) = address(token).call(abi.encodeWithSelector(IERC20.transfer.selector, to, value));
         if (!success || (data.length != 0 && !abi.decode(data, (bool)))) revertBytes(data);
     }
 
-    function callBalanceOf(address token, address account) internal view FREEMEM returns (uint) {
+    function callBalanceOf(IERC20 token, address account) internal view FREEMEM returns (uint) {
         // We set a gas limit so that a malicious token can't eat up all gas and cause a liquidity check to fail.
 
-        (bool success, bytes memory data) = token.staticcall{gas: 200000}(abi.encodeWithSelector(IERC20.balanceOf.selector, account));
+        (bool success, bytes memory data) = address(token).staticcall{gas: 200000}(abi.encodeWithSelector(IERC20.balanceOf.selector, account));
 
         // If token's balanceOf() call fails for any reason, return 0. This prevents malicious tokens from causing liquidity checks to fail.
         // If the contract doesn't exist (maybe because selfdestructed), then data.length will be 0 and we will return 0.
@@ -58,7 +58,8 @@ library Utils {
         return abi.decode(data, (uint256));
     }
 
-    function revertBytes(bytes memory errMsg) internal pure {
+    // TODO
+    function revertBytes(bytes memory errMsg) private pure {
         if (errMsg.length > 0) {
             assembly {
                 revert(add(32, errMsg), mload(errMsg))

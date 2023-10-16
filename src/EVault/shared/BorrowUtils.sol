@@ -2,10 +2,12 @@
 
 pragma solidity ^0.8.0;
 
-import "./CVCClient.sol";
-import "./Cache.sol";
-import "../DToken.sol";
-import "../../IRiskManager.sol";
+import {CVCClient} from "./CVCClient.sol";
+import {Cache} from "./Cache.sol";
+import {DToken} from "../DToken.sol";
+import {IRiskManager} from "../../IRiskManager.sol";
+
+import "./types/Types.sol";
 
 abstract contract BorrowUtils is CVCClient, Cache {
     using TypesLib for uint;
@@ -15,7 +17,7 @@ abstract contract BorrowUtils is CVCClient, Cache {
         if (owed.isZero()) return Owed.wrap(0);
 
         // Can't divide by 0 here: If owed is non-zero, we must've initialised the user's interestAccumulator
-        return (owed.toUint() * marketCache.interestAccumulator / marketStorage.users[account].interestAccumulator).toOwed();
+        return owed.mulDiv(marketCache.interestAccumulator, marketStorage.users[account].interestAccumulator);
     }
 
     function getCurrentOwed(MarketCache memory marketCache, address account) internal view returns (Owed) {
@@ -92,7 +94,7 @@ abstract contract BorrowUtils is CVCClient, Cache {
     // }
 
     // // TODO revisit
-    // function getLiquidityPayload(address account, address[] memory collateralMarkets) internal view returns (address riskManager, IRiskManager.MarketAssets memory liability, IRiskManager.MarketAssets[] memory collaterals) {
+    // function getLiquidityPayload(address account, address[] memory collateralMarkets) internal view returns (IRiskManager riskManager, IRiskManager.MarketAssets memory liability, IRiskManager.MarketAssets[] memory collaterals) {
     //     liability.market = address(this);
 
     //     MarketCache memory marketCache = loadMarket();

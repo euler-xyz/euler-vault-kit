@@ -6,20 +6,21 @@ import {IERC4626} from "../IEVault.sol";
 import {Base} from "../shared/Base.sol";
 import {AssetTransfers} from "../shared/AssetTransfers.sol";
 import {BalanceUtils} from "../shared/BalanceUtils.sol";
-import {Utils} from "../shared/lib/Utils.sol";
+import {SafeERC20Lib} from "../shared/lib/SafeERC20Lib.sol";
 
 import "../shared/types/Types.sol";
 
 abstract contract ERC4626Module is IERC4626, Base, AssetTransfers, BalanceUtils {
     using TypesLib for uint;
+    using SafeERC20Lib for IERC20;
 
     /// @inheritdoc IERC4626
     function asset() external view virtual returns (address) {
-        (address asset_,) = proxyMetadata();
-        return asset_;
+        (IERC20 asset_,) = proxyMetadata();
+        return address(asset_);
     }
 
-    // @inheritdoc IERC4626
+    /// @inheritdoc IERC4626
     function deposit(uint assets, address receiver) external virtual nonReentrantWithChecks returns (uint shares) {
         shares = _deposit(CVCAuthenticate(), loadAndUpdateMarket(), assets, receiver);
     }
@@ -33,7 +34,7 @@ abstract contract ERC4626Module is IERC4626, Base, AssetTransfers, BalanceUtils 
         emit RequestDeposit(account, receiver, amount);
 
         Assets assets = amount == type(uint).max
-            ? Utils.callBalanceOf(marketCache.asset, account).toAssets()
+            ? marketCache.asset.callBalanceOf(account).toAssets()
             : amount.toAssets();
 
         Assets assetsTransferred = pullTokens(marketCache, account, assets);

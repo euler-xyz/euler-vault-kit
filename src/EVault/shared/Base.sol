@@ -62,4 +62,14 @@ abstract contract Base is CVCClient, Cache {
             marketStorage.marketSnapshot.performedOperations = performedOperations | operationType;
         }
     }
+
+    function revertBytes(bytes memory errMsg) internal pure override {
+        if (errMsg.length > 0) {
+            assembly {
+                revert(add(32, errMsg), mload(errMsg))
+            }
+        }
+
+        revert Errors.E_EmptyError();
+    }
 }

@@ -18,6 +18,10 @@ library FeesLib {
     function toShares(Fees self) pure internal returns (Shares) {
         return Shares.wrap(Fees.unwrap(self));
     }
+
+    function mulDiv(Fees self, uint multiplier, uint divisor) pure internal returns (Fees) {
+        return TypesLib.toFees(uint(Fees.unwrap(self)) * multiplier / divisor);
+    }
 }
 
 function addFees(Fees a, Fees b) pure returns (Fees) {

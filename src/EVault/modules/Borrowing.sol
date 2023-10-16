@@ -15,7 +15,7 @@ abstract contract BorrowingModule is IBorrowing, Base, BorrowUtils {
     function totalBorrows() external view virtual returns (uint) {
         MarketCache memory marketCache = loadMarketNonReentrant();
 
-        return marketCache.totalBorrows.toAssetsDown().toUint();
+        return marketCache.totalBorrows.toAssetsUp().toUint();
     }
 
     /// @inheritdoc IBorrowing

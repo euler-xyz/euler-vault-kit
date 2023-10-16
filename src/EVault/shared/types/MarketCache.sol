@@ -2,11 +2,14 @@
 
 pragma solidity ^0.8.0;
 
+import {IERC20} from "../../IEVault.sol";
+import {IRiskManager} from "../../../IRiskManager.sol";
+
 import "./Types.sol";
 
 struct MarketCache {
-    address asset;
-    address riskManager;
+    IERC20 asset;
+    IRiskManager riskManager;
 
     Shares totalBalances;
     Owed totalBorrows;

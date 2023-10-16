@@ -33,6 +33,10 @@ library OwedLib {
     function isZero(Owed self) internal pure returns (bool) {
         return Owed.unwrap(self) == 0;
     }
+
+    function mulDiv(Owed self, uint multiplier, uint divisor) pure internal returns (Owed) {
+        return TypesLib.toOwed(uint(Owed.unwrap(self)) * multiplier / divisor);
+    }
 }
 
 function addOwed(Owed a, Owed b) pure returns (Owed) {
