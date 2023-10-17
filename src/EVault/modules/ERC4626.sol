@@ -28,7 +28,6 @@ abstract contract ERC4626Module is IERC4626, Base, AssetTransfers, BalanceUtils 
         lock(address(0), marketCache, PAUSETYPE__DEPOSIT)
         returns (uint)
     {
-        // TODO defaultTo on address
         if (receiver == address(0)) receiver = account;
 
         emit RequestDeposit(account, receiver, amount);
