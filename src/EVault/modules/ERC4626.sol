@@ -40,7 +40,7 @@ abstract contract ERC4626Module is IERC4626, Base, AssetTransfers, BalanceUtils 
         Assets assetsTransferred = pullTokens(marketCache, account, assets);
         // pullTokens() updates poolSize in the cache, but we need shares amount converted before the update,
         // excluding the assets transferred
-        Shares shares = assetsTransferred.toSharesDownExclusive(marketCache);
+        Shares shares = assetsTransferred.toSharesDownPremoney(marketCache);
 
         if (shares.isZero()) revert E_ZeroShares();
 
