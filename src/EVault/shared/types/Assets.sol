@@ -24,6 +24,14 @@ library AssetsLib {
         );
     }
 
+    // Exclude the asset amount from the pool size when converting to shares. It's used to get the shares amount after the deposit
+    function toSharesDownExclusive(Assets amount, MarketCache memory marketCache) pure internal returns (Shares) {
+        (uint totalAssets, uint totalBalances) = totalsVirtual(marketCache);
+        return TypesLib.toShares(
+            amount.toUint() * totalBalances / (totalAssets - amount.toUint())
+        );
+    }
+
     function toSharesUp(Assets amount, MarketCache memory marketCache) pure internal returns (Shares) {
         (uint totalAssets, uint totalBalances) = totalsVirtual(marketCache);
         return TypesLib.toShares(

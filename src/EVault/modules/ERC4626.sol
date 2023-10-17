@@ -38,17 +38,9 @@ abstract contract ERC4626Module is IERC4626, Base, AssetTransfers, BalanceUtils 
             : amount.toAssets();
 
         Assets assetsTransferred = pullTokens(marketCache, account, assets);
-
-        // pullTokens() updates poolSize in the cache, but we need the poolSize before the deposit to determine
-        // the internal amount so temporarily reduce it by the amountTransferred (which is size checked within
-        // pullTokens()). We can't compute this value before the pull because we don't know how much we'll
-        // actually receive (the token might be deflationary).
-        Shares shares;
-        unchecked {
-            marketCache.poolSize = marketCache.poolSize - assetsTransferred;
-            shares = assetsTransferred.toSharesDown(marketCache);
-            marketCache.poolSize = marketCache.poolSize + assetsTransferred;
-        }
+        // pullTokens() updates poolSize in the cache, but we need shares amount converted before the update,
+        // excluding the assets transferred
+        Shares shares = assetsTransferred.toSharesDownExclusive(marketCache);
 
         if (shares.isZero()) revert E_ZeroShares();
 
