@@ -17,7 +17,6 @@ abstract contract BalanceUtils is Storage, Events, Errors {
         marketStorage.users[account].balance = marketStorage.users[account].balance + amount;
         marketStorage.totalBalances = marketCache.totalBalances = marketCache.totalBalances + amount;
 
-        emit IncreaseBalance(address(this), account, amount.toUint());
         emit Transfer(address(0), account, amount.toUint());
     }
 
@@ -28,7 +27,6 @@ abstract contract BalanceUtils is Storage, Events, Errors {
 
 //         marketStorage.totalBalances = marketCache.totalBalances = marketCache.totalBalances - amount;
 
-//         emit DecreaseBalance(address(this), account, amount.toUint());
 //         emit Transfer(account, address(0), amount.toUint());
 //     }
 
@@ -41,8 +39,6 @@ abstract contract BalanceUtils is Storage, Events, Errors {
 //         marketStorage.users[from].balance = newFromBalance;
 //         marketStorage.users[to].balance = marketStorage.users[to].balance + amount;
 
-//         emit DecreaseBalance(address(this), from, amount.toUint());
-//         emit IncreaseBalance(address(this), to, amount.toUint());
 //         emit Transfer(from, to, amount.toUint());
 //     }
 

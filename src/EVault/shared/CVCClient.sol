@@ -20,7 +20,7 @@ abstract contract CVCClient is Storage, Events, Errors {
     // function releaseController(address account) internal virtual {
     //     cvc.disableController(account);
 
-    //     emit ReleaseController(account, address(this));
+    //     emit ReleaseController(account);
     // }
 
     function CVCAuthenticate() internal view returns (address) {
@@ -87,12 +87,12 @@ abstract contract CVCClient is Storage, Events, Errors {
     //     return cvc.getCollaterals(account);
     // }
 
-    // function isEnteredCollateral(address account, address market) internal view returns (bool) {
+    // function isCollateralEnabled(address account, address market) internal view returns (bool) {
     //     return cvc.isCollateralEnabled(account, market);
     // }
 
-    // function isControllerEnabled(address account, address market) internal view returns (bool) {
-    //     return cvc.isControllerEnabled(account, market);
+    // function isControllerEnabled(address account) internal view returns (bool) {
+    //     return cvc.isControllerEnabled(account, address(this));
     // }
 
     // function isAccountStatusCheckDeferred(address account) internal view returns (bool) {

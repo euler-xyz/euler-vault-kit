@@ -137,11 +137,11 @@ abstract contract BorrowUtils is CVCClient, Cache {
 
     //     if (owed > prevOwed) {
     //         Assets change = owed.toAssetsUp() - prevOwed.toAssetsUp();
-    //         emit Borrow(address(this), account, change.toUint());
+    //         emit Borrow(account, change.toUint());
     //         DToken(dTokenAddress).emitTransfer(address(0), account, change.toUint());
     //     } else if (prevOwed > owed) {
     //         Assets change = prevOwed.toAssetsUp() - owed.toAssetsUp();
-    //         emit Repay(address(this), account, change.toUint());
+    //         emit Repay(account, change.toUint());
     //         DToken(dTokenAddress).emitTransfer(account, address(0), change.toUint());
     //     }
     // }

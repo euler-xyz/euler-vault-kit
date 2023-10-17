@@ -40,7 +40,7 @@ abstract contract Base is CVCClient, Cache {
     }
 
     function logMarketStatus(MarketCache memory a) internal {
-        emit MarketStatus(address(this), a.totalBalances.toUint(), a.totalBorrows.toAssetsDown().toUint(), Fees.unwrap(a.feesBalance), a.poolSize.toUint(), a.interestAccumulator, a.interestRate, block.timestamp);
+        emit MarketStatus(a.totalBalances.toUint(), a.totalBorrows.toAssetsDown().toUint(), Fees.unwrap(a.feesBalance), a.poolSize.toUint(), a.interestAccumulator, a.interestRate, block.timestamp);
     }
 
     function getMarketSnapshot(uint8 operationType, MarketCache memory marketCache) internal pure returns (MarketSnapshot memory) {
