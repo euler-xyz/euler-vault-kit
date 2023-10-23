@@ -10,8 +10,8 @@ interface IRiskManager {
     }
 
     struct Snapshot {
-        uint112 totalBalances;
-        uint112 totalBorrows;
+        uint totalBalances;
+        uint totalBorrows;
     }
 
     function onMarketActivation(address creator, address market, address asset, bytes calldata riskManagerConfig) external returns (bool success);

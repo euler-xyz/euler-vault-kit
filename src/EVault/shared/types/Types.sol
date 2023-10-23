@@ -45,6 +45,10 @@ library TypesLib {
         return Owed.wrap(uint144(amount));
     }
 
+    function toOwedFromUintAssets(uint amount) internal pure returns (Owed) {
+        return toOwed(amount * INTERNAL_DEBT_PRECISION);
+    }
+
     function toFees(uint amount) internal pure returns (Fees) {
         if (amount > MAX_SANE_SMALL_AMOUNT) revert Errors.E_SmallAmountTooLargeToEncode();
         return Fees.wrap(uint96(amount));

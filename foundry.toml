@@ -3,4 +3,13 @@ src = "src"
 out = "out"
 libs = ["lib"]
 
+optimizer = true
+optimizer_runs = 20_000
+solc = "0.8.20"
+etherscan_api_key = "2WRUJ9EEBUYAZQRAPRJPXDZ6WA3VWQU4B4"
+remappings = [
+  "euler-cvc/=lib/euler-cvc/src"
+]
+gas_reports = ["*"]
+
 # See more config options https://github.com/foundry-rs/foundry/blob/master/crates/config/README.md#all-options

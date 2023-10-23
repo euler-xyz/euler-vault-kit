@@ -2,8 +2,8 @@
 
 pragma solidity ^0.8.0;
 
-import {Base} from "../shared/Base.sol";
 import {ILiquidation} from "../IEVault.sol";
+import {Base} from "../shared/Base.sol";
 
 import "../shared/types/Types.sol";
 

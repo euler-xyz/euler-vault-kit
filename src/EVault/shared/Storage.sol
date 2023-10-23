@@ -20,11 +20,14 @@ abstract contract Storage {
     }
 
     struct MarketSnapshot {
+        // Packed slot 14 + 18 = 32
+        Assets totalBalances;
+        Owed totalBorrows;
+
+        // Packed slot 8 + 14 + 17 = 32
         uint8 performedOperations;
         Assets poolSize;
-        Assets totalBalances;
-        Assets totalBorrows;
-        uint144 interestAccumulator;
+        uint136 interestAccumulator;
     }
 
     struct MarketStorage {
@@ -35,6 +38,7 @@ abstract contract Storage {
         uint16 interestFee;
         uint8 reentrancyLock;
 
+        // Packed slot 14 + 18 = 32
         Shares totalBalances;
         Owed totalBorrows;
 
