@@ -31,9 +31,8 @@ abstract contract BorrowingModule is IBorrowing, Base, BorrowUtils {
     }
 
     /// @inheritdoc IBorrowing
-    function checkVaultStatus() external virtual reentrantOK returns (bool, bytes memory) {
-        if (msg.sender != address(cvc)) return (false, "e/invalid-caller");
-        return (true, "");
+    function checkVaultStatus() external virtual reentrantOK onlyCVCChecks returns (bytes4 magicValue) {
+        magicValue = VAULT_STATUS_CHECK_RETURN_VALUE;
     }
 }
 

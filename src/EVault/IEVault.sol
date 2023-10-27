@@ -193,9 +193,9 @@ interface IBorrowing {
 
     // function releaseController() external;
 
-    // function checkAccountStatus(address account, address[] calldata collaterals) external returns (bool, bytes memory);
+    // function checkAccountStatus(address account, address[] calldata collaterals) external returns (bytes4);
 
-    function checkVaultStatus() external returns (bool, bytes memory);
+    function checkVaultStatus() external returns (bytes4);
 }
 
 interface ILiquidation {

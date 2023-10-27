@@ -156,9 +156,9 @@ contract EVault is ERC20Module, ERC4626Module, BorrowingModule, LiquidationModul
     // function releaseController() external use(MODULE_BORROWING) override {}
 
     // function checkAccountStatus(address account, address[] calldata collaterals)
-    //     external use(MODULE_BORROWING) override returns (bool, bytes memory) {}
+    //     external use(MODULE_BORROWING) override returns (bytes4) {}
 
-    // function checkVaultStatus() external use(MODULE_BORROWING) override returns (bool, bytes memory) {}
+    // function checkVaultStatus() external use(MODULE_BORROWING) override returns (bytes4) {}
 
 
     // // ----------------- Liquidation -----------------

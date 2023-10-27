@@ -8,10 +8,20 @@ import {Errors} from "./Errors.sol";
 
 import {IERC20} from "../IEVault.sol";
 import {ICVC} from "euler-cvc/interfaces/ICreditVaultConnector.sol";
+import {ICreditVault} from "euler-cvc/interfaces/ICreditVault.sol";
 
 abstract contract CVCClient is Storage, Events, Errors {
     ICVC immutable cvc;
     uint8 constant BATCH_DEPTH_INIT = 1;
+    bytes4 constant ACCOUNT_STATUS_CHECK_RETURN_VALUE = ICreditVault.checkAccountStatus.selector;
+    bytes4 constant VAULT_STATUS_CHECK_RETURN_VALUE = ICreditVault.checkVaultStatus.selector;
+
+    modifier onlyCVCChecks() {
+        if (!cvc.areChecksInProgress() || msg.sender != address(cvc))
+            revert E_CheckUnauthorized();
+
+        _;
+    }
 
     constructor(address _cvc) {
         cvc = ICVC(_cvc);
@@ -19,7 +29,7 @@ abstract contract CVCClient is Storage, Events, Errors {
 
     function CVCAuthenticate() internal view returns (address) {
         if (msg.sender == address(cvc)) {
-            (address onBehalfOfAccount,) = cvc.getExecutionContext(address(0));
+            (address onBehalfOfAccount,) = cvc.getCurrentOnBehalfOfAccount(address(0));
             return onBehalfOfAccount;
         }
 

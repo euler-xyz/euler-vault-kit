@@ -13,6 +13,7 @@ abstract contract Storage {
     // ----------------------------------------------
 
     struct UserAsset {
+        // Packed slot 14 + 18 = 32
         Shares balance;
         Owed owed;
 

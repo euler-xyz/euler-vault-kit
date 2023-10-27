@@ -46,6 +46,10 @@ contract Errors {
     error E_Unauthorized();
     error E_BadInterestFee();
     error E_FeesDepleted();
+    error E_CheckUnauthorized();
+    error E_InvalidSnapshot();
+    error E_InterestAccumulatorInvariant();
+    error E_BalancesInvariant();
 
     error E_NotSupported();
     error E_EmptyError();
