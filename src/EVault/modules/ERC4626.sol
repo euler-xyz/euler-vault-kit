@@ -33,13 +33,10 @@ abstract contract ERC4626Module is IERC4626, Base, AssetTransfers, BalanceUtils 
     }
 
     /// @inheritdoc IERC4626
-    function deposit(uint assets, address receiver) external virtual nonReentrantWithChecks returns (uint shares) {
-        shares = _deposit(CVCAuthenticate(), loadAndUpdateMarket(), assets, receiver);
-    }
-    function _deposit(address account, MarketCache memory marketCache, uint amount, address receiver) private
-        lock(address(0), marketCache, PAUSETYPE__DEPOSIT)
-        returns (uint)
-    {
+    function deposit(uint amount, address receiver) external virtual routedThroughCVC nonReentrant returns (uint) {
+        // INIT
+        (MarketCache memory marketCache, address account) = initMarketAndAccount(PAUSETYPE__DEPOSIT);
+
         if (receiver == address(0)) receiver = account;
 
         emit RequestDeposit(account, receiver, amount);
@@ -61,6 +58,8 @@ abstract contract ERC4626Module is IERC4626, Base, AssetTransfers, BalanceUtils 
 
         emit Deposit(account, receiver, assetsTransferred.toUint(), shares.toUint());
 
+        // FINALIZE AND RETURN
+        checkMarketAndAccountStatus(marketCache, address(0));
         return shares.toUint();
     }
 }

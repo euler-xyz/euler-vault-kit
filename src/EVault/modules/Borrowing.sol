@@ -31,7 +31,7 @@ abstract contract BorrowingModule is IBorrowing, Base, BorrowUtils {
     }
 
     /// @inheritdoc IBorrowing
-    function checkVaultStatus() external virtual reentrantOK onlyCVCChecks returns (bytes4 magicValue) {
+    function checkVaultStatus() public virtual reentrantOK onlyCVCChecks returns (bytes4 magicValue) {
         magicValue = VAULT_STATUS_CHECK_RETURN_VALUE;
     }
 }

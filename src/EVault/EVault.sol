@@ -114,7 +114,7 @@ contract EVault is ERC20Module, ERC4626Module, BorrowingModule, LiquidationModul
 
 
 
-    // // ----------------- Lending -----------------
+    // ----------------- Borrowing -----------------
 
 
 
@@ -145,7 +145,7 @@ contract EVault is ERC20Module, ERC4626Module, BorrowingModule, LiquidationModul
 
     // function unwind(uint assets, address debtFrom) external use(MODULE_BORROWING) override returns (uint) {}
 
-    // function pullDebt(uint assets, address from) external use(MODULE_BORROWING) override returns (bool) {}
+    // function pullDebt(uint assets, address from) external use(MODULE_BORROWING) override {}
 
     // function flashLoan(uint assets, bytes calldata data) external use(MODULE_BORROWING) override {}
 
@@ -156,9 +156,9 @@ contract EVault is ERC20Module, ERC4626Module, BorrowingModule, LiquidationModul
     // function releaseController() external use(MODULE_BORROWING) override {}
 
     // function checkAccountStatus(address account, address[] calldata collaterals)
-    //     external use(MODULE_BORROWING) override returns (bytes4) {}
+    //     external override returns (bytes4) { return super.checkAccountStatus(account, collaterals); }
 
-    // function checkVaultStatus() external use(MODULE_BORROWING) override returns (bytes4) {}
+    function checkVaultStatus() public override returns (bytes4) { return super.checkVaultStatus(); }
 
 
     // // ----------------- Liquidation -----------------

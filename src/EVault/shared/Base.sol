@@ -14,28 +14,32 @@ abstract contract Base is CVCClient, Cache {
         factory = factory_;
     }
 
-    modifier nonReentrantWithChecks() { _; } // documentation only
     modifier reentrantOK() { _; } // documentation only
 
     modifier nonReentrant() {
-    if (marketStorage.reentrancyLock != REENTRANCYLOCK__UNLOCKED) revert E_Reentrancy();
+        if (marketStorage.reentrancyLock != REENTRANCYLOCK__UNLOCKED) revert E_Reentrancy();
 
         marketStorage.reentrancyLock = REENTRANCYLOCK__LOCKED;
         _;
         marketStorage.reentrancyLock = REENTRANCYLOCK__UNLOCKED;
     }
 
-    modifier lock(address account, MarketCache memory marketCache, uint8 pauseType) {
-        if (marketStorage.reentrancyLock != REENTRANCYLOCK__UNLOCKED) revert E_Reentrancy();
-
-        marketStorage.reentrancyLock = REENTRANCYLOCK__LOCKED;
+    function loadMarketAndAuthenticate(uint8 pauseType, bool isBorrowOperation) private returns (MarketCache memory marketCache, address account) {
+        marketCache = loadAndUpdateMarket();
         marketSnapshot(pauseType, marketCache); 
+        account = CVCAuthenticate(isBorrowOperation);
+    }
 
-        _;
+    function initMarketAndAccount(uint8 pauseType) internal returns (MarketCache memory marketCache, address account) {
+        (marketCache, account) = loadMarketAndAuthenticate(pauseType, false);
+    }
 
-        marketStorage.reentrancyLock = REENTRANCYLOCK__UNLOCKED;
+    function initMarketAndAccountForBorrow(uint8 pauseType) internal returns (MarketCache memory marketCache, address account) {
+        (marketCache, account) = loadMarketAndAuthenticate(pauseType, true);
+    }
 
-        checkAccountAndMarketStatus(account);
+    function checkMarketAndAccountStatus(MarketCache memory marketCache, address account) internal {
+        CVCRequireStatusChecks(account);
         logMarketStatus(marketCache);
     }
 
@@ -63,7 +67,7 @@ abstract contract Base is CVCClient, Cache {
         }
     }
 
-    function revertBytes(bytes memory errMsg) internal pure override {
+    function revertBytes(bytes memory errMsg) internal pure {
         if (errMsg.length > 0) {
             assembly {
                 revert(add(32, errMsg), mload(errMsg))

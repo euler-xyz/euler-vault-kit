@@ -175,7 +175,7 @@ interface IBorrowing {
     // /// @return Amount of shares burned
     // function unwind(uint assets, address debtFrom) external returns (uint);
 
-    // function pullDebt(uint assets, address from) external returns (bool);
+    // function pullDebt(uint assets, address from) external;
 
     // /// @notice Request a flash-loan. A onFlashLoan() callback in msg.sender will be invoked, which must repay the loan to the main Euler address prior to returning.
     // /// @param assets In underlying units
