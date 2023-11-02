@@ -5,11 +5,17 @@ libs = ["lib"]
 
 optimizer = true
 optimizer_runs = 20_000
-solc = "0.8.20"
+solc = "0.8.22"
+
 etherscan_api_key = "2WRUJ9EEBUYAZQRAPRJPXDZ6WA3VWQU4B4"
 remappings = [
   "euler-cvc/=lib/euler-cvc/src"
 ]
 gas_reports = ["*"]
+
+[profile.default.fuzz]
+max_test_rejects = 1_000_000
+seed = "0xee1d0f7d9556539a9c0e26aed5e63556"
+runs = 1000
 
 # See more config options https://github.com/foundry-rs/foundry/blob/master/crates/config/README.md#all-options

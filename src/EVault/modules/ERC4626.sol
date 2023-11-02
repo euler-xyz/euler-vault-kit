@@ -21,6 +21,18 @@ abstract contract ERC4626Module is IERC4626, Base, AssetTransfers, BalanceUtils 
     }
 
     /// @inheritdoc IERC4626
+    function totalAssets() external view virtual returns (uint) {
+        MarketCache memory marketCache = loadMarketNonReentrant();
+
+        // TODO double check this: in V1 totalSupplyUnderlying was converted from totalSupply.
+        // Now without initial shares balance, tokens transferred directly to vault would not be shown in conversion from 0.
+        // See "market activation with pre-existing pool balance" test
+        // The first depositor gets all the assets, but must deposit more than existing balance
+        // return sharesToAssets(marketCache, marketCache.totalBalances);
+        return marketCache.poolSize.toUint() + marketCache.totalBorrows.toUintAssetsDown();
+    }
+
+    /// @inheritdoc IERC4626
     function deposit(uint assets, address receiver) external virtual nonReentrantWithChecks returns (uint shares) {
         shares = _deposit(CVCAuthenticate(), loadAndUpdateMarket(), assets, receiver);
     }
@@ -35,6 +47,8 @@ abstract contract ERC4626Module is IERC4626, Base, AssetTransfers, BalanceUtils 
         Assets assets = amount == type(uint).max
             ? marketCache.asset.callBalanceOf(account).toAssets()
             : amount.toAssets();
+
+        if (assets.isZero()) return 0;
 
         Assets assetsTransferred = pullTokens(marketCache, account, assets);
         // pullTokens() updates poolSize in the cache, but we need shares amount converted before the update,

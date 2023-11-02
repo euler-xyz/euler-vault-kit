@@ -7,7 +7,7 @@ import {Errors} from "./Errors.sol";
 
 import "./types/Types.sol";
 
-contract AssetTransfers is Errors {
+abstract contract AssetTransfers is Errors {
     using TypesLib for uint;
     using SafeERC20Lib for IERC20;
 

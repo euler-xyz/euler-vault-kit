@@ -1,24 +1,15 @@
 // SPDX-License-Identifier: UNLICENSED
-pragma solidity ^0.8.13;
+pragma solidity ^0.8.22;
 
 import {Test, console2, stdError} from "forge-std/Test.sol";
-import {EVaultFactory} from "../src/EVaultFactory/EVaultFactory.sol";
+import {EVaultFactory} from "src/EVaultFactory/EVaultFactory.sol";
 
-import {MockEVault} from "./mocks/MockEVault.sol";
-import {MockRiskManager, MockRiskManagerFail} from "./mocks/MockRiskManager.sol";
-import {TestERC20} from "./mocks/TestERC20.sol";
-import {ReentrancyAttack} from "./mocks/ReentrancyAttack.sol";
+import {MockEVault} from "../../mocks/MockEVault.sol";
+import {MockRiskManager, MockRiskManagerFail} from "../../mocks/MockRiskManager.sol";
+import {TestERC20} from "../../mocks/TestERC20.sol";
+import {ReentrancyAttack} from "../../mocks/ReentrancyAttack.sol";
 
-interface IEvents {
-    event Genesis();
-    event EVaultCreated(address indexed eVault, address indexed asset, address indexed riskManager);
-    event SetEVaultImplementation(address indexed newImplementation);
-    event SetUpgradeAdmin(address indexed newUpgradeAdmin);
-    event SetGovernorAdmin(address indexed newGovernorAdmin);
-    event SetProtocolFeesHolder(address indexed newProtocolFeesHolder);
-}
-
-contract FactoryTest is Test, IEvents {
+contract FactoryTest is Test {
     EVaultFactory public factory;
     address public upgradeAdmin;
     address public governorAdmin;
@@ -28,16 +19,16 @@ contract FactoryTest is Test, IEvents {
         address admin = vm.addr(1000);
 
         vm.expectEmit();
-        emit Genesis();
+        emit EVaultFactory.Genesis();
 
         vm.expectEmit(true, false, false, false);
-        emit SetUpgradeAdmin(admin);
+        emit EVaultFactory.SetUpgradeAdmin(admin);
 
         vm.expectEmit(true, false, false, false);
-        emit SetGovernorAdmin(admin);
+        emit EVaultFactory.SetGovernorAdmin(admin);
 
         vm.expectEmit(true, false, false, false);
-        emit SetProtocolFeesHolder(admin);
+        emit EVaultFactory.SetProtocolFeesHolder(admin);
 
         factory = new EVaultFactory(admin);
 
@@ -55,7 +46,7 @@ contract FactoryTest is Test, IEvents {
 
         vm.prank(admin);
         factory.setUpgradeAdmin(upgradeAdmin);
-        
+
         vm.prank(upgradeAdmin);
         factory.setGovernorAdmin(governorAdmin);
 
@@ -213,14 +204,14 @@ contract FactoryTest is Test, IEvents {
         MockRiskManager rm = new MockRiskManager();
 
         vm.expectEmit(false, true, true, false);
-        emit EVaultCreated(address(1), address(asset), address(rm));
+        emit EVaultFactory.EVaultCreated(address(1), address(asset), address(rm));
 
         factory.activateMarket(address(asset), address(rm), "");
     }
 
     function test_Event_SetEVaultImplementation() public {
         vm.expectEmit(true, false, false, false);
-        emit SetEVaultImplementation(address(1));
+        emit EVaultFactory.SetEVaultImplementation(address(1));
 
         vm.prank(upgradeAdmin);
         factory.setEVaultImplementation(address(1));
@@ -230,7 +221,7 @@ contract FactoryTest is Test, IEvents {
         address newUpgradeAdmin = vm.addr(1002);
 
         vm.expectEmit(true, false, false, false, address(factory));
-        emit SetUpgradeAdmin(newUpgradeAdmin);
+        emit EVaultFactory.SetUpgradeAdmin(newUpgradeAdmin);
         
         vm.prank(upgradeAdmin);
         factory.setUpgradeAdmin(newUpgradeAdmin);
@@ -240,7 +231,7 @@ contract FactoryTest is Test, IEvents {
         address newGovernorAdmin = vm.addr(1003);
 
         vm.expectEmit(true, false, false, false, address(factory));
-        emit SetGovernorAdmin(newGovernorAdmin);
+        emit EVaultFactory.SetGovernorAdmin(newGovernorAdmin);
         
         vm.prank(upgradeAdmin);
         factory.setGovernorAdmin(newGovernorAdmin);
@@ -250,7 +241,7 @@ contract FactoryTest is Test, IEvents {
         address newProtocolFeesHolder = vm.addr(1004);
 
         vm.expectEmit(true, false, false, false, address(factory));
-        emit SetProtocolFeesHolder(newProtocolFeesHolder);
+        emit EVaultFactory.SetProtocolFeesHolder(newProtocolFeesHolder);
 
         vm.prank(governorAdmin);
         factory.setProtocolFeesHolder(newProtocolFeesHolder);
@@ -285,7 +276,7 @@ contract FactoryTest is Test, IEvents {
         MockEVault mockEvaultImpl = new MockEVault(address(factory), address(1));
         vm.prank(upgradeAdmin);
         factory.setEVaultImplementation(address(mockEvaultImpl));
-        
+
         address asset = vm.addr(1);
         ReentrancyAttack rm = new ReentrancyAttack(address(factory), address(asset));
 
@@ -298,7 +289,7 @@ contract FactoryTest is Test, IEvents {
         MockEVault mockEvaultImpl = new MockEVault(address(factory), address(1));
         vm.prank(upgradeAdmin);
         factory.setEVaultImplementation(address(mockEvaultImpl));
-        
+
         address rm = vm.addr(2);
         address asset = address(factory);
 
@@ -357,7 +348,7 @@ contract FactoryTest is Test, IEvents {
 
         // Create Tokens and activate Markets
         uint amountEVaults = 100;
-        
+
         address[] memory eVaultsList = new address[](amountEVaults);
 
         for(uint i; i < amountEVaults; i++){

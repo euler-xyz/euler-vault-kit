@@ -37,6 +37,11 @@ abstract contract ERC20Module is IERC20, Base {
     }
 
     /// @inheritdoc IERC20
+    function totalSupply() external view virtual returns (uint) {
+        return loadMarketNonReentrant().totalBalances.toUint();
+    }
+
+    /// @inheritdoc IERC20
     function balanceOf(address account) external view virtual returns (uint) {
         return marketStorage.users[account].balance.toUint();
     }

@@ -12,8 +12,8 @@ interface IERC20 {
     /// @notice Decimals, always normalised to 18.
     function decimals() external view returns (uint8);
 
-    // /// @notice Sum of all share balances (non-increasing)
-    // function totalSupply() external view returns (uint);
+    /// @notice Sum of all share balances (non-increasing)
+    function totalSupply() external view returns (uint);
 
     /// @notice Balance of a particular account, in internal book-keeping units (non-increasing)
     function balanceOf(address account) external view returns (uint);
@@ -49,8 +49,8 @@ interface IERC4626 {
     /// @notice Vault underlying asset
     function asset() external view returns (address);
 
-    // /// @notice Total amount of managed assets
-    // function totalAssets() external view returns (uint);
+    /// @notice Total amount of managed assets
+    function totalAssets() external view returns (uint);
 
     // /// @notice Calculate amount of assets corresponding to the requested shares amount
     // function convertToAssets(uint shares) external view returns (uint);

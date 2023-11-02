@@ -58,7 +58,7 @@ contract EVault is ERC20Module, ERC4626Module, BorrowingModule, LiquidationModul
 
     function decimals() external view useView(MODULE_ERC20) override returns (uint8) {}
 
-    // function totalSupply() external view useView(MODULE_ERC20) override returns (uint) {}
+    function totalSupply() external view useView(MODULE_ERC20) override returns (uint) {}
 
     // function balanceOf(address account) external view useView(MODULE_ERC20) override returns (uint) {}
 
@@ -78,9 +78,9 @@ contract EVault is ERC20Module, ERC4626Module, BorrowingModule, LiquidationModul
     // // ----------------- ERC4626 -----------------
 
 
-    // function asset() external view useView(MODULE_ERC4626) override returns (address) {}
+    function asset() external view useView(MODULE_ERC4626) override returns (address) {}
 
-    // function totalAssets() external view useView(MODULE_ERC4626) override returns (uint) {}
+    function totalAssets() external view useView(MODULE_ERC4626) override returns (uint) {}
 
     // function convertToAssets(uint shares) public view useView(MODULE_ERC4626) override returns (uint) {}
 
