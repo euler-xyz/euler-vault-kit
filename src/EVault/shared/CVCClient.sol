@@ -5,6 +5,7 @@ pragma solidity ^0.8.0;
 import {Storage} from "./Storage.sol";
 import {Events} from "./Events.sol";
 import {Errors} from "./Errors.sol";
+import {ProxyUtils} from "./lib/ProxyUtils.sol";
 
 import {IERC20} from "../IEVault.sol";
 import {ICVC} from "euler-cvc/interfaces/ICreditVaultConnector.sol";
@@ -27,7 +28,7 @@ abstract contract CVCClient is Storage, Events, Errors {
         if (msg.sender == address(cvc)) {
             _;
         } else {
-            bytes memory result = cvc.callback(msg.sender, 0, msg.data);
+            bytes memory result = cvc.callback(msg.sender, 0, ProxyUtils.originalCalldata());
 
             assembly {
                 return(add(32, result), mload(result))

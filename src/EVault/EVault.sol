@@ -10,9 +10,11 @@ import {BorrowingModule} from "./modules/Borrowing.sol";
 import {LiquidationModule} from "./modules/Liquidation.sol";
 import {AdminModule} from "./modules/Admin.sol";
 
+import {ModuleDispatch} from "./modules/ModuleDispatch.sol";
+
 import "./shared/Constants.sol";
 
-contract EVault is ERC20Module, ERC4626Module, BorrowingModule, LiquidationModule, AdminModule {
+contract EVault is ModuleDispatch, ERC20Module, ERC4626Module, BorrowingModule, LiquidationModule, AdminModule {
     address immutable MODULE_ERC20;
     address immutable MODULE_ERC4626;
     address immutable MODULE_BORROWING;
@@ -185,47 +187,4 @@ contract EVault is ERC20Module, ERC4626Module, BorrowingModule, LiquidationModul
     // function protocolFeeShare() external view useView(MODULE_ADMIN) override returns (uint) {}
 
     // function convertFees() external use(MODULE_ADMIN) override {}
-
-
-
-    // ----------------- DISPATCH -----------------
-
-
-
-    modifier use(address module) {
-        _;
-        assembly {
-            calldatacopy(0, 0, calldatasize())
-            let result := delegatecall(gas(), module, 0, calldatasize(), 0, 0)
-            returndatacopy(0, 0, returndatasize())
-            switch result
-            case 0 { revert(0, returndatasize()) }
-            default { return(0, returndatasize()) }
-        }
-    }
-
-    modifier useView(address module) {
-        _;
-        ViewDelegate(address(this)).viewDelegate(module, msg.data);
-        assembly {
-            returndatacopy(0, 0, returndatasize())
-            return(0, returndatasize())
-        }
-    }
-
-    function viewDelegate(address module, bytes calldata payload) external {
-        if (msg.sender != address(this)) revert ("unauthorized");
-        (bool result, ) = module.delegatecall(payload);
-
-        assembly {
-            returndatacopy(0, 0, returndatasize())
-            switch result
-            case 0 { revert(0, returndatasize()) }
-            default { return(0, returndatasize()) }
-        }
-    }
-}
-
-interface ViewDelegate {
-    function viewDelegate(address, bytes memory) external view;
 }

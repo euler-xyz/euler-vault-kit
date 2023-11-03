@@ -7,6 +7,7 @@ import {Base} from "../shared/Base.sol";
 import {AssetTransfers} from "../shared/AssetTransfers.sol";
 import {BalanceUtils} from "../shared/BalanceUtils.sol";
 import {SafeERC20Lib} from "../shared/lib/SafeERC20Lib.sol";
+import {ProxyUtils} from "../shared/lib/ProxyUtils.sol";
 
 import "../shared/types/Types.sol";
 
@@ -16,7 +17,7 @@ abstract contract ERC4626Module is IERC4626, Base, AssetTransfers, BalanceUtils 
 
     /// @inheritdoc IERC4626
     function asset() external view virtual returns (address) {
-        (IERC20 asset_,) = proxyMetadata();
+        (IERC20 asset_,) = ProxyUtils.metadata();
         return address(asset_);
     }
 

@@ -6,19 +6,13 @@ import {Storage} from "./Storage.sol";
 import {Errors} from "./Errors.sol";
 import {RPow} from "./lib/RPow.sol";
 import {SafeERC20Lib} from "./lib/SafeERC20Lib.sol";
+import {ProxyUtils} from "./lib/ProxyUtils.sol";
 
 import "./types/Types.sol";
 
 contract Cache is Storage, Errors {
     using TypesLib for uint;
     using SafeERC20Lib for IERC20;
-
-    function proxyMetadata() internal pure returns (IERC20 marketAsset, IRiskManager riskManager) {
-        assembly {
-            marketAsset := shr(96, calldataload(sub(calldatasize(), 40)))
-            riskManager := shr(96, calldataload(sub(calldatasize(), 20)))
-        }
-    }
 
     // MarketCache
 
@@ -27,7 +21,7 @@ contract Cache is Storage, Errors {
 
         // Proxy metadata
 
-        (marketCache.asset, marketCache.riskManager) = proxyMetadata();
+        (marketCache.asset, marketCache.riskManager) = ProxyUtils.metadata();
 
         // Storage loads
 

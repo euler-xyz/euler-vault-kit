@@ -5,13 +5,15 @@ pragma solidity ^0.8.0;
 import {IERC20} from "../IEVault.sol";
 import {Base} from "../shared/Base.sol";
 
+import {ProxyUtils} from "../shared/lib/ProxyUtils.sol";
+
 import "../shared/types/Types.sol";
 
 abstract contract ERC20Module is IERC20, Base {
 
     /// @inheritdoc IERC20
     function name() external view virtual returns (string memory) {
-        (IERC20 asset_,) = proxyMetadata();
+        (IERC20 asset_,) = ProxyUtils.metadata();
 
         // Handle MKR like tokens returning bytes32
         (bool success, bytes memory data) = address(asset_).staticcall(abi.encodeWithSelector(IERC20.name.selector));
@@ -21,7 +23,7 @@ abstract contract ERC20Module is IERC20, Base {
 
     /// @inheritdoc IERC20
     function symbol() external view virtual returns (string memory) {
-        (IERC20 asset_,) = proxyMetadata();
+        (IERC20 asset_,) = ProxyUtils.metadata();
 
         // Handle MKR like tokens returning bytes32
         (bool success, bytes memory data) = address(asset_).staticcall(abi.encodeWithSelector(IERC20.symbol.selector));
@@ -31,7 +33,7 @@ abstract contract ERC20Module is IERC20, Base {
 
     /// @inheritdoc IERC20
     function decimals() external view virtual returns (uint8) {
-        (IERC20 asset_,) = proxyMetadata();
+        (IERC20 asset_,) = ProxyUtils.metadata();
 
         return asset_.decimals();
     }
