@@ -46,18 +46,19 @@ abstract contract ModuleDispatch is Base {
         } else {
             address _evc = address(evc);
             assembly {
-                mstore(0, 0x7d60c2fe00000000000000000000000000000000000000000000000000000000) // EVC.callback signature
-                mstore(4, caller()) // callback 1st argument - msg.sender
-                mstore(36, callvalue()) // callback 2nd argument - msg.value
-                mstore(68, 0x60) // callback 3rd argument - msg.data, offset to the start of encoding - 96 bytes (0x60)
-                mstore(100, sub(calldatasize(), PROXY_METADATA_LENGTH)) // msg.data length without proxy metadata
-                calldatacopy(132, 0, sub(calldatasize(), PROXY_METADATA_LENGTH)) // original calldata
-                let result := call(gas(), _evc, callvalue(), 0, add(92, calldatasize()), 0, 0)
+                mstore(0, 0x1f8b521500000000000000000000000000000000000000000000000000000000) // EVC.call signature
+                mstore(4, address()) // callback 1st argument - address(this)
+                mstore(36, caller()) // callback 2nd argument - msg.sender
+                mstore(68, callvalue()) // callback 3rd argument - msg.value
+                mstore(100, 128) // callback 4th argument - msg.data, offset to the start of encoding - 128 bytes
+                mstore(132, sub(calldatasize(), PROXY_METADATA_LENGTH)) // msg.data length without proxy metadata
+                calldatacopy(164, 0, sub(calldatasize(), PROXY_METADATA_LENGTH)) // original calldata
+                let result := call(gas(), _evc, callvalue(), 0, add(124, calldatasize()), 0, 0)
 
                 returndatacopy(0, 0, returndatasize())
                 switch result
                 case 0 { revert(0, returndatasize()) }
-                default { return(64, sub(returndatasize(), 64)) } // strip bytes encoding from callback return
+                default { return(64, sub(returndatasize(), 64)) } // strip bytes encoding from call return
             }
         }
     }

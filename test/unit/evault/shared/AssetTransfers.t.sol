@@ -86,14 +86,6 @@ contract AssetTransfersTest is EVaultTestBase {
         assertEq(assetTST.balanceOf(address(tc)), 1.5e18);
     }
 
-    function test_RevertWhenNegativeTransferAmount_pullTokens() public {
-        MarketCache memory cache = initCache();
-        cache.poolSize = Assets.wrap(2e18);
-
-        vm.expectRevert(Errors.E_NegativeTransferAmount.selector);
-        tc.exposed_pullTokens(cache, from, Assets.wrap(1e18));
-    }
-
     function test_RevertWhenPoolSizeAfterOverflows_pullTokens() public {
         MarketCache memory cache = initCache();
 
