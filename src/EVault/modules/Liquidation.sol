@@ -8,9 +8,8 @@ import {Base} from "../shared/Base.sol";
 import "../shared/types/Types.sol";
 
 abstract contract LiquidationModule is ILiquidation, Base {
-
 }
 
 contract Liquidation is LiquidationModule {
-    constructor(address factory, address cvc) Base(factory, cvc) {}
+    constructor(address evc) Base(evc) {}
 }

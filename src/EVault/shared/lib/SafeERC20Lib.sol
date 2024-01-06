@@ -3,7 +3,9 @@
 pragma solidity ^0.8.0;
 
 import {IERC20} from "../../IEVault.sol";
-import {Errors} from "../Errors.sol";
+import {RevertBytes} from "./RevertBytes.sol";
+
+import "hardhat/console.sol";
 
 library SafeERC20Lib {
     // WARNING: Must be very careful with this modifier. It resets the free memory pointer
@@ -13,7 +15,7 @@ library SafeERC20Lib {
     // use this modifier.
 
     modifier FREEMEM() {
-        uint origFreeMemPtr;
+        uint256 origFreeMemPtr;
 
         assembly {
             origFreeMemPtr := mload(0x40)
@@ -33,21 +35,23 @@ library SafeERC20Lib {
         }
     }
 
-
-    function safeTransferFrom(IERC20 token, address from, address to, uint value) internal {
-        (bool success, bytes memory data) = address(token).call(abi.encodeWithSelector(IERC20.transferFrom.selector, from, to, value));
-        if (!success || (data.length != 0 && !abi.decode(data, (bool)))) revertBytes(data);
+    function safeTransferFrom(IERC20 token, address from, address to, uint256 value) internal {
+        (bool success, bytes memory data) =
+            address(token).call(abi.encodeWithSelector(IERC20.transferFrom.selector, from, to, value));
+        if (!success || (data.length != 0 && !abi.decode(data, (bool)))) RevertBytes.revertBytes(data);
     }
 
-    function safeTransfer(IERC20 token, address to, uint value) internal {
-        (bool success, bytes memory data) = address(token).call(abi.encodeWithSelector(IERC20.transfer.selector, to, value));
-        if (!success || (data.length != 0 && !abi.decode(data, (bool)))) revertBytes(data);
+    function safeTransfer(IERC20 token, address to, uint256 value) internal {
+        (bool success, bytes memory data) =
+            address(token).call(abi.encodeWithSelector(IERC20.transfer.selector, to, value));
+        if (!success || (data.length != 0 && !abi.decode(data, (bool)))) RevertBytes.revertBytes(data);
     }
 
-    function callBalanceOf(IERC20 token, address account) internal view FREEMEM returns (uint) {
+    function callBalanceOf(IERC20 token, address account) internal view FREEMEM returns (uint256) {
         // We set a gas limit so that a malicious token can't eat up all gas and cause a liquidity check to fail.
 
-        (bool success, bytes memory data) = address(token).staticcall{gas: 200000}(abi.encodeWithSelector(IERC20.balanceOf.selector, account));
+        (bool success, bytes memory data) =
+            address(token).staticcall{gas: 200000}(abi.encodeWithSelector(IERC20.balanceOf.selector, account));
 
         // If token's balanceOf() call fails for any reason, return 0. This prevents malicious tokens from causing liquidity checks to fail.
         // If the contract doesn't exist (maybe because selfdestructed), then data.length will be 0 and we will return 0.
@@ -56,16 +60,5 @@ library SafeERC20Lib {
         if (!success || data.length < 32) return 0;
 
         return abi.decode(data, (uint256));
-    }
-
-    // TODO
-    function revertBytes(bytes memory errMsg) private pure {
-        if (errMsg.length > 0) {
-            assembly {
-                revert(add(32, errMsg), mload(errMsg))
-            }
-        }
-
-        revert Errors.E_EmptyError();
     }
 }

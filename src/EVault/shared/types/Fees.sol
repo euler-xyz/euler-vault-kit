@@ -7,23 +7,23 @@ import "./MarketCache.sol";
 import "./Shares.sol";
 
 library FeesLib {
-    function toUint(Fees self) pure internal returns (uint) {
+    function toUint(Fees self) internal pure returns (uint256) {
         return Fees.unwrap(self);
     }
 
-    function toAssetsDown(Fees self, MarketCache memory marketCache) pure internal returns (Assets) {
+    function toAssetsDown(Fees self, MarketCache memory marketCache) internal pure returns (Assets) {
         return SharesLib.toAssetsDown(TypesLib.toShares(Fees.unwrap(self)), marketCache);
     }
 
-    function toShares(Fees self) pure internal returns (Shares) {
+    function toShares(Fees self) internal pure returns (Shares) {
         return Shares.wrap(Fees.unwrap(self));
     }
 
-    function mulDiv(Fees self, uint multiplier, uint divisor) pure internal returns (Fees) {
-        return TypesLib.toFees(uint(Fees.unwrap(self)) * multiplier / divisor);
+    function mulDiv(Fees self, uint256 multiplier, uint256 divisor) internal pure returns (Fees) {
+        return TypesLib.toFees(uint256(Fees.unwrap(self)) * multiplier / divisor);
     }
 }
 
 function addFees(Fees a, Fees b) pure returns (Fees) {
-    return TypesLib.toFees(uint(Fees.unwrap(a)) + uint(Fees.unwrap(b)));
+    return TypesLib.toFees(uint256(Fees.unwrap(a)) + uint256(Fees.unwrap(b)));
 }

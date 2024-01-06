@@ -7,47 +7,43 @@ import "../Constants.sol";
 import "./MarketCache.sol";
 import "./Helpers.sol";
 
-
 library AssetsLib {
-    function toUint(Assets self) pure internal returns (uint) {
+    function toUint(Assets self) internal pure returns (uint256) {
         return Assets.unwrap(self);
     }
 
-    function isZero(Assets self) pure internal returns (bool) {
+    function isZero(Assets self) internal pure returns (bool) {
         return Assets.unwrap(self) == 0;
     }
 
-    function toSharesDown(Assets amount, MarketCache memory marketCache) pure internal returns (Shares) {
-        (uint totalAssets, uint totalBalances) = totalsVirtual(marketCache);
-        return TypesLib.toShares(
-            amount.toUint() * totalBalances / totalAssets
-        );
+    function toSharesDown(Assets amount, MarketCache memory marketCache) internal pure returns (Shares) {
+        (uint256 totalAssets, uint256 totalBalances) = totals(marketCache);
+        unchecked {
+            return
+                TypesLib.toShares(totalBalances == 0 ? amount.toUint() : amount.toUint() * totalBalances / totalAssets);
+        }
     }
 
-    // Exclude the asset amount from the pool size when converting to shares. It's used to get the shares amount after the deposit
-    function toSharesDownPremoney(Assets amount, MarketCache memory marketCache) pure internal returns (Shares) {
-        (uint totalAssets, uint totalBalances) = totalsVirtual(marketCache);
-        return TypesLib.toShares(
-            amount.toUint() * totalBalances / (totalAssets - amount.toUint())
-        );
+    function toSharesUp(Assets amount, MarketCache memory marketCache) internal pure returns (Shares) {
+        (uint256 totalAssets, uint256 totalBalances) = totals(marketCache);
+        unchecked {
+            return TypesLib.toShares(
+                totalBalances == 0
+                    ? amount.toUint()
+                    : (amount.toUint() * totalBalances + (totalAssets - 1)) / totalAssets
+            );
+        }
     }
 
-    function toSharesUp(Assets amount, MarketCache memory marketCache) pure internal returns (Shares) {
-        (uint totalAssets, uint totalBalances) = totalsVirtual(marketCache);
-        return TypesLib.toShares(
-            (amount.toUint() * totalBalances / totalAssets) + (mulmod(amount.toUint(), totalBalances, totalAssets) != 0 ? 1 : 0)
-        );
-    }
-
-    function toOwed(Assets self) pure internal returns (Owed) {
-        return TypesLib.toOwed(
-            uint(Assets.unwrap(self)) * INTERNAL_DEBT_PRECISION
-        );
+    function toOwed(Assets self) internal pure returns (Owed) {
+        unchecked {
+            return TypesLib.toOwed(uint256(Assets.unwrap(self)) * INTERNAL_DEBT_PRECISION);
+        }
     }
 }
 
 function addAssets(Assets a, Assets b) pure returns (Assets) {
-    return TypesLib.toAssets(uint(Assets.unwrap(a)) + uint(Assets.unwrap(b)));
+    return TypesLib.toAssets(uint256(Assets.unwrap(a)) + uint256(Assets.unwrap(b)));
 }
 
 function subAssets(Assets a, Assets b) pure returns (Assets) {

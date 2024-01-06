@@ -3,188 +3,183 @@
 pragma solidity ^0.8.0;
 
 import {Base} from "./shared/Base.sol";
-import {DToken} from "./DToken.sol";
-import {ERC20Module} from "./modules/ERC20.sol";
+import {TokenModule} from "./modules/Token.sol";
 import {ERC4626Module} from "./modules/ERC4626.sol";
 import {BorrowingModule} from "./modules/Borrowing.sol";
 import {LiquidationModule} from "./modules/Liquidation.sol";
-import {AdminModule} from "./modules/Admin.sol";
-
+import {FeesModule} from "./modules/Fees.sol";
+import {InitializeModule} from "./modules/Initialize.sol";
 import {ModuleDispatch} from "./modules/ModuleDispatch.sol";
 
-import "./shared/Constants.sol";
-
-contract EVault is ModuleDispatch, ERC20Module, ERC4626Module, BorrowingModule, LiquidationModule, AdminModule {
-    address immutable MODULE_ERC20;
-    address immutable MODULE_ERC4626;
-    address immutable MODULE_BORROWING;
-    address immutable MODULE_LIQUIDATION;
-    address immutable MODULE_ADMIN;
-
+contract EVault is
+    ModuleDispatch,
+    InitializeModule,
+    TokenModule,
+    ERC4626Module,
+    BorrowingModule,
+    LiquidationModule,
+    FeesModule
+{
     constructor(
-        address factory,
-        address cvc,
-        address MODULE_ERC20_,
+        address evc,
+        address MODULE_INITIALIZE_,
+        address MODULE_TOKEN_,
         address MODULE_ERC4626_,
         address MODULE_BORROWING_,
         address MODULE_LIQUIDATION_,
-        address MODULE_ADMIN_
-    ) Base(factory, cvc) {
-        MODULE_ERC20 = MODULE_ERC20_;
+        address MODULE_FEES_
+    ) Base(evc) {
+        MODULE_INITIALIZE = MODULE_INITIALIZE_;
+        MODULE_TOKEN = MODULE_TOKEN_;
         MODULE_ERC4626 = MODULE_ERC4626_;
         MODULE_BORROWING = MODULE_BORROWING_;
         MODULE_LIQUIDATION = MODULE_LIQUIDATION_;
-        MODULE_ADMIN = MODULE_ADMIN_;
+        MODULE_FEES = MODULE_FEES_;
     }
 
-    function initialize() external {
-        if (msg.sender != factory) revert E_Unauthorized();
-        if (marketStorage.lastInterestAccumulatorUpdate != 0) revert E_Initialized();
+    // ------------ Initialization -------------
 
-        marketStorage.lastInterestAccumulatorUpdate = uint40(block.timestamp);
-        marketStorage.interestAccumulator = INITIAL_INTEREST_ACCUMULATOR;
-        marketStorage.reentrancyLock = REENTRANCYLOCK__UNLOCKED;
-
-        address dTokenAddress = address(new DToken()); // TODO deploy from module to free up code space
-
-        emit DTokenCreated(dTokenAddress);
-    }
-
-
-    // ----------------- ERC20 -----------------
-
-
-    function name() external view useView(MODULE_ERC20) override returns (string memory) {}
-
-    function symbol() external view useView(MODULE_ERC20) override returns (string memory) {}
-
-    function decimals() external view useView(MODULE_ERC20) override returns (uint8) {}
-
-    function totalSupply() external view useView(MODULE_ERC20) override returns (uint) {}
-
-    // function balanceOf(address account) external view useView(MODULE_ERC20) override returns (uint) {}
-
-    // function allowance(address holder, address spender) external view useView(MODULE_ERC20) override returns (uint) {}
+    function initialize(address creator) external override use(MODULE_INITIALIZE) {}
 
 
 
-    // function transfer(address to, uint amount) external use(MODULE_ERC20) override returns (bool) {}
+    // ----------------- Token -----------------
 
-    // function transferFromMax(address from, address to) external use(MODULE_ERC20) override returns (bool) {}
+    function name() external view override useView(MODULE_TOKEN) returns (string memory) {}
 
-    // function transferFrom(address from, address to, uint amount) public use(MODULE_ERC20) override returns (bool) {}
+    function symbol() external view override useView(MODULE_TOKEN) returns (string memory) {}
 
-    // function approve(address spender, uint amount) external use(MODULE_ERC20) override returns (bool) {}
+    function decimals() external view override useView(MODULE_TOKEN) returns (uint8) {}
 
+    function totalSupply() external view override useView(MODULE_TOKEN) returns (uint256) {}
 
-    // // ----------------- ERC4626 -----------------
-
-
-    function asset() external view useView(MODULE_ERC4626) override returns (address) {}
-
-    function totalAssets() external view useView(MODULE_ERC4626) override returns (uint) {}
-
-    // function convertToAssets(uint shares) public view useView(MODULE_ERC4626) override returns (uint) {}
-
-    // function convertToShares(uint assets) public view useView(MODULE_ERC4626) override returns (uint) {}
-
-    // function maxDeposit(address) external view useView(MODULE_ERC4626) override returns (uint) {}
-
-    // function previewDeposit(uint assets) external view useView(MODULE_ERC4626) override returns (uint) {}
-
-    // function maxMint(address) external view useView(MODULE_ERC4626) override returns (uint) {}
-
-    // function previewMint(uint shares) external view useView(MODULE_ERC4626) override returns (uint) {}
-
-    // function maxWithdraw(address owner) external view useView(MODULE_ERC4626) override returns (uint) {}
-
-    // function previewWithdraw(uint assets) external view useView(MODULE_ERC4626) override returns (uint) {}
-
-    // function maxRedeem(address owner) external view useView(MODULE_ERC4626) override returns (uint) {}
-
-    // function previewRedeem(uint shares) external view useView(MODULE_ERC4626) override returns (uint) {}
+    // function balanceOf(address account) external view override useView(MODULE_TOKEN) returns (uint256) {}
 
 
 
-    function deposit(uint assets, address receiver) external use(MODULE_ERC4626) override returns (uint) {}
+    // function allowance(address holder, address spender) external view override useView(MODULE_TOKEN) returns (uint256) {}
 
-    // function mint(uint shares, address receiver) external use(MODULE_ERC4626) override returns (uint) {}
+    // function transfer(address to, uint256 amount) external override callThroughEVC use(MODULE_TOKEN) returns (bool) {}
 
-    // function withdraw(uint assets, address receiver, address owner) external use(MODULE_ERC4626)  override returns (uint) {}
+    // function transferFrom(address from, address to, uint256 amount) public override callThroughEVC use(MODULE_TOKEN) returns (bool) {}
 
-    // function redeem(uint shares, address receiver, address owner) external use(MODULE_ERC4626) override returns (uint) {}
+    // function approve(address spender, uint256 amount) external override use(MODULE_TOKEN) returns (bool) {}
+
+    // function transferFromMax(address from, address to) external override callThroughEVC use(MODULE_TOKEN) returns (bool) {}
+
+
+
+    // ----------------- ERC4626 -----------------
+
+    function asset() external view override useView(MODULE_ERC4626) returns (address) {}
+
+    function totalAssets() external view override useView(MODULE_ERC4626) returns (uint256) {}
+
+    // function convertToAssets(uint256 shares) public view override useView(MODULE_ERC4626) returns (uint256) {}
+
+    // function convertToShares(uint256 assets) public view override useView(MODULE_ERC4626) returns (uint256) {}
+
+    // function maxDeposit(address) public view override useView(MODULE_ERC4626) returns (uint256) {}
+
+    // function previewDeposit(uint256 assets) external view override useView(MODULE_ERC4626) returns (uint256) {}
+
+    // function maxMint(address) external view override useView(MODULE_ERC4626) returns (uint256) {}
+
+    // function previewMint(uint256 shares) external view override useView(MODULE_ERC4626) returns (uint256) {}
+
+    // function maxWithdraw(address owner) external view override useView(MODULE_ERC4626) returns (uint256) {}
+
+    // function previewWithdraw(uint256 assets) external view override useView(MODULE_ERC4626) returns (uint256) {}
+
+    // function maxRedeem(address owner) public view override useView(MODULE_ERC4626) returns (uint256) {}
+
+    // function previewRedeem(uint256 shares) external view override useView(MODULE_ERC4626) returns (uint256) {}
+
+
+
+    function deposit(uint256 assets, address receiver) external override callThroughEVC use(MODULE_ERC4626) returns (uint256) {}
+
+    // function mint(uint256 shares, address receiver) external override callThroughEVC use(MODULE_ERC4626) returns (uint256) {}
+
+    // function withdraw(uint256 assets, address receiver, address owner) external override callThroughEVC use(MODULE_ERC4626) returns (uint256) {}
+
+    // function redeem(uint256 shares, address receiver, address owner) external override callThroughEVC use(MODULE_ERC4626) returns (uint256) {}
 
 
 
     // ----------------- Borrowing -----------------
 
+    function totalBorrows() external view override useView(MODULE_BORROWING) returns (uint256) {}
 
+    function totalBorrowsExact() external view override useView(MODULE_BORROWING) returns (uint256) {}
 
-    function totalBorrows() external view useView(MODULE_BORROWING) override returns (uint) {}
+    // function poolSize() external view override useView(MODULE_BORROWING) returns (uint256) {}
 
-    function totalBorrowsExact() external view useView(MODULE_BORROWING) override returns (uint) {}
+    function debtOf(address account) external view override useView(MODULE_BORROWING) returns (uint256) {}
 
-    function debtOf(address account) external view useView(MODULE_BORROWING) override returns (uint) {}
+    // function debtOfExact(address account) external view override useView(MODULE_BORROWING) returns (uint256) {}
 
-    // function debtOfExact(address account) external view useView(MODULE_BORROWING) override returns (uint) {}
+    // function interestRate() external view override useView(MODULE_BORROWING) returns (int96) {}
 
-    // function interestRate() external view useView(MODULE_BORROWING) override returns (int96) {}
+    // function interestAccumulator() external view override useView(MODULE_BORROWING) returns (uint256) {}
 
-    // function interestAccumulator() external view useView(MODULE_BORROWING) override returns (uint) {}
+    // function collateralBalanceLocked(address collateral, address account) external view override useView(MODULE_BORROWING) returns (uint256 lockedBalance) {}
 
-    // function riskManager() external view useView(MODULE_BORROWING) override returns (address) {}
+    // function riskManager() external view override useView(MODULE_BORROWING) returns (address) {}
 
-    // function dToken() external useView(MODULE_BORROWING) override view returns (address) {}
+    // function dToken() external view override useView(MODULE_BORROWING) returns (address) {}
 
-    // function getCVC() external useView(MODULE_BORROWING) override view returns (address) {}
-
-
-    // function borrow(uint assets, address receiver) external use(MODULE_BORROWING) override {}
-
-    // function repay(uint assets, address receiver) external use(MODULE_BORROWING) override {}
-
-    // function wind(uint assets, address collateralReceiver) external use(MODULE_BORROWING) override returns (uint) {}
-
-    // function unwind(uint assets, address debtFrom) external use(MODULE_BORROWING) override returns (uint) {}
-
-    // function pullDebt(uint assets, address from) external use(MODULE_BORROWING) override {}
-
-    // function flashLoan(uint assets, bytes calldata data) external use(MODULE_BORROWING) override {}
-
-    // function touch() external use(MODULE_BORROWING) override {}
-
-    // function donateToReserves(uint shares) external use(MODULE_BORROWING) override {}
-
-    // function releaseController() external use(MODULE_BORROWING) override {}
-
-    // function checkAccountStatus(address account, address[] calldata collaterals)
-    //     external override returns (bytes4) { return super.checkAccountStatus(account, collaterals); }
-
-    function checkVaultStatus() public override returns (bytes4) { return super.checkVaultStatus(); }
-
-
-    // // ----------------- Liquidation -----------------
-
-
-    // function checkLiquidation(address liquidator, address violator, address collateral)
-    //     external view useView(MODULE_LIQUIDATION) override returns (uint maxRepay, uint maxYield) {}
-
-    // function liquidate(address violator, address collateral, uint repayAssets, uint minYieldBalance)
-    //     external use(MODULE_LIQUIDATION) override {}
+    // function getEVC() external view override useView(MODULE_BORROWING) returns (address) {}
 
 
 
-    // // ----------------- Admin -----------------
+    // function borrow(uint256 assets, address receiver) external override callThroughEVC use(MODULE_BORROWING) {}
+
+    // function repay(uint256 assets, address receiver) external override callThroughEVC use(MODULE_BORROWING) {}
+
+    // function wind(uint256 assets, address collateralReceiver) external override callThroughEVC use(MODULE_BORROWING) returns (uint256) {}
+
+    // function unwind(uint256 assets, address debtFrom) external override callThroughEVC use(MODULE_BORROWING) returns (uint256) {}
+
+    // function pullDebt(uint256 assets, address from) external override callThroughEVC use(MODULE_BORROWING) {}
+
+    // function flashLoan(uint256 assets, bytes calldata data) external override use(MODULE_BORROWING) {}
+
+    // function touch() external override callThroughEVC use(MODULE_BORROWING) {}
+
+    // function disableController() external override use(MODULE_BORROWING) {}
+
+    // function checkAccountStatus(address account, address[] calldata collaterals) public override returns (bytes4) {
+    //     return super.checkAccountStatus(account, collaterals);
+    // }
+
+    function checkVaultStatus() public override returns (bytes4) {
+        return super.checkVaultStatus();
+    }
 
 
 
-    // function feesBalance() external view useView(MODULE_ADMIN) override returns (uint) {}
+    // ----------------- Liquidation -----------------
 
-    // function feesBalanceUnderlying() external view useView(MODULE_ADMIN) override returns (uint) {}
+    // function checkLiquidation(address liquidator, address violator, address collateral) external view override useView(MODULE_LIQUIDATION) returns (uint256 maxRepay, uint256 maxYield) {}
 
-    // function interestFee() external view useView(MODULE_ADMIN) override returns (uint16) {}
+    // function liquidate(address violator, address collateral, uint256 repayAssets, uint256 minYieldBalance) external override callThroughEVC use(MODULE_LIQUIDATION) {}
 
-    // function protocolFeeShare() external view useView(MODULE_ADMIN) override returns (uint) {}
 
-    // function convertFees() external use(MODULE_ADMIN) override {}
+
+    // ----------------- Fees -----------------
+
+    // function feesBalance() external view override useView(MODULE_FEES) returns (uint256) {}
+
+    // function feesBalanceUnderlying() external view override useView(MODULE_FEES) returns (uint256) {}
+
+    // function interestFee() external view override useView(MODULE_FEES) returns (uint16) {}
+
+    // function protocolFeeShare() external view override useView(MODULE_FEES) returns (uint256) {}
+
+    // function protocolFeesHolder() external view override useView(MODULE_FEES) returns (address) {}
+
+    // function setProtocolFeesHolder(address newHolder) external override use(MODULE_FEES) {}
+
+    // function convertFees() external override callThroughEVC use(MODULE_FEES) {}
 }

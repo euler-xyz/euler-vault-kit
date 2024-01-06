@@ -10,17 +10,10 @@ import "./Types.sol";
 struct MarketCache {
     IERC20 asset;
     IRiskManager riskManager;
-
     Shares totalBalances;
     Owed totalBorrows;
-
-    Fees feesBalance;
-
-    uint interestAccumulator;
-
     uint40 lastInterestAccumulatorUpdate;
-    int96 interestRate;
-    uint16 interestFee;
-
-    Assets poolSize; // result of calling balanceOf on asset (in external units)
+    Assets poolSize;
+    Fees feesBalance;
+    uint256 interestAccumulator;
 }

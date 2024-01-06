@@ -2,19 +2,18 @@
 
 pragma solidity ^0.8.0;
 
-import {CVCClient} from "./CVCClient.sol";
+import {EVCClient} from "./EVCClient.sol";
 import {Cache} from "./Cache.sol";
 
 import "./types/Types.sol";
 
-abstract contract Base is CVCClient, Cache {
-    address immutable public factory;
+abstract contract Base is EVCClient, Cache {
+    constructor(address evc) EVCClient(evc) {}
 
-    constructor(address factory_, address cvc_) CVCClient(cvc_) {
-        factory = factory_;
+    // documentation only
+    modifier reentrantOK() {
+        _;
     }
-
-    modifier reentrantOK() { _; } // documentation only
 
     modifier nonReentrant() {
         if (marketStorage.reentrancyLock != REENTRANCYLOCK__UNLOCKED) revert E_Reentrancy();
@@ -24,56 +23,58 @@ abstract contract Base is CVCClient, Cache {
         marketStorage.reentrancyLock = REENTRANCYLOCK__UNLOCKED;
     }
 
-    function loadMarketAndAuthenticate(uint8 pauseType, bool isBorrowOperation) private returns (MarketCache memory marketCache, address account) {
+    modifier nonReentrantView() {
+        if (marketStorage.reentrancyLock != REENTRANCYLOCK__UNLOCKED) revert E_Reentrancy();
+        _;
+    }
+
+    function initOperation(uint24 operation, address checkAccount)
+        internal
+        returns (MarketCache memory marketCache, address account)
+    {
+        (marketCache, account) = initMarketAndAccountCommon(operation, false);
+
+        EVCRequireStatusChecks(checkAccount == ACCOUNT_CHECK_CALLER ? account : checkAccount);
+    }
+
+    function initOperationForBorrow(uint24 operation)
+        internal
+        returns (MarketCache memory marketCache, address account)
+    {
+        (marketCache, account) = initMarketAndAccountCommon(operation, true);
+
+        EVCRequireStatusChecks(account);
+    }
+
+    function initMarketAndAccountCommon(uint24 operation, bool checkController)
+        private
+        returns (MarketCache memory marketCache, address account)
+    {
         marketCache = loadAndUpdateMarket();
-        marketSnapshot(pauseType, marketCache); 
-        account = CVCAuthenticate(isBorrowOperation);
+        snapshotMarket(operation, marketCache);
+
+        account = EVCAuthenticate(checkController);
     }
 
-    function initMarketAndAccount(uint8 pauseType) internal returns (MarketCache memory marketCache, address account) {
-        (marketCache, account) = loadMarketAndAuthenticate(pauseType, false);
-    }
-
-    function initMarketAndAccountForBorrow(uint8 pauseType) internal returns (MarketCache memory marketCache, address account) {
-        (marketCache, account) = loadMarketAndAuthenticate(pauseType, true);
-    }
-
-    function checkMarketAndAccountStatus(MarketCache memory marketCache, address account) internal {
-        CVCRequireStatusChecks(account);
-        logMarketStatus(marketCache);
-    }
-
-    function logMarketStatus(MarketCache memory a) internal {
-        emit MarketStatus(a.totalBalances.toUint(), a.totalBorrows.toUintAssetsDown(), Fees.unwrap(a.feesBalance), a.poolSize.toUint(), a.interestAccumulator, a.interestRate, block.timestamp);
-    }
-
-    function getMarketSnapshot(uint8 operationType, MarketCache memory marketCache) internal pure returns (MarketSnapshot memory) {
-        return MarketSnapshot({
-            totalBalances: marketCache.totalBalances.toAssetsDown(marketCache),
-            totalBorrows: marketCache.totalBorrows,
-            performedOperations: operationType,
-            poolSize: marketCache.poolSize,
-            interestAccumulator: uint136(marketCache.interestAccumulator) // TODO cast down
-        });
-    }
-
-    function marketSnapshot(uint8 operationType, MarketCache memory marketCache) internal {
-        uint8 performedOperations = marketStorage.marketSnapshot.performedOperations;
+    function snapshotMarket(uint24 operation, MarketCache memory marketCache) internal {
+        uint24 performedOperations = marketStorage.marketSnapshot.performedOperations;
 
         if (performedOperations == 0) {
-            marketStorage.marketSnapshot = getMarketSnapshot(operationType, marketCache);
+            marketStorage.marketSnapshot = getMarketSnapshot(operation, marketCache);
         } else {
-            marketStorage.marketSnapshot.performedOperations = performedOperations | operationType;
+            marketStorage.marketSnapshot.performedOperations = performedOperations | operation;
         }
     }
 
-    function revertBytes(bytes memory errMsg) internal pure {
-        if (errMsg.length > 0) {
-            assembly {
-                revert(add(32, errMsg), mload(errMsg))
-            }
-        }
-
-        revert Errors.E_EmptyError();
+    function getMarketSnapshot(uint24 operation, MarketCache memory marketCache)
+        internal
+        pure
+        returns (MarketSnapshot memory)
+    {
+        return MarketSnapshot({
+            poolSize: marketCache.poolSize,
+            totalBorrows: marketCache.totalBorrows.toOwedAssetsSnapshot(),
+            performedOperations: operation
+        });
     }
 }

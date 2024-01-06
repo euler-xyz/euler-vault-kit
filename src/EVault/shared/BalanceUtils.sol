@@ -9,14 +9,19 @@ import {Errors} from "./Errors.sol";
 import "./types/Types.sol";
 
 abstract contract BalanceUtils is Storage, Events, Errors {
-    using TypesLib for uint;
+    using TypesLib for uint256;
 
-   // Balances
-
-    function increaseBalance(MarketCache memory marketCache, address account, Shares amount) internal {
+    function increaseBalance(
+        MarketCache memory marketCache,
+        address account,
+        address sender,
+        Shares amount,
+        Assets assets
+    ) internal {
         marketStorage.users[account].balance = marketStorage.users[account].balance + amount;
         marketStorage.totalBalances = marketCache.totalBalances = marketCache.totalBalances + amount;
 
         emit Transfer(address(0), account, amount.toUint());
+        emit Deposit(sender, account, assets.toUint(), amount.toUint());
     }
 }

@@ -2,15 +2,15 @@
 
 pragma solidity ^0.8.0;
 
-import {CVCClient} from "./CVCClient.sol";
+import {EVCClient} from "./EVCClient.sol";
 import {Cache} from "./Cache.sol";
 import {DToken} from "../DToken.sol";
 import {IRiskManager} from "../../IRiskManager.sol";
 
 import "./types/Types.sol";
 
-abstract contract BorrowUtils is CVCClient, Cache {
-    using TypesLib for uint;
+abstract contract BorrowUtils is EVCClient, Cache {
+    using TypesLib for uint256;
 
     function getCurrentOwed(MarketCache memory marketCache, address account, Owed owed) internal view returns (Owed) {
         // Don't bother loading the user's accumulator

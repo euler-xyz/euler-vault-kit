@@ -12,8 +12,4 @@ library ProxyUtils {
             riskManager := shr(96, calldataload(sub(calldatasize(), 20)))
         }
     }
-
-    function originalCalldata() internal pure returns (bytes memory data) {
-        return msg.data[: msg.data.length - 40];
-    }
 }

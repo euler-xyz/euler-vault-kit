@@ -5,50 +5,43 @@ pragma solidity ^0.8.0;
 import "./types/Types.sol";
 
 abstract contract Storage {
-
-    // ---------- singleton storage struct ----------
+    bool initialized;
+    address factory;
 
     MarketStorage marketStorage;
-
-    // ----------------------------------------------
 
     struct UserAsset {
         // Packed slot 14 + 18 = 32
         Shares balance;
         Owed owed;
-
-        uint interestAccumulator;
+        uint256 interestAccumulator;
     }
 
     struct MarketSnapshot {
-        // Packed slot 14 + 18 = 32
-        Assets totalBalances;
-        Owed totalBorrows;
-
-        // Packed slot 8 + 14 + 17 = 32
-        uint8 performedOperations;
+        // Packed slot 14 + 15 + 3 = 32
         Assets poolSize;
-        uint136 interestAccumulator;
+        OwedAssetsSnapshot totalBorrows;
+        uint24 performedOperations;
     }
 
     struct MarketStorage {
-        // Packed slot 5 + 12 + 12 + 2 + 1 = 32
-        uint40 lastInterestAccumulatorUpdate;
-        Fees feesBalance;
-        int96 interestRate;
-        uint16 interestFee;
+        // Packed slot 1 + 5 + 14 + 12 = 32
         uint8 reentrancyLock;
-
+        uint40 lastInterestAccumulatorUpdate;
+        Assets poolSize;
+        Fees feesBalance;
         // Packed slot 14 + 18 = 32
         Shares totalBalances;
         Owed totalBorrows;
-
-        uint interestAccumulator;
-
+        uint256 interestAccumulator;
         MarketSnapshot marketSnapshot;
-
+        // Packed slot 12 + 2
+        // Read on first item in a block (interest accrual). Read and written in vault status check (interest rate update).
+        // Not touched on other batch items.
+        int96 interestRate;
+        uint16 interestFee;
+        address protocolFeesHolder;
         mapping(address account => UserAsset) users;
-
-        mapping(address owner => mapping(address spender => uint allowance)) eVaultAllowance;
+        mapping(address owner => mapping(address spender => uint256 allowance)) eVaultAllowance;
     }
 }

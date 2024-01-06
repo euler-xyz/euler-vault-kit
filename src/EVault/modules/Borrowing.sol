@@ -9,33 +9,34 @@ import {BorrowUtils} from "../shared/BorrowUtils.sol";
 import "../shared/types/Types.sol";
 
 abstract contract BorrowingModule is IBorrowing, Base, BorrowUtils {
-    using TypesLib for uint;
+    using TypesLib for uint256;
 
     /// @inheritdoc IBorrowing
-    function totalBorrows() external view virtual returns (uint) {
-        MarketCache memory marketCache = loadMarketNonReentrant();
+    function totalBorrows() external view virtual nonReentrantView returns (uint256) {
+        MarketCache memory marketCache = loadMarket();
 
         return marketCache.totalBorrows.toUintAssetsDown();
     }
 
     /// @inheritdoc IBorrowing
-    function totalBorrowsExact() external view virtual returns (uint) {
-        return loadMarketNonReentrant().totalBorrows.toUint();
+    function totalBorrowsExact() external view virtual nonReentrantView returns (uint256) {
+        return loadMarket().totalBorrows.toUint();
     }
 
     /// @inheritdoc IBorrowing
-    function debtOf(address account) external view virtual returns (uint) {
-        MarketCache memory marketCache = loadMarketNonReentrant();
+    function debtOf(address account) external view virtual nonReentrantView returns (uint256) {
+        MarketCache memory marketCache = loadMarket();
 
         return getCurrentOwed(marketCache, account).toUintAssetsUp();
     }
 
+
     /// @inheritdoc IBorrowing
-    function checkVaultStatus() public virtual reentrantOK onlyCVCChecks returns (bytes4 magicValue) {
+    function checkVaultStatus() public virtual reentrantOK onlyEVCChecks returns (bytes4 magicValue) {
         magicValue = VAULT_STATUS_CHECK_RETURN_VALUE;
     }
 }
 
 contract Borrowing is BorrowingModule {
-    constructor(address factory, address cvc) Base(factory, cvc) {}
+    constructor(address evc) Base(evc) {}
 }
