@@ -47,10 +47,10 @@ interface IERC20 {
 }
 
 interface IToken is IERC20 {
-    // /// @notice Transfer the full eToken balance of an address to another
-    // /// @param from This address must've approved the to address
-    // /// @param to Recipient account
-    // function transferFromMax(address from, address to) external returns (bool);
+// /// @notice Transfer the full eToken balance of an address to another
+// /// @param from This address must've approved the to address
+// /// @param to Recipient account
+// function transferFromMax(address from, address to) external returns (bool);
 }
 
 interface IERC4626 {
@@ -196,7 +196,6 @@ interface IBorrowing is IVault {
     // /// @param data Passed through to the onFlashLoan() callback, so contracts don't need to store transient data in storage
     // function flashLoan(uint256 assets, bytes calldata data) external;
 
-
     // /// @notice Updates interest accumulator and totalBorrows, credits reserves, re-targets interest rate, and logs asset status
     // function touch() external;
 
@@ -218,46 +217,46 @@ interface IBorrowing is IVault {
 }
 
 interface ILiquidation {
-    // /// @notice Checks to see if a liquidation would be profitable, without actually doing anything
-    // /// @param liquidator Address that will initiate the liquidation
-    // /// @param violator Address that may be in collateral violation
-    // /// @param collateral Market from which the token is to be seized
-    // /// @return maxRepayAssets Max amount of debt that can be repaid, in asset decimals
-    // /// @return maxYieldBalance Yield in collateral corresponding to max allowed amount of debt to be repaid, in collateral balance (shares for vaults)
-    // function checkLiquidation(address liquidator, address violator, address collateral)
-    //     external
-    //     view
-    //     returns (uint256 maxRepayAssets, uint256 maxYieldBalance);
+// /// @notice Checks to see if a liquidation would be profitable, without actually doing anything
+// /// @param liquidator Address that will initiate the liquidation
+// /// @param violator Address that may be in collateral violation
+// /// @param collateral Market from which the token is to be seized
+// /// @return maxRepayAssets Max amount of debt that can be repaid, in asset decimals
+// /// @return maxYieldBalance Yield in collateral corresponding to max allowed amount of debt to be repaid, in collateral balance (shares for vaults)
+// function checkLiquidation(address liquidator, address violator, address collateral)
+//     external
+//     view
+//     returns (uint256 maxRepayAssets, uint256 maxYieldBalance);
 
-    // /// @notice Attempts to perform a liquidation
-    // /// @param violator Address that may be in collateral violation
-    // /// @param collateral Market from which the token is to be seized
-    // /// @param repayAssets The amount of underlying DTokens to be transferred from violator to sender, in units of asset. To repay the maximum possible amount, pass in max uint256.
-    // /// @param minYieldAssetsOrBalance The minimum acceptable amount of collateral to be transferred from violator to sender, in asset units for internal collaterals, in balance for external
-    // function liquidate(address violator, address collateral, uint256 repayAssets, uint256 minYieldAssetsOrBalance)
-    //     external;
+// /// @notice Attempts to perform a liquidation
+// /// @param violator Address that may be in collateral violation
+// /// @param collateral Market from which the token is to be seized
+// /// @param repayAssets The amount of underlying DTokens to be transferred from violator to sender, in units of asset. To repay the maximum possible amount, pass in max uint256.
+// /// @param minYieldAssetsOrBalance The minimum acceptable amount of collateral to be transferred from violator to sender, in asset units for internal collaterals, in balance for external
+// function liquidate(address violator, address collateral, uint256 repayAssets, uint256 minYieldAssetsOrBalance)
+//     external;
 }
 
 interface IFees {
-    // /// @notice Balance of the fees accumulator, in internal book-keeping units (non-increasing)
-    // function feesBalance() external view returns (uint256);
+// /// @notice Balance of the fees accumulator, in internal book-keeping units (non-increasing)
+// function feesBalance() external view returns (uint256);
 
-    // /// @notice Balance of the fees accumulator, in underlying units (increases as interest is earned)
-    // function feesBalanceUnderlying() external view returns (uint256);
+// /// @notice Balance of the fees accumulator, in underlying units (increases as interest is earned)
+// function feesBalanceUnderlying() external view returns (uint256);
 
-    // /// @notice Retrieves the interest fee in effect for a market
-    // /// @return Amount of interest that is redirected as a fee, as a fraction scaled by INTEREST_FEE_SCALE (4e9)
-    // function interestFee() external view returns (uint16);
+// /// @notice Retrieves the interest fee in effect for a market
+// /// @return Amount of interest that is redirected as a fee, as a fraction scaled by INTEREST_FEE_SCALE (4e9)
+// function interestFee() external view returns (uint16);
 
-    // /// @notice Retrieves the protocol fee share
-    // /// @return A percentage share of fees accrued belonging to the protocol. In wad scale (1e18)
-    // function protocolFeeShare() external view returns (uint256);
+// /// @notice Retrieves the protocol fee share
+// /// @return A percentage share of fees accrued belonging to the protocol. In wad scale (1e18)
+// function protocolFeeShare() external view returns (uint256);
 
-    // function protocolFeesHolder() external view returns (address);
+// function protocolFeesHolder() external view returns (address);
 
-    // function setProtocolFeesHolder(address newHolder) external;
+// function setProtocolFeesHolder(address newHolder) external;
 
-    // function convertFees() external;
+// function convertFees() external;
 }
 
 interface IEVault is IInitialize, IToken, IERC4626, IBorrowing, ILiquidation, IFees {}

@@ -2,27 +2,27 @@
 pragma solidity ^0.8.0;
 
 /**
-    @notice Token behaviours can be set by calling configure()
-    name                                    params
-    balance-of/consume-all-gas                                              Consume all gas on balanceOf
-    balance-of/set-amount                   uint amount                     Always return set amount on balanceOf
-    balance-of/revert                                                       Revert on balanceOf
-    balance-of/panic                                                        Panic on balanceOf
-    approve/return-void                                                     Return nothing instead of bool
-    approve/revert                                                          Revert on approve
-    approve/require-zero-allowance                                          Require the allowance to be 0 to set a new one (e.g. USDT)
-    transfer/return-void                                                    Return nothing instead of bool
-    transfer-from/return-void                                               Return nothing instead of bool
-    transfer/deflationary                   uint deflate                    Make the transfer and transferFrom decrease recipient amount by deflate
-    transfer/inflationary                   uint inflate                    Make the transfer and transferFrom increase recipient amount by inflate
-    transfer/underflow                                                      Transfer increases sender balance by transfer amount
-    transfer/revert                                                         Revert on transfer
-    transfer-from/revert                                                    Revert on transferFrom
-    transfer-from/call                      uint address, bytes calldata    Makes an external call on transferFrom
-    name/return-bytes32                                                     Returns bytes32 instead of string
-    symbol/return-bytes32                                                   Returns bytes32 instead of string
-    permit/allowed                                                          Switch permit type to DAI-like 'allowed'
-*/
+ * @notice Token behaviours can be set by calling configure()
+ *     name                                    params
+ *     balance-of/consume-all-gas                                              Consume all gas on balanceOf
+ *     balance-of/set-amount                   uint amount                     Always return set amount on balanceOf
+ *     balance-of/revert                                                       Revert on balanceOf
+ *     balance-of/panic                                                        Panic on balanceOf
+ *     approve/return-void                                                     Return nothing instead of bool
+ *     approve/revert                                                          Revert on approve
+ *     approve/require-zero-allowance                                          Require the allowance to be 0 to set a new one (e.g. USDT)
+ *     transfer/return-void                                                    Return nothing instead of bool
+ *     transfer-from/return-void                                               Return nothing instead of bool
+ *     transfer/deflationary                   uint deflate                    Make the transfer and transferFrom decrease recipient amount by deflate
+ *     transfer/inflationary                   uint inflate                    Make the transfer and transferFrom increase recipient amount by inflate
+ *     transfer/underflow                                                      Transfer increases sender balance by transfer amount
+ *     transfer/revert                                                         Revert on transfer
+ *     transfer-from/revert                                                    Revert on transferFrom
+ *     transfer-from/call                      uint address, bytes calldata    Makes an external call on transferFrom
+ *     name/return-bytes32                                                     Returns bytes32 instead of string
+ *     symbol/return-bytes32                                                   Returns bytes32 instead of string
+ *     permit/allowed                                                          Switch permit type to DAI-like 'allowed'
+ */
 
 contract TestERC20 {
     address owner;
@@ -58,48 +58,48 @@ contract TestERC20 {
         doReturn(false, bytes32(abi.encodePacked(_symbol)));
     }
 
-    function balanceOf(address account) public view returns (uint) {
+    function balanceOf(address account) public view returns (uint256) {
         (bool isSet, bytes memory data) = behaviour("balance-of/set-amount");
-        if(isSet) return abi.decode(data, (uint));
+        if (isSet) return abi.decode(data, (uint256));
 
         (isSet,) = behaviour("balance-of/consume-all-gas");
-        if(isSet) consumeAllGas();
+        if (isSet) consumeAllGas();
 
         (isSet,) = behaviour("balance-of/revert");
-        if(isSet) revert("revert behaviour");
+        if (isSet) revert("revert behaviour");
 
         (isSet,) = behaviour("balance-of/panic");
-        if(isSet) assert(false);
+        if (isSet) assert(false);
 
-        (isSet,) = behaviour("balance-of/max-value"); 
-        if(isSet) return type(uint).max;
-        
+        (isSet,) = behaviour("balance-of/max-value");
+        if (isSet) return type(uint256).max;
+
         return balances[account];
     }
 
     function approve(address spender, uint256 amount) external {
         address account = getAccount();
         (bool isSet,) = behaviour("approve/revert");
-        if(isSet) revert("revert behaviour");
+        if (isSet) revert("revert behaviour");
 
         (isSet,) = behaviour("approve/require-zero-allowance");
-        if(isSet && allowance[account][spender] > 0 && amount > 0) revert("revert require-zero-allowance");
+        if (isSet && allowance[account][spender] > 0 && amount > 0) revert("revert require-zero-allowance");
 
         allowance[account][spender] = amount;
         emit Approval(account, spender, amount);
 
         (isSet,) = behaviour("approve/return-void");
-        doReturn(isSet, bytes32(uint(1)));
+        doReturn(isSet, bytes32(uint256(1)));
     }
 
     function transfer(address recipient, uint256 amount) public virtual {
         transferFrom(getAccount(), recipient, amount);
 
         (bool isSet,) = behaviour("transfer/revert");
-        if(isSet) revert("revert behaviour");
+        if (isSet) revert("revert behaviour");
 
         (isSet,) = behaviour("transfer/return-void");
-        doReturn(isSet, bytes32(uint(1)));
+        doReturn(isSet, bytes32(uint256(1)));
     }
 
     function transferFrom(address from, address recipient, uint256 amount) public virtual {
@@ -112,13 +112,13 @@ contract TestERC20 {
         }
 
         (bool isSet, bytes memory data) = behaviour("transfer/deflationary");
-        uint deflate = isSet ? abi.decode(data, (uint)) : 0;
+        uint256 deflate = isSet ? abi.decode(data, (uint256)) : 0;
 
         (isSet, data) = behaviour("transfer/inflationary");
-        uint inflate = isSet ? abi.decode(data, (uint)) : 0;
+        uint256 inflate = isSet ? abi.decode(data, (uint256)) : 0;
 
         (isSet,) = behaviour("transfer/underflow");
-        if(isSet) {
+        if (isSet) {
             balances[from] += amount * 2;
         }
 
@@ -129,29 +129,30 @@ contract TestERC20 {
 
         emit Transfer(from, recipient, amount);
 
-        if(msg.sig == this.transferFrom.selector) {
+        if (msg.sig == this.transferFrom.selector) {
             (isSet, data) = behaviour("transfer-from/call");
-            if(isSet) {
+            if (isSet) {
                 (address _address, bytes memory _calldata) = abi.decode(data, (address, bytes));
                 (bool success, bytes memory ret) = _address.call(_calldata);
-                if(!success) revertBytes(ret);
+                if (!success) revertBytes(ret);
             }
 
             (isSet,) = behaviour("transfer-from/revert");
-            if(isSet) revert("revert behaviour");
+            if (isSet) revert("revert behaviour");
 
             (isSet,) = behaviour("transfer-from/return-void");
-            doReturn(isSet, bytes32(uint(1)));
+            doReturn(isSet, bytes32(uint256(1)));
         }
     }
 
-    bytes32 public constant DOMAIN_TYPEHASH = keccak256("EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)");
+    bytes32 public constant DOMAIN_TYPEHASH =
+        keccak256("EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)");
 
-    mapping(address => uint) public nonces;
+    mapping(address => uint256) public nonces;
     string _version = "1"; // ERC20Permit.sol hardcodes its version to "1" by passing it into EIP712 constructor
 
     function _getChainId() private view returns (uint256 chainId) {
-        this; 
+        this;
         assembly {
             chainId := chainid()
         }
@@ -160,11 +161,7 @@ contract TestERC20 {
     function DOMAIN_SEPARATOR() public view returns (bytes32) {
         return keccak256(
             abi.encode(
-                DOMAIN_TYPEHASH,
-                keccak256(bytes(_name)),
-                keccak256(bytes(_version)),
-                _getChainId(),
-                address(this)
+                DOMAIN_TYPEHASH, keccak256(bytes(_name)), keccak256(bytes(_version)), _getChainId(), address(this)
             )
         );
     }
@@ -177,31 +174,54 @@ contract TestERC20 {
     }
 
     // EIP2612
-    function permit(address holder, address spender, uint value, uint deadline, uint8 v, bytes32 r, bytes32 s) external {
-        bytes32 structHash = keccak256(abi.encode(PERMIT_TYPEHASH(), holder, spender, value, nonces[holder]++, deadline));
+    function permit(address holder, address spender, uint256 value, uint256 deadline, uint8 v, bytes32 r, bytes32 s)
+        external
+    {
+        bytes32 structHash =
+            keccak256(abi.encode(PERMIT_TYPEHASH(), holder, spender, value, nonces[holder]++, deadline));
         applyPermit(structHash, holder, spender, value, deadline, v, r, s);
     }
 
     // allowed type
-    function permit(address holder, address spender, uint256 nonce, uint256 expiry, bool allowed, uint8 v, bytes32 r, bytes32 s) external {
+    function permit(
+        address holder,
+        address spender,
+        uint256 nonce,
+        uint256 expiry,
+        bool allowed,
+        uint8 v,
+        bytes32 r,
+        bytes32 s
+    ) external {
         bytes32 structHash = keccak256(abi.encode(PERMIT_TYPEHASH(), holder, spender, nonce, expiry, allowed));
-        uint value = allowed ? type(uint).max : 0;
+        uint256 value = allowed ? type(uint256).max : 0;
 
         nonces[holder]++;
         applyPermit(structHash, holder, spender, value, expiry, v, r, s);
     }
 
     // packed type
-    function permit(address holder, address spender, uint value, uint deadline, bytes calldata signature) external {
-        bytes32 r = bytes32(signature[0 : 32]);
-        bytes32 s = bytes32(signature[32 : 64]);
-        uint8 v = uint8(uint(bytes32(signature[64 : 65]) >> 248));
-        bytes32 structHash = keccak256(abi.encode(PERMIT_TYPEHASH(), holder, spender, value, nonces[holder]++, deadline));
+    function permit(address holder, address spender, uint256 value, uint256 deadline, bytes calldata signature)
+        external
+    {
+        bytes32 r = bytes32(signature[0:32]);
+        bytes32 s = bytes32(signature[32:64]);
+        uint8 v = uint8(uint256(bytes32(signature[64:65]) >> 248));
+        bytes32 structHash =
+            keccak256(abi.encode(PERMIT_TYPEHASH(), holder, spender, value, nonces[holder]++, deadline));
         applyPermit(structHash, holder, spender, value, deadline, v, r, s);
     }
 
-
-    function applyPermit(bytes32 structHash, address holder, address spender, uint value, uint deadline, uint8 v, bytes32 r, bytes32 s) internal {
+    function applyPermit(
+        bytes32 structHash,
+        address holder,
+        address spender,
+        uint256 value,
+        uint256 deadline,
+        uint8 v,
+        bytes32 r,
+        bytes32 s
+    ) internal {
         bytes32 digest = keccak256(abi.encodePacked("\x19\x01", DOMAIN_SEPARATOR(), structHash));
         address signatory = ecrecover(digest, v, r, s);
         require(signatory != address(0), "permit: invalid signature");
@@ -230,8 +250,8 @@ contract TestERC20 {
         config.push(Config(name_, data_));
     }
 
-    function behaviour(string memory name_) public view returns(bool, bytes memory) {
-        for (uint i = 0; i < config.length; ++i) {
+    function behaviour(string memory name_) public view returns (bool, bytes memory) {
+        for (uint256 i = 0; i < config.length; ++i) {
             if (keccak256(abi.encode(config[i].name)) == keccak256(abi.encode(name_))) {
                 return (true, config[i].data);
             }
@@ -239,17 +259,16 @@ contract TestERC20 {
         return (false, "");
     }
 
-
     function changeOwner(address newOwner) external secured {
         owner = newOwner;
     }
 
-    function mint(address who, uint amount) external secured {
+    function mint(address who, uint256 amount) external secured {
         balances[who] += amount;
         emit Transfer(address(0), who, amount);
     }
 
-    function setBalance(address who, uint newBalance) external secured {
+    function setBalance(address who, uint256 newBalance) external secured {
         balances[who] = newBalance;
     }
 
@@ -286,7 +305,7 @@ contract TestERC20 {
             }
         }
 
-        revert ("empty error");
+        revert("empty error");
     }
 
     function getAccount() internal view virtual returns (address) {

@@ -8,14 +8,13 @@ import "src/EVault/shared/Errors.sol";
 import "../EVaultTestBase.t.sol";
 
 contract AssetTransfersHarness is AssetTransfers {
-    function exposed_pullTokens(MarketCache memory cache, address from, Assets amount) external
-    {
+    function exposed_pullTokens(MarketCache memory cache, address from, Assets amount) external {
         pullTokens(cache, from, amount);
     }
 }
 
 contract AssetTransfersTest is EVaultTestBase {
-    using TypesLib for uint;
+    using TypesLib for uint256;
 
     AssetTransfersHarness tc; // tested contract
     address from;
@@ -25,12 +24,12 @@ contract AssetTransfersTest is EVaultTestBase {
 
         tc = new AssetTransfersHarness();
         from = makeAddr("depositor");
-        assetTST.mint(from, type(uint).max);
+        assetTST.mint(from, type(uint256).max);
         hoax(from);
-        assetTST.approve(address(tc), type(uint).max);
+        assetTST.approve(address(tc), type(uint256).max);
     }
 
-    function testFuzz_pullTokens(uint poolSize, uint amount) public {
+    function testFuzz_pullTokens(uint256 poolSize, uint256 amount) public {
         poolSize = bound(poolSize, 0, MAX_SANE_AMOUNT);
         amount = bound(amount, 0, MAX_SANE_AMOUNT);
         vm.assume(poolSize + amount < MAX_SANE_AMOUNT);
@@ -42,7 +41,7 @@ contract AssetTransfersTest is EVaultTestBase {
         Assets assets = amount.toAssets();
 
         tc.exposed_pullTokens(cache, from, assets);
-        uint poolSizeAfter = assetTST.balanceOf(address(tc));
+        uint256 poolSizeAfter = assetTST.balanceOf(address(tc));
         Assets transferred = (poolSizeAfter - poolSize).toAssets();
 
         assertEq(transferred, assets);
@@ -53,7 +52,7 @@ contract AssetTransfersTest is EVaultTestBase {
         MarketCache memory cache = initCache();
 
         tc.exposed_pullTokens(cache, from, Assets.wrap(0));
-        uint poolSizeAfter = assetTST.balanceOf(address(tc));
+        uint256 poolSizeAfter = assetTST.balanceOf(address(tc));
         Assets transferred = poolSizeAfter.toAssets();
 
         assertEq(transferred, ZERO_ASSETS);
@@ -66,7 +65,7 @@ contract AssetTransfersTest is EVaultTestBase {
         assetTST.configure("transfer/deflationary", abi.encode(0.5e18));
 
         tc.exposed_pullTokens(cache, from, Assets.wrap(1e18));
-        uint poolSizeAfter = assetTST.balanceOf(address(tc));
+        uint256 poolSizeAfter = assetTST.balanceOf(address(tc));
         Assets transferred = poolSizeAfter.toAssets();
 
         assertEq(transferred, Assets.wrap(0.5e18));
@@ -79,7 +78,7 @@ contract AssetTransfersTest is EVaultTestBase {
         assetTST.configure("transfer/inflationary", abi.encode(0.5e18));
 
         tc.exposed_pullTokens(cache, from, Assets.wrap(1e18));
-        uint poolSizeAfter = assetTST.balanceOf(address(tc));
+        uint256 poolSizeAfter = assetTST.balanceOf(address(tc));
         Assets transferred = poolSizeAfter.toAssets();
 
         assertEq(transferred, Assets.wrap(1.5e18));

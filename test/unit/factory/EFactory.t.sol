@@ -130,14 +130,14 @@
 
 //         // Create Tokens and activate Markets
 //         uint amountEVaults = 100;
-        
+
 //         address[] memory eVaultsList = new address[](amountEVaults);
 
 //         for(uint i; i < amountEVaults; i++){
 //             TestERC20 TST = new TestERC20("Test Token", "TST" , 18, false);
 //             MockEVault eVault = MockEVault(factory.activateMarket(address(TST), address(rm), ""));
 //             eVaultsList[i] = address(eVault);
-//         }   
+//         }
 
 //         //get eVaults List
 //         address[] memory listEVaultsTest;
@@ -167,7 +167,7 @@
 //         }
 
 //         assertEq(listEFactory, listEVaultsTest);
-        
+
 //     }
 
 //     function test_getEVaultConfig() public {
@@ -224,7 +224,7 @@
 
 //         vm.expectEmit(true, false, false, false, address(factory));
 //         emit EFactory.SetUpgradeAdmin(newUpgradeAdmin);
-        
+
 //         vm.prank(upgradeAdmin);
 //         factory.setUpgradeAdmin(newUpgradeAdmin);
 //     }
@@ -234,7 +234,7 @@
 
 //         vm.expectEmit(true, false, false, false, address(factory));
 //         emit EFactory.SetGovernorAdmin(newGovernorAdmin);
-        
+
 //         vm.prank(upgradeAdmin);
 //         factory.setGovernorAdmin(newGovernorAdmin);
 //     }
@@ -319,7 +319,7 @@
 //         vm.prank(upgradeAdmin);
 //         vm.expectRevert(EFactory.E_BadAddress.selector);
 //         factory.setUpgradeAdmin(address(0));
-        
+
 //         vm.prank(upgradeAdmin);
 //         vm.expectRevert(EFactory.E_BadAddress.selector);
 //         factory.setGovernorAdmin(address(0));
@@ -357,7 +357,7 @@
 //             TestERC20 TST = new TestERC20("Test Token", "TST" , 18, false);
 //             MockEVault eVault = MockEVault(factory.activateMarket(address(TST), address(rm), ""));
 //             eVaultsList[i] = address(eVault);
-//         }   
+//         }
 
 //         uint startIndex = 0;
 //         uint amountNumbers = amountEVaults + 1;

@@ -47,11 +47,10 @@ abstract contract TokenModule is IToken, Base, BalanceUtils {
         return marketStorage.eVaultAllowance[holder][spender];
     }
 
-        /// @inheritdoc IERC20
+    /// @inheritdoc IERC20
     function transfer(address to, uint256 amount) external virtual reentrantOK returns (bool) {
         return transferFrom(address(0), to, amount);
     }
-
 
     /// @inheritdoc IERC20
     function transferFrom(address from, address to, uint256 amount) public virtual nonReentrant returns (bool) {

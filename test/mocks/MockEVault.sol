@@ -3,11 +3,9 @@
 pragma solidity ^0.8.0;
 
 contract MockEVault {
-    constructor(address factory_, address evc_) {
-    }
+    constructor(address factory_, address evc_) {}
 
-    function initialize() external {
-    }
+    function initialize() external {}
 
     function implementation() external pure returns (string memory) {
         return "TRANSPARENT";

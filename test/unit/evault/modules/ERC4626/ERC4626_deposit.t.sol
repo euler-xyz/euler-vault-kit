@@ -8,7 +8,8 @@ import {Events} from "src/EVault/shared/Events.sol";
 import "src/EVault/shared/types/Types.sol";
 
 contract ERC4626Test_Deposit is EVaultTestBase {
-    using TypesLib for uint;
+    using TypesLib for uint256;
+
     address user;
     address user1;
 
@@ -18,13 +19,13 @@ contract ERC4626Test_Deposit is EVaultTestBase {
         user = makeAddr("depositor");
         user1 = makeAddr("user1");
 
-        assetTST.mint(user1, type(uint).max);
+        assetTST.mint(user1, type(uint256).max);
         hoax(user1);
-        assetTST.approve(address(eTST), type(uint).max);
+        assetTST.approve(address(eTST), type(uint256).max);
 
-        assetTST.mint(user, type(uint).max);
+        assetTST.mint(user, type(uint256).max);
         startHoax(user);
-        assetTST.approve(address(eTST), type(uint).max);
+        assetTST.approve(address(eTST), type(uint256).max);
     }
 
     function test_maxSaneAmount() public {
@@ -66,7 +67,7 @@ contract ERC4626Test_Deposit is EVaultTestBase {
 
     //     vm.expectEmit();
     //     emit Events.RequestDeposit({owner: user, receiver: receiver, assets: amount});
-    //     vm.expectEmit(address(eTST)); 
+    //     vm.expectEmit(address(eTST));
     //     emit Events.Transfer({from: address(0), to: receiver, value: shares});
     //     vm.expectEmit();
     //     emit Events.Deposit({sender: user, owner: receiver, assets: amount, shares: shares});
@@ -85,11 +86,11 @@ contract ERC4626Test_Deposit is EVaultTestBase {
     // }
 
     function test_defaultReceiver() public {
-        uint amount = 1e18;
+        uint256 amount = 1e18;
 
         vm.expectEmit();
         emit Events.RequestDeposit({owner: user, receiver: user, assets: amount});
-        vm.expectEmit(address(eTST)); 
+        vm.expectEmit(address(eTST));
         emit Events.Transfer({from: address(0), to: user, value: amount});
         vm.expectEmit();
         emit Events.Deposit({sender: user, owner: user, assets: amount, shares: amount});
@@ -112,18 +113,18 @@ contract ERC4626Test_Deposit is EVaultTestBase {
         address user2 = makeAddr("user2");
         startHoax(user2);
 
-        eTST.deposit(type(uint).max, user2);
+        eTST.deposit(type(uint256).max, user2);
 
         assertEq(eTST.totalAssets(), 0);
         assertEq(eTST.balanceOf(user2), 0);
         assertEq(eTST.totalSupply(), 0);
 
-        uint walletBalance = 2e18;
+        uint256 walletBalance = 2e18;
 
         assetTST.mint(user2, walletBalance);
-        assetTST.approve(address(eTST), type(uint).max);
+        assetTST.approve(address(eTST), type(uint256).max);
 
-        eTST.deposit(type(uint).max, user2);
+        eTST.deposit(type(uint256).max, user2);
 
         assertEq(eTST.totalAssets(), walletBalance);
         assertEq(eTST.balanceOf(user2), walletBalance);
