@@ -4,3 +4,6 @@
 [submodule "lib/euler-cvc"]
 	path = lib/euler-cvc
 	url = https://github.com/euler-xyz/euler-cvc
+[submodule "lib/ethereum-vault-connector"]
+	path = lib/ethereum-vault-connector
+	url = https://github.com/euler-xyz/ethereum-vault-connector
