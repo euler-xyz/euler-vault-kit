@@ -20,6 +20,13 @@ contract EVault is
     LiquidationModule,
     FeesModule
 {
+    address immutable MODULE_INITIALIZE;
+    address immutable MODULE_TOKEN;
+    address immutable MODULE_ERC4626;
+    address immutable MODULE_BORROWING;
+    address immutable MODULE_LIQUIDATION;
+    address immutable MODULE_FEES;
+
     constructor(
         address evc,
         address MODULE_INITIALIZE_,

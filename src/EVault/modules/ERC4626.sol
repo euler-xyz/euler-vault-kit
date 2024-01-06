@@ -48,6 +48,18 @@ abstract contract ERC4626Module is IERC4626, Base, AssetTransfers, BalanceUtils 
 
         return shares.toUint();
     }
+
+    function finalizeDeposit(
+        MarketCache memory marketCache,
+        Assets assets,
+        Shares shares,
+        address sender,
+        address receiver
+    ) private {
+        pullTokens(marketCache, sender, assets);
+
+        increaseBalance(marketCache, receiver, sender, shares, assets);
+    }
 }
 
 contract ERC4626 is ERC4626Module {

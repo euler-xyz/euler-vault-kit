@@ -2,7 +2,6 @@
 
 pragma solidity ^0.8.0;
 
-import "hardhat/console.sol";
 import "../Errors.sol";
 import "../Constants.sol";
 

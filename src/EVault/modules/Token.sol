@@ -15,16 +15,14 @@ abstract contract TokenModule is IToken, Base, BalanceUtils {
 
     /// @inheritdoc IERC20
     function name() external view virtual reentrantOK returns (string memory) {
-        (, IRiskManager riskManager) = ProxyUtils.metadata();
-
-        return riskManager.marketName(address(this));
+        // TODO name()
+        return "";
     }
 
     /// @inheritdoc IERC20
     function symbol() external view virtual reentrantOK returns (string memory) {
-        (, IRiskManager riskManager) = ProxyUtils.metadata();
-
-        return riskManager.marketSymbol(address(this));
+        // TODO symbol()
+        return "";
     }
 
     /// @inheritdoc IERC20
@@ -47,6 +45,18 @@ abstract contract TokenModule is IToken, Base, BalanceUtils {
     /// @inheritdoc IERC20
     function allowance(address holder, address spender) external view virtual nonReentrantView returns (uint256) {
         return marketStorage.eVaultAllowance[holder][spender];
+    }
+
+        /// @inheritdoc IERC20
+    function transfer(address to, uint256 amount) external virtual reentrantOK returns (bool) {
+        return transferFrom(address(0), to, amount);
+    }
+
+
+    /// @inheritdoc IERC20
+    function transferFrom(address from, address to, uint256 amount) public virtual nonReentrant returns (bool) {
+        // TODO transferFrom()
+        return true;
     }
 }
 

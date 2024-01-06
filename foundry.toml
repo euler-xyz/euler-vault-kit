@@ -5,13 +5,22 @@ libs = ["lib"]
 
 optimizer = true
 optimizer_runs = 20_000
-solc = "0.8.22"
+solc = "0.8.23"
+
+fs_permissions = [{ access = "read-write", path = "./"}]
 
 etherscan_api_key = "2WRUJ9EEBUYAZQRAPRJPXDZ6WA3VWQU4B4"
 remappings = [
-  "euler-cvc/=lib/euler-cvc/src"
+  "ethereum-vault-connector/=lib/ethereum-vault-connector/src"
 ]
 gas_reports = ["*"]
+
+
+[profile.default.fmt]
+ignore = [
+    "EVault/EVault.sol"
+]
+
 
 [profile.default.fuzz]
 max_test_rejects = 1_000_000

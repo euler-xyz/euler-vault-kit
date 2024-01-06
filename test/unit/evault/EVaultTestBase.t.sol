@@ -3,18 +3,20 @@ pragma solidity ^0.8.13;
 
 import {Test, console2, stdError} from "forge-std/Test.sol";
 
-import {EVaultFactory} from "src/EVaultFactory/EVaultFactory.sol";
+import {EFactory} from "src/EFactory/EFactory.sol";
 
 import {EVault} from "src/EVault/EVault.sol";
-import {ERC20} from "src/EVault/modules/ERC20.sol";
+
+import {Initialize} from "src/EVault/modules/Initialize.sol";
+import {Token} from "src/EVault/modules/Token.sol";
 import {ERC4626} from "src/EVault/modules/ERC4626.sol";
 import {Borrowing} from "src/EVault/modules/Borrowing.sol";
 import {Liquidation} from "src/EVault/modules/Liquidation.sol";
-import {Admin} from "src/EVault/modules/Admin.sol";
+import {FeesInstance} from "src/EVault/modules/Fees.sol";
 
 import {IEVault, IERC20} from "src/EVault/IEVault.sol";
 
-import {CreditVaultConnector} from "lib/euler-cvc/src/CreditVaultConnector.sol";
+import {EthereumVaultConnector} from "ethereum-vault-connector/EthereumVaultConnector.sol";
 
 import {TestERC20} from "../../mocks/TestERC20.sol";
 import {MockRiskManager} from "../../mocks/MockRiskManager.sol";
@@ -25,30 +27,31 @@ import "src/EVault/shared/Constants.sol";
 
 
 contract EVaultTestBase is Test, AssertionsCustomTypes {
-    CreditVaultConnector public cvc;
-    EVaultFactory public factory;
+    EthereumVaultConnector public evc;
+    EFactory public factory;
     TestERC20 assetTST;
     IEVault public eTST;
 
     function setUp() public virtual {
         address admin = vm.addr(1000);
-        factory = new EVaultFactory(admin);
+        factory = new EFactory(admin);
 
-		cvc = new CreditVaultConnector();
+		evc = new EthereumVaultConnector();
 
-		address erc20Module = address(new ERC20(address(factory), address(cvc)));
-		address erc4626Module = address(new ERC4626(address(factory), address(cvc)));
-		address borrowingModule = address(new Borrowing(address(factory), address(cvc)));
-		address liquidationModule = address(new Liquidation(address(factory), address(cvc)));
-		address adminModule = address(new Admin(address(factory), address(cvc)));
+		address initializeModule = address(new Initialize(address(evc)));
+		address tokenModule = address(new Token(address(evc)));
+		address erc4626Module = address(new ERC4626(address(evc)));
+		address borrowingModule = address(new Borrowing(address(evc)));
+		address liquidationModule = address(new Liquidation(address(evc)));
+		address feesModule = address(new FeesInstance(address(evc)));
 
-		address evaultImpl = address(new EVault(address(factory), address(cvc), erc20Module, erc4626Module, borrowingModule, liquidationModule, adminModule));
+		address evaultImpl = address(new EVault(address(evc), initializeModule, tokenModule, erc4626Module, borrowingModule, liquidationModule, feesModule));
 
         vm.prank(admin);
-		factory.setEVaultImplementation(evaultImpl);
+		factory.setImplementation(evaultImpl);
 
         assetTST = new TestERC20("Test Token", "TST", 17, false);
         MockRiskManager rm = new MockRiskManager();
-        eTST = IEVault(factory.activateMarket(address(assetTST), address(rm), ""));
+        eTST = IEVault(factory.createProxy(true, abi.encodePacked(address(assetTST), address(rm))));
     }
 }

@@ -6,13 +6,6 @@ import {Base} from "../shared/Base.sol";
 import "../shared/Constants.sol";
 
 abstract contract ModuleDispatch is Base {
-    address immutable MODULE_INITIALIZE;
-    address immutable MODULE_TOKEN;
-    address immutable MODULE_ERC4626;
-    address immutable MODULE_BORROWING;
-    address immutable MODULE_LIQUIDATION;
-    address immutable MODULE_FEES;
-
     // Modifier proxies the function call to a module and low-level returns the result
     modifier use(address module) {
         _;

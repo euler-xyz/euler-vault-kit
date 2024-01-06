@@ -6,8 +6,6 @@ import "./Types.sol";
 import "./MarketCache.sol";
 import "./Helpers.sol";
 
-import "hardhat/console.sol";
-
 library SharesLib {
     function toUint(Shares self) internal pure returns (uint256) {
         return Shares.unwrap(self);

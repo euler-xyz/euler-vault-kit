@@ -30,9 +30,26 @@ abstract contract BorrowingModule is IBorrowing, Base, BorrowUtils {
         return getCurrentOwed(marketCache, account).toUintAssetsUp();
     }
 
+    /// @inheritdoc IBorrowing
+    function disableController() external virtual nonReentrant {
+        // TODO disableController()
+    }
+
+    /// @inheritdoc IBorrowing
+    function checkAccountStatus(address account, address[] calldata collaterals)
+        public
+        virtual
+        reentrantOK
+        onlyEVCChecks
+        returns (bytes4 magicValue)
+    {
+        // TODO checkAccountStatus()
+        magicValue = ACCOUNT_STATUS_CHECK_RETURN_VALUE;
+    }
 
     /// @inheritdoc IBorrowing
     function checkVaultStatus() public virtual reentrantOK onlyEVCChecks returns (bytes4 magicValue) {
+        // TODO checkVaultStatus()
         magicValue = VAULT_STATUS_CHECK_RETURN_VALUE;
     }
 }

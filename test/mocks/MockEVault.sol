@@ -2,10 +2,8 @@
 
 pragma solidity ^0.8.0;
 
-import "../../src/EVaultFactory/EVaultFactory.sol";
-
 contract MockEVault {
-    constructor(address factory_, address cvc_) {
+    constructor(address factory_, address evc_) {
     }
 
     function initialize() external {

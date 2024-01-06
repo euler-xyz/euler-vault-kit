@@ -7,7 +7,7 @@ import {IRiskManager} from "../../IRiskManager.sol";
 import {IFactory} from "../shared/interfaces/IFactory.sol";
 import {Base} from "../shared/Base.sol";
 import {BorrowUtils} from "../shared/BorrowUtils.sol";
-import {DToken} from "../DToken.sol";
+// import {DToken} from "../DToken.sol";
 import {ProxyUtils} from "../shared/lib/ProxyUtils.sol";
 
 import "../shared/Constants.sol";
@@ -41,20 +41,21 @@ abstract contract InitializeModule is IInitialize, Base, BorrowUtils {
         marketStorage.protocolFeesHolder = admin;
         emit NewProtocolFeesHolder(admin);
 
-        // Create companion DToken
+        // TODO initialize()
+        // // Create companion DToken
 
-        address dToken = address(new DToken());
+        // address dToken = address(new DToken());
 
-        // Initialize new vault on the risk manager
+        // // Initialize new vault on the risk manager
 
-        (, IRiskManager rm) = ProxyUtils.metadata();
-        rm.activateMarket(creator);
+        // (, IRiskManager rm) = ProxyUtils.metadata();
+        // rm.activateMarket(creator);
 
-        // Initialize interest rate and interest fee
-        updateInterestParams(loadMarket());
-        if (marketStorage.interestFee == 0) revert E_InterestFeeInit();
+        // // Initialize interest rate and interest fee
+        // updateInterestParams(loadMarket());
+        // if (marketStorage.interestFee == 0) revert E_InterestFeeInit();
 
-        emit EVaultCreated(creator, address(asset), address(riskManager), dToken);
+        // emit EVaultCreated(creator, address(asset), address(riskManager), dToken);
     }
 }
 

@@ -9,7 +9,7 @@ interface IComponent {
     function initialize(address creator) external;
 }
 
-contract GenericFactory is MetaProxyDeployer {
+contract EFactory is MetaProxyDeployer {
     // Constants
 
     uint256 constant REENTRANCYLOCK__UNLOCKED = 1;
