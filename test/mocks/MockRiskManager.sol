@@ -8,25 +8,10 @@ import "forge-std/console.sol";
 contract MockRiskManager {
     constructor() {}
 
-    function onMarketActivation(address, address, address, bytes calldata) external pure returns (bool success) {
-        success = true;
-    }
+    function activateMarket(address) external pure {}
 
-    function checkMarketStatus(uint8, IRiskManager.Snapshot memory, IRiskManager.Snapshot memory)
+    function checkMarketStatus(address, address[] calldata, IRiskManager.Liability calldata)
         external
-        view
-        returns (bool healthy, bytes memory notHealthyReason)
-    {
-        console.log("herererer");
-        healthy = true;
-        notHealthyReason = "";
-    }
-}
-
-contract MockRiskManagerFail {
-    constructor() {}
-
-    function onMarketActivation(address, address, address, bytes calldata) external pure returns (bool success) {
-        success = false;
-    }
+        pure
+    {}
 }

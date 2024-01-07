@@ -2,35 +2,26 @@
 
 pragma solidity ^0.8.0;
 
-interface IRiskManager {
-    function onMarketActivation(address creator, address market, address asset, bytes calldata riskManagerConfig)
-        external
-        returns (bool success);
+interface IVault {
+    function initialize(address creator) external;
 }
 
-interface IEVaultFactory {
-    function activateMarket(address asset, address riskManager, bytes memory riskManagerConfig)
+interface IEFactory {
+    function createProxy(bool upgradeable, bytes memory trailingData)
         external
         returns (address);
 }
 
-contract ReentrancyAttack is IRiskManager {
-    address factory;
-    address asset;
+contract ReentrancyAttack is IVault {
+    address immutable factory;
+    address immutable asset;
 
     constructor(address _factory, address _asset) {
         factory = _factory;
         asset = _asset;
     }
-    // Factory - test modifier nonReentrancy activateMarket
 
-    function onMarketActivation(
-        address, /*creator*/
-        address, /*market*/
-        address, /*asset*/
-        bytes calldata /*riskManagerConfig*/
-    ) external override returns (bool success) {
-        IEVaultFactory(factory).activateMarket(asset, address(this), "");
-        success = false;
+    function initialize(address) external {
+        IEFactory(factory).createProxy(true, abi.encodePacked(asset, address(this)));
     }
 }

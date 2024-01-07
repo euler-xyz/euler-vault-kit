@@ -3,48 +3,59 @@
 pragma solidity ^0.8.0;
 
 interface IRiskManager {
-    struct MarketAssets {
-        address market;
-        uint256 assets;
-        bool assetsSet;
-    }
-
     struct Snapshot {
-        uint256 totalBalances;
+        uint256 poolSize;
         uint256 totalBorrows;
     }
 
-    function onMarketActivation(address creator, address market, address asset, bytes calldata riskManagerConfig)
-        external
-        returns (bool success);
+    struct Liability {
+        address market;
+        uint256 owed;
+        uint256 deposit;
+    }
+
+    function activateMarket(address creator) external;
+
     function calculateLiquidation(
         address liquidator,
         address violator,
         address collateral,
-        MarketAssets[] calldata collaterals,
-        MarketAssets calldata liability,
+        Liability calldata liability,
         uint256 desiredRepayAssets
-    )
-        external
-        view
-        returns (uint256 repayAssets, uint256 yieldBalance, uint256 feeAssets, bytes memory accountSnapshot);
+    ) external view returns (uint256 repayAssets, uint256 yieldBalance, bytes memory accountSnapshot);
     function verifyLiquidation(
         address liquidator,
         address violator,
         address collateral,
         uint256 yieldBalance,
         uint256 repayAssets,
-        MarketAssets[] calldata collaterals,
-        MarketAssets calldata liability,
+        Liability calldata liability,
         bytes memory accountSnapshot
-    ) external view returns (bool isValid);
+    ) external view;
 
-    function checkAccountStatus(address account, MarketAssets[] calldata collaterals, MarketAssets calldata liability)
-        external;
-    function checkMarketStatus(uint8 performedOperations, Snapshot memory oldSnapshot, Snapshot memory currentSnapshot)
-        external;
+    function checkAccountStatus(address account, address[] calldata collaterals, Liability calldata liability)
+        external
+        view;
+    function checkMarketStatus(
+        address market,
+        uint24 performedOperations,
+        Snapshot memory oldSnapshot,
+        Snapshot memory currentSnapshot
+    ) external view;
 
     function computeInterestParams(address asset, uint32 utilisation)
         external
         returns (int96 interestRate, uint16 interestFee);
+
+    function marketName(address market) external view returns (string memory);
+    function marketSymbol(address market) external view returns (string memory);
+
+    function isPausedOperation(address market, uint24 operations) external view returns (bool);
+    function maxDeposit(address account, address market) external view returns (uint256);
+    function collateralBalanceLocked(address collateral, address account, Liability calldata liability)
+        external
+        view
+        returns (uint256 lockedBalance);
+
+    function feeRecipient() external view returns (address);
 }

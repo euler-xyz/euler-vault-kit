@@ -27,8 +27,8 @@ contract EFactory is MetaProxyDeployer {
 
     address public upgradeAdmin;
     address public implementation;
-    mapping(address proxy => ProxyConfig) public proxyLookup;
     address[] public proxyList;
+    mapping(address proxy => ProxyConfig) proxyLookup;
 
     // Events
 
@@ -72,7 +72,7 @@ contract EFactory is MetaProxyDeployer {
         emit SetUpgradeAdmin(admin);
     }
 
-    function createProxy(bool upgradeable, bytes memory trailingData) external returns (address) {
+    function createProxy(bool upgradeable, bytes memory trailingData) external nonReentrant returns (address) {
         if (implementation == address(0)) revert E_Implementation();
 
         address proxy;
@@ -113,6 +113,10 @@ contract EFactory is MetaProxyDeployer {
 
     // Proxy getters
 
+    function getProxyConfig(address proxy) external view returns (ProxyConfig memory) {
+        return proxyLookup[proxy];
+    }
+
     function isProxy(address proxy) external view returns (bool) {
         return proxyLookup[proxy].implementation != address(0);
     }
@@ -125,7 +129,7 @@ contract EFactory is MetaProxyDeployer {
         if (startIndex == 0 && numElements == type(uint256).max) {
             list = proxyList;
         } else {
-            if (startIndex + numElements > proxyList.length) revert E_BadQuery();
+            if (startIndex > proxyList.length || numElements > proxyList.length || startIndex + numElements > proxyList.length) revert E_BadQuery();
 
             list = new address[](numElements);
             for (uint256 i; i < numElements;) {
