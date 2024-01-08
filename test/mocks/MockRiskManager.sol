@@ -10,8 +10,5 @@ contract MockRiskManager {
 
     function activateMarket(address) external pure {}
 
-    function checkMarketStatus(address, address[] calldata, IRiskManager.Liability calldata)
-        external
-        pure
-    {}
+    function checkMarketStatus(address, address[] calldata, IRiskManager.Liability calldata) external pure {}
 }

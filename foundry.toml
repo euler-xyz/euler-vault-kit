@@ -18,7 +18,8 @@ gas_reports = ["*"]
 
 [profile.default.fmt]
 ignore = [
-    "src/EVault/EVault.sol"
+    "src/EVault/EVault.sol",
+    "src/EVault/shared/Storage.sol"
 ]
 
 

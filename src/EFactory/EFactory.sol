@@ -129,7 +129,10 @@ contract EFactory is MetaProxyDeployer {
         if (startIndex == 0 && numElements == type(uint256).max) {
             list = proxyList;
         } else {
-            if (startIndex > proxyList.length || numElements > proxyList.length || startIndex + numElements > proxyList.length) revert E_BadQuery();
+            if (
+                startIndex > proxyList.length || numElements > proxyList.length
+                    || startIndex + numElements > proxyList.length
+            ) revert E_BadQuery();
 
             list = new address[](numElements);
             for (uint256 i; i < numElements;) {

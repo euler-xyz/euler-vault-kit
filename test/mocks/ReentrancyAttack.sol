@@ -7,9 +7,7 @@ interface IVault {
 }
 
 interface IEFactory {
-    function createProxy(bool upgradeable, bytes memory trailingData)
-        external
-        returns (address);
+    function createProxy(bool upgradeable, bytes memory trailingData) external returns (address);
 }
 
 contract ReentrancyAttack is IVault {

@@ -71,8 +71,8 @@ contract FactoryTest is Test {
 
             address randomUser = vm.addr(5000);
             vm.prank(randomUser);
-            (string memory outputArg, address theMsgSender, address marketAsset, address riskManager)
-                = eTST.arbitraryFunction(inputArg);
+            (string memory outputArg, address theMsgSender, address marketAsset, address riskManager) =
+                eTST.arbitraryFunction(inputArg);
 
             assertEq(outputArg, inputArg);
             assertEq(theMsgSender, randomUser);
@@ -89,19 +89,18 @@ contract FactoryTest is Test {
         MockRiskManager rm = new MockRiskManager();
 
         // Create Tokens and activate Markets
-        uint amountEVault = 10;
-        for(uint i; i < amountEVault; i++){
-            TestERC20 TST = new TestERC20("Test Token", "TST" , 18, false);
+        uint256 amountEVault = 10;
+        for (uint256 i; i < amountEVault; i++) {
+            TestERC20 TST = new TestERC20("Test Token", "TST", 18, false);
             MockEVault(factory.createProxy(true, abi.encodePacked(address(TST), address(rm))));
         }
 
-        uint lenEVaultList = factory.getProxyListLength();
+        uint256 lenEVaultList = factory.getProxyListLength();
 
         assertEq(lenEVaultList, amountEVault);
     }
 
     function test_getEVaultsList() public {
-
         // Create and install mock eVault impl
         MockEVault mockEvaultImpl = new MockEVault(address(factory), address(1));
         vm.prank(upgradeAdmin);
@@ -109,12 +108,12 @@ contract FactoryTest is Test {
         MockRiskManager rm = new MockRiskManager();
 
         // Create Tokens and activate Markets
-        uint amountEVaults = 100;
+        uint256 amountEVaults = 100;
 
         address[] memory eVaultsList = new address[](amountEVaults);
 
-        for(uint i; i < amountEVaults; i++){
-            TestERC20 TST = new TestERC20("Test Token", "TST" , 18, false);
+        for (uint256 i; i < amountEVaults; i++) {
+            TestERC20 TST = new TestERC20("Test Token", "TST", 18, false);
             MockEVault eVault = MockEVault(factory.createProxy(true, abi.encodePacked(address(TST), address(rm))));
             eVaultsList[i] = address(eVault);
         }
@@ -124,8 +123,8 @@ contract FactoryTest is Test {
         address[] memory listEFactory;
 
         //test getEVaultsList(0, type(uint).max) - get all eVaults list
-        uint startIndex = 0;
-        uint amountNumbers = type(uint).max;
+        uint256 startIndex = 0;
+        uint256 amountNumbers = type(uint256).max;
 
         listEFactory = factory.getProxyListRange(startIndex, amountNumbers);
 
@@ -140,14 +139,13 @@ contract FactoryTest is Test {
         listEFactory = factory.getProxyListRange(startIndex, amountNumbers);
 
         listEVaultsTest = new address[](amountNumbers);
-        for(uint i; i < amountEVaults; i++){
-            if(i >= startIndex && i < amountNumbers + startIndex){
+        for (uint256 i; i < amountEVaults; i++) {
+            if (i >= startIndex && i < amountNumbers + startIndex) {
                 listEVaultsTest[i - startIndex] = eVaultsList[i];
             }
         }
 
         assertEq(listEFactory, listEVaultsTest);
-
     }
 
     function test_getEVaultConfig() public {
@@ -158,14 +156,14 @@ contract FactoryTest is Test {
         MockRiskManager rm = new MockRiskManager();
 
         // Create Tokens and activate Markets
-        TestERC20 TST = new TestERC20("Test Token", "TST" , 18, false);
+        TestERC20 TST = new TestERC20("Test Token", "TST", 18, false);
         MockEVault eVault = MockEVault(factory.createProxy(true, abi.encodePacked(address(TST), address(rm))));
 
         EFactory.ProxyConfig memory config = factory.getProxyConfig(address(eVault));
 
         assertEq(config.trailingData, abi.encodePacked(address(TST), address(rm)));
 
-        TST = new TestERC20("Test Token", "TST" , 18, false);
+        TST = new TestERC20("Test Token", "TST", 18, false);
         eVault = MockEVault(factory.createProxy(true, abi.encodePacked(address(TST), address(rm))));
 
         config = factory.getProxyConfig(address(eVault));
@@ -184,7 +182,9 @@ contract FactoryTest is Test {
         MockRiskManager rm = new MockRiskManager();
 
         vm.expectEmit(false, true, true, true);
-        emit EFactory.ProxyCreated(address(1), true, address(mockEvaultImpl), abi.encodePacked(address(asset), address(rm)));
+        emit EFactory.ProxyCreated(
+            address(1), true, address(mockEvaultImpl), abi.encodePacked(address(asset), address(rm))
+        );
 
         factory.createProxy(true, abi.encodePacked(address(asset), address(rm)));
     }
@@ -230,7 +230,6 @@ contract FactoryTest is Test {
 
         vm.expectRevert(EFactory.E_Reentrancy.selector);
         factory.createProxy(false, abi.encodePacked(address(asset), address(rm)));
-
     }
 
     function test_RevertIfImplementation_ActivateMarket() public {
@@ -259,24 +258,24 @@ contract FactoryTest is Test {
         MockRiskManager rm = new MockRiskManager();
 
         // Create Tokens and activate Markets
-        uint amountEVaults = 100;
+        uint256 amountEVaults = 100;
 
         address[] memory eVaultsList = new address[](amountEVaults);
 
-        for(uint i; i < amountEVaults; i++){
-            TestERC20 TST = new TestERC20("Test Token", "TST" , 18, false);
+        for (uint256 i; i < amountEVaults; i++) {
+            TestERC20 TST = new TestERC20("Test Token", "TST", 18, false);
             MockEVault eVault = MockEVault(factory.createProxy(true, abi.encodePacked(address(TST), address(rm))));
             eVaultsList[i] = address(eVault);
         }
 
-        uint startIndex = 0;
-        uint amountNumbers = amountEVaults + 1;
+        uint256 startIndex = 0;
+        uint256 amountNumbers = amountEVaults + 1;
 
         vm.expectRevert(EFactory.E_BadQuery.selector);
         factory.getProxyListRange(startIndex, amountNumbers);
 
         startIndex = 1;
-        amountNumbers = type(uint).max;
+        amountNumbers = type(uint256).max;
 
         vm.expectRevert(EFactory.E_BadQuery.selector);
         factory.getProxyListRange(startIndex, amountNumbers);
