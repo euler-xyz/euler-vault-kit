@@ -130,4 +130,24 @@ contract ERC4626Test_Deposit is EVaultTestBase {
         assertEq(eTST.balanceOf(user2), walletBalance);
         assertEq(eTST.totalSupply(), walletBalance);
     }
+
+    function test_directTransfer() public {
+        uint amount = 1e18;
+
+        vm.startPrank(user);
+        assetTST.transfer(address(eTST), amount);
+
+        assertEq(assetTST.balanceOf(address(eTST)), amount);
+        assertEq(eTST.balanceOf(user), 0);
+        assertEq(eTST.totalSupply(), 0);
+        assertEq(eTST.totalAssets(), 0);
+
+        eTST.deposit(amount, user);
+
+        assertEq(assetTST.balanceOf(address(eTST)), amount*2);
+        assertEq(eTST.balanceOf(user), amount);
+        assertEq(eTST.totalSupply(), amount);
+        assertEq(eTST.totalAssets(), amount);
+    }
+
 }
