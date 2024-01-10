@@ -28,7 +28,8 @@ abstract contract EVCClient is Storage, Events, Errors {
 
     function EVCAuthenticate(bool checkController) internal view returns (address) {
         if (msg.sender == address(evc)) {
-            (address onBehalfOfAccount, bool controllerEnabled) = evc.getCurrentOnBehalfOfAccount(address(this));
+            (address onBehalfOfAccount, bool controllerEnabled) =
+                evc.getCurrentOnBehalfOfAccount(checkController ? address(this) : address(0));
 
             if (checkController && !controllerEnabled) revert E_ControllerDisabled();
 

@@ -46,6 +46,7 @@ contract EFactory is MetaProxyDeployer {
     error E_Implementation();
     error E_BadAddress();
     error E_BadQuery();
+    error E_MetaProxy();
 
     // Modifiers
 
@@ -72,15 +73,14 @@ contract EFactory is MetaProxyDeployer {
         emit SetUpgradeAdmin(admin);
     }
 
-    function createProxy(bool upgradeable, bytes memory trailingData) external nonReentrant returns (address) {
+    function createProxy(bool upgradeable, bytes memory trailingData) external nonReentrant returns (address proxy) {
         if (implementation == address(0)) revert E_Implementation();
-
-        address proxy;
 
         if (upgradeable) {
             proxy = address(new BeaconProxy(trailingData));
         } else {
             proxy = deployMetaProxy(implementation, trailingData);
+            if (proxy == address(0)) revert E_MetaProxy();
         }
 
         proxyLookup[proxy] =
@@ -91,8 +91,6 @@ contract EFactory is MetaProxyDeployer {
         IComponent(proxy).initialize(msg.sender);
 
         emit ProxyCreated(proxy, upgradeable, implementation, trailingData);
-
-        return proxy;
     }
 
     // EVault beacon upgrade
@@ -114,7 +112,12 @@ contract EFactory is MetaProxyDeployer {
     // Proxy getters
 
     function getProxyConfig(address proxy) external view returns (ProxyConfig memory) {
-        return proxyLookup[proxy];
+        ProxyConfig memory config = proxyLookup[proxy];
+        return ProxyConfig({
+            upgradeable: config.upgradeable,
+            implementation: config.upgradeable ? implementation : config.implementation,
+            trailingData: config.trailingData
+        });
     }
 
     function isProxy(address proxy) external view returns (bool) {
@@ -129,10 +132,9 @@ contract EFactory is MetaProxyDeployer {
         if (startIndex == 0 && numElements == type(uint256).max) {
             list = proxyList;
         } else {
-            if (
-                startIndex > proxyList.length || numElements > proxyList.length
-                    || startIndex + numElements > proxyList.length
-            ) revert E_BadQuery();
+            if (type(uint256).max - startIndex < numElements || startIndex + numElements > proxyList.length) {
+                revert E_BadQuery();
+            }
 
             list = new address[](numElements);
             for (uint256 i; i < numElements;) {

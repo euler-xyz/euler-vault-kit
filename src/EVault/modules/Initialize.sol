@@ -26,6 +26,7 @@ abstract contract InitializeModule is IInitialize, Base, BorrowUtils {
         if (
             address(asset) == address(0) || address(asset) == address(riskManager) || address(asset) == address(evc)
                 || address(riskManager) == address(0) || address(riskManager) == address(evc)
+                || address(asset).code.length == 0
         ) revert E_BadAddress();
 
         // Initialize storage
