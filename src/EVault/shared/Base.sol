@@ -32,7 +32,7 @@ abstract contract Base is EVCClient, Cache {
         internal
         returns (MarketCache memory marketCache, address account)
     {
-        (marketCache, account) = initMarketAndAccountCommon(operation, false);
+        (marketCache, account) = initMarketAndAccount(operation, false);
 
         EVCRequireStatusChecks(checkAccount == ACCOUNT_CHECK_CALLER ? account : checkAccount);
     }
@@ -41,12 +41,12 @@ abstract contract Base is EVCClient, Cache {
         internal
         returns (MarketCache memory marketCache, address account)
     {
-        (marketCache, account) = initMarketAndAccountCommon(operation, true);
+        (marketCache, account) = initMarketAndAccount(operation, true);
 
         EVCRequireStatusChecks(account);
     }
 
-    function initMarketAndAccountCommon(uint24 operation, bool checkController)
+    function initMarketAndAccount(uint24 operation, bool checkController)
         private
         returns (MarketCache memory marketCache, address account)
     {
