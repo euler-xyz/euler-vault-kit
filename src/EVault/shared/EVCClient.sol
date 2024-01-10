@@ -41,6 +41,8 @@ abstract contract EVCClient is Storage, Events, Errors {
     }
 
     function EVCRequireStatusChecks(address account) internal {
+        if (msg.sender != address(evc)) revert E_CALL_THROUGH_EVC_NOT_USED();
+
         if (account == ACCOUNT_CHECK_NONE) {
             evc.requireVaultStatusCheck();
         } else {
