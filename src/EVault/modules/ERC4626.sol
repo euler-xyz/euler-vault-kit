@@ -34,8 +34,6 @@ abstract contract ERC4626Module is IERC4626, Base, AssetTransfers, BalanceUtils 
 
         if (receiver == address(0)) receiver = account;
 
-        emit RequestDeposit(account, receiver, amount);
-
         Assets assets =
             amount == type(uint256).max ? marketCache.asset.callBalanceOf(account).toAssets() : amount.toAssets();
 
