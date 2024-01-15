@@ -28,7 +28,7 @@ abstract contract Base is EVCClient, Cache {
         _;
     }
 
-    function initOperation(uint24 operation, address checkAccount)
+    function initOperation(uint32 operation, address checkAccount)
         internal
         returns (MarketCache memory marketCache, address account)
     {
@@ -37,7 +37,7 @@ abstract contract Base is EVCClient, Cache {
         EVCRequireStatusChecks(checkAccount == ACCOUNT_CHECK_CALLER ? account : checkAccount);
     }
 
-    function initOperationForBorrow(uint24 operation)
+    function initOperationForBorrow(uint32 operation)
         internal
         returns (MarketCache memory marketCache, address account)
     {
@@ -46,7 +46,7 @@ abstract contract Base is EVCClient, Cache {
         EVCRequireStatusChecks(account);
     }
 
-    function initMarketAndAccount(uint24 operation, bool checkController)
+    function initMarketAndAccount(uint32 operation, bool checkController)
         private
         returns (MarketCache memory marketCache, address account)
     {
@@ -56,8 +56,8 @@ abstract contract Base is EVCClient, Cache {
         account = EVCAuthenticate(checkController);
     }
 
-    function snapshotMarket(uint24 operation, MarketCache memory marketCache) internal {
-        uint24 performedOperations = marketStorage.marketSnapshot.performedOperations;
+    function snapshotMarket(uint32 operation, MarketCache memory marketCache) internal {
+        uint32 performedOperations = marketStorage.marketSnapshot.performedOperations;
 
         if (performedOperations == 0) {
             marketStorage.marketSnapshot = getMarketSnapshot(operation, marketCache);
@@ -66,14 +66,14 @@ abstract contract Base is EVCClient, Cache {
         }
     }
 
-    function getMarketSnapshot(uint24 operation, MarketCache memory marketCache)
+    function getMarketSnapshot(uint32 operation, MarketCache memory marketCache)
         internal
         pure
         returns (MarketSnapshot memory)
     {
         return MarketSnapshot({
             poolSize: marketCache.poolSize,
-            totalBorrows: marketCache.totalBorrows.toOwedAssetsSnapshot(),
+            totalBorrows: marketCache.totalBorrows.toAssetsDown(),
             performedOperations: operation
         });
     }

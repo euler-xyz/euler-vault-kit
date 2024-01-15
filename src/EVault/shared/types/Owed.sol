@@ -10,24 +10,22 @@ library OwedLib {
         return Owed.unwrap(self);
     }
 
-    function toUintAssetsDown(Owed amount) internal pure returns (uint256) {
-        if (Owed.unwrap(amount) == 0) return 0;
+    function toAssetsDown(Owed amount) internal pure returns (Assets) {
+        if (Owed.unwrap(amount) == 0) return Assets.wrap(0);
 
         unchecked {
-            return Owed.unwrap(amount) / INTERNAL_DEBT_PRECISION;
+            return TypesLib.toAssets(Owed.unwrap(amount) / INTERNAL_DEBT_PRECISION);
         }
     }
 
-    function toUintAssetsUp(Owed amount) internal pure returns (uint256) {
-        if (Owed.unwrap(amount) == 0) return 0;
+    function toAssetsUp(Owed amount) internal pure returns (Assets) {
+        if (Owed.unwrap(amount) == 0) return Assets.wrap(0);
 
         unchecked {
-            return (uint256(Owed.unwrap(amount)) + INTERNAL_DEBT_PRECISION - 1) / INTERNAL_DEBT_PRECISION;
+            return TypesLib.toAssets(
+                (uint256(Owed.unwrap(amount)) + INTERNAL_DEBT_PRECISION - 1) / INTERNAL_DEBT_PRECISION
+            );
         }
-    }
-
-    function toOwedAssetsSnapshot(Owed amount) internal pure returns (OwedAssetsSnapshot) {
-        return OwedAssetsSnapshot.wrap(uint120(toUintAssetsUp(amount)));
     }
 
     function isDust(Owed self) internal pure returns (bool) {
