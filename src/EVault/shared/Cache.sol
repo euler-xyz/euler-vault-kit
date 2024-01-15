@@ -68,10 +68,10 @@ contract Cache is Storage, Errors {
             uint256 newTotalBalances = marketCache.totalBalances.toUint();
 
             uint256 feeAmount = (newTotalBorrows - marketCache.totalBorrows.toUint()) * interestFee
-                / (INTEREST_FEE_SCALE * INTERNAL_DEBT_PRECISION);
+                / (INTEREST_FEE_SCALE << INTERNAL_DEBT_PRECISION);
 
             if (feeAmount != 0) {
-                uint256 poolAssets = marketCache.poolSize.toUint() + (newTotalBorrows / INTERNAL_DEBT_PRECISION);
+                uint256 poolAssets = marketCache.poolSize.toUint() + (newTotalBorrows >> INTERNAL_DEBT_PRECISION);
                 newTotalBalances = poolAssets * newTotalBalances / (poolAssets - feeAmount);
                 newFeesBalance += newTotalBalances - marketCache.totalBalances.toUint();
             }

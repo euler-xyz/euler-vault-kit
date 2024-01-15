@@ -14,7 +14,7 @@ library OwedLib {
         if (Owed.unwrap(amount) == 0) return Assets.wrap(0);
 
         unchecked {
-            return TypesLib.toAssets(Owed.unwrap(amount) / INTERNAL_DEBT_PRECISION);
+            return TypesLib.toAssets(Owed.unwrap(amount) >> INTERNAL_DEBT_PRECISION);
         }
     }
 
@@ -23,13 +23,13 @@ library OwedLib {
 
         unchecked {
             return TypesLib.toAssets(
-                (uint256(Owed.unwrap(amount)) + INTERNAL_DEBT_PRECISION - 1) / INTERNAL_DEBT_PRECISION
+                (uint256(Owed.unwrap(amount)) + MIN_REPRESENTABLE_INTERNAL_DEBT_AMOUNT - 1) >> INTERNAL_DEBT_PRECISION
             );
         }
     }
 
     function isDust(Owed self) internal pure returns (bool) {
-        return Owed.unwrap(self) < INTERNAL_DEBT_PRECISION;
+        return Owed.unwrap(self) < MIN_REPRESENTABLE_INTERNAL_DEBT_AMOUNT;
     }
 
     function isZero(Owed self) internal pure returns (bool) {

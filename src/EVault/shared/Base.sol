@@ -61,7 +61,7 @@ abstract contract Base is EVCClient, Cache {
 
         if (performedOperations == 0) {
             marketStorage.marketSnapshot = getMarketSnapshot(operation, marketCache);
-        } else {
+        } else if (performedOperations & operation == 0) {
             marketStorage.marketSnapshot.performedOperations = performedOperations | operation;
         }
     }
