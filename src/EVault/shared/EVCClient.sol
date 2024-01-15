@@ -26,17 +26,24 @@ abstract contract EVCClient is Storage, Events, Errors {
         evc = IEVC(_evc);
     }
 
-    function EVCAuthenticate(bool checkController) internal view returns (address) {
-        if (msg.sender == address(evc)) {
-            (address onBehalfOfAccount, bool controllerEnabled) =
-                evc.getCurrentOnBehalfOfAccount(checkController ? address(this) : address(0));
+    // Authenticate account and controller, making sure the call is made through EVC and the status checks are deferred
+    function EVCAuthenticateDeferred(bool checkController) internal view returns (address) {
+        if (msg.sender != address(evc)) revert E_Unauthorized();
 
-            if (checkController && !controllerEnabled) revert E_ControllerDisabled();
+        (address onBehalfOfAccount, bool controllerEnabled) =
+            evc.getCurrentOnBehalfOfAccount(checkController ? address(this) : address(0));
+
+        if (checkController && !controllerEnabled) revert E_ControllerDisabled();
+
+        return onBehalfOfAccount;
+    }
+
+    function EVCAuthenticate() internal view returns (address) {
+        if (msg.sender == address(evc)) {
+            (address onBehalfOfAccount,) = evc.getCurrentOnBehalfOfAccount(address(0));
 
             return onBehalfOfAccount;
         }
-
-        if (checkController && !evc.isControllerEnabled(msg.sender, address(this))) revert E_ControllerDisabled();
         return msg.sender;
     }
 

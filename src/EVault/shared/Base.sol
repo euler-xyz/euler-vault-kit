@@ -53,7 +53,7 @@ abstract contract Base is EVCClient, Cache {
         marketCache = loadAndUpdateMarket();
         snapshotMarket(operation, marketCache);
 
-        account = EVCAuthenticate(checkController);
+        account = EVCAuthenticateDeferred(checkController);
     }
 
     function snapshotMarket(uint24 operation, MarketCache memory marketCache) internal {
