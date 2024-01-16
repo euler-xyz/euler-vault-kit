@@ -23,13 +23,13 @@ library OwedLib {
 
         unchecked {
             return TypesLib.toAssets(
-                (uint256(Owed.unwrap(amount)) + MIN_REPRESENTABLE_INTERNAL_DEBT_AMOUNT - 1) >> INTERNAL_DEBT_PRECISION
+                (uint256(Owed.unwrap(amount)) + (1 << INTERNAL_DEBT_PRECISION) - 1) >> INTERNAL_DEBT_PRECISION
             );
         }
     }
 
     function isDust(Owed self) internal pure returns (bool) {
-        return Owed.unwrap(self) < MIN_REPRESENTABLE_INTERNAL_DEBT_AMOUNT;
+        return Owed.unwrap(self) < (1 << INTERNAL_DEBT_PRECISION); // less than a minimum representable internal debt amount
     }
 
     function isZero(Owed self) internal pure returns (bool) {

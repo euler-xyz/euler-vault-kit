@@ -5,11 +5,11 @@ import {IVault} from "ethereum-vault-connector/interfaces/IVault.sol";
 
 // Protocol parameters
 
+uint256 constant INTERNAL_DEBT_PRECISION = 32;
 uint256 constant MAX_SANE_AMOUNT = type(uint112).max;
-uint256 constant MAX_SANE_DEBT_AMOUNT = type(uint144).max ^ type(uint32).max;
+// Max debt amount fits in uint144 (112 + 32 bits). Last 32 bits are zeros to enusure max debt rounded up equals max sane amount.
+uint256 constant MAX_SANE_DEBT_AMOUNT = uint(MAX_SANE_AMOUNT) << INTERNAL_DEBT_PRECISION; 
 uint256 constant MAX_SANE_SMALL_AMOUNT = type(uint96).max;
-uint256 constant INTERNAL_DEBT_PRECISION = 32; // internally debt amount is tracked by shifting asset amount left 32 bits
-uint256 constant MIN_REPRESENTABLE_INTERNAL_DEBT_AMOUNT = 1 << INTERNAL_DEBT_PRECISION;
 uint256 constant INTEREST_FEE_SCALE = 60_000; // must fit into a uint16
 
 uint256 constant PROTOCOL_FEE_SHARE = 0.1 * 1e18;
