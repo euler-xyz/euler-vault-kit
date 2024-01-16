@@ -53,6 +53,8 @@ abstract contract Base is EVCClient, Cache {
         marketCache = loadAndUpdateMarket();
         snapshotMarket(operation, marketCache);
 
+        // authenticate on EVC while making sure the checks are deferred, implying also 
+        // the called external function has callThroughEVC modifier set
         account = EVCAuthenticateDeferred(checkController);
     }
 
