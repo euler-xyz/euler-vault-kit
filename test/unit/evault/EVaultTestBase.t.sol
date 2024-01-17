@@ -16,12 +16,15 @@ import {FeesInstance} from "src/EVault/modules/Fees.sol";
 
 import {IEVault, IERC20} from "src/EVault/IEVault.sol";
 
+import {TypesLib} from "src/EVault/shared/types/Types.sol";
+
 import {EthereumVaultConnector} from "ethereum-vault-connector/EthereumVaultConnector.sol";
 
 import {TestERC20} from "../../mocks/TestERC20.sol";
 import {MockRiskManager} from "../../mocks/MockRiskManager.sol";
 
 import {AssertionsCustomTypes} from "../../helpers/AssertionsCustomTypes.sol";
+
 
 import "src/EVault/shared/Constants.sol";
 

@@ -38,7 +38,7 @@ interface IRiskManager {
         view;
     function checkMarketStatus(
         address market,
-        uint24 performedOperations,
+        uint32 performedOperations,
         Snapshot memory oldSnapshot,
         Snapshot memory currentSnapshot
     ) external view;
@@ -50,7 +50,7 @@ interface IRiskManager {
     function marketName(address market) external view returns (string memory);
     function marketSymbol(address market) external view returns (string memory);
 
-    function isPausedOperation(address market, uint24 operations) external view returns (bool);
+    function isPausedOperation(address market, uint32 operations) external view returns (bool);
     function maxDeposit(address account, address market) external view returns (uint256);
     function collateralBalanceLocked(address collateral, address account, Liability calldata liability)
         external

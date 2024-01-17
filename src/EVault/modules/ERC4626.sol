@@ -25,7 +25,7 @@ abstract contract ERC4626Module is IERC4626, Base, AssetTransfers, BalanceUtils 
     function totalAssets() external view virtual nonReentrantView returns (uint256) {
         MarketCache memory marketCache = loadMarket();
 
-        return marketCache.poolSize.toUint() + marketCache.totalBorrows.toUintAssetsDown();
+        return marketCache.poolSize.toUint() + marketCache.totalBorrows.toAssetsDown().toUint();
     }
 
     /// @inheritdoc IERC4626

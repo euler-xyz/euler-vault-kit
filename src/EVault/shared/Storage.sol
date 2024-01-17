@@ -14,14 +14,15 @@ abstract contract Storage {
         // Packed slot 14 + 18 = 32
         Shares balance;
         Owed owed;
+
         uint256 interestAccumulator;
     }
 
     struct MarketSnapshot {
-        // Packed slot 14 + 15 + 3 = 32
+        // Packed slot 14 + 14 + 4 = 32
         Assets poolSize;
-        OwedAssetsSnapshot totalBorrows;
-        uint24 performedOperations;
+        Assets totalBorrows;
+        uint32 performedOperations;
     }
 
     struct MarketStorage {
@@ -40,7 +41,7 @@ abstract contract Storage {
         MarketSnapshot marketSnapshot;
 
         // Packed slot 12 + 2
-        // Read on first item in a block (interest accrual). Read and written in vault status check (interest rate update).
+        // Read on first item in a block (interest accrual). Read and written to in vault status check (interest rate update).
         // Not touched on other batch items.
         int96 interestRate;
         uint16 interestFee;

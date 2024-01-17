@@ -18,7 +18,6 @@ library SharesLib {
     function toAssetsDown(Shares amount, MarketCache memory marketCache) internal pure returns (Assets) {
         (uint256 totalAssets, uint256 totalBalances) = totals(marketCache);
         unchecked {
-            // total assets < max uint128
             return
                 TypesLib.toAssets(totalBalances == 0 ? amount.toUint() : amount.toUint() * totalAssets / totalBalances);
         }
@@ -27,7 +26,6 @@ library SharesLib {
     function toAssetsUp(Shares amount, MarketCache memory marketCache) internal pure returns (Assets) {
         (uint256 totalAssets, uint256 totalBalances) = totals(marketCache);
         unchecked {
-            // total assets < max uint128
             return TypesLib.toAssets(
                 totalBalances == 0
                     ? amount.toUint()

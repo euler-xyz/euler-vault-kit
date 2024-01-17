@@ -6,7 +6,7 @@ import "./MarketCache.sol";
 
 function totals(MarketCache memory marketCache) pure returns (uint256 totalAssets, uint256 totalBalances) {
     unchecked {
-        totalAssets = marketCache.poolSize.toUint() + marketCache.totalBorrows.toUintAssetsDown();
+        totalAssets = marketCache.poolSize.toUint() + marketCache.totalBorrows.toAssetsDown().toUint();
     }
     totalBalances = marketCache.totalBalances.toUint();
 }

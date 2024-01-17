@@ -16,8 +16,6 @@ type Assets is uint112;
 
 type Owed is uint144;
 
-type OwedAssetsSnapshot is uint120;
-
 type Fees is uint96;
 
 using SharesLib for Shares global;
@@ -50,10 +48,6 @@ library TypesLib {
     function toOwed(uint256 amount) internal pure returns (Owed) {
         if (amount > MAX_SANE_DEBT_AMOUNT) revert Errors.E_DebtAmountTooLargeToEncode();
         return Owed.wrap(uint144(amount));
-    }
-
-    function toOwedFromUintAssets(uint256 amount) internal pure returns (Owed) {
-        return toOwed(amount * INTERNAL_DEBT_PRECISION);
     }
 
     function toFees(uint256 amount) internal pure returns (Fees) {
