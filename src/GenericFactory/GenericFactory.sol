@@ -113,6 +113,11 @@ contract GenericFactory is MetaProxyDeployer {
 
     // Proxy getters
 
+    function getProxyConfig(address proxy) external view returns (ProxyConfig memory config) {
+        config = proxyLookup[proxy];
+        if (config.upgradeable) config.implementation = implementation;
+    }
+
     function isProxy(address proxy) external view returns (bool) {
         return proxyLookup[proxy].implementation != address(0);
     }
@@ -121,18 +126,15 @@ contract GenericFactory is MetaProxyDeployer {
         return proxyList.length;
     }
 
-    function getProxyListRange(uint256 startIndex, uint256 numElements) external view returns (address[] memory list) {
-        if (startIndex == 0 && numElements == type(uint256).max) {
-            list = proxyList;
-        } else {
-            if (startIndex + numElements > proxyList.length) revert E_BadQuery();
+    function getProxyListSlice(uint256 start, uint256 end) external view returns (address[] memory list) {
+        if (end == type(uint256).max) end = proxyList.length;
+        if (end < start || end > proxyList.length) revert E_BadQuery();
 
-            list = new address[](numElements);
-            for (uint256 i; i < numElements;) {
-                list[i] = proxyList[startIndex + i];
-                unchecked {
-                    ++i;
-                }
+        list = new address[](end - start);
+        for (uint256 i; i < end - start;) {
+            list[i] = proxyList[start + i];
+            unchecked {
+                ++i;
             }
         }
     }
