@@ -2,7 +2,7 @@
 pragma solidity ^0.8.13;
 
 import {Test, console2, stdError} from "forge-std/Test.sol";
-import {EFactory} from "src/EFactory/EFactory.sol";
+import {GenericFactory} from "src/GenericFactory/GenericFactory.sol";
 
 import {MockEVault} from "../../mocks/MockEVault.sol";
 import {MockRiskManager} from "../../mocks/MockRiskManager.sol";
@@ -10,7 +10,7 @@ import {TestERC20} from "../../mocks/TestERC20.sol";
 import {ReentrancyAttack} from "../../mocks/ReentrancyAttack.sol";
 
 contract FactoryTest is Test {
-    EFactory public factory;
+    GenericFactory public factory;
     address public upgradeAdmin;
     address public otherAccount;
 
@@ -18,12 +18,12 @@ contract FactoryTest is Test {
         address admin = vm.addr(1000);
 
         vm.expectEmit();
-        emit EFactory.Genesis();
+        emit GenericFactory.Genesis();
 
         vm.expectEmit(true, false, false, false);
-        emit EFactory.SetUpgradeAdmin(admin);
+        emit GenericFactory.SetUpgradeAdmin(admin);
 
-        factory = new EFactory(admin);
+        factory = new GenericFactory(admin);
 
         // Defaults are all set to admin
         assertEq(factory.upgradeAdmin(), admin);
@@ -120,32 +120,30 @@ contract FactoryTest is Test {
 
         //get eVaults List
         address[] memory listEVaultsTest;
-        address[] memory listEFactory;
+        address[] memory listGenericFactory;
 
         //test getEVaultsList(0, type(uint).max) - get all eVaults list
         uint256 startIndex = 0;
-        uint256 amountNumbers = type(uint256).max;
+        uint256 endIndex = type(uint256).max;
 
-        listEFactory = factory.getProxyListRange(startIndex, amountNumbers);
+        listGenericFactory = factory.getProxyListSlice(startIndex, endIndex);
 
         listEVaultsTest = eVaultsList;
 
-        assertEq(listEFactory, listEVaultsTest);
+        assertEq(listGenericFactory, listEVaultsTest);
 
-        //test getEVaultsList(3, 10) - get 10 eVault's address starting with 3
+        //test getEVaultsList(3, 10) - get [3,10) slice
         startIndex = 3;
-        amountNumbers = 10;
+        endIndex = 10;
 
-        listEFactory = factory.getProxyListRange(startIndex, amountNumbers);
+        listGenericFactory = factory.getProxyListSlice(startIndex, endIndex);
 
-        listEVaultsTest = new address[](amountNumbers);
-        for (uint256 i; i < amountEVaults; i++) {
-            if (i >= startIndex && i < amountNumbers + startIndex) {
-                listEVaultsTest[i - startIndex] = eVaultsList[i];
-            }
+        listEVaultsTest = new address[](endIndex - startIndex);
+        for (uint256 i = startIndex; i < endIndex; i++) {
+            listEVaultsTest[i - startIndex] = eVaultsList[i];
         }
 
-        assertEq(listEFactory, listEVaultsTest);
+        assertEq(listGenericFactory, listEVaultsTest);
     }
 
     function test_getEVaultConfig() public {
@@ -159,7 +157,7 @@ contract FactoryTest is Test {
         TestERC20 TST = new TestERC20("Test Token", "TST", 18, false);
         MockEVault eVault = MockEVault(factory.createProxy(true, abi.encodePacked(address(TST), address(rm))));
 
-        EFactory.ProxyConfig memory config = factory.getProxyConfig(address(eVault));
+        GenericFactory.ProxyConfig memory config = factory.getProxyConfig(address(eVault));
 
         assertEq(config.trailingData, abi.encodePacked(address(TST), address(rm)));
 
@@ -182,7 +180,7 @@ contract FactoryTest is Test {
         MockRiskManager rm = new MockRiskManager();
 
         vm.expectEmit(false, true, true, true);
-        emit EFactory.ProxyCreated(
+        emit GenericFactory.ProxyCreated(
             address(1), true, address(mockEvaultImpl), abi.encodePacked(address(asset), address(rm))
         );
 
@@ -191,7 +189,7 @@ contract FactoryTest is Test {
 
     function test_Event_SetEVaultImplementation() public {
         vm.expectEmit(true, false, false, false);
-        emit EFactory.SetImplementation(address(1));
+        emit GenericFactory.SetImplementation(address(1));
 
         vm.prank(upgradeAdmin);
         factory.setImplementation(address(1));
@@ -201,7 +199,7 @@ contract FactoryTest is Test {
         address newUpgradeAdmin = vm.addr(1002);
 
         vm.expectEmit(true, false, false, false, address(factory));
-        emit EFactory.SetUpgradeAdmin(newUpgradeAdmin);
+        emit GenericFactory.SetUpgradeAdmin(newUpgradeAdmin);
 
         vm.prank(upgradeAdmin);
         factory.setUpgradeAdmin(newUpgradeAdmin);
@@ -211,12 +209,12 @@ contract FactoryTest is Test {
         // Nobody addresses are unauthorised
 
         vm.prank(vm.addr(2000));
-        vm.expectRevert(EFactory.E_Unauthorized.selector);
+        vm.expectRevert(GenericFactory.E_Unauthorized.selector);
         factory.setUpgradeAdmin(address(1));
 
         // Only upgradeAdmin can upgrade
         vm.prank(otherAccount);
-        vm.expectRevert(EFactory.E_Unauthorized.selector);
+        vm.expectRevert(GenericFactory.E_Unauthorized.selector);
         factory.setImplementation(address(1));
     }
 
@@ -228,7 +226,7 @@ contract FactoryTest is Test {
         address asset = vm.addr(1);
         address rm = vm.addr(2);
 
-        vm.expectRevert(EFactory.E_Reentrancy.selector);
+        vm.expectRevert(GenericFactory.E_Reentrancy.selector);
         factory.createProxy(false, abi.encodePacked(address(asset), address(rm)));
     }
 
@@ -236,17 +234,17 @@ contract FactoryTest is Test {
         address rm = vm.addr(2);
         address asset = vm.addr(1);
 
-        vm.expectRevert(EFactory.E_Implementation.selector);
+        vm.expectRevert(GenericFactory.E_Implementation.selector);
         factory.createProxy(true, abi.encodePacked(address(asset), address(rm)));
     }
 
     function test_RevertIfBadAddress() public {
         vm.prank(upgradeAdmin);
-        vm.expectRevert(EFactory.E_BadAddress.selector);
+        vm.expectRevert(GenericFactory.E_BadAddress.selector);
         factory.setImplementation(address(0));
 
         vm.prank(upgradeAdmin);
-        vm.expectRevert(EFactory.E_BadAddress.selector);
+        vm.expectRevert(GenericFactory.E_BadAddress.selector);
         factory.setUpgradeAdmin(address(0));
     }
 
@@ -268,23 +266,17 @@ contract FactoryTest is Test {
             eVaultsList[i] = address(eVault);
         }
 
-        uint256 startIndex = 0;
-        uint256 amountNumbers = amountEVaults + 1;
+        vm.expectRevert(GenericFactory.E_BadQuery.selector);
+        factory.getProxyListSlice(0, eVaultsList.length + 1);
 
-        vm.expectRevert(EFactory.E_BadQuery.selector);
-        factory.getProxyListRange(startIndex, amountNumbers);
+        vm.expectRevert(GenericFactory.E_BadQuery.selector);
+        factory.getProxyListSlice(50, eVaultsList.length + 1);
 
-        startIndex = 1;
-        amountNumbers = type(uint256).max;
+        vm.expectRevert(GenericFactory.E_BadQuery.selector);
+        factory.getProxyListSlice(1, 0);
 
-        vm.expectRevert(EFactory.E_BadQuery.selector);
-        factory.getProxyListRange(startIndex, amountNumbers);
-
-        startIndex = 32;
-        amountNumbers = 92;
-
-        vm.expectRevert(EFactory.E_BadQuery.selector);
-        factory.getProxyListRange(startIndex, amountNumbers);
+        vm.expectRevert(GenericFactory.E_BadQuery.selector);
+        factory.getProxyListSlice(1000, 1000);
     }
 
     // TODO test non-upgradeable
