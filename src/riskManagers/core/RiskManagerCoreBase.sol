@@ -16,7 +16,7 @@ abstract contract RiskManagerCoreBase is IRiskManager {
     constructor(bytes32 gitCommit_, address factory_, address evc_, address oracle_) {
         gitCommit = gitCommit_;
         oracle = oracle_;
-        referenceAsset = PriceOracleCore(oracle_).referenceAsset();
+        referenceAsset = address(0); // FIXME: PriceOracleCore(oracle_).referenceAsset();
         evc = evc_;
         factory = factory_;
     }

@@ -50,7 +50,7 @@ contract RiskManagerCore is IRiskManager, RiskManagerCoreLiquidation {
         config.interestRateModel = defaultInterestRateModel;
         config.interestFee = type(uint16).max;
 
-        PriceOracleCore(oracle).initPricingConfig(msg.sender, decimals, false);
+        //FIXME: PriceOracleCore(oracle).initPricingConfig(msg.sender, decimals, false);
     }
 
     // TODO handle vaults vs token collaterals - distinction now necessary by mock oracle

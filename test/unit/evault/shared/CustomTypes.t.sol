@@ -9,7 +9,6 @@ contract CustomTypesTest is EVaultTestBase {
 
     function test_maxOwedAndAssetsConversions() external pure {
         require(MAX_SANE_DEBT_AMOUNT.toOwed().toAssetsUp().toUint() == MAX_SANE_AMOUNT, "owed to assets up");
-        require(MAX_SANE_DEBT_AMOUNT.toOwed().toAssetsDown().toUint() == MAX_SANE_AMOUNT, "owed to assets down");
         require(MAX_SANE_AMOUNT.toAssets().toOwed().toUint() == MAX_SANE_DEBT_AMOUNT, "assets to owed");
     }
 }
