@@ -72,7 +72,7 @@ contract GenericFactory is MetaProxyDeployer {
         emit SetUpgradeAdmin(admin);
     }
 
-    function createProxy(bool upgradeable, bytes memory trailingData) external returns (address) {
+    function createProxy(bool upgradeable, bytes memory trailingData) external nonReentrant returns (address) {
         if (implementation == address(0)) revert E_Implementation();
 
         address proxy;
