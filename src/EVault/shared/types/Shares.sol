@@ -6,6 +6,8 @@ import "./Types.sol";
 import "./MarketCache.sol";
 import "./Helpers.sol";
 
+import "hardhat/console.sol";
+
 library SharesLib {
     function toUint(Shares self) internal pure returns (uint256) {
         return Shares.unwrap(self);
@@ -16,21 +18,16 @@ library SharesLib {
     }
 
     function toAssetsDown(Shares amount, MarketCache memory marketCache) internal pure returns (Assets) {
-        (uint256 totalAssets, uint256 totalBalances) = totals(marketCache);
+        (uint256 totalAssets, uint256 totalShares) = totals(marketCache);
         unchecked {
-            return
-                TypesLib.toAssets(totalBalances == 0 ? amount.toUint() : amount.toUint() * totalAssets / totalBalances);
+            return TypesLib.toAssets(amount.toUint() * totalAssets / totalShares);
         }
     }
 
     function toAssetsUp(Shares amount, MarketCache memory marketCache) internal pure returns (Assets) {
-        (uint256 totalAssets, uint256 totalBalances) = totals(marketCache);
+        (uint256 totalAssets, uint256 totalShares) = totals(marketCache);
         unchecked {
-            return TypesLib.toAssets(
-                totalBalances == 0
-                    ? amount.toUint()
-                    : (amount.toUint() * totalAssets + (totalBalances - 1)) / totalBalances
-            );
+            return TypesLib.toAssets((amount.toUint() * totalAssets + (totalShares - 1)) / totalShares);
         }
     }
 }

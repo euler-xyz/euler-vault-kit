@@ -17,21 +17,16 @@ library AssetsLib {
     }
 
     function toSharesDown(Assets amount, MarketCache memory marketCache) internal pure returns (Shares) {
-        (uint256 totalAssets, uint256 totalBalances) = totals(marketCache);
+        (uint256 totalAssets, uint256 totalShares) = totals(marketCache);
         unchecked {
-            return
-                TypesLib.toShares(totalBalances == 0 ? amount.toUint() : amount.toUint() * totalBalances / totalAssets);
+            return TypesLib.toShares(amount.toUint() * totalShares / totalAssets);
         }
     }
 
     function toSharesUp(Assets amount, MarketCache memory marketCache) internal pure returns (Shares) {
-        (uint256 totalAssets, uint256 totalBalances) = totals(marketCache);
+        (uint256 totalAssets, uint256 totalShares) = totals(marketCache);
         unchecked {
-            return TypesLib.toShares(
-                totalBalances == 0
-                    ? amount.toUint()
-                    : (amount.toUint() * totalBalances + (totalAssets - 1)) / totalAssets
-            );
+            return TypesLib.toShares((amount.toUint() * totalShares + (totalAssets - 1)) / totalAssets);
         }
     }
 

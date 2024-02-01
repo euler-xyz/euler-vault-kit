@@ -10,8 +10,8 @@ interface IRiskManager {
 
     struct Liability {
         address market;
+        address asset;
         uint256 owed;
-        uint256 deposit;
     }
 
     function activateMarket(address creator) external;
@@ -45,7 +45,7 @@ interface IRiskManager {
 
     function computeInterestParams(address asset, uint32 utilisation)
         external
-        returns (int96 interestRate, uint16 interestFee);
+        returns (uint256 interestRate, uint16 interestFee);
 
     function marketName(address market) external view returns (string memory);
     function marketSymbol(address market) external view returns (string memory);
@@ -57,5 +57,5 @@ interface IRiskManager {
         view
         returns (uint256 lockedBalance);
 
-    function feeRecipient() external view returns (address);
+    function feeReceiver() external view returns (address);
 }

@@ -6,14 +6,11 @@ import "./types/Types.sol";
 
 abstract contract Storage {
     bool initialized;
-    address factory;
 
     MarketStorage marketStorage;
 
-    struct UserAsset {
-        // Packed slot 14 + 18 = 32
-        Shares balance;
-        Owed owed;
+    struct UserStorage {
+        PackedUserSlot data;
 
         uint256 interestAccumulator;
     }
@@ -33,22 +30,20 @@ abstract contract Storage {
         Fees feesBalance;
 
         // Packed slot 14 + 18 = 32
-        Shares totalBalances;
+        Shares totalShares;
         Owed totalBorrows;
 
         uint256 interestAccumulator;
 
         MarketSnapshot marketSnapshot;
 
-        // Packed slot 12 + 2
-        // Read on first item in a block (interest accrual). Read and written to in vault status check (interest rate update).
+        // Packed slot 9 + 2
+        // Read on first item in a block (interest accrual). Read and written in vault status check DF(interest rate update).
         // Not touched on other batch items.
-        int96 interestRate;
+        uint72 interestRate;
         uint16 interestFee;
 
-        address protocolFeesHolder;
-
-        mapping(address account => UserAsset) users;
+        mapping(address account => UserStorage) users;
         mapping(address owner => mapping(address spender => uint256 allowance)) eVaultAllowance;
     }
 }

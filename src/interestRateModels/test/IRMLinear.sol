@@ -1,0 +1,15 @@
+// SPDX-License-Identifier: GPL-2.0-or-later
+
+pragma solidity ^0.8.0;
+
+import "../BaseIRM.sol";
+
+contract IRMLinear is BaseIRM {
+    uint256 internal constant MAX_IR = uint256(1e27 * 0.1) / SECONDS_PER_YEAR;
+
+    constructor(bytes32 _gitCommit) BaseIRM(_gitCommit) {}
+
+    function computeInterestRateImpl(address, address, uint32 utilisation) internal pure override returns (uint72) {
+        return uint72(MAX_IR * utilisation / type(uint32).max);
+    }
+}

@@ -17,21 +17,22 @@ abstract contract Events {
     event Repay(address indexed account, uint256 assets);
 
     event NewInterestFee(uint16 newFee);
-    event NewProtocolFeesHolder(address protocolFeesHolder);
+
     event ConvertFees(
-        address indexed protocolFeesHolder,
-        address indexed feeRecipient,
+        address indexed sender,
+        address indexed protocolReceiver,
+        address indexed riskManagerReceiver,
         uint256 protocolAssets,
         uint256 riskManagerAssets
     );
 
     event MarketStatus(
-        uint256 totalBalances,
+        uint256 totalShares,
         uint256 totalBorrows,
         uint96 feesBalance,
         uint256 poolSize,
         uint256 interestAccumulator,
-        int96 interestRate,
+        uint72 interestRate,
         uint256 timestamp
     );
     event Liquidate(
@@ -42,4 +43,8 @@ abstract contract Events {
         uint256 yieldBalance
     );
     event DisableController(address indexed account);
+
+    event SkimAssets(address indexed admin, address indexed receiver, uint256 assets);
+
+    event BalanceForwarderStatus(address indexed account, bool status);
 }

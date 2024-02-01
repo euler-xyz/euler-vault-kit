@@ -10,7 +10,7 @@ import "./Types.sol";
 struct MarketCache {
     IERC20 asset;
     IRiskManager riskManager;
-    Shares totalBalances;
+    Shares totalShares;
     Owed totalBorrows;
     uint40 lastInterestAccumulatorUpdate;
     Assets poolSize;

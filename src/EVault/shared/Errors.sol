@@ -51,7 +51,11 @@ contract Errors {
     error E_InvalidSnapshot();
     error E_InterestAccumulatorInvariant();
     error E_AccountCheckType();
+    error E_BalancesInvariant();
+    error E_BalanceForwarderUnsupported();
+
     error E_NotSupported();
     error E_EmptyError();
     error E_InterestFeeInit();
+    error E_VaultStatusCheckDeferred();
 }

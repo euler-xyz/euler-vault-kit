@@ -5,6 +5,8 @@ pragma solidity ^0.8.0;
 import {IERC20} from "../../IEVault.sol";
 import {RevertBytes} from "./RevertBytes.sol";
 
+import "hardhat/console.sol";
+
 library SafeERC20Lib {
     // WARNING: Must be very careful with this modifier. It resets the free memory pointer
     // to the value it was when the function started. This saves gas if more memory will
@@ -33,7 +35,7 @@ library SafeERC20Lib {
         }
     }
 
-    // If no code exists under the token address, the function will succeed. EVault ensures this is not the case in `initialize`.
+    // If no code exists under the token address, the func`tion will succeed. EVault ensures this is not the case in `initialize`.
     function safeTransferFrom(IERC20 token, address from, address to, uint256 value) internal {
         (bool success, bytes memory data) =
             address(token).call(abi.encodeWithSelector(IERC20.transferFrom.selector, from, to, value));

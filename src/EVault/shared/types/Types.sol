@@ -2,13 +2,16 @@
 
 pragma solidity ^0.8.0;
 
+import "hardhat/console.sol";
 import "../Errors.sol";
 import "../Constants.sol";
+import {Storage} from "../Storage.sol";
 
 import "./Shares.sol";
 import "./Assets.sol";
 import "./Owed.sol";
 import "./Fees.sol";
+import "./UserStorage.sol";
 
 type Shares is uint112;
 
@@ -17,6 +20,8 @@ type Assets is uint112;
 type Owed is uint144;
 
 type Fees is uint96;
+
+type PackedUserSlot is uint256;
 
 using SharesLib for Shares global;
 using {

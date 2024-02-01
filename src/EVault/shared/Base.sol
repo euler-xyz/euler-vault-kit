@@ -5,15 +5,23 @@ pragma solidity ^0.8.0;
 import {EVCClient} from "./EVCClient.sol";
 import {Cache} from "./Cache.sol";
 
+import {IProtocolAdmin} from "../../IProtocolAdmin.sol";
+import {IBalanceTracker} from "../../IBalanceTracker.sol";
+
 import "./types/Types.sol";
 
 abstract contract Base is EVCClient, Cache {
-    constructor(address evc) EVCClient(evc) {}
+    IProtocolAdmin immutable protocolAdmin;
+    IBalanceTracker immutable balanceTracker;
 
-    // documentation only
+    constructor(address _evc, address _protocolAdmin, address _balanceTracker) EVCClient(_evc) {
+        protocolAdmin = IProtocolAdmin(_protocolAdmin);
+        balanceTracker = IBalanceTracker(_balanceTracker);
+    }
+
     modifier reentrantOK() {
         _;
-    }
+    } // documentation only
 
     modifier nonReentrant() {
         if (marketStorage.reentrancyLock != REENTRANCYLOCK__UNLOCKED) revert E_Reentrancy();
@@ -34,7 +42,7 @@ abstract contract Base is EVCClient, Cache {
     {
         (marketCache, account) = initMarketAndAccount(operation, false);
 
-        EVCRequireStatusChecks(checkAccount == ACCOUNT_CHECK_CALLER ? account : checkAccount);
+        EVCRequireStatusChecks(checkAccount == ACCOUNTCHECK_CALLER ? account : checkAccount);
     }
 
     function initOperationForBorrow(uint32 operation)
@@ -50,10 +58,10 @@ abstract contract Base is EVCClient, Cache {
         private
         returns (MarketCache memory marketCache, address account)
     {
-        marketCache = loadAndUpdateMarket();
+        marketCache = updateMarket();
         snapshotMarket(operation, marketCache);
 
-        account = EVCAuthenticate(checkController);
+        account = EVCAuthenticateDeferred(checkController);
     }
 
     function snapshotMarket(uint32 operation, MarketCache memory marketCache) internal {
@@ -73,8 +81,20 @@ abstract contract Base is EVCClient, Cache {
     {
         return MarketSnapshot({
             poolSize: marketCache.poolSize,
-            totalBorrows: marketCache.totalBorrows.toAssetsDown(),
+            totalBorrows: marketCache.totalBorrows.toAssetsUp(),
             performedOperations: operation
         });
+    }
+
+    function logMarketStatus(MarketCache memory a, uint72 interestRate) internal {
+        emit MarketStatus(
+            a.totalShares.toUint(),
+            a.totalBorrows.toAssetsUp().toUint(),
+            Fees.unwrap(a.feesBalance),
+            a.poolSize.toUint(),
+            a.interestAccumulator,
+            interestRate,
+            block.timestamp
+        );
     }
 }

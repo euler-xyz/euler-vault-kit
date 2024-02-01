@@ -5,17 +5,11 @@ pragma solidity ^0.8.0;
 import "./Types.sol";
 import "../Constants.sol";
 
+import "hardhat/console.sol";
+
 library OwedLib {
     function toUint(Owed self) internal pure returns (uint256) {
         return Owed.unwrap(self);
-    }
-
-    function toAssetsDown(Owed amount) internal pure returns (Assets) {
-        if (Owed.unwrap(amount) == 0) return Assets.wrap(0);
-
-        unchecked {
-            return TypesLib.toAssets(Owed.unwrap(amount) >> INTERNAL_DEBT_PRECISION);
-        }
     }
 
     function toAssetsUp(Owed amount) internal pure returns (Assets) {

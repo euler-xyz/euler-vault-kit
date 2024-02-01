@@ -23,7 +23,6 @@ abstract contract ModuleDispatch is Base {
     // static call `this.viewDelegate()` function, which in turn will delegate the payload to a module.
     modifier useView(address module) {
         _;
-
         assembly {
             // Construct optimized custom call data for `this.viewDelegate()`
             // [selector 4B][module address 32B][calldata with stripped proxy metadata]
@@ -31,8 +30,8 @@ abstract contract ModuleDispatch is Base {
             mstore(0, 0x1fe8b95300000000000000000000000000000000000000000000000000000000)
             mstore(4, module)
             calldatacopy(36, 0, calldatasize())
-            // insize: calldatasize + 36 (signature and address) - proxy metadata size (assuming PROXY_METADATA_LENGTH = 40)
-            let result := staticcall(gas(), address(), 0, sub(calldatasize(), 4), 0, 0)
+            // insize: calldatasize + 36 (signature and address) - proxy metadata size
+            let result := staticcall(gas(), address(), 0, sub(add(calldatasize(), 36), PROXY_METADATA_LENGTH), 0, 0)
             returndatacopy(0, 0, returndatasize())
             switch result
             case 0 { revert(0, returndatasize()) }
