@@ -6,9 +6,7 @@ import "./IPriceOracle.sol";
 import "../vendor/TickMath.sol";
 import "../vendor/FullMath.sol";
 
-import {IERC4626, IERC20} from "contracts/EVault/IEVault.sol";
-
-import "hardhat/console.sol";
+import {IERC4626, IERC20} from "../EVault/IEVault.sol";
 
 interface IUniswapV3Factory {
     function getPool(address tokenA, address tokenB, uint24 fee) external view returns (address pool);

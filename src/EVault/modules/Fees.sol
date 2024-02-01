@@ -10,8 +10,6 @@ import {SafeERC20Lib} from "../shared/lib/SafeERC20Lib.sol";
 
 import "../shared/types/Types.sol";
 
-import "hardhat/console.sol";
-
 abstract contract FeesModule is IFees, Base, BalanceUtils {
     using TypesLib for uint256;
     using SafeERC20Lib for IERC20;

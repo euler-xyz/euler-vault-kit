@@ -12,8 +12,6 @@ import {MarketCache} from "../shared/types/MarketCache.sol";
 
 import "../shared/Constants.sol";
 
-import "hardhat/console.sol";
-
 abstract contract InitializeModule is IInitialize, Base, BorrowUtils {
     /// @inheritdoc IInitialize
     function initialize(address creator) external virtual reentrantOK {

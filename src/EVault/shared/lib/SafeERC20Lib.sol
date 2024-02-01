@@ -5,8 +5,6 @@ pragma solidity ^0.8.0;
 import {IERC20} from "../../IEVault.sol";
 import {RevertBytes} from "./RevertBytes.sol";
 
-import "hardhat/console.sol";
-
 library SafeERC20Lib {
     // WARNING: Must be very careful with this modifier. It resets the free memory pointer
     // to the value it was when the function started. This saves gas if more memory will

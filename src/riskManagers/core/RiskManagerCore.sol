@@ -10,8 +10,6 @@ import {IEVC} from "ethereum-vault-connector/interfaces/IEthereumVaultConnector.
 
 import "../../EVault/shared/Constants.sol"; // TODO
 
-import "hardhat/console.sol";
-
 interface IFactory {
     function isProxy(address) external view returns (bool);
 }

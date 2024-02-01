@@ -10,7 +10,6 @@ import {SafeERC20Lib} from "../shared/lib/SafeERC20Lib.sol";
 import {ProxyUtils} from "../shared/lib/ProxyUtils.sol";
 
 import "../shared/types/Types.sol";
-import "hardhat/console.sol";
 
 abstract contract ERC4626Module is IERC4626, Base, AssetTransfers, BalanceUtils {
     using TypesLib for uint256;

@@ -5,8 +5,6 @@ pragma solidity ^0.8.0;
 import "./Types.sol";
 import "../Constants.sol";
 
-import "hardhat/console.sol";
-
 library OwedLib {
     function toUint(Owed self) internal pure returns (uint256) {
         return Owed.unwrap(self);

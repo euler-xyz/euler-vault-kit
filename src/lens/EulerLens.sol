@@ -9,7 +9,6 @@ import {RiskManagerCore, IRiskManager, IEVC} from "../riskManagers/core/RiskMana
 
 import "../EVault/shared/Constants.sol";
 import {IERC20} from "../EVault/IEVault.sol";
-import "hardhat/console.sol";
 
 interface IExec {
     function getPriceFull(address underlying)

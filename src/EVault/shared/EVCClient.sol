@@ -11,8 +11,6 @@ import "./Constants.sol";
 import {IERC20} from "../IEVault.sol";
 import {IEVC} from "ethereum-vault-connector/interfaces/IEthereumVaultConnector.sol";
 
-import "hardhat/console.sol";
-
 abstract contract EVCClient is Storage, Events, Errors {
     IEVC immutable evc;
 

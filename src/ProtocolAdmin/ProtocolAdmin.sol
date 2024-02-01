@@ -5,8 +5,6 @@ pragma solidity ^0.8.0;
 import "../IProtocolAdmin.sol";
 import "../EVault/shared/Constants.sol";
 
-import "hardhat/console.sol";
-
 contract ProtocolAdmin is IProtocolAdmin {
     address admin;
     address feeReceiver;
