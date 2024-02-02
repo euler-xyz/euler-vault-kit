@@ -5,9 +5,8 @@ pragma solidity ^0.8.0;
 import "./BaseIRMLinearKink.sol";
 
 contract IRMClassOHM is BaseIRMLinearKink {
-    constructor(bytes32 gitCommit_)
+    constructor()
         BaseIRMLinearKink(
-            gitCommit_,
             // Base=5% APY,  Kink(80%)=20% APY  Max=300% APY
             1546098748700444833,
             1231511520,

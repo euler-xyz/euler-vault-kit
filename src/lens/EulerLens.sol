@@ -21,12 +21,10 @@ interface IExec {
 contract EulerLens {
     uint16 internal constant FEE_SCALE = 60_000;
 
-    bytes32 public immutable moduleGitCommit;
     address public immutable evc;
 
-    constructor(address evc_, bytes32 moduleGitCommit_) {
+    constructor(address evc_) {
         evc = evc_;
-        moduleGitCommit = moduleGitCommit_;
     }
 
     // Query

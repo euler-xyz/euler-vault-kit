@@ -10,9 +10,7 @@ contract BaseIRMLinearKink is BaseIRM {
     uint256 public immutable slope2;
     uint256 public immutable kink;
 
-    constructor(bytes32 gitCommit, uint256 baseRate_, uint256 slope1_, uint256 slope2_, uint256 kink_)
-        BaseIRM(gitCommit)
-    {
+    constructor(uint256 baseRate_, uint256 slope1_, uint256 slope2_, uint256 kink_) {
         baseRate = baseRate_;
         slope1 = slope1_;
         slope2 = slope2_;

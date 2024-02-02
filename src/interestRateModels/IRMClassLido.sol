@@ -30,7 +30,7 @@ contract IRMClassLido is BaseIRM {
         uint64 lastCalled;
     }
 
-    constructor(bytes32 gitCommit) BaseIRM(gitCommit) {
+    constructor() {
         lidoOracle = 0x442af784A788A5bd6F42A01Ebe9F287a871243fb;
         stETH = 0xae7ab96520DE3A18E5e111B5EaAb095312D7fE84;
 

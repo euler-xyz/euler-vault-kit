@@ -6,14 +6,12 @@ import "../../IRiskManager.sol";
 import "../../Interfaces.sol";
 
 abstract contract RiskManagerCoreBase is IRiskManager {
-    bytes32 immutable gitCommit;
     address immutable factory;
     address immutable evc;
     address immutable oracle;
     address immutable referenceAsset;
 
-    constructor(bytes32 gitCommit_, address factory_, address evc_, address oracle_, address referenceAsset_) {
-        gitCommit = gitCommit_;
+    constructor(address factory_, address evc_, address oracle_, address referenceAsset_) {
         factory = factory_;
         evc = evc_;
         oracle = oracle_;

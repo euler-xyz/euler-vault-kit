@@ -9,12 +9,6 @@ abstract contract BaseIRM is IIRM {
 
     uint72 constant MAX_ALLOWED_INTEREST_RATE = uint72(uint256(5 * 1e27) / SECONDS_PER_YEAR); // 500% APR
 
-    bytes32 internal immutable gitCommit;
-
-    constructor(bytes32 _gitCommit) {
-        gitCommit = _gitCommit;
-    }
-
     function computeInterestRateImpl(address, address, uint32) internal virtual returns (uint72);
 
     function computeInterestRate(address market, address asset, uint32 utilisation) external returns (uint256) {

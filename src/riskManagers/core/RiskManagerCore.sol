@@ -16,14 +16,13 @@ interface IFactory {
 
 contract RiskManagerCore is IRiskManager, RiskManagerCoreLiquidation {
     constructor(
-        bytes32 gitCommit,
         address admin,
         address _factory,
         address _evc,
         address _defaultInterestRateModel,
         address _oracle,
         address _referenceAsset
-    ) RiskManagerCoreBase(gitCommit, _factory, _evc, _oracle, _referenceAsset) RiskManagerCoreGovernance(admin) {
+    ) RiskManagerCoreBase(_factory, _evc, _oracle, _referenceAsset) RiskManagerCoreGovernance(admin) {
         defaultInterestRateModel = _defaultInterestRateModel;
     }
 
