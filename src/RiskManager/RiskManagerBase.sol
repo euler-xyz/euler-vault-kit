@@ -2,10 +2,10 @@
 
 pragma solidity ^0.8.0;
 
-import "../../IRiskManager.sol";
-import "../../Interfaces.sol";
+import "../IRiskManager.sol";
+import "../Interfaces.sol";
 
-abstract contract RiskManagerCoreBase is IRiskManager {
+abstract contract RiskManagerBase is IRiskManager {
     address immutable factory;
     address immutable evc;
     address immutable oracle;

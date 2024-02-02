@@ -2,10 +2,10 @@
 
 pragma solidity ^0.8.0;
 
-import "./RiskManagerCoreBase.sol";
-import "../../interestRateModels/IIRM.sol";
+import "./RiskManagerBase.sol";
+import "../interestRateModels/IIRM.sol";
 
-abstract contract RiskManagerCoreGovernance is RiskManagerCoreBase {
+abstract contract RiskManagerGovernance is RiskManagerBase {
     constructor(address _governorAdmin) {
         governorAdmin = _governorAdmin;
         feeReceiverAddress = _governorAdmin;

@@ -5,7 +5,7 @@ pragma solidity ^0.8.0;
 import "../EVault/EVault.sol";
 import "../interestRateModels/BaseIRMLinearKink.sol";
 import "../EVault/shared/lib/RPow.sol";
-import {RiskManagerCore, IRiskManager, IEVC} from "../riskManagers/core/RiskManagerCore.sol";
+import {RiskManager, IRiskManager, IEVC} from "../RiskManager/RiskManager.sol";
 
 import "../EVault/shared/Constants.sol";
 import {IERC20} from "../EVault/IEVault.sol";
@@ -98,10 +98,10 @@ contract EulerLens {
         r.timestamp = block.timestamp;
         r.blockNumber = block.number;
 
-        RiskManagerCore.MarketLiquidity[] memory liqs;
+        RiskManager.MarketLiquidity[] memory liqs;
 
         if (q.account != address(0)) {
-            liqs = RiskManagerCore(q.riskManager).computeAccountLiquidityPerMarket(q.account);
+            liqs = RiskManager(q.riskManager).computeAccountLiquidityPerMarket(q.account);
         }
 
         r.markets = new ResponseMarket[](liqs.length + q.markets.length);
@@ -113,7 +113,7 @@ contract EulerLens {
             m.underlying = EVault(m.eVaultAddr).asset();
             // m.liquidityStatus = liqs[i].status;
 
-            populateResponseMarket(q, m, RiskManagerCore(q.riskManager));
+            populateResponseMarket(q, m, RiskManager(q.riskManager));
         }
 
         for (uint256 j = liqs.length; j < liqs.length + q.markets.length; ++j) {
@@ -121,15 +121,15 @@ contract EulerLens {
             ResponseMarket memory m = r.markets[j];
 
             m.underlying = q.markets[i];
-            m.eVaultAddr = RiskManagerCore(q.riskManager).getMarketByUnderlying(m.underlying);
-            populateResponseMarket(q, m, RiskManagerCore(q.riskManager));
+            m.eVaultAddr = RiskManager(q.riskManager).getMarketByUnderlying(m.underlying);
+            populateResponseMarket(q, m, RiskManager(q.riskManager));
         }
         if (q.account != address(0)) {
             r.enteredMarkets = IEVC(evc).getCollaterals(q.account);
         }
     }
 
-    function populateResponseMarket(Query memory q, ResponseMarket memory m, RiskManagerCore riskManager)
+    function populateResponseMarket(Query memory q, ResponseMarket memory m, RiskManager riskManager)
         private
         view
     {
@@ -218,7 +218,7 @@ contract EulerLens {
     }
 
     function doQueryIRM(QueryIRM memory q) external view returns (ResponseIRM memory r) {
-        RiskManagerCore riskManager = RiskManagerCore(EVault(q.market).riskManager());
+        RiskManager riskManager = RiskManager(EVault(q.market).riskManager());
 
         BaseIRMLinearKink irm = BaseIRMLinearKink(riskManager.interestRateModel(q.market));
 

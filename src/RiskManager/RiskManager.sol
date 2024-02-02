@@ -2,19 +2,19 @@
 
 pragma solidity ^0.8.0;
 
-import "./RiskManagerCoreLiquidation.sol";
-import "../../IPriceOracle.sol";
-import {IEVault} from "../../EVault/IEVault.sol";
-import {IRiskManager} from "../../IRiskManager.sol";
+import "./RiskManagerLiquidation.sol";
+import "../IPriceOracle.sol";
+import {IEVault} from "../EVault/IEVault.sol";
+import {IRiskManager} from "../IRiskManager.sol";
 import {IEVC} from "ethereum-vault-connector/interfaces/IEthereumVaultConnector.sol";
 
-import "../../EVault/shared/Constants.sol"; // TODO
+import "../EVault/shared/Constants.sol"; // TODO
 
 interface IFactory {
     function isProxy(address) external view returns (bool);
 }
 
-contract RiskManagerCore is IRiskManager, RiskManagerCoreLiquidation {
+contract RiskManager is IRiskManager, RiskManagerLiquidation {
     constructor(
         address admin,
         address _factory,
@@ -22,7 +22,7 @@ contract RiskManagerCore is IRiskManager, RiskManagerCoreLiquidation {
         address _defaultInterestRateModel,
         address _oracle,
         address _referenceAsset
-    ) RiskManagerCoreBase(_factory, _evc, _oracle, _referenceAsset) RiskManagerCoreGovernance(admin) {
+    ) RiskManagerBase(_factory, _evc, _oracle, _referenceAsset) RiskManagerGovernance(admin) {
         defaultInterestRateModel = _defaultInterestRateModel;
     }
 

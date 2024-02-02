@@ -6,7 +6,7 @@ import {Test, console2, stdError} from "forge-std/Test.sol";
 import {GenericFactory} from "src/GenericFactory/GenericFactory.sol";
 
 import {EVault} from "src/EVault/EVault.sol";
-import {RiskManagerCore} from "src/riskManagers/core/RiskManagerCore.sol";
+import {RiskManager} from "src/RiskManager/RiskManager.sol";
 import {IRMClassStable} from "src/interestRateModels/IRMClassStable.sol";
 import {ProtocolAdmin} from "src/ProtocolAdmin/ProtocolAdmin.sol";
 
@@ -79,7 +79,7 @@ contract EVaultTestBase is Test, AssertionsCustomTypes {
         address referenceAsset = address(0);
 
         assetTST = new TestERC20("Test Token", "TST", 17, false);
-        RiskManagerCore rm = new RiskManagerCore(address(0), address(factory), address(evc), irm, oracle, referenceAsset);
+        RiskManager rm = new RiskManager(address(0), address(factory), address(evc), irm, oracle, referenceAsset);
 
         eTST = IEVault(factory.createProxy(true, abi.encodePacked(address(assetTST), address(rm))));
     }

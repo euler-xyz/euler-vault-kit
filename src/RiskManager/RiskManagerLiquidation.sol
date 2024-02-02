@@ -2,11 +2,11 @@
 
 pragma solidity ^0.8.0;
 
-import "./RiskManagerCoreGovernance.sol";
-import "../../IPriceOracle.sol";
+import "./RiskManagerGovernance.sol";
+import "../IPriceOracle.sol";
 import {IEVC} from "ethereum-vault-connector/interfaces/IEthereumVaultConnector.sol";
 
-abstract contract RiskManagerCoreLiquidation is RiskManagerCoreGovernance {
+abstract contract RiskManagerLiquidation is RiskManagerGovernance {
     function computeLiquidity(address account, address[] memory collaterals, Liability memory liability)
         internal
         view
