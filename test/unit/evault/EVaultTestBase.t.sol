@@ -76,9 +76,10 @@ contract EVaultTestBase is Test, AssertionsCustomTypes {
 
         address irm = address(new IRMClassStable(bytes32(0)));
         address oracle = address(0);
+        address referenceAsset = address(0);
 
         assetTST = new TestERC20("Test Token", "TST", 17, false);
-        RiskManagerCore rm = new RiskManagerCore(bytes32(0), address(0), address(factory), address(evc), irm, oracle);
+        RiskManagerCore rm = new RiskManagerCore(bytes32(0), address(0), address(factory), address(evc), irm, oracle, referenceAsset);
 
         eTST = IEVault(factory.createProxy(true, abi.encodePacked(address(assetTST), address(rm))));
     }

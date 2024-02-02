@@ -11,12 +11,6 @@ interface IPriceOracle {
         view
         returns (uint256 bidOut, uint256 askOut);
 
-    function getTick(uint256 amount, address base, address quote) external view returns (uint256 tick);
-    function getTicks(uint256 amount, address base, address quote)
-        external
-        view
-        returns (uint256 bidTick, uint256 askTick);
-
     error PO_BaseUnsupported();
     error PO_QuoteUnsupported();
     error PO_Overflow();

@@ -3,6 +3,7 @@
 pragma solidity ^0.8.0;
 
 import "./RiskManagerCoreGovernance.sol";
+import "../../IPriceOracle.sol";
 import {IEVC} from "ethereum-vault-connector/interfaces/IEthereumVaultConnector.sol";
 
 abstract contract RiskManagerCoreLiquidation is RiskManagerCoreGovernance {
@@ -75,7 +76,7 @@ abstract contract RiskManagerCoreLiquidation is RiskManagerCoreGovernance {
         // Compute maximum yield
 
         cache.collateralBalance = IERC20(collateral).balanceOf(violator);
-        uint256 collateralValue = PriceOracleCore(oracle).getQuote(cache.collateralBalance, collateral, referenceAsset);
+        uint256 collateralValue = IPriceOracle(oracle).getQuote(cache.collateralBalance, collateral, referenceAsset);
 
         uint256 maxRepayValue = liabilityValue;
         uint256 maxYieldValue = maxRepayValue * 1e18 / discountFactor;

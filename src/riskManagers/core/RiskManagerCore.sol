@@ -3,7 +3,7 @@
 pragma solidity ^0.8.0;
 
 import "./RiskManagerCoreLiquidation.sol";
-import "../../oracles/IPriceOracle.sol";
+import "../../IPriceOracle.sol";
 import {IEVault} from "../../EVault/IEVault.sol";
 import {IRiskManager} from "../../IRiskManager.sol";
 import {IEVC} from "ethereum-vault-connector/interfaces/IEthereumVaultConnector.sol";
@@ -21,8 +21,9 @@ contract RiskManagerCore is IRiskManager, RiskManagerCoreLiquidation {
         address _factory,
         address _evc,
         address _defaultInterestRateModel,
-        address _oracle
-    ) RiskManagerCoreBase(gitCommit, _factory, _evc, _oracle) RiskManagerCoreGovernance(admin) {
+        address _oracle,
+        address _referenceAsset
+    ) RiskManagerCoreBase(gitCommit, _factory, _evc, _oracle, _referenceAsset) RiskManagerCoreGovernance(admin) {
         defaultInterestRateModel = _defaultInterestRateModel;
     }
 
@@ -66,7 +67,7 @@ contract RiskManagerCore is IRiskManager, RiskManagerCoreLiquidation {
 
         // Borrow factor and interest rate model are not initialized, making the market non-borrowable
 
-        PriceOracleCore(oracle).initPricingConfig(market, uint8(decimals), true);
+        //FIXME: PriceOracleCore(oracle).initPricingConfig(market, uint8(decimals), true);
     }
 
     function marketName(address market) external view returns (string memory) {
@@ -138,9 +139,9 @@ contract RiskManagerCore is IRiskManager, RiskManagerCoreLiquidation {
         uint256 extraCollateralBalance;
         {
             // TODO use direct quote (below) when oracle supports both directions
-            // uint extraCollateralBalance = PriceOracleCore(oracle).getQuote(extraCollateralValue, referenceAsset, collateral);
+            // uint extraCollateralBalance = IPriceOracle(oracle).getQuote(extraCollateralValue, referenceAsset, collateral);
             uint256 quoteUnit = 1e18;
-            uint256 collateralPrice = PriceOracleCore(oracle).getQuote(quoteUnit, collateral, referenceAsset);
+            uint256 collateralPrice = IPriceOracle(oracle).getQuote(quoteUnit, collateral, referenceAsset);
             if (collateralPrice == 0) return 0; // worthless / unpriced collateral is not locked TODO what happens in liquidation??
             extraCollateralBalance = extraCollateralValue * quoteUnit / collateralPrice;
         }
@@ -347,7 +348,7 @@ contract RiskManagerCore is IRiskManager, RiskManagerCoreLiquidation {
 
         liabilityConfig = resolveMarketConfig(liability.market);
         //TODO // if (isExternalMarket(liabilityConfig)) revert RM_ExternalMarket();
-        liabilityValue = PriceOracleCore(oracle).getQuote(liability.owed, liability.asset, referenceAsset);
+        liabilityValue = IPriceOracle(oracle).getQuote(liability.owed, liability.asset, referenceAsset);
 
         // Count collateral
 
@@ -363,7 +364,7 @@ contract RiskManagerCore is IRiskManager, RiskManagerCoreLiquidation {
 
             if (balance == 0) continue;
 
-            uint256 currentCollateralValue = PriceOracleCore(oracle).getQuote(balance, collateral, referenceAsset);
+            uint256 currentCollateralValue = IPriceOracle(oracle).getQuote(balance, collateral, referenceAsset);
 
             collateralValue += currentCollateralValue * collateralFactor / CONFIG_SCALE;
         }

@@ -4,21 +4,20 @@ pragma solidity ^0.8.0;
 
 import "../../IRiskManager.sol";
 import "../../Interfaces.sol";
-import {PriceOracleCore} from "../../oracles/PriceOracleCore.sol";
 
 abstract contract RiskManagerCoreBase is IRiskManager {
     bytes32 immutable gitCommit;
-    address immutable oracle;
-    address immutable referenceAsset;
     address immutable factory;
     address immutable evc;
+    address immutable oracle;
+    address immutable referenceAsset;
 
-    constructor(bytes32 gitCommit_, address factory_, address evc_, address oracle_) {
+    constructor(bytes32 gitCommit_, address factory_, address evc_, address oracle_, address referenceAsset_) {
         gitCommit = gitCommit_;
-        oracle = oracle_;
-        referenceAsset = address(0); // FIXME: PriceOracleCore(oracle_).referenceAsset();
-        evc = evc_;
         factory = factory_;
+        evc = evc_;
+        oracle = oracle_;
+        referenceAsset = referenceAsset_;
     }
 
     // ERRORS
