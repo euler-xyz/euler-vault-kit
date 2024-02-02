@@ -18,7 +18,7 @@ abstract contract ERC4626Module is IERC4626, Base, AssetTransfers, BalanceUtils 
 
     /// @inheritdoc IERC4626
     function asset() external view virtual reentrantOK returns (address) {
-        (IERC20 asset_,) = ProxyUtils.metadata();
+        (IERC20 asset_) = ProxyUtils.metadata();
         return address(asset_);
     }
 
@@ -45,9 +45,7 @@ abstract contract ERC4626Module is IERC4626, Base, AssetTransfers, BalanceUtils 
 
     /// @inheritdoc IERC4626
     function maxDeposit(address account) public view virtual nonReentrantView returns (uint256) {
-        (, IRiskManager riskManager) = ProxyUtils.metadata();
-
-        uint256 max = riskManager.maxDeposit(account, address(this));
+        uint256 max = maxDepositInternal(account);
         return max > MAX_SANE_AMOUNT ? MAX_SANE_AMOUNT : max;
     }
 
@@ -70,8 +68,7 @@ abstract contract ERC4626Module is IERC4626, Base, AssetTransfers, BalanceUtils 
 
     /// @inheritdoc IERC4626
     function maxWithdraw(address owner) external view virtual nonReentrantView returns (uint256) {
-        (, IRiskManager riskManager) = ProxyUtils.metadata();
-        if (riskManager.isPausedOperation(address(this), OP_WITHDRAW)) return 0;
+        if (isPausedOperation(OP_WITHDRAW)) return 0;
 
         MarketCache memory marketCache = loadMarket();
         return maxRedeemInternal(owner).toAssetsDown(marketCache).toUint();
@@ -85,8 +82,7 @@ abstract contract ERC4626Module is IERC4626, Base, AssetTransfers, BalanceUtils 
 
     /// @inheritdoc IERC4626
     function maxRedeem(address owner) public view virtual nonReentrantView returns (uint256) {
-        (, IRiskManager riskManager) = ProxyUtils.metadata();
-        if (riskManager.isPausedOperation(address(this), OP_REDEEM)) return 0;
+        if (isPausedOperation(OP_REDEEM)) return 0;
 
         return maxRedeemInternal(owner).toUint();
     }
@@ -219,6 +215,29 @@ abstract contract ERC4626Module is IERC4626, Base, AssetTransfers, BalanceUtils 
         max = max > poolSize ? poolSize : max;
 
         return max;
+    }
+
+    function maxDepositInternal(address) private view returns (uint256) {
+        (IERC20 market) = ProxyUtils.metadata();
+
+        // TODO optimize read
+        uint256 supplyCap = marketConfig.supplyCap;
+        uint256 decimals = marketConfig.assetDecimals;
+        uint256 pauseBitmask = marketConfig.pauseBitmask;
+
+        if (pauseBitmask & OP_DEPOSIT != 0) return 0;
+        if (supplyCap == 0) return type(uint256).max;
+
+        uint256 currentSupply = IERC4626(address(market)).totalAssets(); // FIXME: why calling external here?
+        supplyCap = supplyCap * (10 ** decimals);
+
+        return currentSupply < supplyCap ? supplyCap - currentSupply : 0;
+    }
+
+    function isPausedOperation(uint32 operations) private view returns (bool) {
+        // TODO optimize read
+        uint256 pauseBitmask = marketConfig.pauseBitmask;
+        return operations & pauseBitmask > 0;
     }
 }
 

@@ -3,7 +3,6 @@
 pragma solidity ^0.8.0;
 
 import {IInitialize, IERC20} from "../IEVault.sol";
-import {IRiskManager} from "../../IRiskManager.sol";
 import {Base} from "../shared/Base.sol";
 import {BorrowUtils} from "../shared/BorrowUtils.sol";
 import {DToken} from "../DToken.sol";
@@ -18,15 +17,15 @@ abstract contract InitializeModule is IInitialize, Base, BorrowUtils {
         if (initialized) revert E_Initialized();
         initialized = true;
 
+        governorAdmin = creator;
+
         // Validate proxy immutables
 
         // Calldata should include: signature and abi encoded creator address (4 + 32 bytes), followed by proxy metadata
         if (msg.data.length != 4 + 32 + PROXY_METADATA_LENGTH) revert E_ProxyMetadata();
-        (IERC20 asset, IRiskManager riskManager) = ProxyUtils.metadata();
+        (IERC20 asset) = ProxyUtils.metadata();
         if (
-            address(asset) == address(0) || address(asset) == address(riskManager) || address(asset) == address(evc)
-                || address(riskManager) == address(0) || address(riskManager) == address(evc)
-                || address(asset).code.length == 0
+            address(asset) == address(0) || address(asset) == address(evc) || address(asset).code.length == 0
         ) revert E_BadAddress();
 
         // Create companion DToken
@@ -39,18 +38,19 @@ abstract contract InitializeModule is IInitialize, Base, BorrowUtils {
         marketStorage.interestAccumulator = INITIAL_INTEREST_ACCUMULATOR;
         marketStorage.reentrancyLock = REENTRANCYLOCK__UNLOCKED;
 
-        // Initialize risk manager and interest rates
+        // Initialize config
 
-        riskManager.activateMarket(creator);
+        uint8 decimals = asset.decimals();
+        if (decimals > 18) revert RM_TooManyDecimals();
 
-        MarketCache memory marketCache = loadMarket();
-        uint72 interestRate = updateInterestParams(marketCache);
-        if (!protocolAdmin.isValidInterestFee(address(this), marketStorage.interestFee)) revert E_InterestFeeInit();
+        marketConfig.assetDecimals = decimals;
+        marketConfig.interestFee = DEFAULT_INTEREST_FEE;
+        marketConfig.unitOfAccount = address(asset);
 
         // Emit logs
 
-        emit EVaultCreated(creator, address(asset), address(riskManager), dToken);
-        logMarketStatus(marketCache, interestRate);
+        emit EVaultCreated(creator, address(asset), dToken);
+        logMarketStatus(loadMarket(), 0);
     }
 }
 

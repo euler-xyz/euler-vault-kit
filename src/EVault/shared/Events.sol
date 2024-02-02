@@ -3,7 +3,7 @@
 pragma solidity ^0.8.0;
 
 abstract contract Events {
-    event EVaultCreated(address indexed creator, address indexed asset, address indexed riskManager, address dToken);
+    event EVaultCreated(address indexed creator, address indexed asset, address dToken);
 
     event Transfer(address indexed from, address indexed to, uint256 value);
     event Approval(address indexed owner, address indexed spender, uint256 value);
@@ -21,9 +21,9 @@ abstract contract Events {
     event ConvertFees(
         address indexed sender,
         address indexed protocolReceiver,
-        address indexed riskManagerReceiver,
+        address indexed feeReceiver,
         uint256 protocolAssets,
-        uint256 riskManagerAssets
+        uint256 feeAssets
     );
 
     event MarketStatus(

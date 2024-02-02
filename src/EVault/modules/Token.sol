@@ -16,23 +16,29 @@ abstract contract TokenModule is IToken, Base, BalanceUtils {
 
     /// @inheritdoc IERC20
     function name() external view virtual reentrantOK returns (string memory) {
-        (, IRiskManager riskManager) = ProxyUtils.metadata();
+        (IERC20 asset) = ProxyUtils.metadata();
 
-        return riskManager.marketName(address(this));
+        // Handle MKR like tokens returning bytes32
+        (bool success, bytes memory data) = address(asset).staticcall(abi.encodeWithSelector(IERC20.name.selector));
+        if (!success) RevertBytes.revertBytes(data);
+        return string.concat("Euler Pool: ", data.length == 32 ? string(data) : abi.decode(data, (string)));
     }
 
     /// @inheritdoc IERC20
     function symbol() external view virtual reentrantOK returns (string memory) {
-        (, IRiskManager riskManager) = ProxyUtils.metadata();
+        (IERC20 asset) = ProxyUtils.metadata();
 
-        return riskManager.marketSymbol(address(this));
+        // Handle MKR like tokens returning bytes32
+        (bool success, bytes memory data) = address(asset).staticcall(abi.encodeWithSelector(IERC20.symbol.selector));
+        if (!success) RevertBytes.revertBytes(data);
+        return string.concat("e", data.length == 32 ? string(data) : abi.decode(data, (string)));
     }
 
     /// @inheritdoc IERC20
     function decimals() external view virtual reentrantOK returns (uint8) {
-        (IERC20 asset_,) = ProxyUtils.metadata();
+        (IERC20 asset) = ProxyUtils.metadata();
 
-        return asset_.decimals();
+        return asset.decimals();
     }
 
     /// @inheritdoc IERC20

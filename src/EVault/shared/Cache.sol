@@ -35,7 +35,7 @@ contract Cache is Storage, Errors {
 
         // Proxy metadata
 
-        (marketCache.asset, marketCache.riskManager) = ProxyUtils.metadata();
+        (marketCache.asset) = ProxyUtils.metadata();
 
         // Storage loads
 

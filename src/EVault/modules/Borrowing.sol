@@ -9,6 +9,7 @@ import {BorrowUtils} from "../shared/BorrowUtils.sol";
 import {AssetTransfers} from "../shared/AssetTransfers.sol";
 import {SafeERC20Lib} from "../shared/lib/SafeERC20Lib.sol";
 import {ProxyUtils} from "../shared/lib/ProxyUtils.sol";
+import {IEVC} from "ethereum-vault-connector/interfaces/IEthereumVaultConnector.sol";
 
 import "../shared/types/Types.sol";
 
@@ -74,16 +75,8 @@ abstract contract BorrowingModule is IBorrowing, Base, AssetTransfers, BalanceUt
         returns (uint256)
     {
         if (getController(account) != address(this)) revert E_ControllerDisabled();
-        MarketCache memory marketCache = loadMarket();
 
-        return
-            marketCache.riskManager.collateralBalanceLocked(collateral, account, getRMLiability(marketCache, account));
-    }
-
-    /// @inheritdoc IBorrowing
-    function riskManager() external view virtual reentrantOK returns (address) {
-        (, IRiskManager rm) = ProxyUtils.metadata();
-        return address(rm);
+        return collateralBalanceLockedInternal(collateral, account, getRMLiability(loadMarket(), account));
     }
 
     /// @inheritdoc IBorrowing
@@ -204,7 +197,7 @@ abstract contract BorrowingModule is IBorrowing, Base, AssetTransfers, BalanceUt
 
     /// @inheritdoc IBorrowing
     function flashLoan(uint256 assets, bytes calldata data) external virtual nonReentrant {
-        (IERC20 asset_,) = ProxyUtils.metadata();
+        (IERC20 asset_) = ProxyUtils.metadata();
         address account = EVCAuthenticate();
 
         uint256 origBalance = asset_.balanceOf(address(this));
@@ -216,61 +209,71 @@ abstract contract BorrowingModule is IBorrowing, Base, AssetTransfers, BalanceUt
         if (asset_.balanceOf(address(this)) < origBalance) revert E_FlashLoanNotRepaid();
     }
 
-    /// @inheritdoc IBorrowing
-    function disableController() external virtual nonReentrant {
-        address account = EVCAuthenticate();
 
-        if (!marketStorage.users[account].getOwed().isZero()) revert E_OutstandingDebt();
 
-        disableControllerInternal(account);
-    }
+    // Internal
 
-    /// @inheritdoc IBorrowing
-    /// @dev The function doesn't have a re-entrancy lock, because onlyEVCChecks provides equivalent behaviour. It ensures that the caller
-    /// is the EVC, in 'checks in progress' state. In this state EVC will not accept any calls. Since all the functions which modify
-    /// vault state use callThroughEVC modifier, they are effectively blocked while the function executes. There are non-view functions without
-    /// callThroughEVC modifier (`flashLoan`, `disableCollateral`, `skimAssets`), but they don't change the vault's storage.
-    function checkAccountStatus(address account, address[] calldata collaterals)
-        public
-        virtual
-        reentrantOK
-        onlyEVCChecks
-        returns (bytes4 magicValue)
+    // FIXME: maybe just move this into wrapper above
+    function collateralBalanceLockedInternal(address /*collateral*/, address /*account*/, Liability memory /*liability*/)
+        private
+        view
+        returns (uint256 lockedBalance)
     {
-        MarketCache memory marketCache = loadMarket();
-        marketCache.riskManager.checkAccountStatus(account, collaterals, getRMLiability(marketCache, account));
-        magicValue = ACCOUNT_STATUS_CHECK_RETURN_VALUE;
-    }
+        return 0; // FIXME
+    /*
+        if (liability.owed == 0) return 0;
+        // TODO check liability is in RM?
 
-    /// @inheritdoc IBorrowing
-    /// @dev See comment about re-entrancy for `checkAccountStatus`
-    function checkVaultStatus() public virtual reentrantOK onlyEVCChecks returns (bytes4 magicValue) {
-        // Use the updating variant to make sure interest is accrued in storage before the interest rate update
-        MarketCache memory marketCache = updateMarket();
-        uint72 newInterestRate = updateInterestParams(marketCache);
+        address[] memory collaterals = IEVC(evc).getCollaterals(account);
+        (uint256 totalCollateralValueRA, uint256 liabilityValue) = computeLiquidity(account, collaterals, liability);
 
-        logMarketStatus(marketCache, newInterestRate);
+        if (liabilityValue == 0) return 0;
 
-        MarketSnapshot memory currentSnapshot = getMarketSnapshot(0, marketCache);
-        MarketSnapshot memory oldSnapshot = marketStorage.marketSnapshot;
-        delete marketStorage.marketSnapshot.performedOperations;
+        uint256 collateralBalance = IERC20(collateral).balanceOf(account);
+        if (liabilityValue >= totalCollateralValueRA) {
+            return collateralBalance;
+        }
 
-        if (oldSnapshot.performedOperations == 0) revert E_InvalidSnapshot();
+        // check if collateral is enabled only for healthy account. In unhealthy state all withdrawals are blocked.
+        {
+            bool isCollateral;
+            for (uint256 i; i < collaterals.length;) {
+                if (collaterals[i] == collateral) {
+                    isCollateral = true;
+                    break;
+                }
+                unchecked {
+                    ++i;
+                }
+            }
+            if (!isCollateral) return 0;
+        }
 
-        marketCache.riskManager.checkMarketStatus(
-            address(this),
-            oldSnapshot.performedOperations,
-            IRiskManager.Snapshot({
-                poolSize: oldSnapshot.poolSize.toUint(),
-                totalBorrows: oldSnapshot.totalBorrows.toUint()
-            }),
-            IRiskManager.Snapshot({
-                poolSize: currentSnapshot.poolSize.toUint(),
-                totalBorrows: currentSnapshot.totalBorrows.toUint()
-            })
-        );
+        uint256 collateralFactor;
+        {
+            MarketConfig memory liabilityConfig = resolveMarketConfig(liability.market);
+            MarketConfig memory collateralConfig = resolveMarketConfig(collateral);
 
-        magicValue = VAULT_STATUS_CHECK_RETURN_VALUE;
+            collateralFactor = resolveCollateralFactor(collateral, liability.market, collateralConfig, liabilityConfig);
+            if (collateralFactor == 0) return 0;
+        }
+
+        // calculate extra collateral value in terms of requested collateral shares (balance)
+        uint256 extraCollateralValue = (totalCollateralValueRA - liabilityValue) * CONFIG_SCALE / collateralFactor;
+        uint256 extraCollateralBalance;
+        {
+            // TODO use direct quote (below) when oracle supports both directions
+            // uint extraCollateralBalance = IPriceOracle(oracle).getQuote(extraCollateralValue, referenceAsset, collateral);
+            uint256 quoteUnit = 1e18;
+            uint256 collateralPrice = IPriceOracle(oracle).getQuote(quoteUnit, collateral, referenceAsset);
+            if (collateralPrice == 0) return 0; // worthless / unpriced collateral is not locked TODO what happens in liquidation??
+            extraCollateralBalance = extraCollateralValue * quoteUnit / collateralPrice;
+        }
+
+        if (extraCollateralBalance >= collateralBalance) return 0; // other collaterals are sufficient to support the debt
+
+        return collateralBalance - extraCollateralBalance;
+    */
     }
 }
 

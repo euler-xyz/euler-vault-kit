@@ -6,7 +6,6 @@ import {Test, console2, stdError} from "forge-std/Test.sol";
 import {GenericFactory} from "src/GenericFactory/GenericFactory.sol";
 
 import {EVault} from "src/EVault/EVault.sol";
-import {RiskManager} from "src/RiskManager/RiskManager.sol";
 import {IRMClassStable} from "src/interestRateModels/IRMClassStable.sol";
 import {ProtocolAdmin} from "src/ProtocolAdmin/ProtocolAdmin.sol";
 
@@ -17,6 +16,8 @@ import {Borrowing} from "src/EVault/modules/Borrowing.sol";
 import {Liquidation} from "src/EVault/modules/Liquidation.sol";
 import {FeesInstance} from "src/EVault/modules/Fees.sol";
 import {BalanceForwarder} from "src/EVault/modules/BalanceForwarder.sol";
+import {Governance} from "src/EVault/modules/Governance.sol";
+import {RiskManager} from "src/EVault/modules/RiskManager.sol";
 
 import {IEVault, IERC20} from "src/EVault/IEVault.sol";
 
@@ -55,6 +56,8 @@ contract EVaultTestBase is Test, AssertionsCustomTypes {
         address liquidationModule = address(new Liquidation(address(evc), protocolAdmin, balanceTracker));
         address feesModule = address(new FeesInstance(address(evc), protocolAdmin, balanceTracker));
         address balanceForwarderModule = address(new BalanceForwarder(address(evc), protocolAdmin, balanceTracker));
+        address governanceModule = address(new Governance(address(evc), protocolAdmin, balanceTracker));
+        address riskManagerModule = address(new RiskManager(address(evc), protocolAdmin, balanceTracker));
 
         address evaultImpl = address(
             new EVault(
@@ -67,20 +70,23 @@ contract EVaultTestBase is Test, AssertionsCustomTypes {
                 borrowingModule,
                 liquidationModule,
                 feesModule,
-                balanceForwarderModule
+                balanceForwarderModule,
+                governanceModule,
+                riskManagerModule
             )
         );
 
         vm.prank(admin);
         factory.setImplementation(evaultImpl);
 
-        address irm = address(new IRMClassStable());
-        address oracle = address(0);
-        address referenceAsset = address(0);
-
         assetTST = new TestERC20("Test Token", "TST", 17, false);
-        RiskManager rm = new RiskManager(address(0), address(factory), address(evc), irm, oracle, referenceAsset);
 
-        eTST = IEVault(factory.createProxy(true, abi.encodePacked(address(assetTST), address(rm))));
+        eTST = IEVault(factory.createProxy(true, abi.encodePacked(address(assetTST))));
+
+        address irm = address(new IRMClassStable());
+        eTST.setIRM(irm, "");
+
+        //address oracle = address(0);
+        // FIXME: set oracle
     }
 }

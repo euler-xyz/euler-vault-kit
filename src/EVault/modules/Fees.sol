@@ -52,18 +52,18 @@ abstract contract FeesModule is IFees, Base, BalanceUtils {
             marketCache.totalShares = marketCache.totalShares - marketCache.feesBalance.toShares();
 
         (address protocolReceiver, uint256 protocolFee) = protocolAdmin.feeConfig(address(this));
-        address riskManagerReceiver = marketCache.riskManager.feeReceiver();
+        address feeReceiverAddress_ = feeReceiverAddress;
 
-        if (riskManagerReceiver == address(0)) protocolFee = 1e18; // risk manager forfeits fees
+        if (feeReceiverAddress_ == address(0)) protocolFee = 1e18; // governor forfeits fees
 
         else if (protocolFee > MAX_PROTOCOL_FEE_SHARE) protocolFee = MAX_PROTOCOL_FEE_SHARE;
 
-        Shares riskManagerShares = marketCache.feesBalance.mulDiv(1e18 - protocolFee, 1e18).toShares();
-        Shares protocolShares = marketCache.feesBalance.toShares() - riskManagerShares;
+        Shares governorShares = marketCache.feesBalance.mulDiv(1e18 - protocolFee, 1e18).toShares();
+        Shares protocolShares = marketCache.feesBalance.toShares() - governorShares;
         marketStorage.feesBalance = marketCache.feesBalance = Fees.wrap(0);
 
         increaseBalance(
-            marketCache, riskManagerReceiver, address(0), riskManagerShares, riskManagerShares.toAssetsDown(marketCache)
+            marketCache, feeReceiverAddress_, address(0), governorShares, governorShares.toAssetsDown(marketCache)
         ); // TODO confirm address(0)
         increaseBalance(
             marketCache, protocolReceiver, address(0), protocolShares, protocolShares.toAssetsDown(marketCache)
@@ -72,9 +72,9 @@ abstract contract FeesModule is IFees, Base, BalanceUtils {
         emit ConvertFees(
             account,
             protocolReceiver,
-            riskManagerReceiver,
+            feeReceiverAddress_,
             protocolShares.toAssetsDown(marketCache).toUint(),
-            riskManagerShares.toAssetsDown(marketCache).toUint()
+            governorShares.toAssetsDown(marketCache).toUint()
         );
     }
 
@@ -84,7 +84,7 @@ abstract contract FeesModule is IFees, Base, BalanceUtils {
         if (msg.sender != admin) revert E_Unauthorized();
         if (receiver == address(0) || receiver == address(this)) revert E_BadAddress();
 
-        (IERC20 asset,) = ProxyUtils.metadata();
+        (IERC20 asset) = ProxyUtils.metadata();
 
         uint256 balance = asset.callBalanceOf(address(this));
         uint256 poolSize = marketStorage.poolSize.toUint();

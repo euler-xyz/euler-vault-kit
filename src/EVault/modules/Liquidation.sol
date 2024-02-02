@@ -6,6 +6,8 @@ import {ILiquidation} from "../IEVault.sol";
 import {Base} from "../shared/Base.sol";
 import {BalanceUtils} from "../shared/BalanceUtils.sol";
 import {BorrowUtils} from "../shared/BorrowUtils.sol";
+import {IEVC} from "ethereum-vault-connector/interfaces/IEthereumVaultConnector.sol";
+import "../../IPriceOracle.sol";
 
 import "../shared/types/Types.sol";
 
@@ -18,7 +20,6 @@ abstract contract LiquidationModule is ILiquidation, Base, BalanceUtils, BorrowU
         address collateral;
         uint256 repayAssets;
         uint256 yieldBalance;
-        bytes accountSnapshot;
     }
 
     /// @inheritdoc ILiquidation
@@ -53,9 +54,6 @@ abstract contract LiquidationModule is ILiquidation, Base, BalanceUtils, BorrowU
         if (liqCache.repayAssets > 0) {
             // non-reentrant
             executeLiquidation(marketCache, liqCache, minYieldBalance);
-
-            // static call
-            verifyLiquidation(marketCache, liqCache);
         }
     }
 
@@ -88,12 +86,11 @@ abstract contract LiquidationModule is ILiquidation, Base, BalanceUtils, BorrowU
         // violator has no liabilities
         if (owed.isZero()) return liqCache;
 
-        IRiskManager.Liability memory liability =
-            IRiskManager.Liability({market: address(this), asset: address(marketCache.asset), owed: owed.toUint()});
+        Liability memory liability =
+            Liability({market: address(this), asset: address(marketCache.asset), owed: owed.toUint()});
 
-        (liqCache.repayAssets, liqCache.yieldBalance, liqCache.accountSnapshot) = marketCache
-            .riskManager
-            .calculateLiquidation(liqCache.liquidator, liqCache.violator, liqCache.collateral, liability, desiredRepay);
+        (liqCache.repayAssets, liqCache.yieldBalance) =
+            calculateLiquidationInternal(liqCache.liquidator, liqCache.violator, liqCache.collateral, liability, desiredRepay);
     }
 
     function executeLiquidation(
@@ -114,8 +111,9 @@ abstract contract LiquidationModule is ILiquidation, Base, BalanceUtils, BorrowU
             // 1. `liquidate` function is enforcing that the violator is not in deferred checks state,
             //    therefore there were no prior batch operations that could have registered a health check,
             //    and if the check is present now, it must have been triggered by the enforced transfer.
-            // 2. `verifyLiquidation` function is comparing the whole account state before and after yield transfer
-            //    to make sure there were no side effects, effectively performing an equivalent of the health check immediately.
+            // 2. Markets with collateral factor 0 are never invoked during liquidation, and markets with
+            //    non-zero collateral factors are assumed to have trusted transfer methods that make no external calls
+            //    FIXME FIXME make sure this is true ^^^
             // 3. Any additional operations on violator's account in a batch will register the health check again, and it
             //    will be executed normally at the end of the batch.
             forgiveAccountStatusCheck(liqCache.violator);
@@ -128,20 +126,6 @@ abstract contract LiquidationModule is ILiquidation, Base, BalanceUtils, BorrowU
         transferBorrow(marketCache, liqCache.violator, liqCache.liquidator, liqCache.repayAssets.toAssets());
 
         emitLiquidationLog(liqCache);
-    }
-
-    function verifyLiquidation(MarketCache memory marketCache, LiquidationCache memory liqCache) private view {
-        if (liqCache.collateral != address(this)) {
-            marketCache.riskManager.verifyLiquidation(
-                liqCache.liquidator,
-                liqCache.violator,
-                liqCache.collateral,
-                liqCache.yieldBalance,
-                liqCache.repayAssets,
-                getRMLiability(marketCache, liqCache.violator),
-                liqCache.accountSnapshot
-            );
-        }
     }
 
     function emitLiquidationLog(LiquidationCache memory liqCache) private {
@@ -158,6 +142,84 @@ abstract contract LiquidationModule is ILiquidation, Base, BalanceUtils, BorrowU
             marketStorage.feesBalance = marketCache.feesBalance = newFeesBalance.toFees();
             marketStorage.totalShares = marketCache.totalShares = newTotalShares.toShares();
         }
+    }
+
+
+
+
+    struct CalculateLiquidationCache {
+        uint256 collateralBalance;
+        uint256 repay;
+        uint256 yield;
+    }
+
+    function calculateLiquidationInternal(
+        address,
+        address violator,
+        address collateral,
+        Liability memory liability,
+        uint256 desiredRepay
+    ) internal view returns (uint256, uint256) {
+        address[] memory collaterals = IEVC(evc).getCollaterals(violator);
+
+        CalculateLiquidationCache memory cache = calculateMaxLiquidation(violator, collateral, liability, collaterals);
+        if (cache.repay == 0) return (0, 0);
+
+        // Adjust for desired repay
+
+        if (desiredRepay != type(uint256).max) {
+            if (desiredRepay > cache.repay) revert RM_ExcessiveRepayAmount();
+
+            cache.yield = desiredRepay * cache.yield / cache.repay;
+            cache.repay = desiredRepay;
+        }
+
+        return (cache.repay, cache.yield);
+    }
+
+    function calculateMaxLiquidation(
+        address violator,
+        address collateral,
+        Liability memory liability,
+        address[] memory collaterals
+    ) internal view virtual returns (CalculateLiquidationCache memory cache) {
+        cache.repay = 0;
+        cache.yield = 0;
+        cache.collateralBalance = 0;
+
+        (uint256 totalCollateralValueRA, uint256 liabilityValue) = computeLiquidity(violator, collaterals, liability);
+
+        // no violation
+        if (totalCollateralValueRA >= liabilityValue) return cache;
+
+        // At this point healthScore must be < 1 since collateral < liability
+
+        // Compute discount
+
+        uint256 discountFactor = totalCollateralValueRA * 1e18 / liabilityValue; // 1 - health score
+
+        if (discountFactor < 1e18 - MAXIMUM_LIQUIDATION_DISCOUNT) {
+            discountFactor = 1e18 - MAXIMUM_LIQUIDATION_DISCOUNT;
+        }
+
+        // Compute maximum yield
+
+        cache.collateralBalance = IERC20(collateral).balanceOf(violator);
+        uint256 collateralValue = IPriceOracle(marketConfig.oracle).getQuote(cache.collateralBalance, collateral, marketConfig.unitOfAccount);
+
+        uint256 maxRepayValue = liabilityValue;
+        uint256 maxYieldValue = maxRepayValue * 1e18 / discountFactor;
+
+        // Limit yield to borrower's available collateral, and reduce repay if necessary
+        // This can happen when borrower has multiple collaterals and seizing all of this one won't bring the violator back to solvency
+
+        if (collateralValue < maxYieldValue) {
+            maxRepayValue = collateralValue * discountFactor / 1e18;
+            maxYieldValue = collateralValue;
+        }
+
+        cache.repay = maxRepayValue * liability.owed / liabilityValue;
+        cache.yield = maxYieldValue * cache.collateralBalance / collateralValue;
     }
 }
 

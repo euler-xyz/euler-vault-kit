@@ -22,7 +22,7 @@ uint256 constant MAX_SANE_SMALL_AMOUNT = type(uint96).max;
 uint8 constant REENTRANCYLOCK__UNLOCKED = 1;
 uint8 constant REENTRANCYLOCK__LOCKED = 2;
 
-uint256 constant PROXY_METADATA_LENGTH = 40; // 2 addresses: asset and risk manager
+uint256 constant PROXY_METADATA_LENGTH = 20; // 1 address: asset
 
 address constant ACCOUNTCHECK_NONE = address(0);
 address constant ACCOUNTCHECK_CALLER = address(1);
@@ -31,6 +31,14 @@ bytes4 constant ACCOUNT_STATUS_CHECK_RETURN_VALUE = IVault.checkAccountStatus.se
 bytes4 constant VAULT_STATUS_CHECK_RETURN_VALUE = IVault.checkVaultStatus.selector;
 
 uint256 constant VIRTUAL_DEPOSIT_AMOUNT = 1e6;
+
+// Config
+
+uint256 constant CONFIG_SCALE = 60_000; // must fit into a uint16
+uint16 constant DEFAULT_BORROW_FACTOR = uint16(0.28 * 60_000); // FIXME: kill this
+uint16 constant DEFAULT_INTEREST_FEE = uint16(0.23 * 60_000);
+// Maximum liquidation discount that can be awarded under any conditions.
+uint256 constant MAXIMUM_LIQUIDATION_DISCOUNT = 0.2 * 1e18; // FIXME: move to liq module, make accessor (ie, public)
 
 // Operations
 

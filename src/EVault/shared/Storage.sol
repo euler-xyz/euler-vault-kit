@@ -7,7 +7,16 @@ import "./types/Types.sol";
 abstract contract Storage {
     bool initialized;
 
+    address internal governorAdmin;
+    address internal defaultInterestRateModel;
+    address internal feeReceiverAddress;
+
     MarketStorage marketStorage;
+    MarketConfig marketConfig;
+
+    mapping(address collateral => OverrideConfig) internal overrideLookup;
+    address[] internal overrideCollaterals;
+
 
     struct UserStorage {
         PackedUserSlot data;
@@ -45,5 +54,24 @@ abstract contract Storage {
 
         mapping(address account => UserStorage) users;
         mapping(address owner => mapping(address spender => uint256 allowance)) eVaultAllowance;
+    }
+
+    struct MarketConfig {
+        uint8 assetDecimals; // TODO FIXME remove if possible
+        uint16 collateralFactor; // FIXME: kill. overrides only
+        uint16 borrowFactor; // FIXME: kill. overrides only
+        uint32 pauseBitmask;
+        uint64 supplyCap; // asset units without decimals, 0 means no cap
+        uint64 borrowCap; // asset units without decimals, 0 means no cap
+        address interestRateModel; // external market if address(0) (FIXME: not anymore)
+        uint16 interestFee;
+
+        address unitOfAccount;
+        address oracle;
+    }
+
+    struct OverrideConfig {
+        bool enabled;
+        uint16 collateralFactor;
     }
 }

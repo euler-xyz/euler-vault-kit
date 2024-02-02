@@ -5,7 +5,6 @@ import {Test, console2, stdError} from "forge-std/Test.sol";
 import {GenericFactory} from "src/GenericFactory/GenericFactory.sol";
 
 import {MockEVault} from "../../mocks/MockEVault.sol";
-import {MockRiskManager} from "../../mocks/MockRiskManager.sol";
 import {TestERC20} from "../../mocks/TestERC20.sol";
 import {ReentrancyAttack} from "../../mocks/ReentrancyAttack.sol";
 
@@ -59,9 +58,8 @@ contract FactoryTest is Test {
 
         // Create token and activate it
         TestERC20 asset = new TestERC20("Test Token", "TST", 17, false);
-        MockRiskManager rm = new MockRiskManager();
 
-        MockEVault eTST = MockEVault(factory.createProxy(true, abi.encodePacked(address(asset), address(rm))));
+        MockEVault eTST = MockEVault(factory.createProxy(true, abi.encodePacked(address(asset))));
 
         // Verify proxying behaves as intended
         assertEq(eTST.implementation(), "TRANSPARENT");
@@ -71,13 +69,12 @@ contract FactoryTest is Test {
 
             address randomUser = vm.addr(5000);
             vm.prank(randomUser);
-            (string memory outputArg, address theMsgSender, address marketAsset, address riskManager) =
+            (string memory outputArg, address theMsgSender, address marketAsset) =
                 eTST.arbitraryFunction(inputArg);
 
             assertEq(outputArg, inputArg);
             assertEq(theMsgSender, randomUser);
             assertEq(marketAsset, address(asset));
-            assertEq(riskManager, address(rm));
         }
     }
 
@@ -86,13 +83,12 @@ contract FactoryTest is Test {
         MockEVault mockEvaultImpl = new MockEVault(address(factory), address(1));
         vm.prank(upgradeAdmin);
         factory.setImplementation(address(mockEvaultImpl));
-        MockRiskManager rm = new MockRiskManager();
 
         // Create Tokens and activate Markets
         uint256 amountEVault = 10;
         for (uint256 i; i < amountEVault; i++) {
             TestERC20 TST = new TestERC20("Test Token", "TST", 18, false);
-            MockEVault(factory.createProxy(true, abi.encodePacked(address(TST), address(rm))));
+            MockEVault(factory.createProxy(true, abi.encodePacked(address(TST))));
         }
 
         uint256 lenEVaultList = factory.getProxyListLength();
@@ -105,7 +101,6 @@ contract FactoryTest is Test {
         MockEVault mockEvaultImpl = new MockEVault(address(factory), address(1));
         vm.prank(upgradeAdmin);
         factory.setImplementation(address(mockEvaultImpl));
-        MockRiskManager rm = new MockRiskManager();
 
         // Create Tokens and activate Markets
         uint256 amountEVaults = 100;
@@ -114,7 +109,7 @@ contract FactoryTest is Test {
 
         for (uint256 i; i < amountEVaults; i++) {
             TestERC20 TST = new TestERC20("Test Token", "TST", 18, false);
-            MockEVault eVault = MockEVault(factory.createProxy(true, abi.encodePacked(address(TST), address(rm))));
+            MockEVault eVault = MockEVault(factory.createProxy(true, abi.encodePacked(address(TST))));
             eVaultsList[i] = address(eVault);
         }
 
@@ -151,22 +146,21 @@ contract FactoryTest is Test {
         MockEVault mockEvaultImpl = new MockEVault(address(factory), address(1));
         vm.prank(upgradeAdmin);
         factory.setImplementation(address(mockEvaultImpl));
-        MockRiskManager rm = new MockRiskManager();
 
         // Create Tokens and activate Markets
         TestERC20 TST = new TestERC20("Test Token", "TST", 18, false);
-        MockEVault eVault = MockEVault(factory.createProxy(true, abi.encodePacked(address(TST), address(rm))));
+        MockEVault eVault = MockEVault(factory.createProxy(true, abi.encodePacked(address(TST))));
 
         GenericFactory.ProxyConfig memory config = factory.getProxyConfig(address(eVault));
 
-        assertEq(config.trailingData, abi.encodePacked(address(TST), address(rm)));
+        assertEq(config.trailingData, abi.encodePacked(address(TST)));
 
         TST = new TestERC20("Test Token", "TST", 18, false);
-        eVault = MockEVault(factory.createProxy(true, abi.encodePacked(address(TST), address(rm))));
+        eVault = MockEVault(factory.createProxy(true, abi.encodePacked(address(TST))));
 
         config = factory.getProxyConfig(address(eVault));
 
-        assertEq(config.trailingData, abi.encodePacked(address(TST), address(rm)));
+        assertEq(config.trailingData, abi.encodePacked(address(TST)));
     }
 
     function test_Event_ProxyCreated() public {
@@ -177,14 +171,13 @@ contract FactoryTest is Test {
 
         // Create token and activate it
         TestERC20 asset = new TestERC20("Test Token", "TST", 17, false);
-        MockRiskManager rm = new MockRiskManager();
 
         vm.expectEmit(false, true, true, true);
         emit GenericFactory.ProxyCreated(
-            address(1), true, address(mockEvaultImpl), abi.encodePacked(address(asset), address(rm))
+            address(1), true, address(mockEvaultImpl), abi.encodePacked(address(asset))
         );
 
-        factory.createProxy(true, abi.encodePacked(address(asset), address(rm)));
+        factory.createProxy(true, abi.encodePacked(address(asset)));
     }
 
     function test_Event_SetEVaultImplementation() public {
@@ -224,18 +217,16 @@ contract FactoryTest is Test {
         factory.setImplementation(address(badVaultImpl));
 
         address asset = vm.addr(1);
-        address rm = vm.addr(2);
 
         vm.expectRevert(GenericFactory.E_Reentrancy.selector);
-        factory.createProxy(false, abi.encodePacked(address(asset), address(rm)));
+        factory.createProxy(false, abi.encodePacked(address(asset)));
     }
 
     function test_RevertIfImplementation_ActivateMarket() public {
-        address rm = vm.addr(2);
         address asset = vm.addr(1);
 
         vm.expectRevert(GenericFactory.E_Implementation.selector);
-        factory.createProxy(true, abi.encodePacked(address(asset), address(rm)));
+        factory.createProxy(true, abi.encodePacked(address(asset)));
     }
 
     function test_RevertIfBadAddress() public {
@@ -253,7 +244,6 @@ contract FactoryTest is Test {
         MockEVault mockEvaultImpl = new MockEVault(address(factory), address(1));
         vm.prank(upgradeAdmin);
         factory.setImplementation(address(mockEvaultImpl));
-        MockRiskManager rm = new MockRiskManager();
 
         // Create Tokens and activate Markets
         uint256 amountEVaults = 100;
@@ -262,7 +252,7 @@ contract FactoryTest is Test {
 
         for (uint256 i; i < amountEVaults; i++) {
             TestERC20 TST = new TestERC20("Test Token", "TST", 18, false);
-            MockEVault eVault = MockEVault(factory.createProxy(true, abi.encodePacked(address(TST), address(rm))));
+            MockEVault eVault = MockEVault(factory.createProxy(true, abi.encodePacked(address(TST))));
             eVaultsList[i] = address(eVault);
         }
 

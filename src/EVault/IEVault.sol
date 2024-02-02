@@ -130,7 +130,7 @@ interface IERC4626 {
     function redeem(uint256 shares, address receiver, address owner) external returns (uint256);
 }
 
-interface IBorrowing is IVault {
+interface IBorrowing {
     /// @notice Sum of all outstanding debts, in underlying units (increases as interest is accrued)
     function totalBorrows() external view returns (uint256);
 
@@ -158,9 +158,6 @@ interface IBorrowing is IVault {
         external
         view
         returns (uint256 lockedBalance);
-
-    /// @notice Address of the risk manager
-    function riskManager() external view returns (address);
 
     /// @notice Address of the DToken
     function dToken() external view returns (address);
@@ -201,22 +198,6 @@ interface IBorrowing is IVault {
 
     /// @notice Updates interest accumulator and totalBorrows, credits reserves, re-targets interest rate, and logs asset status
     function touch() external;
-
-    /// @notice Release control of the account on EVC if no outstanding debt is present
-    function disableController() external;
-
-    /// @notice Checks the status of an account.
-    /// @param account The address of the account to be checked.
-    /// @return magicValue Must return the bytes4 magic value 0xb168c58f (which is a selector of this function) when
-    /// account status is valid, or revert otherwise.
-    /// @dev Only callable by EVC during status checks
-    function checkAccountStatus(address account, address[] calldata collaterals) external returns (bytes4);
-
-    /// @notice Checks the status of the vault.
-    /// @return magicValue Must return the bytes4 magic value 0x4b3d1223 (which is a selector of this function) when
-    /// account status is valid, or revert otherwise.
-    /// @dev Only callable by EVC during status checks
-    function checkVaultStatus() external returns (bytes4);
 }
 
 interface ILiquidation {
@@ -278,4 +259,62 @@ interface IBalanceForwarder {
     function disableBalanceForwarder() external;
 }
 
-interface IEVault is IInitialize, IToken, IERC4626, IBorrowing, ILiquidation, IFees, IBalanceForwarder {}
+interface IGovernance {
+    function setDefaultInterestRateModel(address newModel) external;
+
+    function setGovernorAdmin(address newGovernorAdmin) external;
+
+    function setFeeReceiver(address newFeeReceiver) external;
+
+    function setMarketConfig(uint16 collateralFactor, uint16 borrowFactor) external;
+
+    //function setOverride(address collateral, OverrideConfig calldata newOverride) external;
+    // FIXME
+
+    function setIRM(address newModel, bytes calldata resetParams) external;
+
+    function setMarketPolicy(uint32 pauseBitmask, uint64 supplyCap, uint64 borrowCap) external;
+
+    function setInterestFee(uint16 newFee) external;
+
+    function setUnitOfAccount(address newUnitOfAccount) external;
+
+    function getGovernorAdmin() external view returns (address);
+
+    function getMarketConfig() external view returns (uint256 collateralFactor, uint256 borrowFactor);
+
+    //function getOverride(address collateral) external view returns (OverrideConfig memory);
+    // FIXME
+
+    function getOverrideCollaterals() external view returns (address[] memory);
+
+    function interestRateModel() external view returns (address);
+
+    function getDefaultInterestRateModel() external view returns (address);
+
+    function getMarketPolicy() external view returns (uint32 pauseBitmask, uint64 supplyCap, uint64 borrowCap);
+
+    function feeReceiver() external view returns (address);
+}
+
+interface IRiskManager is IVault {
+    // FIXME: missing funcs
+
+    /// @notice Release control of the account on EVC if no outstanding debt is present
+    function disableController() external;
+
+    /// @notice Checks the status of an account.
+    /// @param account The address of the account to be checked.
+    /// @return magicValue Must return the bytes4 magic value 0xb168c58f (which is a selector of this function) when
+    /// account status is valid, or revert otherwise.
+    /// @dev Only callable by EVC during status checks
+    function checkAccountStatus(address account, address[] calldata collaterals) external returns (bytes4);
+
+    /// @notice Checks the status of the vault.
+    /// @return magicValue Must return the bytes4 magic value 0x4b3d1223 (which is a selector of this function) when
+    /// account status is valid, or revert otherwise.
+    /// @dev Only callable by EVC during status checks
+    function checkVaultStatus() external returns (bytes4);
+}
+
+interface IEVault is IInitialize, IToken, IERC4626, IBorrowing, ILiquidation, IFees, IBalanceForwarder, IGovernance, IRiskManager {}

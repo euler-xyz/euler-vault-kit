@@ -4,13 +4,51 @@ pragma solidity ^0.8.0;
 
 import {Base} from "./Base.sol";
 import {DToken} from "../DToken.sol";
-import {IRiskManager} from "../../IRiskManager.sol";
+import "../../interestRateModels/IIRM.sol";
 
 import "./types/Types.sol";
 
 abstract contract BorrowUtils is Base {
     using TypesLib for uint256;
     using UserStorageLib for UserStorage;
+
+    function computeLiquidity(address /*account*/, address[] memory /*collaterals*/, Liability memory /*liability*/)
+        internal
+        view
+        returns (uint256 collateralValue, uint256 liabilityValue)
+    {
+        // FIXME
+        return (0, 0);
+    /*
+        MarketConfig memory collateralConfig;
+        MarketConfig memory liabilityConfig;
+
+        // Count liability
+
+        liabilityConfig = resolveMarketConfig(liability.market);
+        //TODO // if (isExternalMarket(liabilityConfig)) revert RM_ExternalMarket();
+        liabilityValue = IPriceOracle(oracle).getQuote(liability.owed, liability.asset, referenceAsset);
+
+        // Count collateral
+
+        for (uint256 i; i < collaterals.length; ++i) {
+            address collateral = collaterals[i];
+
+            collateralConfig = resolveMarketConfig(collateral);
+            uint256 collateralFactor =
+                resolveCollateralFactor(collateral, liability.market, collateralConfig, liabilityConfig);
+            if (collateralFactor == 0) continue;
+
+            uint256 balance = IERC20(collateral).balanceOf(account); // TODO low level
+
+            if (balance == 0) continue;
+
+            uint256 currentCollateralValue = IPriceOracle(oracle).getQuote(balance, collateral, referenceAsset);
+
+            collateralValue += currentCollateralValue * collateralFactor / CONFIG_SCALE;
+        }
+        */
+    }
 
     function getCurrentOwed(MarketCache memory marketCache, address account, Owed owed) internal view returns (Owed) {
         // Don't bother loading the user's accumulator
@@ -99,13 +137,24 @@ abstract contract BorrowUtils is Base {
     function getRMLiability(MarketCache memory marketCache, address account)
         internal
         view
-        returns (IRiskManager.Liability memory liability)
+        returns (Liability memory liability)
     {
         Owed owed = marketStorage.users[account].getOwed();
 
         liability.market = address(this);
         liability.asset = address(marketCache.asset);
         liability.owed = getCurrentOwed(marketCache, account, owed).toAssetsUp().toUint();
+    }
+
+    function computeInterestParams(address asset, uint32 utilisation) internal returns (uint256 interestRate, uint16 interestFee) {
+        address irm = marketConfig.interestRateModel;
+        uint16 fee = marketConfig.interestFee;
+
+        try IIRM(irm).computeInterestRate(msg.sender, asset, utilisation) returns (uint256 ir) {
+            interestRate = ir;
+        } catch {}
+
+        interestFee = fee == type(uint16).max ? DEFAULT_INTEREST_FEE : fee;
     }
 
     function updateInterestParams(MarketCache memory marketCache) internal returns (uint72) {
@@ -116,8 +165,7 @@ abstract contract BorrowUtils is Base {
             ? 0 // empty pool arbitrarily given utilisation of 0
             : uint32(borrows * (uint256(type(uint32).max) * 1e18) / poolAssets / 1e18);
 
-        (uint256 newInterestRate, uint16 newInterestFee) =
-            marketCache.riskManager.computeInterestParams(address(marketCache.asset), utilisation);
+        (uint256 newInterestRate, uint16 newInterestFee) = computeInterestParams(address(marketCache.asset), utilisation);
         uint16 interestFee = marketStorage.interestFee;
 
         if (newInterestFee != interestFee) {
