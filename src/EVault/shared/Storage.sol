@@ -6,22 +6,29 @@ import "./types/Types.sol";
 
 abstract contract Storage {
     bool initialized;
-    address factory;
+
+    address internal governorAdmin;
+    address internal defaultInterestRateModel;
+    address internal feeReceiverAddress;
 
     MarketStorage marketStorage;
+    MarketConfig marketConfig;
 
-    struct UserAsset {
-        // Packed slot 14 + 18 = 32
-        Shares balance;
-        Owed owed;
+    mapping(address collateral => LTVConfig) internal ltvLookup;
+    address[] internal ltvList;
+
+
+    struct UserStorage {
+        PackedUserSlot data;
+
         uint256 interestAccumulator;
     }
 
     struct MarketSnapshot {
-        // Packed slot 14 + 15 + 3 = 32
+        // Packed slot 14 + 14 + 4 = 32
         Assets poolSize;
-        OwedAssetsSnapshot totalBorrows;
-        uint24 performedOperations;
+        Assets totalBorrows;
+        uint32 performedOperations;
     }
 
     struct MarketStorage {
@@ -32,22 +39,36 @@ abstract contract Storage {
         Fees feesBalance;
 
         // Packed slot 14 + 18 = 32
-        Shares totalBalances;
+        Shares totalShares;
         Owed totalBorrows;
 
         uint256 interestAccumulator;
 
         MarketSnapshot marketSnapshot;
 
-        // Packed slot 12 + 2
-        // Read on first item in a block (interest accrual). Read and written in vault status check (interest rate update).
+        // Packed slot 9 + 2
+        // Read on first item in a block (interest accrual). Read and written in vault status check DF(interest rate update).
         // Not touched on other batch items.
-        int96 interestRate;
+        uint72 interestRate;
         uint16 interestFee;
 
-        address protocolFeesHolder;
-
-        mapping(address account => UserAsset) users;
+        mapping(address account => UserStorage) users;
         mapping(address owner => mapping(address spender => uint256 allowance)) eVaultAllowance;
+    }
+
+    struct MarketConfig {
+        uint32 pauseBitmask;
+        AmountCap supplyCap;
+        AmountCap borrowCap;
+        uint16 interestFee;
+
+        address interestRateModel; // external market if address(0) (FIXME: not anymore: now it means 0% interest)
+        address unitOfAccount;
+        address oracle;
+    }
+
+    struct LTVConfig {
+        bool enabled;
+        uint16 collateralFactor;
     }
 }

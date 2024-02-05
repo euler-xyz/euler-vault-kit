@@ -3,12 +3,11 @@
 pragma solidity ^0.8.0;
 
 import {IInitialize, IERC20} from "../IEVault.sol";
-import {IRiskManager} from "../../IRiskManager.sol";
-import {IFactory} from "../shared/interfaces/IFactory.sol";
 import {Base} from "../shared/Base.sol";
 import {BorrowUtils} from "../shared/BorrowUtils.sol";
-// import {DToken} from "../DToken.sol";
+import {DToken} from "../DToken.sol";
 import {ProxyUtils} from "../shared/lib/ProxyUtils.sol";
+import {MarketCache} from "../shared/types/MarketCache.sol";
 
 import "../shared/Constants.sol";
 
@@ -18,47 +17,39 @@ abstract contract InitializeModule is IInitialize, Base, BorrowUtils {
         if (initialized) revert E_Initialized();
         initialized = true;
 
+        governorAdmin = creator;
+
         // Validate proxy immutables
 
-        // Calldata should include: signature and abi encoded address argument (4 + 32 bytes) followed by proxy metadata
+        // Calldata should include: signature and abi encoded creator address (4 + 32 bytes), followed by proxy metadata
         if (msg.data.length != 4 + 32 + PROXY_METADATA_LENGTH) revert E_ProxyMetadata();
-        (IERC20 asset, IRiskManager riskManager) = ProxyUtils.metadata();
+        (IERC20 asset) = ProxyUtils.metadata();
         if (
-            address(asset) == address(0) || address(asset) == address(riskManager) || address(asset) == address(evc)
-                || address(riskManager) == address(0) || address(riskManager) == address(evc)
+            address(asset) == address(0) || address(asset) == address(evc) || address(asset).code.length == 0
         ) revert E_BadAddress();
 
-        // Initialize storage
+        // Create companion DToken
 
-        factory = msg.sender;
+        address dToken = address(new DToken());
+
+        // Initialize storage
 
         marketStorage.lastInterestAccumulatorUpdate = uint40(block.timestamp);
         marketStorage.interestAccumulator = INITIAL_INTEREST_ACCUMULATOR;
         marketStorage.reentrancyLock = REENTRANCYLOCK__UNLOCKED;
 
-        address admin = IFactory(factory).upgradeAdmin();
-        if (admin == address(0)) revert E_BadAddress();
-        marketStorage.protocolFeesHolder = admin;
-        emit NewProtocolFeesHolder(admin);
+        // Initialize config
 
-        // TODO initialize()
-        // // Create companion DToken
+        marketConfig.interestFee = DEFAULT_INTEREST_FEE;
+        marketConfig.unitOfAccount = address(asset);
 
-        // address dToken = address(new DToken());
+        // Emit logs
 
-        // // Initialize new vault on the risk manager
-
-        // (, IRiskManager rm) = ProxyUtils.metadata();
-        // rm.activateMarket(creator);
-
-        // // Initialize interest rate and interest fee
-        // updateInterestParams(loadMarket());
-        // if (marketStorage.interestFee == 0) revert E_InterestFeeInit();
-
-        // emit EVaultCreated(creator, address(asset), address(riskManager), dToken);
+        emit EVaultCreated(creator, address(asset), dToken);
+        logMarketStatus(loadMarket(), 0);
     }
 }
 
 contract Initialize is InitializeModule {
-    constructor(address evc) Base(evc) {}
+    constructor(address evc, address protocolAdmin, address balanceTracker) Base(evc, protocolAdmin, balanceTracker) {}
 }

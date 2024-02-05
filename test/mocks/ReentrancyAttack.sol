@@ -6,7 +6,7 @@ interface IVault {
     function initialize(address creator) external;
 }
 
-interface IEFactory {
+interface IGenericFactory {
     function createProxy(bool upgradeable, bytes memory trailingData) external returns (address);
 }
 
@@ -20,6 +20,6 @@ contract ReentrancyAttack is IVault {
     }
 
     function initialize(address) external {
-        IEFactory(factory).createProxy(true, abi.encodePacked(asset, address(this)));
+        IGenericFactory(factory).createProxy(true, abi.encodePacked(asset, address(this)));
     }
 }

@@ -26,24 +26,88 @@ abstract contract EVCClient is Storage, Events, Errors {
         evc = IEVC(_evc);
     }
 
-    function EVCAuthenticate(bool checkController) internal view returns (address) {
-        if (msg.sender == address(evc)) {
-            (address onBehalfOfAccount, bool controllerEnabled) = evc.getCurrentOnBehalfOfAccount(address(this));
+    function disableControllerInternal(address account) internal virtual {
+        evc.disableController(account);
 
-            if (checkController && !controllerEnabled) revert E_ControllerDisabled();
+        emit DisableController(account);
+    }
+
+    // Authenticate account and controller, making sure the call is made through EVC and the status checks are deferred
+    function EVCAuthenticateDeferred(bool checkController) internal view returns (address) {
+        if (msg.sender != address(evc)) revert E_Unauthorized();
+
+        (address onBehalfOfAccount, bool controllerEnabled) =
+            evc.getCurrentOnBehalfOfAccount(checkController ? address(this) : address(0));
+
+        if (checkController && !controllerEnabled) revert E_ControllerDisabled();
+
+        return onBehalfOfAccount;
+    }
+
+    function EVCAuthenticate() internal view returns (address) {
+        if (msg.sender == address(evc)) {
+            (address onBehalfOfAccount,) = evc.getCurrentOnBehalfOfAccount(address(0));
 
             return onBehalfOfAccount;
         }
-
-        if (checkController && !evc.isControllerEnabled(msg.sender, address(this))) revert E_ControllerDisabled();
         return msg.sender;
     }
 
+    function getAccountOwner(address account) internal view returns (address owner) {
+        if (msg.sender == address(evc)) {
+            owner = evc.getAccountOwner(account);
+        } else {
+            owner = account;
+        }
+    }
+
     function EVCRequireStatusChecks(address account) internal {
-        if (account == ACCOUNT_CHECK_NONE) {
+        if (account == ACCOUNTCHECK_NONE) {
             evc.requireVaultStatusCheck();
         } else {
             evc.requireAccountAndVaultStatusCheck(account);
         }
+    }
+
+    function enforceCollateralTransfer(address collateral, uint256 amount, address from, address receiver)
+        internal
+    {
+        evc.controlCollateral(collateral, from, 0, abi.encodeCall(IERC20.transfer, (receiver, amount)));
+    }
+
+    function forgiveAccountStatusCheck(address account) internal {
+        evc.forgiveAccountStatusCheck(account);
+    }
+
+    function getController(address account) internal view returns (address) {
+        address[] memory controllers = evc.getControllers(account);
+
+        if (controllers.length > 1) revert E_TransientState();
+
+        return controllers.length == 1 ? controllers[0] : address(0);
+    }
+
+    function getCollaterals(address account) internal view returns (address[] memory) {
+        return evc.getCollaterals(account);
+    }
+
+    function isCollateralEnabled(address account, address market) internal view returns (bool) {
+        return evc.isCollateralEnabled(account, market);
+    }
+
+    function isControllerEnabled(address account) internal view returns (bool) {
+        return evc.isControllerEnabled(account, address(this));
+    }
+
+    function isAccountStatusCheckDeferred(address account) internal view returns (bool) {
+        return evc.isAccountStatusCheckDeferred(account);
+    }
+
+    function isVaultStatusCheckDeferred() internal view returns (bool) {
+        return evc.isVaultStatusCheckDeferred(address(this));
+    }
+
+    function isControlCollateralInProgress() internal view returns (bool) {
+        return evc.isControlCollateralInProgress();
     }
 }

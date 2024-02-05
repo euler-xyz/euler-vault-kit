@@ -11,15 +11,14 @@ contract MockEVault {
         return "TRANSPARENT";
     }
 
-    function UNPACK() internal pure returns (address marketAsset, address riskManager) {
+    function UNPACK() internal pure returns (address marketAsset) {
         assembly {
-            marketAsset := shr(96, calldataload(sub(calldatasize(), 40)))
-            riskManager := shr(96, calldataload(sub(calldatasize(), 20)))
+            marketAsset := shr(96, calldataload(sub(calldatasize(), 20)))
         }
     }
 
-    function arbitraryFunction(string calldata arg) external view returns (string memory, address, address, address) {
-        (address marketAsset, address riskManager) = UNPACK();
-        return (arg, msg.sender, marketAsset, riskManager);
+    function arbitraryFunction(string calldata arg) external view returns (string memory, address, address) {
+        (address marketAsset) = UNPACK();
+        return (arg, msg.sender, marketAsset);
     }
 }

@@ -12,34 +12,43 @@ import "../shared/types/Types.sol";
 
 abstract contract TokenModule is IToken, Base, BalanceUtils {
     using TypesLib for uint256;
+    using UserStorageLib for UserStorage;
 
     /// @inheritdoc IERC20
     function name() external view virtual reentrantOK returns (string memory) {
-        // TODO name()
-        return "";
+        (IERC20 asset) = ProxyUtils.metadata();
+
+        // Handle MKR like tokens returning bytes32
+        (bool success, bytes memory data) = address(asset).staticcall(abi.encodeWithSelector(IERC20.name.selector));
+        if (!success) RevertBytes.revertBytes(data);
+        return string.concat("Euler Pool: ", data.length == 32 ? string(data) : abi.decode(data, (string)));
     }
 
     /// @inheritdoc IERC20
     function symbol() external view virtual reentrantOK returns (string memory) {
-        // TODO symbol()
-        return "";
+        (IERC20 asset) = ProxyUtils.metadata();
+
+        // Handle MKR like tokens returning bytes32
+        (bool success, bytes memory data) = address(asset).staticcall(abi.encodeWithSelector(IERC20.symbol.selector));
+        if (!success) RevertBytes.revertBytes(data);
+        return string.concat("e", data.length == 32 ? string(data) : abi.decode(data, (string)));
     }
 
     /// @inheritdoc IERC20
     function decimals() external view virtual reentrantOK returns (uint8) {
-        (IERC20 asset_,) = ProxyUtils.metadata();
+        (IERC20 asset) = ProxyUtils.metadata();
 
-        return asset_.decimals();
+        return asset.decimals();
     }
 
     /// @inheritdoc IERC20
     function totalSupply() external view virtual nonReentrantView returns (uint256) {
-        return loadMarket().totalBalances.toUint();
+        return loadMarket().totalShares.toUint();
     }
 
     /// @inheritdoc IERC20
     function balanceOf(address account) external view virtual nonReentrantView returns (uint256) {
-        return marketStorage.users[account].balance.toUint();
+        return marketStorage.users[account].getBalance().toUint();
     }
 
     /// @inheritdoc IERC20
@@ -52,13 +61,41 @@ abstract contract TokenModule is IToken, Base, BalanceUtils {
         return transferFrom(address(0), to, amount);
     }
 
+    /// @inheritdoc IToken
+    function transferFromMax(address from, address to) external virtual reentrantOK returns (bool) {
+        return transferFrom(from, to, marketStorage.users[from].getBalance().toUint());
+    }
+
     /// @inheritdoc IERC20
     function transferFrom(address from, address to, uint256 amount) public virtual nonReentrant returns (bool) {
-        // TODO transferFrom()
+        (, address account) = initOperation(OP_TRANSFER, from == address(0) ? ACCOUNTCHECK_CALLER : from);
+
+        Shares shares = amount.toShares();
+
+        if (from == address(0)) from = account;
+        if (from == to) revert E_SelfTransfer();
+
+        if (shares.isZero()) return true;
+
+        decreaseAllowance(from, account, shares);
+        transferBalance(from, to, shares);
+
+        return true;
+    }
+
+    /// @inheritdoc IERC20
+    function approve(address spender, uint256 amount) external virtual nonReentrant returns (bool) {
+        address account = EVCAuthenticate();
+
+        if (spender == account) revert E_SelfApproval();
+
+        marketStorage.eVaultAllowance[account][spender] = amount;
+        emit Approval(account, spender, amount);
+
         return true;
     }
 }
 
 contract Token is TokenModule {
-    constructor(address evc) Base(evc) {}
+    constructor(address evc, address protocolAdmin, address balanceTracker) Base(evc, protocolAdmin, balanceTracker) {}
 }

@@ -7,6 +7,8 @@ contract BeaconProxy {
     bytes32 constant BEACON_SLOT = 0xa3f0ad74e5423aebfd80d3ef4346578335a9a72aeaee59ff6cb3582b35133d50;
     // Beacon implementation() selector
     bytes32 constant IMPLEMENTATION_SELECTOR = 0x5c60da1b00000000000000000000000000000000000000000000000000000000;
+    // Max trailing data length, 4 immutable slots
+    uint256 constant MAX_TRAILING_DATA_LENGTH = 128;
 
     address immutable beacon;
     uint256 immutable metadataLength;
@@ -20,8 +22,7 @@ contract BeaconProxy {
     constructor(bytes memory trailingData) {
         emit Genesis();
 
-        // 4 immutable slots
-        require(trailingData.length <= 4 * 32, "trailing data too long");
+        require(trailingData.length <= MAX_TRAILING_DATA_LENGTH, "trailing data too long");
 
         // Beacon is always the proxy creator; store it in immutable
         beacon = msg.sender;
@@ -59,7 +60,7 @@ contract BeaconProxy {
             }
             let implementation := mload(0)
 
-            // delegatecall to the implementation
+            // delegatecall to the implementation with trailing metadata
             calldatacopy(0, 0, calldatasize())
             mstore(calldatasize(), metadata0_)
             mstore(add(32, calldatasize()), metadata1_)

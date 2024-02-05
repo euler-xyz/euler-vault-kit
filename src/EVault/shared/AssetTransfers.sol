@@ -16,4 +16,9 @@ contract AssetTransfers is Storage, Errors {
         marketCache.asset.safeTransferFrom(from, address(this), amount.toUint());
         marketStorage.poolSize = marketCache.poolSize = marketCache.poolSize + amount;
     }
+
+    function pushTokens(MarketCache memory marketCache, address to, Assets amount) internal {
+        marketCache.asset.safeTransfer(to, amount.toUint());
+        marketStorage.poolSize = marketCache.poolSize = marketCache.poolSize - amount;
+    }
 }

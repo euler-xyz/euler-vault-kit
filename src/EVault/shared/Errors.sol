@@ -51,7 +51,36 @@ contract Errors {
     error E_InvalidSnapshot();
     error E_InterestAccumulatorInvariant();
     error E_AccountCheckType();
+    error E_BalancesInvariant();
+    error E_BalanceForwarderUnsupported();
+
     error E_NotSupported();
     error E_EmptyError();
     error E_InterestFeeInit();
+    error E_VaultStatusCheckDeferred();
+
+    // FIXME: normalise these to E_ namespace
+
+    error RM_Unauthorized();
+    error RM_AccountLiquidity();
+    error RM_MarketActivated();
+    error RM_UnderlyingActivated();
+    error RM_InvalidUnderlying();
+
+    error RM_NoLiability();
+    error RM_NotController();
+    error RM_EmptyError();
+    error RM_InvalidIRM();
+    error RM_ExcessiveRepay();
+    error RM_ExcessiveYield();
+    error RM_InsufficientBalance();
+    error RM_BadFee();
+    error RM_ExcessiveRepayAmount();
+    error RM_TransientState();
+    error RM_OperationPaused();
+    error RM_InvalidAmountCap();
+    error RM_SupplyCapExceeded();
+    error RM_BorrowCapExceeded();
+    error RM_InvalidLiquidationState();
+    error RM_InvalidLTVAsset();
 }

@@ -88,8 +88,6 @@ contract ERC4626Test_Deposit is EVaultTestBase {
     function test_defaultReceiver() public {
         uint256 amount = 1e18;
 
-        vm.expectEmit();
-        emit Events.RequestDeposit({owner: user, receiver: user, assets: amount});
         vm.expectEmit(address(eTST));
         emit Events.Transfer({from: address(0), to: user, value: amount});
         vm.expectEmit();
