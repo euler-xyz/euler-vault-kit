@@ -24,9 +24,7 @@ abstract contract ERC4626Module is IERC4626, Base, AssetTransfers, BalanceUtils 
 
     /// @inheritdoc IERC4626
     function totalAssets() external view virtual nonReentrantView returns (uint256) {
-        MarketCache memory marketCache = loadMarket();
-
-        return marketCache.poolSize.toUint() + marketCache.totalBorrows.toAssetsUp().toUint();
+        return totalAssetsInternal();
     }
 
     /// @inheritdoc IERC4626
@@ -217,6 +215,11 @@ abstract contract ERC4626Module is IERC4626, Base, AssetTransfers, BalanceUtils 
         return max;
     }
 
+    function totalAssetsInternal() private view returns (uint256) {
+        MarketCache memory marketCache = loadMarket();
+        return marketCache.poolSize.toUint() + marketCache.totalBorrows.toAssetsUp().toUint();
+    }
+
     function maxDepositInternal(address) private view returns (uint256) {
         (IERC20 market) = ProxyUtils.metadata();
 
@@ -227,8 +230,7 @@ abstract contract ERC4626Module is IERC4626, Base, AssetTransfers, BalanceUtils 
         if (pauseBitmask & OP_DEPOSIT != 0) return 0;
         uint256 supplyCap = supplyAmountCap.toAmount();
 
-        uint256 currentSupply = IERC4626(address(market)).totalAssets(); // FIXME: why calling external here?
-
+        uint256 currentSupply = totalAssetsInternal();
         return currentSupply < supplyCap ? supplyCap - currentSupply : 0;
     }
 
