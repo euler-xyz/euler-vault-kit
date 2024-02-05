@@ -8,5 +8,6 @@ contract ERC20Test is EVaultTestBase {
     function test_basicViews() public {
         assertEq(eTST.name(), "Euler Pool: Test Token");
         assertEq(eTST.symbol(), "eTST");
+        assertEq(eTST.decimals(), assetTST.decimals());
     }
 }
