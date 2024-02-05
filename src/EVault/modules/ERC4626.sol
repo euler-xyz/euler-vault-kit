@@ -221,15 +221,13 @@ abstract contract ERC4626Module is IERC4626, Base, AssetTransfers, BalanceUtils 
         (IERC20 market) = ProxyUtils.metadata();
 
         // TODO optimize read
-        uint256 supplyCap = marketConfig.supplyCap;
-        uint256 decimals = marketConfig.assetDecimals;
+        AmountCap supplyAmountCap = marketConfig.supplyCap;
         uint256 pauseBitmask = marketConfig.pauseBitmask;
 
         if (pauseBitmask & OP_DEPOSIT != 0) return 0;
-        if (supplyCap == 0) return type(uint256).max;
+        uint256 supplyCap = supplyAmountCap.toAmount();
 
         uint256 currentSupply = IERC4626(address(market)).totalAssets(); // FIXME: why calling external here?
-        supplyCap = supplyCap * (10 ** decimals);
 
         return currentSupply < supplyCap ? supplyCap - currentSupply : 0;
     }

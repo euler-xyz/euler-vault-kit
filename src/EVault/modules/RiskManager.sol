@@ -152,24 +152,17 @@ abstract contract RiskManagerModule is IRiskManager, Base, BorrowUtils {
     ) private view {
         // TODO optimize reads
         uint256 pauseBitmask = marketConfig.pauseBitmask;
-        uint256 supplyCap = marketConfig.supplyCap;
-        uint256 borrowCap = marketConfig.borrowCap;
-        uint256 assetDecimalsMultiplier = 10 ** marketConfig.assetDecimals;
+        uint256 supplyCap = marketConfig.supplyCap.toAmount();
+        uint256 borrowCap = marketConfig.borrowCap.toAmount();
 
         if (pauseBitmask & performedOperations != 0) revert RM_OperationPaused();
 
         if (supplyCap == 0 && borrowCap == 0) return;
 
         uint256 totalAssets = currentSnapshot.poolSize + currentSnapshot.totalBorrows;
-        if (
-            supplyCap != 0 && totalAssets > (oldSnapshot.poolSize + oldSnapshot.totalBorrows)
-                && totalAssets >= supplyCap * assetDecimalsMultiplier
-        ) revert RM_SupplyCapExceeded();
+        if (totalAssets > supplyCap && totalAssets > (oldSnapshot.poolSize + oldSnapshot.totalBorrows)) revert RM_SupplyCapExceeded();
 
-        if (
-            borrowCap != 0 && currentSnapshot.totalBorrows > oldSnapshot.totalBorrows
-                && currentSnapshot.totalBorrows >= borrowCap * assetDecimalsMultiplier
-        ) revert RM_BorrowCapExceeded();
+        if (currentSnapshot.totalBorrows > borrowCap && currentSnapshot.totalBorrows > oldSnapshot.totalBorrows) revert RM_BorrowCapExceeded();
     }
 
     // getters

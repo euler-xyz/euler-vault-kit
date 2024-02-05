@@ -57,10 +57,9 @@ abstract contract Storage {
     }
 
     struct MarketConfig {
-        uint8 assetDecimals; // TODO FIXME remove if possible
         uint32 pauseBitmask;
-        uint64 supplyCap; // asset units without decimals, 0 means no cap
-        uint64 borrowCap; // asset units without decimals, 0 means no cap
+        AmountCap supplyCap;
+        AmountCap borrowCap;
         uint16 interestFee;
 
         address interestRateModel; // external market if address(0) (FIXME: not anymore: now it means 0% interest)

@@ -134,7 +134,7 @@ interface IBorrowing {
     /// @notice Sum of all outstanding debts, in underlying units (increases as interest is accrued)
     function totalBorrows() external view returns (uint256);
 
-    /// @notice Sum of all outstanding debts, in underlying units scaled up by 9 decimals
+    /// @notice Sum of all outstanding debts, in underlying units scaled up by 9 decimals (FIXME: not scaled by 9 decimals anymore)
     function totalBorrowsExact() external view returns (uint256);
 
     /// @notice Balance of vault assets as tracked by daposits/withdrawals and borrows/repays
@@ -143,7 +143,7 @@ interface IBorrowing {
     /// @notice Debt owed by a particular account, in underlying units
     function debtOf(address account) external view returns (uint256);
 
-    /// @notice Debt owed by a particular account, in underlying units scaled up by 9 decimals
+    /// @notice Debt owed by a particular account, in underlying units scaled up by 9 decimals (FIXME: not scaled by 9 decimals anymore)
     function debtOfExact(address account) external view returns (uint256);
 
     /// @notice Retrieves the current interest rate for an asset
@@ -270,7 +270,7 @@ interface IGovernance {
 
     function setIRM(address newModel, bytes calldata resetParams) external;
 
-    function setMarketPolicy(uint32 pauseBitmask, uint64 supplyCap, uint64 borrowCap) external;
+    function setMarketPolicy(uint32 pauseBitmask, uint16 supplyCap, uint16 borrowCap) external;
 
     function setInterestFee(uint16 newFee) external;
 
@@ -286,7 +286,7 @@ interface IGovernance {
 
     function getDefaultInterestRateModel() external view returns (address);
 
-    function getMarketPolicy() external view returns (uint32 pauseBitmask, uint64 supplyCap, uint64 borrowCap);
+    function getMarketPolicy() external view returns (uint32 pauseBitmask, uint16 supplyCap, uint16 borrowCap);
 
     function feeReceiver() external view returns (address);
 }

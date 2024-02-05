@@ -73,12 +73,12 @@ contract Errors {
     error RM_InvalidIRM();
     error RM_ExcessiveRepay();
     error RM_ExcessiveYield();
-    error RM_TooManyDecimals();
     error RM_InsufficientBalance();
     error RM_BadFee();
     error RM_ExcessiveRepayAmount();
     error RM_TransientState();
     error RM_OperationPaused();
+    error RM_InvalidAmountCap();
     error RM_SupplyCapExceeded();
     error RM_BorrowCapExceeded();
     error RM_InvalidLiquidationState();

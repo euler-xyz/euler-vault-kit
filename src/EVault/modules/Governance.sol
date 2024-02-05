@@ -58,10 +58,10 @@ abstract contract GovernanceModule is IGovernance, Base {
         emit GovSetIRM(newModel, resetParams);
     }
 
-    function setMarketPolicy(uint32 pauseBitmask, uint64 supplyCap, uint64 borrowCap) external virtual nonReentrant governorOnly {
+    function setMarketPolicy(uint32 pauseBitmask, uint16 supplyCap, uint16 borrowCap) external virtual nonReentrant governorOnly {
         marketConfig.pauseBitmask = pauseBitmask;
-        marketConfig.supplyCap = supplyCap;
-        marketConfig.borrowCap = borrowCap;
+        marketConfig.supplyCap = AmountCap.wrap(supplyCap).validate();
+        marketConfig.borrowCap = AmountCap.wrap(borrowCap).validate();
 
         emit GovSetMarketPolicy(pauseBitmask, supplyCap, borrowCap);
     }
@@ -112,8 +112,8 @@ abstract contract GovernanceModule is IGovernance, Base {
         return defaultInterestRateModel;
     }
 
-    function getMarketPolicy() external virtual view returns (uint32 pauseBitmask, uint64 supplyCap, uint64 borrowCap) {
-        return (marketConfig.pauseBitmask, marketConfig.supplyCap, marketConfig.borrowCap);
+    function getMarketPolicy() external virtual view returns (uint32 pauseBitmask, uint16 supplyCap, uint16 borrowCap) {
+        return (marketConfig.pauseBitmask, marketConfig.supplyCap.toUint16(), marketConfig.borrowCap.toUint16());
     }
 
     function feeReceiver() external virtual view returns (address) {

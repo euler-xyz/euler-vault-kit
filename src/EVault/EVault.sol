@@ -224,7 +224,7 @@ contract EVault is
 
     function setIRM(address newModel, bytes calldata resetParams) external override use(MODULE_GOVERNANCE) {}
 
-    function setMarketPolicy(uint32 pauseBitmask, uint64 supplyCap, uint64 borrowCap) external override use(MODULE_GOVERNANCE) {}
+    function setMarketPolicy(uint32 pauseBitmask, uint16 supplyCap, uint16 borrowCap) external override use(MODULE_GOVERNANCE) {}
 
     function setInterestFee(uint16 newFee) external override use(MODULE_GOVERNANCE) {}
 
@@ -240,7 +240,7 @@ contract EVault is
 
     function getDefaultInterestRateModel() external override useView(MODULE_GOVERNANCE) view returns (address) {}
 
-    function getMarketPolicy() external override useView(MODULE_GOVERNANCE) view returns (uint32 pauseBitmask, uint64 supplyCap, uint64 borrowCap) {}
+    function getMarketPolicy() external override useView(MODULE_GOVERNANCE) view returns (uint32 pauseBitmask, uint16 supplyCap, uint16 borrowCap) {}
 
     function feeReceiver() external override useView(MODULE_GOVERNANCE) view returns (address) {}
 

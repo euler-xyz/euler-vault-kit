@@ -40,10 +40,6 @@ abstract contract InitializeModule is IInitialize, Base, BorrowUtils {
 
         // Initialize config
 
-        uint8 decimals = asset.decimals();
-        if (decimals > 18) revert RM_TooManyDecimals();
-
-        marketConfig.assetDecimals = decimals;
         marketConfig.interestFee = DEFAULT_INTEREST_FEE;
         marketConfig.unitOfAccount = address(asset);
 
