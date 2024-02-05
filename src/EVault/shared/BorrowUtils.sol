@@ -4,7 +4,6 @@ pragma solidity ^0.8.0;
 
 import {Base} from "./Base.sol";
 import {DToken} from "../DToken.sol";
-import "../../interestRateModels/IIRM.sol";
 import "../../IPriceOracle.sol";
 
 import "./types/Types.sol";
@@ -136,45 +135,6 @@ abstract contract BorrowUtils is Base {
         liability.market = address(this);
         liability.asset = address(marketCache.asset);
         liability.owed = getCurrentOwed(marketCache, account, owed).toAssetsUp().toUint();
-    }
-
-    function computeInterestParams(address asset, uint32 utilisation) internal returns (uint256 interestRate, uint16 interestFee) {
-        address irm = marketConfig.interestRateModel;
-        uint16 fee = marketConfig.interestFee;
-
-        try IIRM(irm).computeInterestRate(msg.sender, asset, utilisation) returns (uint256 ir) {
-            interestRate = ir;
-        } catch {}
-
-        interestFee = fee == type(uint16).max ? DEFAULT_INTEREST_FEE : fee;
-    }
-
-    function updateInterestParams(MarketCache memory marketCache) internal returns (uint72) {
-        uint256 borrows = marketCache.totalBorrows.toAssetsUp().toUint();
-        uint256 poolAssets = marketCache.poolSize.toUint() + borrows;
-
-        uint32 utilisation = poolAssets == 0
-            ? 0 // empty pool arbitrarily given utilisation of 0
-            : uint32(borrows * (uint256(type(uint32).max) * 1e18) / poolAssets / 1e18);
-
-        (uint256 newInterestRate, uint16 newInterestFee) = computeInterestParams(address(marketCache.asset), utilisation);
-        uint16 interestFee = marketStorage.interestFee;
-
-        if (newInterestFee != interestFee) {
-            if (protocolAdmin.isValidInterestFee(address(this), newInterestFee)) {
-                emit NewInterestFee(newInterestFee);
-            } else {
-                // ignore incorrect value
-                newInterestFee = interestFee;
-            }
-        }
-
-        if (newInterestRate > MAX_ALLOWED_INTEREST_RATE) newInterestRate = MAX_ALLOWED_INTEREST_RATE;
-
-        marketStorage.interestRate = uint72(newInterestRate);
-        marketStorage.interestFee = newInterestFee;
-
-        return uint72(newInterestRate);
     }
 
     function calculateDTokenAddress() internal view returns (address dToken) {

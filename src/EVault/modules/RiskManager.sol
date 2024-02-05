@@ -6,6 +6,7 @@ import {IRiskManager, IEVault} from "../IEVault.sol";
 import {Base} from "../shared/Base.sol";
 import {BorrowUtils} from "../shared/BorrowUtils.sol";
 import {IEVC} from "ethereum-vault-connector/interfaces/IEthereumVaultConnector.sol";
+import "../../interestRateModels/IIRM.sol";
 
 import "../shared/types/Types.sol";
 
@@ -145,6 +146,45 @@ abstract contract RiskManagerModule is IRiskManager, Base, BorrowUtils {
         magicValue = VAULT_STATUS_CHECK_RETURN_VALUE;
     }
 
+    function updateInterestParams(MarketCache memory marketCache) private returns (uint72) {
+        uint256 borrows = marketCache.totalBorrows.toAssetsUp().toUint();
+        uint256 poolAssets = marketCache.poolSize.toUint() + borrows;
+
+        uint32 utilisation = poolAssets == 0
+            ? 0 // empty pool arbitrarily given utilisation of 0
+            : uint32(borrows * (uint256(type(uint32).max) * 1e18) / poolAssets / 1e18);
+
+        (uint256 newInterestRate, uint16 newInterestFee) = computeInterestParams(address(marketCache.asset), utilisation);
+        uint16 interestFee = marketStorage.interestFee;
+
+        if (newInterestFee != interestFee) {
+            if (protocolAdmin.isValidInterestFee(address(this), newInterestFee)) {
+                emit NewInterestFee(newInterestFee);
+            } else {
+                // ignore incorrect value
+                newInterestFee = interestFee;
+            }
+        }
+
+        if (newInterestRate > MAX_ALLOWED_INTEREST_RATE) newInterestRate = MAX_ALLOWED_INTEREST_RATE;
+
+        marketStorage.interestRate = uint72(newInterestRate);
+        marketStorage.interestFee = newInterestFee;
+
+        return uint72(newInterestRate);
+    }
+
+    function computeInterestParams(address asset, uint32 utilisation) private returns (uint256 interestRate, uint16 interestFee) {
+        address irm = marketConfig.interestRateModel;
+        uint16 fee = marketConfig.interestFee;
+
+        try IIRM(irm).computeInterestRate(msg.sender, asset, utilisation) returns (uint256 ir) {
+            interestRate = ir;
+        } catch {}
+
+        interestFee = fee == type(uint16).max ? DEFAULT_INTEREST_FEE : fee;
+    }
+
     function checkVaultStatusInternal(
         uint32 performedOperations,
         Snapshot memory oldSnapshot,
@@ -167,7 +207,7 @@ abstract contract RiskManagerModule is IRiskManager, Base, BorrowUtils {
 
     // getters
 
-    function getSupportedController(address account) internal view returns (address controller) {
+    function getSupportedController(address account) private view returns (address controller) {
         address[] memory controllers = IEVC(evc).getControllers(account);
 
         if (controllers.length > 1) revert RM_TransientState();
