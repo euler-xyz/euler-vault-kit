@@ -5,7 +5,6 @@ pragma solidity ^0.8.0;
 import {IRiskManager, IEVault} from "../IEVault.sol";
 import {Base} from "../shared/Base.sol";
 import {BorrowUtils} from "../shared/BorrowUtils.sol";
-import {IRiskManager} from "../IEVault.sol";
 import {IEVC} from "ethereum-vault-connector/interfaces/IEthereumVaultConnector.sol";
 
 import "../shared/types/Types.sol";

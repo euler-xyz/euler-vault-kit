@@ -63,7 +63,7 @@ abstract contract Storage {
         uint64 borrowCap; // asset units without decimals, 0 means no cap
         uint16 interestFee;
 
-        address interestRateModel; // external market if address(0) (FIXME: not anymore)
+        address interestRateModel; // external market if address(0) (FIXME: not anymore: now it means 0% interest)
         address unitOfAccount;
         address oracle;
     }
