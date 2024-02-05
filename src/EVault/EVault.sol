@@ -220,9 +220,7 @@ contract EVault is
 
     function setFeeReceiver(address newFeeReceiver) external override use(MODULE_GOVERNANCE) {}
 
-    function setMarketConfig(uint16 collateralFactor, uint16 borrowFactor) external override use(MODULE_GOVERNANCE) {}
-
-    function setOverride(address collateral, OverrideConfig calldata newOverride) external override use(MODULE_GOVERNANCE) {}
+    function setLTV(address collateral, LTVConfig calldata newLTV) external override use(MODULE_GOVERNANCE) {}
 
     function setIRM(address newModel, bytes calldata resetParams) external override use(MODULE_GOVERNANCE) {}
 
@@ -234,11 +232,9 @@ contract EVault is
 
     function getGovernorAdmin() external override useView(MODULE_GOVERNANCE) view returns (address) {}
 
-    function getMarketConfig() external override useView(MODULE_GOVERNANCE) view returns (uint256 collateralFactor, uint256 borrowFactor) {}
+    function getLTV(address collateral) external override useView(MODULE_GOVERNANCE) view returns (LTVConfig memory) {}
 
-    function getOverride(address collateral) external override useView(MODULE_GOVERNANCE) view returns (OverrideConfig memory) {}
-
-    function getOverrideCollaterals() external override useView(MODULE_GOVERNANCE) view returns (address[] memory) {}
+    function getLTVList() external override useView(MODULE_GOVERNANCE) view returns (address[] memory) {}
 
     function interestRateModel() external override useView(MODULE_GOVERNANCE) view returns (address) {}
 

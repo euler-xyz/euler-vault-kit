@@ -14,8 +14,8 @@ abstract contract Storage {
     MarketStorage marketStorage;
     MarketConfig marketConfig;
 
-    mapping(address collateral => OverrideConfig) internal overrideLookup;
-    address[] internal overrideCollaterals;
+    mapping(address collateral => LTVConfig) internal ltvLookup;
+    address[] internal ltvList;
 
 
     struct UserStorage {
@@ -58,19 +58,17 @@ abstract contract Storage {
 
     struct MarketConfig {
         uint8 assetDecimals; // TODO FIXME remove if possible
-        uint16 collateralFactor; // FIXME: kill. overrides only
-        uint16 borrowFactor; // FIXME: kill. overrides only
         uint32 pauseBitmask;
         uint64 supplyCap; // asset units without decimals, 0 means no cap
         uint64 borrowCap; // asset units without decimals, 0 means no cap
-        address interestRateModel; // external market if address(0) (FIXME: not anymore)
         uint16 interestFee;
 
+        address interestRateModel; // external market if address(0) (FIXME: not anymore)
         address unitOfAccount;
         address oracle;
     }
 
-    struct OverrideConfig {
+    struct LTVConfig {
         bool enabled;
         uint16 collateralFactor;
     }

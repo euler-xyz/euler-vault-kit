@@ -16,7 +16,7 @@ abstract contract GovernanceModule is IGovernance, Base {
     event SetGovernorAdmin(address indexed newGovernorAdmin);
     event GovSetFeeReceiver(address indexed newFeeReceiver);
     event GovSetMarketConfig(uint256 collateralFactor, uint256 borrowFactor);
-    event GovSetOverride(address indexed collateral, OverrideConfig newOverride);
+    event GovSetLTV(address indexed collateral, LTVConfig newLTV);
     event GovSetIRM(address interestRateModel, bytes resetParams);
     event GovSetMarketPolicy(uint32 newPauseBitmask, uint64 newSupplyCap, uint64 newBorrowCap);
     event GovSetInterestFee(uint16 newFee);
@@ -38,22 +38,15 @@ abstract contract GovernanceModule is IGovernance, Base {
         emit GovSetFeeReceiver(newFeeReceiver);
     }
 
-    function setMarketConfig(uint16 collateralFactor, uint16 borrowFactor) external virtual nonReentrant governorOnly {
-        marketConfig.collateralFactor = collateralFactor;
-        marketConfig.borrowFactor = borrowFactor;
-
-        emit GovSetMarketConfig(collateralFactor, borrowFactor);
-    }
-
-    function setOverride(address collateral, OverrideConfig calldata newOverride) external virtual nonReentrant governorOnly {
+    function setLTV(address collateral, LTVConfig calldata newLTV) external virtual nonReentrant governorOnly {
         MarketCache memory marketCache = loadMarket();
-        if (collateral == address(marketCache.asset)) revert RM_InvalidOverride();
+        if (collateral == address(marketCache.asset)) revert RM_InvalidLTVAsset();
 
-        overrideLookup[collateral] = newOverride;
+        ltvLookup[collateral] = newLTV;
 
-        updateOverridesArray(overrideCollaterals, collateral, newOverride);
+        updateLTVArray(ltvList, collateral, newLTV);
 
-        emit GovSetOverride(collateral, newOverride);
+        emit GovSetLTV(collateral, newLTV);
     }
 
     // After setting a new IRM, touch() should be called on a market
@@ -95,26 +88,18 @@ abstract contract GovernanceModule is IGovernance, Base {
         return governorAdmin;
     }
 
-    /// @notice Looks up the Euler-related configuration for a market, and resolves all default-value placeholders to their currently configured values.
-    /// @return collateralFactor Default collateral factor of the market
-    /// @return borrowFactor Default borrow factor of the market
-    function getMarketConfig() external virtual view returns (uint256 collateralFactor, uint256 borrowFactor) {
-        collateralFactor = marketConfig.collateralFactor;
-        borrowFactor = marketConfig.borrowFactor;
-    }
-
-    /// @notice Retrieves collateral factor override for asset pair
+    /// @notice Retrieves LTV config for a collateral
     /// @param collateral Collateral asset
-    /// @return Override config set for the pair
-    function getOverride(address collateral) external virtual view returns (OverrideConfig memory) {
-        return overrideLookup[collateral];
+    /// @return LTV config set for the pair
+    function getLTV(address collateral) external virtual view returns (LTVConfig memory) {
+        return ltvLookup[collateral];
     }
 
-    /// @notice Retrieves a list of collaterals configured through override for the liability asset
-    /// @return List of asset collaterals with override configured
-    /// @dev The list can have duplicates. Returned assets could have the override disabled
-    function getOverrideCollaterals() external virtual view returns (address[] memory) {
-        return overrideCollaterals;
+    /// @notice Retrieves a list of collaterals with configured LTVs
+    /// @return List of asset collaterals
+    /// @dev The list can have duplicates. Returned assets could have the ltv disabled
+    function getLTVList() external virtual view returns (address[] memory) {
+        return ltvList;
     }
 
     /// @notice Looks up an asset's currently configured interest rate model
@@ -137,9 +122,9 @@ abstract contract GovernanceModule is IGovernance, Base {
 
     // Internal
 
-    function updateOverridesArray(address[] storage arr, address asset, OverrideConfig calldata newOverride) private {
+    function updateLTVArray(address[] storage arr, address asset, LTVConfig calldata newLTV) private {
         uint256 length = arr.length;
-        if (newOverride.enabled) {
+        if (newLTV.enabled) {
             for (uint256 i = 0; i < length;) {
                 if (arr[i] == asset) return;
                 unchecked {

@@ -266,10 +266,7 @@ interface IGovernance {
 
     function setFeeReceiver(address newFeeReceiver) external;
 
-    function setMarketConfig(uint16 collateralFactor, uint16 borrowFactor) external;
-
-    //function setOverride(address collateral, OverrideConfig calldata newOverride) external;
-    // FIXME
+    // FIXME setLTV
 
     function setIRM(address newModel, bytes calldata resetParams) external;
 
@@ -281,12 +278,9 @@ interface IGovernance {
 
     function getGovernorAdmin() external view returns (address);
 
-    function getMarketConfig() external view returns (uint256 collateralFactor, uint256 borrowFactor);
+    // FIXME getLTV
 
-    //function getOverride(address collateral) external view returns (OverrideConfig memory);
-    // FIXME
-
-    function getOverrideCollaterals() external view returns (address[] memory);
+    function getLTVList() external view returns (address[] memory);
 
     function interestRateModel() external view returns (address);
 

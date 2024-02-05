@@ -82,5 +82,5 @@ contract Errors {
     error RM_SupplyCapExceeded();
     error RM_BorrowCapExceeded();
     error RM_InvalidLiquidationState();
-    error RM_InvalidOverride();
+    error RM_InvalidLTVAsset();
 }
