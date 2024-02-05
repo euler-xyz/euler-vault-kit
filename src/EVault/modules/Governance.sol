@@ -18,6 +18,7 @@ abstract contract GovernanceModule is IGovernance, Base {
     event GovSetMarketConfig(uint256 collateralFactor, uint256 borrowFactor);
     event GovSetLTV(address indexed collateral, LTVConfig newLTV);
     event GovSetIRM(address interestRateModel, bytes resetParams);
+    event GovSetOracle(address oracle);
     event GovSetMarketPolicy(uint32 newPauseBitmask, uint64 newSupplyCap, uint64 newBorrowCap);
     event GovSetInterestFee(uint16 newFee);
     event GovSetUnitOfAccount(address newUnitOfAccount);
@@ -38,9 +39,11 @@ abstract contract GovernanceModule is IGovernance, Base {
         emit GovSetFeeReceiver(newFeeReceiver);
     }
 
-    function setLTV(address collateral, LTVConfig calldata newLTV) external virtual nonReentrant governorOnly {
+    function setLTV(address collateral, uint16 collateralFactor, uint256 /*ramp*/) external virtual nonReentrant governorOnly {
         MarketCache memory marketCache = loadMarket();
         if (collateral == address(marketCache.asset)) revert RM_InvalidLTVAsset();
+
+        LTVConfig memory newLTV = LTVConfig({ enabled: collateralFactor != 0, collateralFactor: collateralFactor });
 
         ltvLookup[collateral] = newLTV;
 
@@ -56,6 +59,12 @@ abstract contract GovernanceModule is IGovernance, Base {
         marketConfig.interestRateModel = newModel;
 
         emit GovSetIRM(newModel, resetParams);
+    }
+
+    function setOracle(address newOracle) external virtual nonReentrant governorOnly {
+        marketConfig.oracle = newOracle;
+
+        emit GovSetOracle(newOracle);
     }
 
     function setMarketPolicy(uint32 pauseBitmask, uint16 supplyCap, uint16 borrowCap) external virtual nonReentrant governorOnly {
@@ -122,7 +131,7 @@ abstract contract GovernanceModule is IGovernance, Base {
 
     // Internal
 
-    function updateLTVArray(address[] storage arr, address asset, LTVConfig calldata newLTV) private {
+    function updateLTVArray(address[] storage arr, address asset, LTVConfig memory newLTV) private {
         uint256 length = arr.length;
         if (newLTV.enabled) {
             for (uint256 i = 0; i < length;) {

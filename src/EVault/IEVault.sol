@@ -4,6 +4,7 @@ pragma solidity ^0.8.0;
 
 import {IVault} from "ethereum-vault-connector/interfaces/IVault.sol";
 
+
 interface IInitialize {
     function initialize(address creator) external;
 }
@@ -266,9 +267,11 @@ interface IGovernance {
 
     function setFeeReceiver(address newFeeReceiver) external;
 
-    // FIXME setLTV
+    function setLTV(address collateral, uint16 collateralFactor, uint256 ramp) external;
 
     function setIRM(address newModel, bytes calldata resetParams) external;
+
+    function setOracle(address newOracle) external;
 
     function setMarketPolicy(uint32 pauseBitmask, uint16 supplyCap, uint16 borrowCap) external;
 

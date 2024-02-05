@@ -20,9 +20,9 @@ abstract contract BorrowUtils is Base {
         address unitOfAccount = marketConfig.unitOfAccount;
         address oracle = marketConfig.oracle;
 
-        liabilityValue = unitOfAccount == liability.asset ?
+        liabilityValue = unitOfAccount == liability.market ?
             liability.owed :
-            IPriceOracle(oracle).getQuote(liability.owed, liability.asset, unitOfAccount);
+            IPriceOracle(oracle).getQuote(liability.owed, liability.market, unitOfAccount);
 
         for (uint256 i; i < collaterals.length; ++i) {
             address collateral = collaterals[i];
