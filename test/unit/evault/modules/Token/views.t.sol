@@ -2,9 +2,9 @@
 
 pragma solidity ^0.8.0;
 
-import "../EVaultTestBase.t.sol";
+import "../../EVaultTestBase.t.sol";
 
-contract ERC20Test is EVaultTestBase {
+contract ERC20Test_views is EVaultTestBase {
     function test_basicViews() public {
         assertEq(eTST.name(), "Euler Pool: Test Token");
         assertEq(eTST.symbol(), "eTST");
