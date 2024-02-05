@@ -8,7 +8,7 @@ import "../Errors.sol";
 
 // AmountCaps are 16-bit decimal floating point values:
 // * The least significant 6 bits are the exponent
-// * The most significant 12 bits are the mantissa, scaled by 100
+// * The most significant 10 bits are the mantissa, scaled by 100
 // * The special value of 0 means no limit (MAX_SANE_AMOUNT)
 //   * This is so that uninitialised storage implies no limit
 //   * For an actual cap value of 0, use a zero mantissa and non-zero exponent
@@ -22,7 +22,7 @@ library AmountCapLib {
 
         unchecked {
             // Cannot overflow because this is less than 2**256:
-            //   10**(2**6 - 1) * (2**12 - 1) = 4.095e+66
+            //   10**(2**6 - 1) * (2**10 - 1) = 1.023e+66
 
             return 10**(amountCap & 63) * (amountCap >> 6) / 100;
         }

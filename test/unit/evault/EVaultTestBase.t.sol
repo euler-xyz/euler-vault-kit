@@ -27,6 +27,7 @@ import {EthereumVaultConnector} from "ethereum-vault-connector/EthereumVaultConn
 
 import {TestERC20} from "../../mocks/TestERC20.sol";
 import {MockBalanceTracker} from "../../mocks/MockBalanceTracker.sol";
+import {MockPriceOracle} from "../../mocks/MockPriceOracle.sol";
 
 import {AssertionsCustomTypes} from "../../helpers/AssertionsCustomTypes.sol";
 
@@ -37,9 +38,15 @@ contract EVaultTestBase is Test, AssertionsCustomTypes {
     EthereumVaultConnector public evc;
     address protocolAdmin;
     address balanceTracker;
+    MockPriceOracle oracle;
+    address unitOfAccount;
     GenericFactory public factory;
+
     TestERC20 assetTST;
+    TestERC20 assetTST2;
+
     IEVault public eTST;
+    IEVault public eTST2;
 
     function setUp() public virtual {
         address admin = vm.addr(1000);
@@ -48,6 +55,8 @@ contract EVaultTestBase is Test, AssertionsCustomTypes {
         evc = new EthereumVaultConnector();
         protocolAdmin = address(new ProtocolAdmin(address(0), address(0)));
         balanceTracker = address(new MockBalanceTracker());
+        oracle = new MockPriceOracle();
+        unitOfAccount = address(1);
 
         address initializeModule = address(new Initialize(address(evc), protocolAdmin, balanceTracker));
         address tokenModule = address(new Token(address(evc), protocolAdmin, balanceTracker));
@@ -79,14 +88,17 @@ contract EVaultTestBase is Test, AssertionsCustomTypes {
         vm.prank(admin);
         factory.setImplementation(evaultImpl);
 
-        assetTST = new TestERC20("Test Token", "TST", 17, false);
+        assetTST = new TestERC20("Test Token", "TST", 18, false);
+        assetTST2 = new TestERC20("Test Token 2", "TST2", 18, false);
 
         eTST = IEVault(factory.createProxy(true, abi.encodePacked(address(assetTST))));
+        eTST.setIRM(address(new IRMClassStable()), "");
+        eTST.setOracle(address(oracle));
+        eTST.setUnitOfAccount(unitOfAccount);
 
-        address irm = address(new IRMClassStable());
-        eTST.setIRM(irm, "");
-
-        //address oracle = address(0);
-        // FIXME: set oracle
+        eTST2 = IEVault(factory.createProxy(true, abi.encodePacked(address(assetTST2))));
+        eTST2.setIRM(address(new IRMClassStable()), "");
+        eTST2.setOracle(address(oracle));
+        eTST2.setUnitOfAccount(unitOfAccount);
     }
 }

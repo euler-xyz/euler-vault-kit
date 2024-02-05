@@ -220,9 +220,11 @@ contract EVault is
 
     function setFeeReceiver(address newFeeReceiver) external override use(MODULE_GOVERNANCE) {}
 
-    function setLTV(address collateral, LTVConfig calldata newLTV) external override use(MODULE_GOVERNANCE) {}
+    function setLTV(address collateral, uint16 collateralFactor, uint256 ramp) external override use(MODULE_GOVERNANCE) {}
 
     function setIRM(address newModel, bytes calldata resetParams) external override use(MODULE_GOVERNANCE) {}
+
+    function setOracle(address newOracle) external override use(MODULE_GOVERNANCE) {}
 
     function setMarketPolicy(uint32 pauseBitmask, uint16 supplyCap, uint16 borrowCap) external override use(MODULE_GOVERNANCE) {}
 
@@ -248,17 +250,7 @@ contract EVault is
 
     // ----------------- RiskManager -----------------
 
-    function disableController() external override use(MODULE_BORROWING) {}
-
-/*
-    function checkAccountStatus(address account, address[] calldata collaterals) public override returns (bytes4) {
-        return super.checkAccountStatus(account, collaterals);
-    }
-
-    function checkVaultStatus() public override returns (bytes4) {
-        return super.checkVaultStatus();
-    }
-    */
+    function disableController() external override use(MODULE_RISKMANAGER) {}
 
     function checkAccountStatus(address account, address[] calldata collaterals) external override use(MODULE_RISKMANAGER) returns (bytes4) {}
 
