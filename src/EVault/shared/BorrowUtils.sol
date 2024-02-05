@@ -5,6 +5,7 @@ pragma solidity ^0.8.0;
 import {Base} from "./Base.sol";
 import {DToken} from "../DToken.sol";
 import "../../interestRateModels/IIRM.sol";
+import "../../IPriceOracle.sol";
 
 import "./types/Types.sol";
 
@@ -12,42 +13,33 @@ abstract contract BorrowUtils is Base {
     using TypesLib for uint256;
     using UserStorageLib for UserStorage;
 
-    function computeLiquidity(address /*account*/, address[] memory /*collaterals*/, Liability memory /*liability*/)
+    function computeLiquidity(address account, address[] memory collaterals, Liability memory liability)
         internal
         view
         returns (uint256 collateralValue, uint256 liabilityValue)
     {
-        // FIXME
-        return (0, 0);
-    /*
-        MarketConfig memory collateralConfig;
-        MarketConfig memory liabilityConfig;
+        address unitOfAccount = marketConfig.unitOfAccount;
+        address oracle = marketConfig.oracle;
 
-        // Count liability
-
-        liabilityConfig = resolveMarketConfig(liability.market);
-        //TODO // if (isExternalMarket(liabilityConfig)) revert RM_ExternalMarket();
-        liabilityValue = IPriceOracle(oracle).getQuote(liability.owed, liability.asset, referenceAsset);
-
-        // Count collateral
+        liabilityValue = unitOfAccount == liability.asset ?
+            liability.owed :
+            IPriceOracle(oracle).getQuote(liability.owed, liability.asset, unitOfAccount);
 
         for (uint256 i; i < collaterals.length; ++i) {
             address collateral = collaterals[i];
 
-            collateralConfig = resolveMarketConfig(collateral);
-            uint256 collateralFactor =
-                resolveCollateralFactor(collateral, liability.market, collateralConfig, liabilityConfig);
-            if (collateralFactor == 0) continue;
+            uint256 ltv = ltvLookup[collateral].collateralFactor;
+            if (ltv == 0) continue;
 
             uint256 balance = IERC20(collateral).balanceOf(account); // TODO low level
-
             if (balance == 0) continue;
 
-            uint256 currentCollateralValue = IPriceOracle(oracle).getQuote(balance, collateral, referenceAsset);
+            uint256 currentCollateralValue = unitOfAccount == collateral ?
+                balance :
+                IPriceOracle(oracle).getQuote(balance, collateral, unitOfAccount);
 
-            collateralValue += currentCollateralValue * collateralFactor / CONFIG_SCALE;
+            collateralValue += currentCollateralValue * ltv / CONFIG_SCALE;
         }
-        */
     }
 
     function getCurrentOwed(MarketCache memory marketCache, address account, Owed owed) internal view returns (Owed) {
