@@ -3,18 +3,14 @@
 pragma solidity ^0.8.0;
 
 import "test/unit/evault/EVaultTestBase.t.sol";
+import {Errors as EVCErrors} from "ethereum-vault-connector/Errors.sol";
+import {IEVC} from "ethereum-vault-connector/interfaces/IEthereumVaultConnector.sol";
 import {Errors} from "src/EVault/shared/Errors.sol";
 import {Events} from "src/EVault/shared/Events.sol";
-import {MAX_SANE_AMOUNT} from "src/EVault/shared/types/Types.sol";
 
-contract ERC20Test_transfer is EVaultTestBase {
+contract ERC20Test_Actions is EVaultTestBase {
     address alice = makeAddr("alice");
     address bob = makeAddr("bob");
-    address charlie = makeAddr("charlie");
-
-    function setUp() public override {
-        super.setUp();
-    }
 
     function test_Transfer_Integrity(uint256 balance, uint256 amount) public {
         amount = bound(amount, 1, MAX_SANE_AMOUNT);
@@ -25,9 +21,9 @@ contract ERC20Test_transfer is EVaultTestBase {
         vm.expectEmit();
         emit Events.Transfer(alice, bob, amount);
         vm.prank(alice);
-        bool status = eTST.transfer(bob, amount);
+        bool success = eTST.transfer(bob, amount);
 
-        assertTrue(status);
+        assertTrue(success);
         assertEq(eTST.balanceOf(alice), balance - amount);
         assertEq(eTST.balanceOf(bob), amount);
     }
@@ -40,9 +36,9 @@ contract ERC20Test_transfer is EVaultTestBase {
         vm.expectEmit();
         emit Events.Transfer(alice, bob, 0);
         vm.prank(alice);
-        bool status = eTST.transfer(bob, 0);
+        bool success = eTST.transfer(bob, 0);
 
-        assertTrue(status);
+        assertTrue(success);
         assertEq(eTST.balanceOf(alice), balance);
         assertEq(eTST.balanceOf(bob), 0);
     }
@@ -128,9 +124,9 @@ contract ERC20Test_transfer is EVaultTestBase {
         vm.expectEmit();
         emit Events.Transfer(alice, bob, amount);
         vm.prank(bob);
-        bool status = eTST.transferFrom(alice, bob, amount);
+        bool success = eTST.transferFrom(alice, bob, amount);
 
-        assertTrue(status);
+        assertTrue(success);
         assertEq(eTST.balanceOf(alice), balance - amount);
         assertEq(eTST.balanceOf(bob), amount);
         assertEq(eTST.allowance(alice, bob), allowance - amount);
@@ -148,32 +144,105 @@ contract ERC20Test_transfer is EVaultTestBase {
         vm.expectEmit();
         emit Events.Transfer(alice, bob, 0);
         vm.prank(bob);
-        bool status = eTST.transferFrom(alice, bob, 0);
+        bool success = eTST.transferFrom(alice, bob, 0);
 
-        assertTrue(status);
+        assertTrue(success);
         assertEq(eTST.balanceOf(alice), balance);
         assertEq(eTST.balanceOf(bob), 0);
         assertEq(eTST.allowance(alice, bob), allowance);
     }
 
-    function test_TransferFrom_BetweenSubaccounts(uint256 balance, uint256 amount, uint8 subaccountId) public {
-        address aliceSubaccount = _subaccountOf(alice, subaccountId);
-        vm.assume(aliceSubaccount != alice);
+    function test_TransferFrom_RevertsWhen_InsufficientBalance(uint256 balance, uint256 allowance, uint256 amount) public {
+        amount = bound(amount, 2, MAX_SANE_AMOUNT);
+        balance = bound(balance, 1, amount - 1);
+        allowance = bound(allowance, amount, MAX_SANE_AMOUNT);
 
+        _mintAndDeposit(alice, balance);
+
+        vm.prank(alice);
+        eTST.approve(bob, allowance);
+
+        vm.expectRevert(Errors.E_InsufficientBalance.selector);
+        vm.prank(bob);
+        eTST.transferFrom(alice, bob, amount);
+    }
+
+    function test_TransferFrom_RevertsWhen_InsufficientAllowance(uint256 balance, uint256 allowance, uint256 amount) public {
+        amount = bound(amount, 1, MAX_SANE_AMOUNT);
+        balance = bound(balance, amount, MAX_SANE_AMOUNT);
+        allowance = bound(allowance, 0, amount - 1);
+
+        _mintAndDeposit(alice, balance);
+
+        vm.prank(alice);
+        eTST.approve(bob, allowance);
+
+        vm.expectRevert(Errors.E_InsufficientAllowance.selector);
+        vm.prank(bob);
+        eTST.transferFrom(alice, bob, amount);
+    }
+
+    function test_TransferFrom_RevertsWhen_SelfTransfer(uint256 balance, uint256 amount) public {
         amount = bound(amount, 1, MAX_SANE_AMOUNT);
         balance = bound(balance, amount, MAX_SANE_AMOUNT);
 
         _mintAndDeposit(alice, balance);
 
-        vm.expectEmit();
-        emit Events.Transfer(alice, aliceSubaccount, amount);
+        vm.expectRevert(Errors.E_SelfTransfer.selector);
         vm.prank(alice);
-        bool status = eTST.transferFrom(alice, aliceSubaccount, amount);
+        eTST.transferFrom(alice, alice, amount);
+    }
 
-        assertTrue(status);
-        assertEq(eTST.balanceOf(alice), balance - amount);
-        assertEq(eTST.balanceOf(aliceSubaccount), amount);
-        assertEq(eTST.allowance(alice, aliceSubaccount), 0);
+    function test_TransferFromMax_Integrity(uint256 balance) public {
+        balance = bound(balance, 1, MAX_SANE_AMOUNT);
+
+        _mintAndDeposit(alice, balance);
+        vm.prank(alice);
+        eTST.approve(bob, balance);
+        
+        vm.prank(bob);
+        bool success = eTST.transferFromMax(alice, bob);
+
+        assertTrue(success);
+        assertEq(eTST.balanceOf(alice), 0);
+        assertEq(eTST.balanceOf(bob), balance);
+    }
+
+    function test_Approve_Integrity(uint256 allowance) public {
+        vm.startPrank(alice);
+        vm.expectEmit();
+        emit Events.Approval(alice, bob, allowance);
+        bool success = eTST.approve(bob, allowance);
+        assertTrue(success);
+        assertEq(eTST.allowance(alice, bob), allowance);
+    }
+
+    function test_Approve_Overwrite(uint256 allowanceA, uint256 allowanceB) public {
+        vm.startPrank(alice);
+        eTST.approve(bob, allowanceA);
+        bool success = eTST.approve(bob, allowanceB);
+        assertTrue(success);
+        assertEq(eTST.allowance(alice, bob), allowanceB);
+    }
+
+    function test_Approve_EVCOnBehalfOf(uint256 allowance) public {
+        vm.mockCall(address(evc), abi.encodeCall(evc.getCurrentOnBehalfOfAccount, (address(0))), abi.encode(alice, false));
+        vm.prank(address(evc));
+        bool success = eTST.approve(bob, allowance);
+        assertTrue(success);
+        assertEq(eTST.allowance(alice, bob), allowance);
+    }
+
+    function test_Approve_RevertsWhen_SelfApproval(uint256 allowance) public {
+        vm.expectRevert(Errors.E_SelfApproval.selector);
+        vm.prank(alice);
+        eTST.approve(alice, allowance);
+    }
+
+    function test_Approve_RevertsWhen_EVCOnBehalfOfAccountNotAuthenticated(uint256 allowance) public {
+        vm.expectRevert(EVCErrors.EVC_OnBehalfOfAccountNotAuthenticated.selector);
+        vm.prank(address(evc));
+        eTST.approve(alice, allowance);
     }
 
     function _mintAndDeposit(address user, uint256 amount) internal {
@@ -182,9 +251,5 @@ contract ERC20Test_transfer is EVaultTestBase {
         assetTST.approve(address(eTST), amount);
         eTST.deposit(amount, user);
         vm.stopPrank();
-    }
-
-    function _subaccountOf(address user, uint8 id) internal pure returns (address) {
-        return address(((uint160(user) << 8) >> 8) & id);
     }
 }
