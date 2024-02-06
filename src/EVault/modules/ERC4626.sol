@@ -221,8 +221,6 @@ abstract contract ERC4626Module is IERC4626, Base, AssetTransfers, BalanceUtils 
     }
 
     function maxDepositInternal(address) private view returns (uint256) {
-        (IERC20 market) = ProxyUtils.metadata();
-
         // TODO optimize read
         AmountCap supplyAmountCap = marketConfig.supplyCap;
         uint256 pauseBitmask = marketConfig.pauseBitmask;

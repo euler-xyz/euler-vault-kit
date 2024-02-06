@@ -22,7 +22,7 @@ contract ERC4626Test_Borrow is EVaultTestBase {
 
         // Setup
 
-        oracle.setPrice(address(eTST), unitOfAccount, 1e18);
+        oracle.setPrice(address(assetTST), unitOfAccount, 1e18);
         oracle.setPrice(address(eTST2), unitOfAccount, 1e18);
 
         eTST.setLTV(address(eTST2), uint16(9 * CONFIG_SCALE / 10), 0);

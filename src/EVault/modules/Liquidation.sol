@@ -82,15 +82,8 @@ abstract contract LiquidationModule is ILiquidation, Base, BalanceUtils, BorrowU
         if (getController(liqCache.violator) != address(this)) revert E_ControllerDisabled();
         if (!isCollateralEnabled(liqCache.violator, liqCache.collateral)) revert E_CollateralDisabled();
 
-        Assets owed = getCurrentOwed(marketCache, liqCache.violator).toAssetsUp();
-        // violator has no liabilities
-        if (owed.isZero()) return liqCache;
-
-        Liability memory liability =
-            Liability({market: address(this), asset: address(marketCache.asset), owed: owed.toUint()});
-
         (liqCache.repayAssets, liqCache.yieldBalance) =
-            calculateLiquidationInternal(liqCache.liquidator, liqCache.violator, liqCache.collateral, liability, desiredRepay);
+            calculateLiquidationInternal(marketCache, liqCache.violator, liqCache.collateral, desiredRepay);
     }
 
     function executeLiquidation(
@@ -154,15 +147,18 @@ abstract contract LiquidationModule is ILiquidation, Base, BalanceUtils, BorrowU
     }
 
     function calculateLiquidationInternal(
-        address,
+        MarketCache memory marketCache,
         address violator,
         address collateral,
-        Liability memory liability,
         uint256 desiredRepay
     ) internal view returns (uint256, uint256) {
+        Assets owed = getCurrentOwed(marketCache, violator).toAssetsUp();
+        // violator has no liabilities
+        if (owed.isZero()) return (0, 0);
+
         address[] memory collaterals = IEVC(evc).getCollaterals(violator);
 
-        CalculateLiquidationCache memory cache = calculateMaxLiquidation(violator, collateral, liability, collaterals);
+        CalculateLiquidationCache memory cache = calculateMaxLiquidation(marketCache, violator, collateral, collaterals, owed);
         if (cache.repay == 0) return (0, 0);
 
         // Adjust for desired repay
@@ -178,16 +174,17 @@ abstract contract LiquidationModule is ILiquidation, Base, BalanceUtils, BorrowU
     }
 
     function calculateMaxLiquidation(
+        MarketCache memory marketCache,
         address violator,
         address collateral,
-        Liability memory liability,
-        address[] memory collaterals
+        address[] memory collaterals,
+        Assets owed
     ) internal view virtual returns (CalculateLiquidationCache memory cache) {
         cache.repay = 0;
         cache.yield = 0;
         cache.collateralBalance = 0;
 
-        (uint256 totalCollateralValueRA, uint256 liabilityValue) = computeLiquidity(violator, collaterals, liability);
+        (uint256 totalCollateralValueRA, uint256 liabilityValue) = computeLiquidity(marketCache, violator, collaterals);
 
         // no violation
         if (totalCollateralValueRA >= liabilityValue) return cache;
@@ -218,7 +215,7 @@ abstract contract LiquidationModule is ILiquidation, Base, BalanceUtils, BorrowU
             maxYieldValue = collateralValue;
         }
 
-        cache.repay = maxRepayValue * liability.owed / liabilityValue;
+        cache.repay = maxRepayValue * owed.toUint() / liabilityValue;
         cache.yield = maxYieldValue * cache.collateralBalance / collateralValue;
     }
 }

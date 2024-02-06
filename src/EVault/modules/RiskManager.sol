@@ -15,13 +15,15 @@ abstract contract RiskManagerModule is IRiskManager, Base, BorrowUtils {
     using UserStorageLib for UserStorage;
 
     function computeAccountLiquidity(address account) external virtual view returns (uint256 collateralValue, uint256 liabilityValue) {
-        address controller = getSupportedController(account);
+        MarketCache memory marketCache = loadMarket();
+
+        verifyController(account);
         address[] memory collaterals = IEVC(evc).getCollaterals(account);
 
         return computeLiquidity(
+            marketCache,
             account,
-            collaterals,
-            Liability(controller, IEVault(controller).asset(), IEVault(controller).debtOf(account))
+            collaterals
         );
     }
 
@@ -32,16 +34,14 @@ abstract contract RiskManagerModule is IRiskManager, Base, BorrowUtils {
     }
 
     function computeAccountLiquidityPerMarket(address account) external virtual view returns (MarketLiquidity[] memory) {
-        Liability memory liability;
-        liability.market = getSupportedController(account);
-        liability.asset = IEVault(liability.market).asset();
-        liability.owed = IEVault(liability.market).debtOf(account);
+        MarketCache memory marketCache = loadMarket();
 
+        verifyController(account);
         address[] memory collaterals = IEVC(evc).getCollaterals(account);
 
         uint256 numMarkets = collaterals.length + 1;
         for (uint256 i; i < collaterals.length;) {
-            if (collaterals[i] == liability.market) {
+            if (collaterals[i] == address(this)) {
                 numMarkets--;
                 break;
             }
@@ -59,8 +59,8 @@ abstract contract RiskManagerModule is IRiskManager, Base, BorrowUtils {
             singleCollateral[0] = collaterals[i];
 
             (output[i].collateralValue, output[i].liabilityValue) =
-                computeLiquidity(account, singleCollateral, liability);
-            if (collaterals[i] != liability.market) output[i].liabilityValue = 0;
+                computeLiquidity(marketCache, account, singleCollateral);
+            if (collaterals[i] != address(this)) output[i].liabilityValue = 0;
 
             unchecked {
                 ++i;
@@ -69,12 +69,12 @@ abstract contract RiskManagerModule is IRiskManager, Base, BorrowUtils {
 
         // liability market is not included in supplied collaterals
         if (numMarkets > collaterals.length) {
-            singleCollateral[0] = liability.market;
+            singleCollateral[0] = address(this);
             uint256 index = numMarkets - 1;
 
-            output[index].market = liability.market;
+            output[index].market = address(this);
             (output[index].collateralValue, output[index].liabilityValue) =
-                computeLiquidity(account, singleCollateral, liability);
+                computeLiquidity(marketCache, account, singleCollateral);
         }
 
         return output;
@@ -102,18 +102,13 @@ abstract contract RiskManagerModule is IRiskManager, Base, BorrowUtils {
         returns (bytes4 magicValue)
     {
         MarketCache memory marketCache = loadMarket();
-        checkAccountStatusInternal(account, collaterals, getRMLiability(marketCache, account));
+
+        if (!marketStorage.users[account].getOwed().isZero()) {
+            (uint256 collateralValue, uint256 liabilityValue) = computeLiquidity(marketCache, account, collaterals);
+            if (collateralValue < liabilityValue) revert RM_AccountLiquidity();
+        }
+
         magicValue = ACCOUNT_STATUS_CHECK_RETURN_VALUE;
-    }
-
-    function checkAccountStatusInternal(address account, address[] memory collaterals, Liability memory liability)
-        private
-        view
-    {
-        if (liability.market == address(0) || liability.owed == 0) return;
-        (uint256 collateralValue, uint256 liabilityValue) = computeLiquidity(account, collaterals, liability);
-
-        if (collateralValue < liabilityValue) revert RM_AccountLiquidity();
     }
 
     /// @inheritdoc IRiskManager
@@ -207,15 +202,12 @@ abstract contract RiskManagerModule is IRiskManager, Base, BorrowUtils {
 
     // getters
 
-    function getSupportedController(address account) private view returns (address controller) {
+    function verifyController(address account) private view {
         address[] memory controllers = IEVC(evc).getControllers(account);
 
         if (controllers.length > 1) revert RM_TransientState();
         if (controllers.length == 0) revert RM_NoLiability();
-
-        controller = controllers[0];
-
-        if (controller != address(this)) revert RM_NotController();
+        if (controllers[0] != address(this)) revert RM_NotController();
     }
 }
 
