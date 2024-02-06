@@ -75,8 +75,6 @@ abstract contract TokenModule is IToken, Base, BalanceUtils {
         if (from == address(0)) from = account;
         if (from == to) revert E_SelfTransfer();
 
-        if (shares.isZero()) return true;
-
         decreaseAllowance(from, account, shares);
         transferBalance(from, to, shares);
 
