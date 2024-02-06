@@ -70,14 +70,16 @@ abstract contract GovernanceModule is IGovernance, Base {
         emit GovSetMarketPolicy(pauseBitmask, supplyCap, borrowCap);
     }
 
-    // NOTE separate setters for fees not to emit extra events on the core if only liquidation is changed.
-    function setInterestFee(uint16 newFee) external virtual nonReentrant governorOnly {
-        if (newFee > CONFIG_SCALE && newFee != type(uint16).max) revert RM_BadFee();
-        // TODO check min interest fee from the vault
+    function setInterestFee(uint16 newInterestFee) external virtual nonReentrant governorOnly {
+        if (newInterestFee > CONFIG_SCALE) revert RM_BadFee();
 
-        marketConfig.interestFee = newFee;
+        if (newInterestFee != marketConfig.interestFee) return;
 
-        emit GovSetInterestFee(newFee);
+        if (!protocolAdmin.isValidInterestFee(address(this), newInterestFee)) revert RM_BadFee();
+
+        marketConfig.interestFee = newInterestFee;
+
+        emit GovSetInterestFee(newInterestFee);
     }
 
     function setUnitOfAccount(address newUnitOfAccount) external virtual nonReentrant governorOnly {

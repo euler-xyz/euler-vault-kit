@@ -147,42 +147,27 @@ abstract contract RiskManagerModule is IRiskManager, Base, BorrowUtils {
     }
 
     function updateInterestParams(MarketCache memory marketCache) private returns (uint72) {
-        uint256 borrows = marketCache.totalBorrows.toAssetsUp().toUint();
-        uint256 poolAssets = marketCache.poolSize.toUint() + borrows;
+        uint256 newInterestRate;
+        address irm = marketConfig.interestRateModel;
 
-        uint32 utilisation = poolAssets == 0
-            ? 0 // empty pool arbitrarily given utilisation of 0
-            : uint32(borrows * (uint256(type(uint32).max) * 1e18) / poolAssets / 1e18);
+        if (irm != address(0)) {
+            uint256 borrows = marketCache.totalBorrows.toAssetsUp().toUint();
+            uint256 poolAssets = marketCache.poolSize.toUint() + borrows;
 
-        (uint256 newInterestRate, uint16 newInterestFee) = computeInterestParams(address(marketCache.asset), utilisation);
-        uint16 interestFee = marketStorage.interestFee;
+            uint32 utilisation = poolAssets == 0
+                ? 0 // empty pool arbitrarily given utilisation of 0
+                : uint32(borrows * (uint256(type(uint32).max) * 1e18) / poolAssets / 1e18);
 
-        if (newInterestFee != interestFee) {
-            if (protocolAdmin.isValidInterestFee(address(this), newInterestFee)) {
-                emit NewInterestFee(newInterestFee);
-            } else {
-                // ignore incorrect value
-                newInterestFee = interestFee;
-            }
+            try IIRM(irm).computeInterestRate(msg.sender, , utilisation) returns (uint256 ir) {
+                newInterestRate = ir;
+            } catch {}
         }
 
         if (newInterestRate > MAX_ALLOWED_INTEREST_RATE) newInterestRate = MAX_ALLOWED_INTEREST_RATE;
 
         marketStorage.interestRate = uint72(newInterestRate);
-        marketStorage.interestFee = newInterestFee;
 
         return uint72(newInterestRate);
-    }
-
-    function computeInterestParams(address asset, uint32 utilisation) private returns (uint256 interestRate, uint16 interestFee) {
-        address irm = marketConfig.interestRateModel;
-        uint16 fee = marketConfig.interestFee;
-
-        try IIRM(irm).computeInterestRate(msg.sender, asset, utilisation) returns (uint256 ir) {
-            interestRate = ir;
-        } catch {}
-
-        interestFee = fee == type(uint16).max ? DEFAULT_INTEREST_FEE : fee;
     }
 
     function checkVaultStatusInternal(
