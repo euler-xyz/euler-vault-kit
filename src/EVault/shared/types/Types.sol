@@ -12,6 +12,7 @@ import "./Owed.sol";
 import "./Fees.sol";
 import "./UserStorage.sol";
 import "./AmountCap.sol";
+import "./LTVConfig.sol";
 
 type Shares is uint112;
 

@@ -65,9 +65,4 @@ abstract contract Storage {
         address unitOfAccount;
         address oracle;
     }
-
-    struct LTVConfig {
-        bool enabled;
-        uint16 collateralFactor;
-    }
 }

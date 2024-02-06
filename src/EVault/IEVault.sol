@@ -265,7 +265,7 @@ interface IGovernance {
 
     function setFeeReceiver(address newFeeReceiver) external;
 
-    function setLTV(address collateral, uint16 collateralFactor, uint256 ramp) external;
+    function setLTV(address collateral, uint16 ltv, uint24 rampDuration) external;
 
     function setIRM(address newModel, bytes calldata resetParams) external;
 
@@ -279,7 +279,7 @@ interface IGovernance {
 
     function getGovernorAdmin() external view returns (address);
 
-    // FIXME getLTV
+    function getLTV(address collateral) external view returns (uint16);
 
     function getLTVList() external view returns (address[] memory);
 

@@ -33,15 +33,16 @@ abstract contract GovernanceModule is IGovernance, Base {
         emit GovSetFeeReceiver(newFeeReceiver);
     }
 
-    function setLTV(address collateral, uint16 collateralFactor, uint256 /*ramp*/) external virtual nonReentrant governorOnly {
+    function setLTV(address collateral, uint16 ltv, uint24 rampDuration) external virtual nonReentrant governorOnly {
         MarketCache memory marketCache = loadMarket();
         if (collateral == address(marketCache.asset)) revert RM_InvalidLTVAsset();
 
-        LTVConfig memory newLTV = LTVConfig({ enabled: collateralFactor != 0, collateralFactor: collateralFactor });
+        LTVConfig memory origLTV = ltvLookup[collateral].setLTV(ltv, rampDuration);
+        LTVConfig memory newLTV = origLTV.setLTV(ltv, rampDuration);
 
         ltvLookup[collateral] = newLTV;
 
-        updateLTVArray(ltvList, collateral, newLTV);
+        if (!origLTV.initialised()) ltvList.push(collateral);
 
         emit GovSetLTV(collateral, newLTV);
     }
@@ -94,8 +95,8 @@ abstract contract GovernanceModule is IGovernance, Base {
     /// @notice Retrieves LTV config for a collateral
     /// @param collateral Collateral asset
     /// @return LTV config set for the pair
-    function getLTV(address collateral) external virtual view returns (LTVConfig memory) {
-        return ltvLookup[collateral];
+    function getLTV(address collateral) external virtual view returns (uint16) {
+        return ltvLookup[collateral].getLTV();
     }
 
     /// @notice Retrieves a list of collaterals with configured LTVs
@@ -117,32 +118,6 @@ abstract contract GovernanceModule is IGovernance, Base {
 
     function feeReceiver() external virtual view returns (address) {
         return feeReceiverAddress;
-    }
-
-    // Internal
-
-    function updateLTVArray(address[] storage arr, address asset, LTVConfig memory newLTV) private {
-        uint256 length = arr.length;
-        if (newLTV.enabled) {
-            for (uint256 i = 0; i < length;) {
-                if (arr[i] == asset) return;
-                unchecked {
-                    ++i;
-                }
-            }
-            arr.push(asset);
-        } else {
-            for (uint256 i = 0; i < length;) {
-                if (arr[i] == asset) {
-                    arr[i] = arr[length - 1];
-                    arr.pop();
-                    return;
-                }
-                unchecked {
-                    ++i;
-                }
-            }
-        }
     }
 }
 
