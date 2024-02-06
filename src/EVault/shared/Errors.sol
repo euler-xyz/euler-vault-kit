@@ -70,7 +70,6 @@ contract Errors {
     error RM_NoLiability();
     error RM_NotController();
     error RM_EmptyError();
-    error RM_InvalidIRM();
     error RM_ExcessiveRepay();
     error RM_ExcessiveYield();
     error RM_InsufficientBalance();

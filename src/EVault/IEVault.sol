@@ -261,8 +261,6 @@ interface IBalanceForwarder {
 }
 
 interface IGovernance {
-    function setDefaultInterestRateModel(address newModel) external;
-
     function setGovernorAdmin(address newGovernorAdmin) external;
 
     function setFeeReceiver(address newFeeReceiver) external;
@@ -286,8 +284,6 @@ interface IGovernance {
     function getLTVList() external view returns (address[] memory);
 
     function interestRateModel() external view returns (address);
-
-    function getDefaultInterestRateModel() external view returns (address);
 
     function getMarketPolicy() external view returns (uint32 pauseBitmask, uint16 supplyCap, uint16 borrowCap);
 

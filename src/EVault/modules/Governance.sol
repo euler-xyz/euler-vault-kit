@@ -23,12 +23,6 @@ abstract contract GovernanceModule is IGovernance, Base {
     event GovSetInterestFee(uint16 newFee);
     event GovSetUnitOfAccount(address newUnitOfAccount);
 
-    function setDefaultInterestRateModel(address newModel) external virtual nonReentrant governorOnly {
-        if (newModel == address(0)) revert RM_InvalidIRM();
-
-        marketConfig.interestRateModel = newModel;
-    }
-
     function setGovernorAdmin(address newGovernorAdmin) external virtual nonReentrant governorOnly {
         governorAdmin = newGovernorAdmin;
         emit SetGovernorAdmin(newGovernorAdmin);
@@ -115,10 +109,6 @@ abstract contract GovernanceModule is IGovernance, Base {
     /// @return Address of the interest rate contract
     function interestRateModel() external virtual view returns (address) {
         return marketConfig.interestRateModel;
-    }
-
-    function getDefaultInterestRateModel() external virtual view returns (address) {
-        return defaultInterestRateModel;
     }
 
     function getMarketPolicy() external virtual view returns (uint32 pauseBitmask, uint16 supplyCap, uint16 borrowCap) {

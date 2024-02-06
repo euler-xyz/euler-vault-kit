@@ -214,8 +214,6 @@ contract EVault is
 
     // ----------------- Governance -----------------
 
-    function setDefaultInterestRateModel(address newModel) external override use(MODULE_GOVERNANCE) {}
-
     function setGovernorAdmin(address newGovernorAdmin) external override use(MODULE_GOVERNANCE) {}
 
     function setFeeReceiver(address newFeeReceiver) external override use(MODULE_GOVERNANCE) {}
@@ -239,8 +237,6 @@ contract EVault is
     function getLTVList() external override useView(MODULE_GOVERNANCE) view returns (address[] memory) {}
 
     function interestRateModel() external override useView(MODULE_GOVERNANCE) view returns (address) {}
-
-    function getDefaultInterestRateModel() external override useView(MODULE_GOVERNANCE) view returns (address) {}
 
     function getMarketPolicy() external override useView(MODULE_GOVERNANCE) view returns (uint32 pauseBitmask, uint16 supplyCap, uint16 borrowCap) {}
 

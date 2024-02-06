@@ -8,7 +8,6 @@ abstract contract Storage {
     bool initialized;
 
     address internal governorAdmin;
-    address internal defaultInterestRateModel;
     address internal feeReceiverAddress;
 
     MarketStorage marketStorage;
@@ -62,7 +61,7 @@ abstract contract Storage {
         AmountCap borrowCap;
         uint16 interestFee;
 
-        address interestRateModel; // external market if address(0) (FIXME: not anymore: now it means 0% interest)
+        address interestRateModel; // external market if address(0) (FIXME: not anymore: now it means 0% interest, or MIN_INTEREST?)
         address unitOfAccount;
         address oracle;
     }
