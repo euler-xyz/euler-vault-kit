@@ -269,5 +269,32 @@ contract FactoryTest is Test {
         factory.getProxyListSlice(1000, 1000);
     }
 
-    // TODO test non-upgradeable
+    function test_WhenNonUpgradeable_CreateProxy() public {
+        GenericFactory.ProxyConfig memory config;
+
+        // Create and install mock eVault impl
+        MockEVault mockEvaultImpl = new MockEVault(address(factory), address(1));
+        vm.prank(upgradeAdmin);
+        factory.setImplementation(address(mockEvaultImpl));
+
+        // Create non-upgradeable proxy
+        TestERC20 TST = new TestERC20("Test Token", "TST", 18, false);
+        MockEVault eVaultNonUpg = MockEVault(factory.createProxy(false, abi.encodePacked(address(TST))));
+
+        config = factory.getProxyConfig(address(eVaultNonUpg));
+
+        assertEq(config.upgradeable, false);
+        assertEq(config.trailingData, abi.encodePacked(address(TST)));
+
+        assertEq(config.implementation, factory.implementation());
+        assertEq(eVaultNonUpg.implementation(), "TRANSPARENT");
+
+        // Change eVault impl
+        vm.prank(upgradeAdmin);
+        factory.setImplementation(address(1));
+
+        config = factory.getProxyConfig(address(eVaultNonUpg));
+        assertNotEq(config.implementation, factory.implementation());
+        assertEq(eVaultNonUpg.implementation(), "TRANSPARENT");
+    }   
 }
