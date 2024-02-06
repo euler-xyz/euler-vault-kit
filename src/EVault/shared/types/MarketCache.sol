@@ -6,12 +6,6 @@ import {IERC20} from "../../IEVault.sol";
 
 import "./Types.sol";
 
-// FIXME: figure out better location for this
-struct Snapshot {
-    uint256 poolSize;
-    uint256 totalBorrows;
-}
-
 struct MarketCache {
     IERC20 asset;
     Shares totalShares;
