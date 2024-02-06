@@ -12,7 +12,7 @@ abstract contract BorrowUtils is Base {
     using TypesLib for uint256;
     using UserStorageLib for UserStorage;
 
-    function computeLiquidity(address account, address[] memory collaterals, Liability memory liability)
+    function computeLiquidity(MarketCache memory marketCache, address account, address[] memory collaterals)
         internal
         view
         returns (uint256 collateralValue, uint256 liabilityValue)
@@ -20,9 +20,11 @@ abstract contract BorrowUtils is Base {
         address unitOfAccount = marketConfig.unitOfAccount;
         address oracle = marketConfig.oracle;
 
-        liabilityValue = unitOfAccount == liability.market ?
-            liability.owed :
-            IPriceOracle(oracle).getQuote(liability.owed, liability.market, unitOfAccount);
+        uint256 owed = getCurrentOwed(marketCache, account).toAssetsUp().toUint();
+
+        liabilityValue = address(marketCache.asset) == unitOfAccount ?
+            owed :
+            IPriceOracle(oracle).getQuote(owed, address(marketCache.asset), unitOfAccount);
 
         for (uint256 i; i < collaterals.length; ++i) {
             address collateral = collaterals[i];
@@ -33,9 +35,7 @@ abstract contract BorrowUtils is Base {
             uint256 balance = IERC20(collateral).balanceOf(account); // TODO low level
             if (balance == 0) continue;
 
-            uint256 currentCollateralValue = unitOfAccount == collateral ?
-                balance :
-                IPriceOracle(oracle).getQuote(balance, collateral, unitOfAccount);
+            uint256 currentCollateralValue = IPriceOracle(oracle).getQuote(balance, collateral, unitOfAccount);
 
             collateralValue += currentCollateralValue * ltv / CONFIG_SCALE;
         }
@@ -123,18 +123,6 @@ abstract contract BorrowUtils is Base {
 
         logBorrowChange(from, fromOwedPrev, fromOwed);
         logBorrowChange(to, toOwedPrev, toOwed);
-    }
-
-    function getRMLiability(MarketCache memory marketCache, address account)
-        internal
-        view
-        returns (Liability memory liability)
-    {
-        Owed owed = marketStorage.users[account].getOwed();
-
-        liability.market = address(this);
-        liability.asset = address(marketCache.asset);
-        liability.owed = getCurrentOwed(marketCache, account, owed).toAssetsUp().toUint();
     }
 
     function calculateDTokenAddress() internal view returns (address dToken) {

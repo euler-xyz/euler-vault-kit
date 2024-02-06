@@ -76,7 +76,7 @@ abstract contract BorrowingModule is IBorrowing, Base, AssetTransfers, BalanceUt
     {
         if (getController(account) != address(this)) revert E_ControllerDisabled();
 
-        return collateralBalanceLockedInternal(collateral, account, getRMLiability(loadMarket(), account));
+        return collateralBalanceLockedInternal(collateral, account);
     }
 
     /// @inheritdoc IBorrowing
@@ -214,9 +214,9 @@ abstract contract BorrowingModule is IBorrowing, Base, AssetTransfers, BalanceUt
     // Internal
 
     // FIXME: maybe just move this into wrapper above
-    function collateralBalanceLockedInternal(address /*collateral*/, address /*account*/, Liability memory /*liability*/)
+    function collateralBalanceLockedInternal(address /*collateral*/, address /*account*/)
         private
-        view
+        pure
         returns (uint256 lockedBalance)
     {
         return 0; // FIXME

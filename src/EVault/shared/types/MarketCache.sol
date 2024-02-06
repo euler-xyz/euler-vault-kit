@@ -12,13 +12,6 @@ struct Snapshot {
     uint256 totalBorrows;
 }
 
-// FIXME: kill this, or figure out better location
-struct Liability {
-    address market;
-    address asset;
-    uint256 owed;
-}
-
 struct MarketCache {
     IERC20 asset;
     Shares totalShares;
