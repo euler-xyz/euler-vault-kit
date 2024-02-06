@@ -65,26 +65,28 @@ abstract contract BalanceUtils is Base {
     }
 
     function transferBalance(address from, address to, Shares amount) internal {
-        (Shares origFromBalance, bool fromBalanceForwarderEnabled) =
-            marketStorage.users[from].getBalanceAndBalanceForwarder();
-        (Shares origToBalance, bool toBalanceForwarderEnabled) = marketStorage.users[to].getBalanceAndBalanceForwarder();
-        if (origFromBalance < amount) revert E_InsufficientBalance();
+        if (!amount.isZero()) {
+            (Shares origFromBalance, bool fromBalanceForwarderEnabled) =
+                marketStorage.users[from].getBalanceAndBalanceForwarder();
+            (Shares origToBalance, bool toBalanceForwarderEnabled) = marketStorage.users[to].getBalanceAndBalanceForwarder();
+            if (origFromBalance < amount) revert E_InsufficientBalance();
 
-        Shares newFromBalance;
-        unchecked {
-            newFromBalance = origFromBalance - amount;
-        }
-        Shares newToBalance = origToBalance + amount;
+            Shares newFromBalance;
+            unchecked {
+                newFromBalance = origFromBalance - amount;
+            }
+            Shares newToBalance = origToBalance + amount;
 
-        if (fromBalanceForwarderEnabled) {
-            balanceTracker.balanceTrackerHook(from, newFromBalance.toUint(), isControlCollateralInProgress());
-        }
-        if (toBalanceForwarderEnabled) {
-            balanceTracker.balanceTrackerHook(to, newToBalance.toUint(), false);
-        }
+            if (fromBalanceForwarderEnabled) {
+                balanceTracker.balanceTrackerHook(from, newFromBalance.toUint(), isControlCollateralInProgress());
+            }
+            if (toBalanceForwarderEnabled) {
+                balanceTracker.balanceTrackerHook(to, newToBalance.toUint(), false);
+            }
 
-        marketStorage.users[from].setBalance(newFromBalance);
-        marketStorage.users[to].setBalance(newToBalance);
+            marketStorage.users[from].setBalance(newFromBalance);
+            marketStorage.users[to].setBalance(newToBalance);
+        }
 
         emit Transfer(from, to, amount.toUint());
     }
@@ -92,6 +94,7 @@ abstract contract BalanceUtils is Base {
     // Allowance
 
     function decreaseAllowance(address from, address to, Shares amount) internal {
+        if (amount.isZero()) return;
         uint256 allowanceCache = marketStorage.eVaultAllowance[from][to];
         if (from != to && allowanceCache != type(uint256).max) {
             if (allowanceCache < amount.toUint()) revert E_InsufficientAllowance();
