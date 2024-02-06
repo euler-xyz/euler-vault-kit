@@ -2,7 +2,7 @@
 
 pragma solidity ^0.8.0;
 
-import {EVaultTestBase} from "test/unit/evault/EVaultTestBase.t.sol";
+import "test/unit/evault/EVaultTestBase.t.sol";
 import {Errors} from "src/EVault/shared/Errors.sol";
 import {Events} from "src/EVault/shared/Events.sol";
 import {MAX_SANE_AMOUNT} from "src/EVault/shared/types/Types.sol";
@@ -47,6 +47,38 @@ contract ERC20Test_transfer is EVaultTestBase {
         assertEq(eTST.balanceOf(bob), 0);
     }
 
+    function test_Transfer_BalanceForwarderEnabled(uint256 balance, uint256 amount) public {
+        amount = bound(amount, 1, MAX_SANE_AMOUNT);
+        balance = bound(balance, amount, MAX_SANE_AMOUNT);
+
+        _mintAndDeposit(alice, balance);
+
+        vm.prank(alice);
+        eTST.enableBalanceForwarder();
+        vm.prank(bob);
+        eTST.enableBalanceForwarder();
+
+        vm.prank(alice);
+        eTST.transfer(bob, amount);
+
+        assertEq(MockBalanceTracker(balanceTracker).calls(alice, balance - amount, false), 1);
+        assertEq(MockBalanceTracker(balanceTracker).calls(bob, amount, false), 1);
+    }
+
+    function test_Transfer_BalanceForwarderDisabled(uint256 balance, uint256 amount) public {
+        amount = bound(amount, 1, MAX_SANE_AMOUNT);
+        balance = bound(balance, amount, MAX_SANE_AMOUNT);
+
+        _mintAndDeposit(alice, balance);
+
+        vm.prank(alice);
+        eTST.transfer(bob, amount);
+
+        assertFalse(eTST.balanceForwarderEnabled(alice));
+        assertFalse(eTST.balanceForwarderEnabled(bob));
+        assertEq(MockBalanceTracker(balanceTracker).numCalls(), 0);
+    }
+
     function test_Transfer_RevertsWhen_InsufficientBalance(uint256 balance, uint256 amount) public {
         amount = bound(amount, 2, MAX_SANE_AMOUNT);
         balance = bound(balance, 1, amount - 1);
@@ -67,6 +99,19 @@ contract ERC20Test_transfer is EVaultTestBase {
         vm.expectRevert(Errors.E_SelfTransfer.selector);
         vm.prank(alice);
         eTST.transfer(alice, amount);
+    }
+
+    function test_Transfer_RevertsWhen_ReentrancyThroughBalanceTracker() public {
+        _mintAndDeposit(alice, 1 ether);
+
+        vm.prank(alice);
+        eTST.enableBalanceForwarder();
+
+        MockBalanceTracker(balanceTracker).setReentrantCall(address(eTST), abi.encodeCall(eTST.transfer, (bob, 0.5 ether)));
+
+        vm.expectRevert(Errors.E_Reentrancy.selector);
+        vm.prank(alice);
+        eTST.transfer(bob, 0.5 ether);
     }
 
     function test_TransferFrom_Integrity(uint256 balance, uint256 allowance, uint256 amount) public {
@@ -139,7 +184,7 @@ contract ERC20Test_transfer is EVaultTestBase {
         vm.stopPrank();
     }
 
-    function _subaccountOf(address user, uint8 id) internal returns (address) {
+    function _subaccountOf(address user, uint8 id) internal pure returns (address) {
         return address(((uint160(user) << 8) >> 8) & id);
     }
 }
