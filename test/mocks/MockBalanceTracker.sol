@@ -5,6 +5,7 @@ pragma solidity ^0.8.23;
 contract MockBalanceTracker {
     uint256 public numCalls;
     mapping (address => mapping(uint256 => mapping(bool => uint256))) public calls;
+    mapping (address => uint256) public balance;
 
     struct ReentrantCall {
         address to;
@@ -14,6 +15,7 @@ contract MockBalanceTracker {
 
     function balanceTrackerHook(address account, uint256 newAccountBalance, bool forfeitRecentReward) external {
         calls[account][newAccountBalance][forfeitRecentReward]++;
+        balance[account] = newAccountBalance;
         numCalls++;
 
         ReentrantCall memory _reentrantCall = reentrantCall;

@@ -158,7 +158,7 @@ abstract contract RiskManagerModule is IRiskManager, Base, BorrowUtils {
                 ? 0 // empty pool arbitrarily given utilisation of 0
                 : uint32(borrows * (uint256(type(uint32).max) * 1e18) / poolAssets / 1e18);
 
-            try IIRM(irm).computeInterestRate(msg.sender, , utilisation) returns (uint256 ir) {
+            try IIRM(irm).computeInterestRate(msg.sender, address(marketCache.asset), utilisation) returns (uint256 ir) {
                 newInterestRate = ir;
             } catch {}
         }
