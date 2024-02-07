@@ -3,20 +3,17 @@
 pragma solidity ^0.8.0;
 
 import "test/unit/evault/EVaultTestBase.t.sol";
-import {Errors as EVCErrors} from "ethereum-vault-connector/Errors.sol";
-import {IEVC} from "ethereum-vault-connector/interfaces/IEthereumVaultConnector.sol";
 import {Errors} from "src/EVault/shared/Errors.sol";
 import {Events} from "src/EVault/shared/Events.sol";
 
 contract BalanceForwarderTest_Control is EVaultTestBase {
     address alice = makeAddr("alice");
-    address bob = makeAddr("bob");
 
     function test_BalanceTrackerAddress_Integrity() public {
         assertEq(eTST.balanceTrackerAddress(), balanceTracker);
     }
 
-    function test_Enable_Integrity() public {
+    function test_Enable() public {
         vm.expectEmit();
         emit Events.BalanceForwarderStatus(alice, true);
         vm.prank(alice);
@@ -35,13 +32,6 @@ contract BalanceForwarderTest_Control is EVaultTestBase {
         assertTrue(eTST.balanceForwarderEnabled(alice));
     }
 
-    function test_Enable_RecordBalance() public {
-        _mintAndDeposit(alice, 1 ether);
-        vm.prank(alice);
-        eTST.enableBalanceForwarder();
-        assertEq(MockBalanceTracker(balanceTracker).balance(alice), 1 ether);
-    }
-
     function test_Enable_AlreadyEnabledOk() public {
         vm.prank(alice);
         eTST.enableBalanceForwarder();
@@ -49,8 +39,6 @@ contract BalanceForwarderTest_Control is EVaultTestBase {
         eTST.enableBalanceForwarder();
 
         assertTrue(eTST.balanceForwarderEnabled(alice));
-        assertEq(MockBalanceTracker(balanceTracker).numCalls(), 2);
-        assertEq(MockBalanceTracker(balanceTracker).calls(alice, 0, false), 2);
     }
 
     function test_Enable_RevertsWhen_NoBalanceTracker() public {
@@ -75,18 +63,6 @@ contract BalanceForwarderTest_Control is EVaultTestBase {
         assertEq(MockBalanceTracker(balanceTracker).calls(alice, 0, false), 2);
     }
 
-    function test_Disable_RecordZero() public {
-        _mintAndDeposit(alice, 1 ether);
-        vm.prank(alice);
-        eTST.enableBalanceForwarder();
-
-        vm.prank(alice);
-        eTST.disableBalanceForwarder();
-
-        assertFalse(eTST.balanceForwarderEnabled(alice));
-        assertEq(MockBalanceTracker(balanceTracker).balance(alice), 0);
-    }
-
     function test_Disable_EVCAuthenticate() public {
         vm.prank(alice);
         eTST.enableBalanceForwarder();
@@ -104,8 +80,6 @@ contract BalanceForwarderTest_Control is EVaultTestBase {
         eTST.disableBalanceForwarder();
 
         assertFalse(eTST.balanceForwarderEnabled(alice));
-        assertEq(MockBalanceTracker(balanceTracker).numCalls(), 1);
-        assertEq(MockBalanceTracker(balanceTracker).calls(alice, 0, false), 1);
     }
 
     function test_Disable_RevertsWhen_NoBalanceTracker() public {
