@@ -214,13 +214,11 @@ contract EVault is
 
     // ----------------- Governance -----------------
 
-    function setDefaultInterestRateModel(address newModel) external override use(MODULE_GOVERNANCE) {}
-
     function setGovernorAdmin(address newGovernorAdmin) external override use(MODULE_GOVERNANCE) {}
 
     function setFeeReceiver(address newFeeReceiver) external override use(MODULE_GOVERNANCE) {}
 
-    function setLTV(address collateral, uint16 collateralFactor, uint256 ramp) external override use(MODULE_GOVERNANCE) {}
+    function setLTV(address collateral, uint16 ltv, uint24 rampDuration) external override use(MODULE_GOVERNANCE) {}
 
     function setIRM(address newModel, bytes calldata resetParams) external override use(MODULE_GOVERNANCE) {}
 
@@ -234,13 +232,11 @@ contract EVault is
 
     function getGovernorAdmin() external override useView(MODULE_GOVERNANCE) view returns (address) {}
 
-    function getLTV(address collateral) external override useView(MODULE_GOVERNANCE) view returns (LTVConfig memory) {}
+    function getLTV(address collateral) external override useView(MODULE_GOVERNANCE) view returns (uint16) {}
 
     function getLTVList() external override useView(MODULE_GOVERNANCE) view returns (address[] memory) {}
 
     function interestRateModel() external override useView(MODULE_GOVERNANCE) view returns (address) {}
-
-    function getDefaultInterestRateModel() external override useView(MODULE_GOVERNANCE) view returns (address) {}
 
     function getMarketPolicy() external override useView(MODULE_GOVERNANCE) view returns (uint32 pauseBitmask, uint16 supplyCap, uint16 borrowCap) {}
 

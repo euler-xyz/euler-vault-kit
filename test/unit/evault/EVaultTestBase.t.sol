@@ -36,6 +36,8 @@ import "src/EVault/shared/Constants.sol";
 
 contract EVaultTestBase is Test, AssertionsCustomTypes {
     EthereumVaultConnector public evc;
+    address admin;
+    address feeReceiver;
     address protocolAdmin;
     address balanceTracker;
     MockPriceOracle oracle;
@@ -49,11 +51,12 @@ contract EVaultTestBase is Test, AssertionsCustomTypes {
     IEVault public eTST2;
 
     function setUp() public virtual {
-        address admin = vm.addr(1000);
+        admin = vm.addr(1000);
+        feeReceiver = makeAddr("feeReceiver");
         factory = new GenericFactory(admin);
 
         evc = new EthereumVaultConnector();
-        protocolAdmin = address(new ProtocolAdmin(address(0), address(0)));
+        protocolAdmin = address(new ProtocolAdmin(admin, feeReceiver));
         balanceTracker = address(new MockBalanceTracker());
         oracle = new MockPriceOracle();
         unitOfAccount = address(1);
