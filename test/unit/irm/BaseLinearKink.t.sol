@@ -23,9 +23,9 @@ contract BaseLinearKink is Test {
     }
 
     function test_MaxIR() public {
-        uint precision = 1e12; //8 digit
+        uint precision = 1e12; //8 digits
         uint32 utilisation = getUtilisation(10000); //100%
-        uint SPY = getSPY(30000); //300$
+        uint SPY = getSPY(3*1e17); //300%
 
         uint ir = irm.computeInterestRate(address(0), address(0), utilisation);
 
@@ -33,9 +33,9 @@ contract BaseLinearKink is Test {
     }
 
     function test_KinkIR() public {
-        uint precision = 1e11; //8 digit
+        uint precision = 1e11; //8 digits
         uint32 utilisation = getUtilisation(5000); //50%
-        uint SPY = getSPY(1000); //10%
+        uint SPY = getSPY(1*1e16); //10%
 
         uint ir = irm.computeInterestRate(address(0), address(0), utilisation);
 
@@ -43,9 +43,9 @@ contract BaseLinearKink is Test {
     }
 
     function test_UnderKinkIR() public {
-        uint precision = 1e17; // 2 digit
+        uint precision = 1e13; // 6 digits
         uint32 utilisation = getUtilisation(2500); //25%
-        uint SPY = getSPY(488); //4.88%
+        uint SPY = getSPY(4880875385828198); //4.88%
 
         uint ir = irm.computeInterestRate(address(0), address(0), utilisation);
 
@@ -53,23 +53,23 @@ contract BaseLinearKink is Test {
     }
 
     function test_OverKinkIR() public {
-        uint precision = 1e16; // 4 digit
+        uint precision = 1e13; // 7 digits
         uint32 utilisation = getUtilisation(7500); //75%
-        uint SPY = getSPY(10976); //109.76%
+        uint SPY = getSPY(109761712896340360); //109.76%
 
         uint ir = irm.computeInterestRate(address(0), address(0), utilisation);
 
         assertEq(ir/precision, SPY/precision);
     }
 
-    //util: 0% - 100%(10000)
+    //util: 0% - 100%(1 * 1e17)
     function getUtilisation(uint16 util) public pure returns(uint32){
         return uint32(Math.mulScale(type(uint32).max, util, 10000));
     }
 
-    //apr: 0% - 500%(50000)
+    //apr: 0% - 500%(5 * 1e17) 
     function getSPY(int128 apr) public pure returns(uint) {
-        int x = Math.ln((apr+10000) * (2**64) / 10000);
+        int x = Math.ln((apr+1e17) * (2**64) / 1e17);
         return uint(x) * 1e27 / 2**64 / (365.2425 * 86400);
     }
 }
