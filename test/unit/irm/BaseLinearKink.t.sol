@@ -8,9 +8,6 @@ import "../../helpers/Math.sol";
 contract BaseLinearKink is Test {
     BaseIRMLinearKink irm;
 
-    //56778582418225942733  (1.791759469228055 * 1e27 / SECONDS_PER_YEAR) APR(500%) ln(5+1) = 1.791759469228055
-    //158443692534057154822  MAX_ALLOWED_INTEREST_RATE (5 * 1e27 / SECONDS_PER_YEAR)
-
     function setUp() public {
         //IRM default params
         irm = new BaseIRMLinearKink(
