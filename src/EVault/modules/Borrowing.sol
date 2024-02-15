@@ -9,6 +9,8 @@ import {BorrowUtils} from "../shared/BorrowUtils.sol";
 import {AssetTransfers} from "../shared/AssetTransfers.sol";
 import {SafeERC20Lib} from "../shared/lib/SafeERC20Lib.sol";
 import {ProxyUtils} from "../shared/lib/ProxyUtils.sol";
+
+import "../../IPriceOracle.sol";
 import {IEVC} from "ethereum-vault-connector/interfaces/IEthereumVaultConnector.sol";
 
 import "../shared/types/Types.sol";
@@ -76,7 +78,44 @@ abstract contract BorrowingModule is IBorrowing, Base, AssetTransfers, BalanceUt
     {
         if (getController(account) != address(this)) revert E_ControllerDisabled();
 
-        return collateralBalanceLockedInternal(collateral, account);
+        // if collateral is not enabled, it will not be locked
+        if (!isCollateralEnabled(account, collateral)) return 0;
+
+        address[] memory collaterals = getCollaterals(account);
+        (uint256 totalCollateralValueRA, uint256 liabilityValue) = computeLiquidity(loadMarket(), account, collaterals);
+
+        // if there is no liability or it has no value, collateral will not be locked
+        if (liabilityValue == 0) return 0;
+
+        uint256 collateralBalance = IERC20(collateral).balanceOf(account);
+
+        // if account is not healthy, all of the collateral will be locked
+        if (liabilityValue >= totalCollateralValueRA) {
+            return collateralBalance;
+        }
+
+        // if collateral has zero LTV configured, it will not be locked
+        uint256 ltv = ltvLookup[collateral].getLTV();
+        if (ltv == 0) return 0;
+
+        // calculate extra collateral value in terms of requested collateral shares (balance)
+        uint256 extraCollateralValue = (totalCollateralValueRA - liabilityValue) * CONFIG_SCALE / ltv;
+
+        uint256 extraCollateralBalance;
+        {
+            // TODO use direct quote (below) when oracle supports both directions
+            // uint extraCollateralBalance = IPriceOracle(oracle).getQuote(extraCollateralValue, referenceAsset, collateral);
+            address unitOfAccount = marketConfig.unitOfAccount;
+            address oracle = marketConfig.oracle;
+
+            uint256 collateralPrice = IPriceOracle(oracle).getQuote(1e18, collateral, unitOfAccount);
+            if (collateralPrice == 0) return 0; // worthless / unpriced collateral is not locked TODO what happens in liquidation??
+            extraCollateralBalance = extraCollateralValue * 1e18 / collateralPrice;
+        }
+
+        if (extraCollateralBalance >= collateralBalance) return 0; // other collaterals are sufficient to support the debt
+
+        return collateralBalance - extraCollateralBalance;
     }
 
     /// @inheritdoc IBorrowing
@@ -207,73 +246,6 @@ abstract contract BorrowingModule is IBorrowing, Base, AssetTransfers, BalanceUt
         IFlashLoan(account).onFlashLoan(data);
 
         if (asset_.balanceOf(address(this)) < origBalance) revert E_FlashLoanNotRepaid();
-    }
-
-
-
-    // Internal
-
-    // FIXME: maybe just move this into wrapper above
-    function collateralBalanceLockedInternal(address /*collateral*/, address /*account*/)
-        private
-        pure
-        returns (uint256 lockedBalance)
-    {
-        return 0; // FIXME
-    /*
-        if (liability.owed == 0) return 0;
-        // TODO check liability is in RM?
-
-        address[] memory collaterals = IEVC(evc).getCollaterals(account);
-        (uint256 totalCollateralValueRA, uint256 liabilityValue) = computeLiquidity(account, collaterals, liability);
-
-        if (liabilityValue == 0) return 0;
-
-        uint256 collateralBalance = IERC20(collateral).balanceOf(account);
-        if (liabilityValue >= totalCollateralValueRA) {
-            return collateralBalance;
-        }
-
-        // check if collateral is enabled only for healthy account. In unhealthy state all withdrawals are blocked.
-        {
-            bool isCollateral;
-            for (uint256 i; i < collaterals.length;) {
-                if (collaterals[i] == collateral) {
-                    isCollateral = true;
-                    break;
-                }
-                unchecked {
-                    ++i;
-                }
-            }
-            if (!isCollateral) return 0;
-        }
-
-        uint256 collateralFactor;
-        {
-            MarketConfig memory liabilityConfig = resolveMarketConfig(liability.market);
-            MarketConfig memory collateralConfig = resolveMarketConfig(collateral);
-
-            collateralFactor = resolveCollateralFactor(collateral, liability.market, collateralConfig, liabilityConfig);
-            if (collateralFactor == 0) return 0;
-        }
-
-        // calculate extra collateral value in terms of requested collateral shares (balance)
-        uint256 extraCollateralValue = (totalCollateralValueRA - liabilityValue) * CONFIG_SCALE / collateralFactor;
-        uint256 extraCollateralBalance;
-        {
-            // TODO use direct quote (below) when oracle supports both directions
-            // uint extraCollateralBalance = IPriceOracle(oracle).getQuote(extraCollateralValue, referenceAsset, collateral);
-            uint256 quoteUnit = 1e18;
-            uint256 collateralPrice = IPriceOracle(oracle).getQuote(quoteUnit, collateral, referenceAsset);
-            if (collateralPrice == 0) return 0; // worthless / unpriced collateral is not locked TODO what happens in liquidation??
-            extraCollateralBalance = extraCollateralValue * quoteUnit / collateralPrice;
-        }
-
-        if (extraCollateralBalance >= collateralBalance) return 0; // other collaterals are sufficient to support the debt
-
-        return collateralBalance - extraCollateralBalance;
-    */
     }
 }
 

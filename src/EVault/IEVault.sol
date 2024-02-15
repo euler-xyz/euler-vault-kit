@@ -155,6 +155,7 @@ interface IBorrowing {
     /// @return An opaque accumulator that increases as interest is accrued
     function interestAccumulator() external view returns (uint256);
 
+    /// @notice Retrieves amount of the collateral that is being actively used to support the debt of the account. Withdrawing more than this amount would make the account unhealthy.
     function collateralBalanceLocked(address collateral, address account)
         external
         view
