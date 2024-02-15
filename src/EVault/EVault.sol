@@ -150,7 +150,7 @@ contract EVault is
 
     function interestAccumulator() external view override useView(MODULE_BORROWING) returns (uint256) {}
 
-    function collateralBalanceLocked(address collateral, address account) external view override useView(MODULE_BORROWING) returns (uint256 lockedBalance) {}
+    function collateralUsed(address collateral, address account) external view override useView(MODULE_BORROWING) returns (uint256 lockedBalance) {}
 
     function dToken() external view override useView(MODULE_BORROWING) returns (address) {}
 

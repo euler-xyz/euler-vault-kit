@@ -69,7 +69,7 @@ abstract contract BorrowingModule is IBorrowing, Base, AssetTransfers, BalanceUt
     }
 
     /// @inheritdoc IBorrowing
-    function collateralBalanceLocked(address collateral, address account)
+    function collateralUsed(address collateral, address account)
         external
         view
         virtual

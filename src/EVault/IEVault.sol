@@ -156,10 +156,10 @@ interface IBorrowing {
     function interestAccumulator() external view returns (uint256);
 
     /// @notice Retrieves amount of the collateral that is being actively used to support the debt of the account. Withdrawing more than this amount would make the account unhealthy.
-    function collateralBalanceLocked(address collateral, address account)
+    function collateralUsed(address collateral, address account)
         external
         view
-        returns (uint256 lockedBalance);
+        returns (uint256);
 
     /// @notice Address of the DToken
     function dToken() external view returns (address);

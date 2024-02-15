@@ -200,7 +200,7 @@ abstract contract ERC4626Module is IERC4626, Base, AssetTransfers, BalanceUtils 
             address controller = getController(owner);
 
             if (controller != address(0)) {
-                try IEVault(controller).collateralBalanceLocked(address(this), owner) returns (uint256 locked) {
+                try IEVault(controller).collateralUsed(address(this), owner) returns (uint256 locked) {
                     if (locked >= max.toUint()) return Shares.wrap(0);
                     max = max - locked.toShares();
                 } catch {} // if controller doesn't implement the function, assume it will not block withdrawal
