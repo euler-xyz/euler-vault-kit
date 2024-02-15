@@ -41,30 +41,19 @@ abstract contract LiquidationModule is ILiquidation, Base, BalanceUtils, BorrowU
     function liquidate(address violator, address collateral, uint256 repayAssets, uint256 minYieldBalance)
         external
         virtual
-        reentrantOK
+        nonReentrant
     {
-        // non-reentrant
-        (MarketCache memory marketCache, address liquidator) = initLiquidation(violator);
+        (MarketCache memory marketCache, address liquidator) = initOperationForBorrow(OP_LIQUIDATE);
 
-        // static call
+        if (isAccountStatusCheckDeferred(violator)) revert E_ViolatorLiquidityDeferred();
+
         LiquidationCache memory liqCache =
             calculateLiquidation(marketCache, liquidator, violator, collateral, repayAssets);
 
         // liquidation is a no-op if there's no violation
         if (liqCache.repayAssets > 0) {
-            // non-reentrant
             executeLiquidation(marketCache, liqCache, minYieldBalance);
         }
-    }
-
-    function initLiquidation(address violator)
-        private
-        nonReentrant
-        returns (MarketCache memory marketCache, address account)
-    {
-        (marketCache, account) = initOperationForBorrow(OP_LIQUIDATE);
-
-        if (isAccountStatusCheckDeferred(violator)) revert E_ViolatorLiquidityDeferred();
     }
 
     function calculateLiquidation(

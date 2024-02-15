@@ -190,8 +190,6 @@ abstract contract RiskManagerModule is IRiskManager, Base, BorrowUtils {
         if (currentSnapshot.totalBorrows > borrowCap && currentSnapshot.totalBorrows > oldSnapshot.totalBorrows) revert RM_BorrowCapExceeded();
     }
 
-    // getters
-
     function verifyController(address account) private view {
         address[] memory controllers = IEVC(evc).getControllers(account);
 
