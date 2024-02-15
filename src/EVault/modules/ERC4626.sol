@@ -240,5 +240,5 @@ abstract contract ERC4626Module is IERC4626, Base, AssetTransfers, BalanceUtils 
 }
 
 contract ERC4626 is ERC4626Module {
-    constructor(address evc, address protocolAdmin, address balanceTracker) Base(evc, protocolAdmin, balanceTracker) {}
+    constructor(address evc, address protocolConfig, address balanceTracker) Base(evc, protocolConfig, balanceTracker) {}
 }

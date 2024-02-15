@@ -48,5 +48,5 @@ abstract contract BalanceForwarderModule is IBalanceForwarder, Base {
 }
 
 contract BalanceForwarder is BalanceForwarderModule {
-    constructor(address evc, address protocolAdmin, address balanceTracker) Base(evc, protocolAdmin, balanceTracker) {}
+    constructor(address evc, address protocolConfig, address balanceTracker) Base(evc, protocolConfig, balanceTracker) {}
 }

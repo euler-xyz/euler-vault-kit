@@ -75,7 +75,7 @@ abstract contract GovernanceModule is IGovernance, Base {
 
         if (newInterestFee != marketConfig.interestFee) return;
 
-        if (!protocolAdmin.isValidInterestFee(address(this), newInterestFee)) revert RM_BadFee();
+        if (!protocolConfig.isValidInterestFee(address(this), newInterestFee)) revert RM_BadFee();
 
         marketConfig.interestFee = newInterestFee;
 
@@ -124,5 +124,5 @@ abstract contract GovernanceModule is IGovernance, Base {
 }
 
 contract Governance is GovernanceModule {
-    constructor(address evc, address protocolAdmin, address balanceTracker) Base(evc, protocolAdmin, balanceTracker) {}
+    constructor(address evc, address protocolConfig, address balanceTracker) Base(evc, protocolConfig, balanceTracker) {}
 }

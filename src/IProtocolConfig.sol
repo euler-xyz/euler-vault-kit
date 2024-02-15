@@ -2,7 +2,7 @@
 
 pragma solidity ^0.8.0;
 
-interface IProtocolAdmin {
+interface IProtocolConfig {
     function isValidInterestFee(address vault, uint16 interestFee) external view returns (bool);
 
     function feeConfig(address vault) external view returns (address protocolFeeReceiver, uint256 protocolFeeShare);

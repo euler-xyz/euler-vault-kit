@@ -41,7 +41,7 @@ contract EVault is
 
     constructor(
         address evc,
-        address protocolAdmin,
+        address protocolConfig,
         address balanceTracker,
         address MODULE_INITIALIZE_,
         address MODULE_TOKEN_,
@@ -52,7 +52,7 @@ contract EVault is
         address MODULE_BALANCE_FORWARDER_,
         address MODULE_GOVERNANCE_,
         address MODULE_RISKMANAGER_
-    ) Base(evc, protocolAdmin, balanceTracker) {
+    ) Base(evc, protocolConfig, balanceTracker) {
         MODULE_INITIALIZE = MODULE_INITIALIZE_;
         MODULE_TOKEN = MODULE_TOKEN_;
         MODULE_ERC4626 = MODULE_ERC4626_;

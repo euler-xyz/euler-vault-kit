@@ -5,17 +5,17 @@ pragma solidity ^0.8.0;
 import {EVCClient} from "./EVCClient.sol";
 import {Cache} from "./Cache.sol";
 
-import {IProtocolAdmin} from "../../IProtocolAdmin.sol";
+import {IProtocolConfig} from "../../IProtocolConfig.sol";
 import {IBalanceTracker} from "../../IBalanceTracker.sol";
 
 import "./types/Types.sol";
 
 abstract contract Base is EVCClient, Cache {
-    IProtocolAdmin immutable protocolAdmin;
+    IProtocolConfig immutable protocolConfig;
     IBalanceTracker immutable balanceTracker;
 
-    constructor(address _evc, address _protocolAdmin, address _balanceTracker) EVCClient(_evc) {
-        protocolAdmin = IProtocolAdmin(_protocolAdmin);
+    constructor(address _evc, address _protocolConfig, address _balanceTracker) EVCClient(_evc) {
+        protocolConfig = IProtocolConfig(_protocolConfig);
         balanceTracker = IBalanceTracker(_balanceTracker);
     }
 

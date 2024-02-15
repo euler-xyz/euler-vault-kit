@@ -7,7 +7,7 @@ import {GenericFactory} from "src/GenericFactory/GenericFactory.sol";
 
 import {EVault} from "src/EVault/EVault.sol";
 import {IRMClassStable} from "src/interestRateModels/IRMClassStable.sol";
-import {ProtocolAdmin} from "src/ProtocolAdmin/ProtocolAdmin.sol";
+import {ProtocolConfig} from "src/ProtocolConfig/ProtocolConfig.sol";
 
 import {Initialize} from "src/EVault/modules/Initialize.sol";
 import {Token} from "src/EVault/modules/Token.sol";
@@ -38,7 +38,7 @@ contract EVaultTestBase is Test, AssertionsCustomTypes {
     EthereumVaultConnector public evc;
     address admin;
     address feeReceiver;
-    address protocolAdmin;
+    address protocolConfig;
     address balanceTracker;
     MockPriceOracle oracle;
     address unitOfAccount;
@@ -56,25 +56,25 @@ contract EVaultTestBase is Test, AssertionsCustomTypes {
         factory = new GenericFactory(admin);
 
         evc = new EthereumVaultConnector();
-        protocolAdmin = address(new ProtocolAdmin(admin, feeReceiver));
+        protocolConfig = address(new ProtocolConfig(admin, feeReceiver));
         balanceTracker = address(new MockBalanceTracker());
         oracle = new MockPriceOracle();
         unitOfAccount = address(1);
 
-        address initializeModule = address(new Initialize(address(evc), protocolAdmin, balanceTracker));
-        address tokenModule = address(new Token(address(evc), protocolAdmin, balanceTracker));
-        address erc4626Module = address(new ERC4626(address(evc), protocolAdmin, balanceTracker));
-        address borrowingModule = address(new Borrowing(address(evc), protocolAdmin, balanceTracker));
-        address liquidationModule = address(new Liquidation(address(evc), protocolAdmin, balanceTracker));
-        address feesModule = address(new FeesInstance(address(evc), protocolAdmin, balanceTracker));
-        address balanceForwarderModule = address(new BalanceForwarder(address(evc), protocolAdmin, balanceTracker));
-        address governanceModule = address(new Governance(address(evc), protocolAdmin, balanceTracker));
-        address riskManagerModule = address(new RiskManager(address(evc), protocolAdmin, balanceTracker));
+        address initializeModule = address(new Initialize(address(evc), protocolConfig, balanceTracker));
+        address tokenModule = address(new Token(address(evc), protocolConfig, balanceTracker));
+        address erc4626Module = address(new ERC4626(address(evc), protocolConfig, balanceTracker));
+        address borrowingModule = address(new Borrowing(address(evc), protocolConfig, balanceTracker));
+        address liquidationModule = address(new Liquidation(address(evc), protocolConfig, balanceTracker));
+        address feesModule = address(new FeesInstance(address(evc), protocolConfig, balanceTracker));
+        address balanceForwarderModule = address(new BalanceForwarder(address(evc), protocolConfig, balanceTracker));
+        address governanceModule = address(new Governance(address(evc), protocolConfig, balanceTracker));
+        address riskManagerModule = address(new RiskManager(address(evc), protocolConfig, balanceTracker));
 
         address evaultImpl = address(
             new EVault(
                 address(evc),
-                protocolAdmin,
+                protocolConfig,
                 balanceTracker,
                 initializeModule,
                 tokenModule,

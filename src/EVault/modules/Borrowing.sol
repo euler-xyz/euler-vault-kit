@@ -278,5 +278,5 @@ abstract contract BorrowingModule is IBorrowing, Base, AssetTransfers, BalanceUt
 }
 
 contract Borrowing is BorrowingModule {
-    constructor(address evc, address protocolAdmin, address balanceTracker) Base(evc, protocolAdmin, balanceTracker) {}
+    constructor(address evc, address protocolConfig, address balanceTracker) Base(evc, protocolConfig, balanceTracker) {}
 }

@@ -33,13 +33,13 @@ abstract contract FeesModule is IFees, Base, BalanceUtils {
 
     /// @inheritdoc IFees
     function protocolFeeShare() external view virtual reentrantOK returns (uint256) {
-        (, uint256 protocolShare) = protocolAdmin.feeConfig(address(this));
+        (, uint256 protocolShare) = protocolConfig.feeConfig(address(this));
         return protocolShare;
     }
 
     /// @inheritdoc IFees
     function protocolFeeReceiver() external view virtual reentrantOK returns (address) {
-        (address protocolReceiver,) = protocolAdmin.feeConfig(address(this));
+        (address protocolReceiver,) = protocolConfig.feeConfig(address(this));
         return protocolReceiver;
     }
 
@@ -51,7 +51,7 @@ abstract contract FeesModule is IFees, Base, BalanceUtils {
         marketStorage.totalShares =
             marketCache.totalShares = marketCache.totalShares - marketCache.feesBalance.toShares();
 
-        (address protocolReceiver, uint256 protocolFee) = protocolAdmin.feeConfig(address(this));
+        (address protocolReceiver, uint256 protocolFee) = protocolConfig.feeConfig(address(this));
         address feeReceiverAddress_ = feeReceiverAddress;
 
         if (feeReceiverAddress_ == address(0)) protocolFee = 1e18; // governor forfeits fees
@@ -80,7 +80,7 @@ abstract contract FeesModule is IFees, Base, BalanceUtils {
 
     /// @inheritdoc IFees
     function skimAssets() external virtual nonReentrant {
-        (address admin, address receiver) = protocolAdmin.skimConfig(address(this));
+        (address admin, address receiver) = protocolConfig.skimConfig(address(this));
         if (msg.sender != admin) revert E_Unauthorized();
         if (receiver == address(0) || receiver == address(this)) revert E_BadAddress();
 
@@ -97,5 +97,5 @@ abstract contract FeesModule is IFees, Base, BalanceUtils {
 }
 
 contract FeesInstance is FeesModule {
-    constructor(address evc, address protocolAdmin, address balanceTracker) Base(evc, protocolAdmin, balanceTracker) {}
+    constructor(address evc, address protocolConfig, address balanceTracker) Base(evc, protocolConfig, balanceTracker) {}
 }

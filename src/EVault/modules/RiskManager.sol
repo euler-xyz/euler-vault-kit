@@ -202,5 +202,5 @@ abstract contract RiskManagerModule is IRiskManager, Base, BorrowUtils {
 }
 
 contract RiskManager is RiskManagerModule {
-    constructor(address evc, address protocolAdmin, address balanceTracker) Base(evc, protocolAdmin, balanceTracker) {}
+    constructor(address evc, address protocolConfig, address balanceTracker) Base(evc, protocolConfig, balanceTracker) {}
 }
