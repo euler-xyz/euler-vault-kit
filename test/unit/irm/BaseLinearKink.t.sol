@@ -65,8 +65,8 @@ contract BaseLinearKink is Test {
     }
 
     //apr: 0% - 500%(5 * 1e17) 
-    function getSPY(int128 apr) public pure returns(uint) {
-        int x = Math.ln((apr+1e17) * (2**64) / 1e17);
-        return uint(x) * 1e27 / 2**64 / (365.2425 * 86400);
+    function getSPY(int128 apy) public pure returns(uint) {
+        int apr = Math.ln((apy + 1e17) * (2**64) / 1e17);
+        return uint(apr) * 1e27 / 2**64 / (365.2425 * 86400);
     }
 }
