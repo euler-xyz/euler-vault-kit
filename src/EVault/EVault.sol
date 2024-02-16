@@ -14,9 +14,6 @@ import {ModuleDispatch} from "./modules/ModuleDispatch.sol";
 import {GovernanceModule} from "./modules/Governance.sol";
 import {RiskManagerModule} from "./modules/RiskManager.sol";
 
-import {IVault} from "ethereum-vault-connector/interfaces/IVault.sol";
-
-
 contract EVault is
     ModuleDispatch,
     InitializeModule,
@@ -228,6 +225,8 @@ contract EVault is
 
     function setInterestFee(uint16 newFee) external override use(MODULE_GOVERNANCE) {}
 
+    function setDebtSocialization(bool newValue) external override use(MODULE_GOVERNANCE) {}
+
     function setUnitOfAccount(address newUnitOfAccount) external override use(MODULE_GOVERNANCE) {}
 
     function getGovernorAdmin() external override useView(MODULE_GOVERNANCE) view returns (address) {}
@@ -241,6 +240,12 @@ contract EVault is
     function getMarketPolicy() external override useView(MODULE_GOVERNANCE) view returns (uint32 pauseBitmask, uint16 supplyCap, uint16 borrowCap) {}
 
     function feeReceiver() external override useView(MODULE_GOVERNANCE) view returns (address) {}
+
+    function debtSocialization() external override useView(MODULE_GOVERNANCE) view returns (bool) {}
+
+    function unitOfAccount() external override useView(MODULE_GOVERNANCE) view returns (address) {}
+
+    function oracle() external override useView(MODULE_GOVERNANCE) view returns (address) {}
 
 
 

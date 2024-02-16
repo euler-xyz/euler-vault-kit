@@ -13,19 +13,19 @@ abstract contract GovernanceModule is IGovernance, Base {
         _;
     }
 
-    event SetGovernorAdmin(address indexed newGovernorAdmin);
+    event GovSetGovernorAdmin(address indexed newGovernorAdmin);
     event GovSetFeeReceiver(address indexed newFeeReceiver);
-    event GovSetMarketConfig(uint256 collateralFactor, uint256 borrowFactor);
     event GovSetLTV(address indexed collateral, LTVConfig newLTV);
     event GovSetIRM(address interestRateModel, bytes resetParams);
     event GovSetOracle(address oracle);
     event GovSetMarketPolicy(uint32 newPauseBitmask, uint64 newSupplyCap, uint64 newBorrowCap);
     event GovSetInterestFee(uint16 newFee);
+    event GovSetDebtSocialization(bool debtSocialization);
     event GovSetUnitOfAccount(address newUnitOfAccount);
 
     function setGovernorAdmin(address newGovernorAdmin) external virtual nonReentrant governorOnly {
         governorAdmin = newGovernorAdmin;
-        emit SetGovernorAdmin(newGovernorAdmin);
+        emit GovSetGovernorAdmin(newGovernorAdmin);
     }
 
     function setFeeReceiver(address newFeeReceiver) external virtual nonReentrant governorOnly {
@@ -49,7 +49,7 @@ abstract contract GovernanceModule is IGovernance, Base {
 
     // After setting a new IRM, touch() should be called on a market
     function setIRM(address newModel, bytes calldata resetParams) external virtual nonReentrant governorOnly {
-        // IIRM reset ?
+        // TODO IIRM reset ?
 
         marketConfig.interestRateModel = newModel;
 
@@ -80,6 +80,12 @@ abstract contract GovernanceModule is IGovernance, Base {
         marketConfig.interestFee = newInterestFee;
 
         emit GovSetInterestFee(newInterestFee);
+    }
+
+    function setDebtSocialization(bool newValue) external virtual nonReentrant governorOnly {
+        marketConfig.debtSocialization = newValue;
+
+        emit GovSetDebtSocialization(newValue);
     }
 
     function setUnitOfAccount(address newUnitOfAccount) external virtual nonReentrant governorOnly {
@@ -120,6 +126,18 @@ abstract contract GovernanceModule is IGovernance, Base {
 
     function feeReceiver() external virtual view returns (address) {
         return feeReceiverAddress;
+    }
+
+    function debtSocialization() external virtual view returns (bool) {
+        return marketConfig.debtSocialization;
+    }
+
+    function unitOfAccount() external virtual view returns (address) {
+        return marketConfig.unitOfAccount;
+    }
+
+    function oracle() external virtual view returns (address) {
+        return marketConfig.oracle;
     }
 }
 

@@ -276,6 +276,8 @@ interface IGovernance {
 
     function setInterestFee(uint16 newFee) external;
 
+    function setDebtSocialization(bool newValue) external;
+
     function setUnitOfAccount(address newUnitOfAccount) external;
 
     function getGovernorAdmin() external view returns (address);
@@ -289,6 +291,12 @@ interface IGovernance {
     function getMarketPolicy() external view returns (uint32 pauseBitmask, uint16 supplyCap, uint16 borrowCap);
 
     function feeReceiver() external view returns (address);
+
+    function debtSocialization() external view returns (bool);
+
+    function unitOfAccount() external view returns (address);
+
+    function oracle() external view returns (address);
 }
 
 interface IRiskManager is IVault {

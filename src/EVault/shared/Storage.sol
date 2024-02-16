@@ -46,7 +46,7 @@ abstract contract Storage {
         MarketSnapshot marketSnapshot;
 
         // Packed slot 9 + 2
-        // Read on first item in a block (interest accrual). Read and written in vault status check DF(interest rate update).
+        // Read on first item in a block (interest accrual). Read and written to in vault status check (interest rate update).
         // Not touched on other batch items.
         uint72 interestRate;
         // uint16 interestFee;
@@ -56,6 +56,7 @@ abstract contract Storage {
     }
 
     struct MarketConfig {
+        // Packed slot 4 + 2 + 2 + 2 + 1 = 11
         uint32 pauseBitmask;
         AmountCap supplyCap;
         AmountCap borrowCap;
@@ -63,6 +64,9 @@ abstract contract Storage {
 
         address interestRateModel; // external market if address(0) (FIXME: not anymore: now it means 0% interest, or MIN_INTEREST?)
         address unitOfAccount;
+
+        // Packed slot 20 + 1 = 21
         address oracle;
+        bool debtSocialization;
     }
 }
