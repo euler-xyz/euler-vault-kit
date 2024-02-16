@@ -59,12 +59,12 @@ contract BaseLinearKink is Test {
         assertEq(ir/precision, SPY/precision);
     }
 
-    //util: 0% - 100%(1 * 1e17)
+    //utilisation: 100% = 10000
     function getUtilisation(uint16 util) public pure returns(uint32){
         return uint32(Math.mulScale(type(uint32).max, util, 10000));
     }
 
-    //apr: 0% - 500%(5 * 1e17) 
+    //apy: 500% APY = 5 * 1e17
     function getSPY(int128 apy) public pure returns(uint) {
         int apr = Math.ln((apy + 1e17) * (2**64) / 1e17);
         return uint(apr) * 1e27 / 2**64 / (365.2425 * 86400);
