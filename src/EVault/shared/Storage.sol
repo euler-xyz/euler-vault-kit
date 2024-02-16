@@ -56,17 +56,14 @@ abstract contract Storage {
     }
 
     struct MarketConfig {
-        // Packed slot 4 + 2 + 2 + 2 + 1 = 11
+        // Packed slot 4 + 2 + 2 + 2 + 20 + 1 = 31
         uint32 pauseBitmask;
         AmountCap supplyCap;
         AmountCap borrowCap;
-        uint16 interestFee;
+        address oracle;
+        bool debtSocialization;
 
         address interestRateModel; // external market if address(0) (FIXME: not anymore: now it means 0% interest, or MIN_INTEREST?)
         address unitOfAccount;
-
-        // Packed slot 20 + 1 = 21
-        address oracle;
-        bool debtSocialization;
     }
 }

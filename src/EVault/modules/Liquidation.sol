@@ -19,7 +19,6 @@ abstract contract LiquidationModule is ILiquidation, Base, BalanceUtils, BorrowU
         address violator;
         address collateral;
         address[] collaterals;
-        Assets owed;
         bool debtSocialization;
 
         Assets repay;
@@ -90,13 +89,13 @@ abstract contract LiquidationModule is ILiquidation, Base, BalanceUtils, BorrowU
         if (!isCollateralEnabled(liqCache.violator, liqCache.collateral)) revert E_CollateralDisabled();
 
 
-        liqCache.owed = getCurrentOwed(marketCache, violator).toAssetsUp();
+        Assets owed = getCurrentOwed(marketCache, violator).toAssetsUp();
         // violator has no liabilities
-        if (liqCache.owed.isZero()) return liqCache;
+        if (owed.isZero()) return liqCache;
 
         liqCache.collaterals = IEVC(evc).getCollaterals(violator);
 
-        liqCache = calculateMaxLiquidation(liqCache, marketCache);
+        liqCache = calculateMaxLiquidation(liqCache, marketCache, owed);
         if (liqCache.repay.isZero()) return liqCache;
 
         // Adjust for desired repay
@@ -112,7 +111,8 @@ abstract contract LiquidationModule is ILiquidation, Base, BalanceUtils, BorrowU
 
     function calculateMaxLiquidation(
         LiquidationCache memory liqCache,
-        MarketCache memory marketCache
+        MarketCache memory marketCache,
+        Assets owed
     ) private view returns (LiquidationCache memory){
         (uint256 totalCollateralValueRA, uint256 liabilityValue) = computeLiquidity(marketCache, liqCache.violator, liqCache.collaterals);
 
@@ -150,7 +150,7 @@ abstract contract LiquidationModule is ILiquidation, Base, BalanceUtils, BorrowU
             maxYieldValue = collateralValue;
         }
 
-        liqCache.repay = (maxRepayValue * liqCache.owed.toUint() / liabilityValue).toAssets();
+        liqCache.repay = (maxRepayValue * owed.toUint() / liabilityValue).toAssets();
         liqCache.yieldBalance = maxYieldValue * collateralBalance / collateralValue;
 
         return liqCache;

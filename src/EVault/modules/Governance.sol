@@ -77,7 +77,7 @@ abstract contract GovernanceModule is IGovernance, Base {
 
         if (!protocolConfig.isValidInterestFee(address(this), newInterestFee)) revert RM_BadFee();
 
-        marketConfig.interestFee = newInterestFee;
+        marketStorage.interestFee = newInterestFee;
 
         emit GovSetInterestFee(newInterestFee);
     }
