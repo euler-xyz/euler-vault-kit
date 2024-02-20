@@ -56,7 +56,7 @@ contract Cache is Storage, Errors {
             // Compute new values. Use full precision for intermediate results.
 
             uint72 interestRate = marketStorage.interestRate;
-            uint16 interestFee = marketStorage.interestFee;
+            uint16 interestFee = marketConfig.interestFee;
 
             uint256 deltaT = block.timestamp - marketCache.lastInterestAccumulatorUpdate;
             uint256 newInterestAccumulator =

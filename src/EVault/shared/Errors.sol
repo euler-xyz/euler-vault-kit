@@ -64,7 +64,6 @@ contract Errors {
     error RM_Unauthorized();
     error RM_AccountLiquidity();
     error RM_MarketActivated();
-    error RM_UnderlyingActivated();
     error RM_InvalidUnderlying();
 
     error RM_NoLiability();

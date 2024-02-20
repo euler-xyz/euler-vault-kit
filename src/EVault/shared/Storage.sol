@@ -49,7 +49,7 @@ abstract contract Storage {
         // Read on first item in a block (interest accrual). Read and written in vault status check DF(interest rate update).
         // Not touched on other batch items.
         uint72 interestRate;
-        uint16 interestFee;
+        // uint16 interestFee;
 
         mapping(address account => UserStorage) users;
         mapping(address owner => mapping(address spender => uint256 allowance)) eVaultAllowance;

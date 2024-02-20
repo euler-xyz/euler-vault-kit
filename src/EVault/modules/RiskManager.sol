@@ -14,11 +14,6 @@ abstract contract RiskManagerModule is IRiskManager, Base, BorrowUtils {
     using TypesLib for uint256;
     using UserStorageLib for UserStorage;
 
-    struct Snapshot {
-        uint256 poolSize;
-        uint256 totalBorrows;
-    }
-
     function computeAccountLiquidity(address account) external virtual view returns (uint256 collateralValue, uint256 liabilityValue) {
         MarketCache memory marketCache = loadMarket();
 
@@ -121,7 +116,7 @@ abstract contract RiskManagerModule is IRiskManager, Base, BorrowUtils {
     function checkVaultStatus() external virtual reentrantOK onlyEVCChecks returns (bytes4 magicValue) {
         // Use the updating variant to make sure interest is accrued in storage before the interest rate update
         MarketCache memory marketCache = updateMarket();
-        uint72 newInterestRate = updateInterestParams(marketCache);
+        uint72 newInterestRate = updateInterestRate(marketCache);
 
         logMarketStatus(marketCache, newInterestRate);
 
@@ -146,7 +141,7 @@ abstract contract RiskManagerModule is IRiskManager, Base, BorrowUtils {
         magicValue = VAULT_STATUS_CHECK_RETURN_VALUE;
     }
 
-    function updateInterestParams(MarketCache memory marketCache) private returns (uint72) {
+    function updateInterestRate(MarketCache memory marketCache) private returns (uint72) {
         uint256 newInterestRate;
         address irm = marketConfig.interestRateModel;
 
@@ -168,6 +163,11 @@ abstract contract RiskManagerModule is IRiskManager, Base, BorrowUtils {
         marketStorage.interestRate = uint72(newInterestRate);
 
         return uint72(newInterestRate);
+    }
+
+    struct Snapshot {
+        uint256 poolSize;
+        uint256 totalBorrows;
     }
 
     function checkVaultStatusInternal(

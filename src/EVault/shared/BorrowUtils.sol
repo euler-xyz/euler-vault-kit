@@ -28,11 +28,10 @@ abstract contract BorrowUtils is Base {
 
         for (uint256 i; i < collaterals.length; ++i) {
             address collateral = collaterals[i];
-
             uint256 ltv = ltvLookup[collateral].getLTV();
             if (ltv == 0) continue;
 
-            uint256 balance = IERC20(collateral).balanceOf(account); // TODO low level
+            uint256 balance = IERC20(collateral).balanceOf(account); // TODO low level and read directly for self?
             if (balance == 0) continue;
 
             uint256 currentCollateralValue = IPriceOracle(oracle).getQuote(balance, collateral, unitOfAccount);

@@ -2,10 +2,6 @@
 
 pragma solidity ^0.8.0;
 
-import "./Types.sol";
-import "../Constants.sol";
-import "../Errors.sol";
-
 struct LTVConfig {
     uint40 targetTimestamp;
     uint16 targetLTV;

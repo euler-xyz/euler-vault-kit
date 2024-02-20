@@ -73,7 +73,7 @@ abstract contract GovernanceModule is IGovernance, Base {
     function setInterestFee(uint16 newInterestFee) external virtual nonReentrant governorOnly {
         if (newInterestFee > CONFIG_SCALE) revert RM_BadFee();
 
-        if (newInterestFee != marketConfig.interestFee) return;
+        if (newInterestFee == marketConfig.interestFee) return;
 
         if (!protocolConfig.isValidInterestFee(address(this), newInterestFee)) revert RM_BadFee();
 

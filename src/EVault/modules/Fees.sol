@@ -28,7 +28,7 @@ abstract contract FeesModule is IFees, Base, BalanceUtils {
 
     /// @inheritdoc IFees
     function interestFee() external view virtual reentrantOK returns (uint16) {
-        return marketStorage.interestFee;
+        return marketConfig.interestFee;
     }
 
     /// @inheritdoc IFees
@@ -55,7 +55,6 @@ abstract contract FeesModule is IFees, Base, BalanceUtils {
         address feeReceiverAddress_ = feeReceiverAddress;
 
         if (feeReceiverAddress_ == address(0)) protocolFee = 1e18; // governor forfeits fees
-
         else if (protocolFee > MAX_PROTOCOL_FEE_SHARE) protocolFee = MAX_PROTOCOL_FEE_SHARE;
 
         Shares governorShares = marketCache.feesBalance.mulDiv(1e18 - protocolFee, 1e18).toShares();
