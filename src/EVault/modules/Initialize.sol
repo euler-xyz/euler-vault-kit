@@ -18,8 +18,6 @@ abstract contract InitializeModule is IInitialize, Base, BorrowUtils {
         if (initialized) revert E_Initialized();
         initialized = true;
 
-        governorAdminAddress = creator;
-
         // Validate proxy immutables
 
         // Calldata should include: signature and abi encoded creator address (4 + 32 bytes), followed by proxy metadata
@@ -45,6 +43,7 @@ abstract contract InitializeModule is IInitialize, Base, BorrowUtils {
         marketConfig.unitOfAccount = address(asset);
         marketConfig.name = defaultName(asset);
         marketConfig.symbol = defaultSymbol(asset);
+        marketConfig.governorAdmin = creator;
 
         // Emit logs
 

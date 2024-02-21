@@ -9,13 +9,13 @@ import "../shared/types/Types.sol";
 
 abstract contract GovernanceModule is IGovernance, Base {
     modifier governorOnly() {
-        if (msg.sender != governorAdminAddress) revert RM_Unauthorized();
+        if (msg.sender != marketConfig.governorAdmin) revert RM_Unauthorized();
         _;
     }
 
     /// @inheritdoc IGovernance
     function governorAdmin() external virtual view returns (address) {
-        return governorAdminAddress;
+        return marketConfig.governorAdmin;
     }
 
     /// @inheritdoc IGovernance
@@ -40,7 +40,7 @@ abstract contract GovernanceModule is IGovernance, Base {
 
     /// @inheritdoc IGovernance
     function feeReceiver() external virtual view returns (address) {
-        return feeReceiverAddress;
+        return marketConfig.feeReceiver;
     }
 
     /// @inheritdoc IGovernance
@@ -72,13 +72,13 @@ abstract contract GovernanceModule is IGovernance, Base {
 
     /// @inheritdoc IGovernance
     function setGovernorAdmin(address newGovernorAdmin) external virtual nonReentrant governorOnly {
-        governorAdminAddress = newGovernorAdmin;
+        marketConfig.governorAdmin = newGovernorAdmin;
         emit GovSetGovernorAdmin(newGovernorAdmin);
     }
 
     /// @inheritdoc IGovernance
     function setFeeReceiver(address newFeeReceiver) external virtual nonReentrant governorOnly {
-        feeReceiverAddress = newFeeReceiver;
+        marketConfig.feeReceiver = newFeeReceiver;
         emit GovSetFeeReceiver(newFeeReceiver);
     }
 

@@ -52,9 +52,9 @@ abstract contract FeesModule is IFees, Base, BalanceUtils {
             marketCache.totalShares = marketCache.totalShares - marketCache.feesBalance.toShares();
 
         (address protocolReceiver, uint256 protocolFee) = protocolConfig.feeConfig(address(this));
-        address feeReceiverAddress_ = feeReceiverAddress;
+        address feeReceiver = marketConfig.feeReceiver;
 
-        if (feeReceiverAddress_ == address(0)) protocolFee = 1e18; // governor forfeits fees
+        if (feeReceiver == address(0)) protocolFee = 1e18; // governor forfeits fees
         else if (protocolFee > MAX_PROTOCOL_FEE_SHARE) protocolFee = MAX_PROTOCOL_FEE_SHARE;
 
         Shares governorShares = marketCache.feesBalance.mulDiv(1e18 - protocolFee, 1e18).toShares();
@@ -62,7 +62,7 @@ abstract contract FeesModule is IFees, Base, BalanceUtils {
         marketStorage.feesBalance = marketCache.feesBalance = Fees.wrap(0);
 
         increaseBalance(
-            marketCache, feeReceiverAddress_, address(0), governorShares, governorShares.toAssetsDown(marketCache)
+            marketCache, feeReceiver, address(0), governorShares, governorShares.toAssetsDown(marketCache)
         ); // TODO confirm address(0)
         increaseBalance(
             marketCache, protocolReceiver, address(0), protocolShares, protocolShares.toAssetsDown(marketCache)
@@ -71,7 +71,7 @@ abstract contract FeesModule is IFees, Base, BalanceUtils {
         emit ConvertFees(
             account,
             protocolReceiver,
-            feeReceiverAddress_,
+            feeReceiver,
             protocolShares.toAssetsDown(marketCache).toUint(),
             governorShares.toAssetsDown(marketCache).toUint()
         );

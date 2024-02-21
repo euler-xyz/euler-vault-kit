@@ -7,9 +7,6 @@ import "./types/Types.sol";
 abstract contract Storage {
     bool initialized;
 
-    address internal governorAdminAddress;
-    address internal feeReceiverAddress;
-
     MarketStorage marketStorage;
     MarketConfig marketConfig;
 
@@ -68,5 +65,8 @@ abstract contract Storage {
 
         string name;
         string symbol;
+
+        address governorAdmin;
+        address feeReceiver;
     }
 }
