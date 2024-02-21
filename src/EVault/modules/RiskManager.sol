@@ -39,13 +39,10 @@ abstract contract RiskManagerModule is IRiskManager, Base, BorrowUtils {
         address[] memory collaterals = IEVC(evc).getCollaterals(account);
 
         uint256 numMarkets = collaterals.length + 1;
-        for (uint256 i; i < collaterals.length;) {
+        for (uint256 i; i < collaterals.length; ++i) {
             if (collaterals[i] == address(this)) {
                 numMarkets--;
                 break;
-            }
-            unchecked {
-                ++i;
             }
         }
 
@@ -53,17 +50,13 @@ abstract contract RiskManagerModule is IRiskManager, Base, BorrowUtils {
         address[] memory singleCollateral = new address[](1);
 
         // account also supplies collateral in liability market
-        for (uint256 i; i < collaterals.length;) {
+        for (uint256 i; i < collaterals.length; ++i) {
             output[i].market = collaterals[i];
             singleCollateral[0] = collaterals[i];
 
             (output[i].collateralValue, output[i].liabilityValue) =
                 computeLiquidity(marketCache, account, singleCollateral);
             if (collaterals[i] != address(this)) output[i].liabilityValue = 0;
-
-            unchecked {
-                ++i;
-            }
         }
 
         // liability market is not included in supplied collaterals

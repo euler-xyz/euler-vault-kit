@@ -131,11 +131,8 @@ contract GenericFactory is MetaProxyDeployer {
         if (end < start || end > proxyList.length) revert E_BadQuery();
 
         list = new address[](end - start);
-        for (uint256 i; i < end - start;) {
+        for (uint256 i; i < end - start; ++i) {
             list[i] = proxyList[start + i];
-            unchecked {
-                ++i;
-            }
         }
     }
 }
