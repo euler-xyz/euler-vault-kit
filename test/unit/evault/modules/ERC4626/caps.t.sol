@@ -4,7 +4,7 @@ pragma solidity ^0.8.0;
 
 import {EVaultTestBase} from "test/unit/evault/EVaultTestBase.t.sol";
 import {Errors} from "src/EVault/shared/Errors.sol";
-import {GovernanceModule} from "src/EVault/modules/Governance.sol";
+import {Events} from "src/EVault/shared/Events.sol";
 import "src/EVault/shared/types/Types.sol";
 
 contract ERC4626Test_Caps is EVaultTestBase {
@@ -30,11 +30,11 @@ contract ERC4626Test_Caps is EVaultTestBase {
         vm.assume(supplyCapAmount <= MAX_SANE_AMOUNT && borrowCapAmount <= MAX_SANE_AMOUNT);
 
         vm.expectEmit();
-        emit GovernanceModule.GovSetMarketPolicy(pauseBitmask, supplyCap, borrowCap);
+        emit Events.GovSetMarketPolicy(pauseBitmask, supplyCap, borrowCap);
 
         eTST.setMarketPolicy(pauseBitmask, supplyCap, borrowCap);
 
-        (uint32 pauseBitmask_, uint16 supplyCap_, uint16 borrowCap_) = eTST.getMarketPolicy();
+        (uint32 pauseBitmask_, uint16 supplyCap_, uint16 borrowCap_) = eTST.marketPolicy();
         assertEq(pauseBitmask_, pauseBitmask);
         assertEq(supplyCap_, supplyCap);
         assertEq(borrowCap_, borrowCap);
@@ -65,14 +65,14 @@ contract ERC4626Test_Caps is EVaultTestBase {
     }
 
     function test_SetMarketPolicy_AccessControl(address caller) public {
-        vm.assume(caller != eTST.getGovernorAdmin());
+        vm.assume(caller != eTST.governorAdmin());
         vm.expectRevert(Errors.RM_Unauthorized.selector);
         vm.prank(caller);
         eTST.setMarketPolicy(0, 0, 0);
     }
 
     function test_SupplyCap_UnlimitedByDefault() public {
-        (, uint16 supplyCap,) = eTST.getMarketPolicy();
+        (, uint16 supplyCap,) = eTST.marketPolicy();
         assertEq(supplyCap, 0);
 
         vm.prank(user);
@@ -220,7 +220,7 @@ contract ERC4626Test_Caps is EVaultTestBase {
         vm.prank(user);
         eTST.deposit(MAX_SANE_AMOUNT, user);
 
-        (,, uint16 borrowCap) = eTST.getMarketPolicy();
+        (,, uint16 borrowCap) = eTST.marketPolicy();
         assertEq(borrowCap, 0);
 
         vm.prank(user);
