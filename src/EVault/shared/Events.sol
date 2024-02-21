@@ -16,6 +16,8 @@ abstract contract Events {
     event Borrow(address indexed account, uint256 assets);
     event Repay(address indexed account, uint256 assets);
 
+    event DebtSocialized(address indexed account, uint256 assets);
+
     event ConvertFees(
         address indexed sender,
         address indexed protocolReceiver,
