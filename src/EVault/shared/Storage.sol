@@ -45,11 +45,8 @@ abstract contract Storage {
 
         MarketSnapshot marketSnapshot;
 
-        // Packed slot 9 + 2
-        // Read on first item in a block (interest accrual). Read and written to in vault status check (interest rate update).
-        // Not touched on other batch items.
+        // Read in the first batch item in a block. Written to during health checks.
         uint72 interestRate;
-        // uint16 interestFee;
 
         mapping(address account => UserStorage) users;
         mapping(address owner => mapping(address spender => uint256 allowance)) eVaultAllowance;
@@ -63,7 +60,10 @@ abstract contract Storage {
         address oracle;
         bool debtSocialization;
 
+        // Packed slot 20 + 2 = 22
         address interestRateModel; // external market if address(0) (FIXME: not anymore: now it means 0% interest, or MIN_INTEREST?)
+        uint16 interestFee;
+
         address unitOfAccount;
     }
 }
