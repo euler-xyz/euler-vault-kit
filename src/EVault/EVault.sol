@@ -231,6 +231,10 @@ contract EVault is
     function oracle() external override useView(MODULE_GOVERNANCE) view returns (address) {}
 
 
+    function setName(string calldata newName) external override use(MODULE_GOVERNANCE) {}
+
+    function setSymbol(string calldata newName) external override use(MODULE_GOVERNANCE) {}
+
     function setGovernorAdmin(address newGovernorAdmin) external override use(MODULE_GOVERNANCE) {}
 
     function setFeeReceiver(address newFeeReceiver) external override use(MODULE_GOVERNANCE) {}

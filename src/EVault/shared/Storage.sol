@@ -65,5 +65,8 @@ abstract contract Storage {
         uint16 interestFee;
 
         address unitOfAccount;
+
+        string name;
+        string symbol;
     }
 }

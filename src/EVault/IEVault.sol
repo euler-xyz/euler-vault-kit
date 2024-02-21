@@ -298,6 +298,10 @@ interface IGovernance {
     function oracle() external view returns (address);
 
 
+    function setName(string calldata newName) external;
+
+    function setSymbol(string calldata newSymbol) external;
+
     function setGovernorAdmin(address newGovernorAdmin) external;
 
     function setFeeReceiver(address newFeeReceiver) external;

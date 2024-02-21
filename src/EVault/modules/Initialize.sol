@@ -7,6 +7,7 @@ import {Base} from "../shared/Base.sol";
 import {BorrowUtils} from "../shared/BorrowUtils.sol";
 import {DToken} from "../DToken.sol";
 import {ProxyUtils} from "../shared/lib/ProxyUtils.sol";
+import {RevertBytes} from "../shared/lib/RevertBytes.sol";
 import {MarketCache} from "../shared/types/MarketCache.sol";
 
 import "../shared/Constants.sol";
@@ -42,11 +43,27 @@ abstract contract InitializeModule is IInitialize, Base, BorrowUtils {
 
         marketConfig.interestFee = DEFAULT_INTEREST_FEE;
         marketConfig.unitOfAccount = address(asset);
+        marketConfig.name = defaultName(asset);
+        marketConfig.symbol = defaultSymbol(asset);
 
         // Emit logs
 
         emit EVaultCreated(creator, address(asset), dToken);
         logMarketStatus(loadMarket(), 0);
+    }
+
+    function defaultName(IERC20 asset) private view returns (string memory) {
+        // Handle MKR like tokens returning bytes32
+        (bool success, bytes memory data) = address(asset).staticcall(abi.encodeWithSelector(IERC20.name.selector));
+        if (!success) RevertBytes.revertBytes(data);
+        return string.concat("Euler Pool: ", data.length == 32 ? string(data) : abi.decode(data, (string)));
+    }
+
+    function defaultSymbol(IERC20 asset) private view returns (string memory) {
+        // Handle MKR like tokens returning bytes32
+        (bool success, bytes memory data) = address(asset).staticcall(abi.encodeWithSelector(IERC20.symbol.selector));
+        if (!success) RevertBytes.revertBytes(data);
+        return string.concat("e", data.length == 32 ? string(data) : abi.decode(data, (string)));
     }
 }
 

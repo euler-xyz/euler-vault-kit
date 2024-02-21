@@ -58,6 +58,17 @@ abstract contract GovernanceModule is IGovernance, Base {
         return marketConfig.oracle;
     }
 
+    /// @inheritdoc IGovernance
+    function setName(string calldata newName) external virtual nonReentrant governorOnly {
+        marketConfig.name = newName;
+        emit GovSetName(newName);
+    }
+
+    /// @inheritdoc IGovernance
+    function setSymbol(string calldata newSymbol) external virtual nonReentrant governorOnly {
+        marketConfig.symbol = newSymbol;
+        emit GovSetSymbol(newSymbol);
+    }
 
     /// @inheritdoc IGovernance
     function setGovernorAdmin(address newGovernorAdmin) external virtual nonReentrant governorOnly {

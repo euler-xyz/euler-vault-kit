@@ -50,12 +50,14 @@ abstract contract Events {
 
     event BalanceForwarderStatus(address indexed account, bool status);
 
+    event GovSetName(string newName);
+    event GovSetSymbol(string newSymbol);
     event GovSetGovernorAdmin(address indexed newGovernorAdmin);
     event GovSetFeeReceiver(address indexed newFeeReceiver);
     event GovSetLTV(address indexed collateral, LTVConfig newLTV);
     event GovSetIRM(address interestRateModel, bytes resetParams);
     event GovSetOracle(address oracle);
-    event GovSetMarketPolicy(uint32 newPauseBitmask, uint64 newSupplyCap, uint64 newBorrowCap);
+    event GovSetMarketPolicy(uint32 newPauseBitmask, uint16 newSupplyCap, uint16 newBorrowCap);
     event GovSetInterestFee(uint16 newFee);
     event GovSetDebtSocialization(bool debtSocialization);
     event GovSetUnitOfAccount(address newUnitOfAccount);

@@ -16,6 +16,9 @@ abstract contract TokenModule is IToken, Base, BalanceUtils {
 
     /// @inheritdoc IERC20
     function name() external view virtual reentrantOK returns (string memory) {
+        string memory configName = marketConfig.name;
+        if (bytes(configName).length > 0) return configName;
+    
         (IERC20 asset) = ProxyUtils.metadata();
 
         // Handle MKR like tokens returning bytes32
@@ -26,6 +29,9 @@ abstract contract TokenModule is IToken, Base, BalanceUtils {
 
     /// @inheritdoc IERC20
     function symbol() external view virtual reentrantOK returns (string memory) {
+        string memory configSymbol = marketConfig.symbol;
+        if (bytes(configSymbol).length > 0) return configSymbol;
+
         (IERC20 asset) = ProxyUtils.metadata();
 
         // Handle MKR like tokens returning bytes32
