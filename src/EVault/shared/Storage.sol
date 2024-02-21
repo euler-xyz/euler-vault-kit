@@ -11,15 +11,12 @@ abstract contract Storage {
     MarketConfig marketConfig;
     InterestStorage interestStorage;
 
+    // keep it outside of MarketStorage awaiting for transient keyword
+    Assets snapshotPoolSize;
+    Assets snapshotTotalBorrows;
+
     mapping(address collateral => LTVConfig) internal ltvLookup;
     address[] internal ltvList;
-
-    struct MarketSnapshot {
-        // Packed slot 14 + 14 + 4 = 32
-        Assets poolSize;
-        Assets totalBorrows;
-        uint32 performedOperations;
-    }
 
     struct MarketStorage {
         // Packed slot 1 + 5 + 14 + 12 = 32
@@ -34,14 +31,14 @@ abstract contract Storage {
 
         uint256 interestAccumulator;
 
-        MarketSnapshot marketSnapshot;
+        bool snapshotInitialized;
 
         mapping(address account => UserStorage) users;
         mapping(address owner => mapping(address spender => uint256 allowance)) eVaultAllowance;
     }
 
     struct MarketConfig {
-        // Packed slot 4 + 2 + 2 + 2 + 20 + 1 = 31
+        // Packed slot 4 + 2 + 2 + 20 + 1 = 30
         uint32 pauseBitmask;
         AmountCap supplyCap;
         AmountCap borrowCap;

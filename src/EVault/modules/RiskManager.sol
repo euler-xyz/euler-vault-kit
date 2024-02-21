@@ -112,13 +112,24 @@ abstract contract RiskManagerModule is IRiskManager, Base, BorrowUtils {
 
         logMarketStatus(marketCache, newInterestRate);
 
-        MarketSnapshot memory currentSnapshot = getMarketSnapshot(0, marketCache);
-        MarketSnapshot memory oldSnapshot = marketStorage.marketSnapshot;
-        delete marketStorage.marketSnapshot.performedOperations;
+        if (!marketStorage.snapshotInitialized) revert E_InvalidSnapshot();
 
-        if (oldSnapshot.performedOperations == 0) revert E_InvalidSnapshot();
+        marketStorage.snapshotInitialized = false;
 
-        checkVaultStatusInternal(oldSnapshot.performedOperations, oldSnapshot, currentSnapshot);
+        uint256 supplyCap = marketConfig.supplyCap.toAmount();
+        uint256 borrowCap = marketConfig.borrowCap.toAmount();
+
+        if (supplyCap != 0 || borrowCap != 0) {
+            uint256 oldSnapshotTotalBorrows = snapshotTotalBorrows.toUint();
+            uint256 currentSnapshotTotalBorrows = marketCache.totalBorrows.toAssetsUp().toUint();
+
+            if (currentSnapshotTotalBorrows > borrowCap && currentSnapshotTotalBorrows > oldSnapshotTotalBorrows) revert RM_BorrowCapExceeded();
+
+            uint256 oldSnapshotTotalAssets = snapshotPoolSize.toUint() + oldSnapshotTotalBorrows;        
+            uint256 currentSnapshotTotalAssets = marketCache.poolSize.toUint() + currentSnapshotTotalBorrows;
+
+            if (currentSnapshotTotalAssets > supplyCap && currentSnapshotTotalAssets > oldSnapshotTotalAssets) revert RM_SupplyCapExceeded();
+        }
 
         magicValue = VAULT_STATUS_CHECK_RETURN_VALUE;
     }
@@ -145,25 +156,6 @@ abstract contract RiskManagerModule is IRiskManager, Base, BorrowUtils {
         interestStorage.interestRate = uint72(newInterestRate);
 
         return uint72(newInterestRate);
-    }
-
-    function checkVaultStatusInternal(
-        uint32 performedOperations,
-        MarketSnapshot memory oldSnapshot,
-        MarketSnapshot memory currentSnapshot
-    ) private view {
-        uint256 pauseBitmask = marketConfig.pauseBitmask;
-        uint256 supplyCap = marketConfig.supplyCap.toAmount();
-        uint256 borrowCap = marketConfig.borrowCap.toAmount();
-
-        if (pauseBitmask & performedOperations != 0) revert RM_OperationPaused();
-
-        if (supplyCap == 0 && borrowCap == 0) return;
-
-        uint256 totalAssets = currentSnapshot.poolSize.toUint() + currentSnapshot.totalBorrows.toUint();
-        if (totalAssets > supplyCap && totalAssets > (oldSnapshot.poolSize.toUint() + oldSnapshot.totalBorrows.toUint())) revert RM_SupplyCapExceeded();
-
-        if (currentSnapshot.totalBorrows.toUint() > borrowCap && currentSnapshot.totalBorrows > oldSnapshot.totalBorrows) revert RM_BorrowCapExceeded();
     }
 
     function verifyController(address account) private view {

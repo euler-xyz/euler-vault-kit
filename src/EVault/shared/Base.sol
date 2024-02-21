@@ -58,32 +58,18 @@ abstract contract Base is EVCClient, Cache {
         private
         returns (MarketCache memory marketCache, address account)
     {
+        if (marketConfig.pauseBitmask & operation != 0) {
+            revert E_OperationPaused();
+        }
+
         marketCache = updateMarket();
-        snapshotMarket(operation, marketCache);
+
+        if (!marketStorage.snapshotInitialized) {
+            snapshotPoolSize = marketCache.poolSize;
+            snapshotTotalBorrows = marketCache.totalBorrows.toAssetsUp();
+        }
 
         account = EVCAuthenticateDeferred(checkController);
-    }
-
-    function snapshotMarket(uint32 operation, MarketCache memory marketCache) internal {
-        uint32 performedOperations = marketStorage.marketSnapshot.performedOperations;
-
-        if (performedOperations == 0) {
-            marketStorage.marketSnapshot = getMarketSnapshot(operation, marketCache);
-        } else if (performedOperations & operation == 0) {
-            marketStorage.marketSnapshot.performedOperations = performedOperations | operation;
-        }
-    }
-
-    function getMarketSnapshot(uint32 operation, MarketCache memory marketCache)
-        internal
-        pure
-        returns (MarketSnapshot memory)
-    {
-        return MarketSnapshot({
-            poolSize: marketCache.poolSize,
-            totalBorrows: marketCache.totalBorrows.toAssetsUp(),
-            performedOperations: operation
-        });
     }
 
     function logMarketStatus(MarketCache memory a, uint72 interestRate) internal {
