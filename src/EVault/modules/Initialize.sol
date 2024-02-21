@@ -17,7 +17,7 @@ abstract contract InitializeModule is IInitialize, Base, BorrowUtils {
         if (initialized) revert E_Initialized();
         initialized = true;
 
-        governorAdmin = creator;
+        governorAdminAddress = creator;
 
         // Validate proxy immutables
 

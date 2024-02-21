@@ -124,7 +124,7 @@ abstract contract BorrowingModule is IBorrowing, Base, AssetTransfers, BalanceUt
     }
 
     /// @inheritdoc IBorrowing
-    function getEVC() external view virtual reentrantOK returns (address) {
+    function EVC() external view virtual reentrantOK returns (address) {
         return address(evc);
     }
 
