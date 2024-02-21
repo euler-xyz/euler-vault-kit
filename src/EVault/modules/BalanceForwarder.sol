@@ -5,11 +5,8 @@ pragma solidity ^0.8.0;
 import {IBalanceForwarder} from "../IEVault.sol";
 import {IBalanceTracker} from "../../IBalanceTracker.sol";
 import {Base} from "../shared/Base.sol";
-import {UserStorageLib} from "../shared/types/UserStorage.sol";
 
 abstract contract BalanceForwarderModule is IBalanceForwarder, Base {
-    using UserStorageLib for UserStorage;
-
     /// @inheritdoc IBalanceForwarder
     function balanceTrackerAddress() external view virtual reentrantOK returns (address) {
         return address(balanceTracker);

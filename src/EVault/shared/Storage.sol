@@ -14,13 +14,6 @@ abstract contract Storage {
     mapping(address collateral => LTVConfig) internal ltvLookup;
     address[] internal ltvList;
 
-
-    struct UserStorage {
-        PackedUserSlot data;
-
-        uint256 interestAccumulator;
-    }
-
     struct MarketSnapshot {
         // Packed slot 14 + 14 + 4 = 32
         Assets poolSize;

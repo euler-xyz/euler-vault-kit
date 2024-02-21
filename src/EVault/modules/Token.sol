@@ -12,7 +12,6 @@ import "../shared/types/Types.sol";
 
 abstract contract TokenModule is IToken, Base, BalanceUtils {
     using TypesLib for uint256;
-    using UserStorageLib for UserStorage;
 
     /// @inheritdoc IERC20
     function name() external view virtual reentrantOK returns (string memory) {

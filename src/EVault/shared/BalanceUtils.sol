@@ -10,7 +10,6 @@ import "./types/Types.sol";
 
 abstract contract BalanceUtils is Base {
     using TypesLib for uint256;
-    using UserStorageLib for UserStorage;
 
     // Balances
 

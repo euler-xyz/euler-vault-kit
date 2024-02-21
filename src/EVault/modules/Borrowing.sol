@@ -23,7 +23,6 @@ interface IFlashLoan {
 abstract contract BorrowingModule is IBorrowing, Base, AssetTransfers, BalanceUtils, BorrowUtils {
     using TypesLib for uint256;
     using SafeERC20Lib for IERC20;
-    using UserStorageLib for UserStorage;
 
     /// @inheritdoc IBorrowing
     function totalBorrows() external view virtual nonReentrantView returns (uint256) {

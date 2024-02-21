@@ -10,7 +10,6 @@ import "./types/Types.sol";
 
 abstract contract BorrowUtils is Base {
     using TypesLib for uint256;
-    using UserStorageLib for UserStorage;
 
     function computeLiquidity(MarketCache memory marketCache, address account, address[] memory collaterals)
         internal

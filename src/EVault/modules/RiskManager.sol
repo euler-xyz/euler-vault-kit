@@ -12,7 +12,6 @@ import "../shared/types/Types.sol";
 
 abstract contract RiskManagerModule is IRiskManager, Base, BorrowUtils {
     using TypesLib for uint256;
-    using UserStorageLib for UserStorage;
 
     function computeAccountLiquidity(address account) external virtual view returns (uint256 collateralValue, uint256 liabilityValue) {
         MarketCache memory marketCache = loadMarket();

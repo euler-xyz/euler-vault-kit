@@ -14,7 +14,6 @@ import "../shared/types/Types.sol";
 abstract contract ERC4626Module is IERC4626, Base, AssetTransfers, BalanceUtils {
     using TypesLib for uint256;
     using SafeERC20Lib for IERC20;
-    using UserStorageLib for UserStorage;
 
     /// @inheritdoc IERC4626
     function asset() external view virtual reentrantOK returns (address) {

@@ -22,8 +22,6 @@ type Owed is uint144;
 
 type Fees is uint96;
 
-type PackedUserSlot is uint256;
-
 type AmountCap is uint16;
 
 using SharesLib for Shares global;
