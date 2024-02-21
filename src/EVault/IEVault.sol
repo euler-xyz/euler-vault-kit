@@ -165,7 +165,7 @@ interface IBorrowing {
     function dToken() external view returns (address);
 
     /// @notice Address of EthereumVaultConnector contract
-    function getEVC() external view returns (address);
+    function EVC() external view returns (address);
 
     /// @notice Transfer underlying tokens from the Euler pool to the sender, and increase sender's dTokens
     /// @param assets In underlying units (use max uint for all available tokens)
@@ -262,6 +262,42 @@ interface IBalanceForwarder {
 }
 
 interface IGovernance {
+    
+    function governorAdmin() external view returns (address);
+
+    /// @notice Retrieves LTV config for a collateral
+    /// @param collateral Collateral asset
+    /// @return LTV set for the collateral
+    function LTV(address collateral) external view returns (uint16);
+
+    /// @notice Retrieves a list of collaterals with configured LTVs
+    /// @return List of asset collaterals
+    /// @dev The list can have duplicates. Returned assets could have the ltv disabled
+    function LTVList() external view returns (address[] memory);
+
+    /// @notice Looks up an asset's currently configured interest rate model
+    /// @return Address of the interest rate contract or address zero to indicate 0% interest
+    function interestRateModel() external view returns (address);
+
+    /// @notice Retrieves the policy set for the market
+    /// @return pauseBitmask Bitmask indicating which operations are paused.
+    /// @return supplyCap Supply cap in AmountCap format
+    /// @return borrowCap Borrow cap in AmountCap format
+    function marketPolicy() external view returns (uint32 pauseBitmask, uint16 supplyCap, uint16 borrowCap);
+
+    /// @notice Retrieves address of the governance fee receiver
+    function feeReceiver() external view returns (address);
+
+    /// @notice Indicates if debt socialization is activated
+    function debtSocialization() external view returns (bool);
+
+    /// @notice Retrieves a reference asset used for liquidity calculations
+    function unitOfAccount() external view returns (address);
+
+    /// @notice Retrieves the address of the oracle contract
+    function oracle() external view returns (address);
+
+
     function setGovernorAdmin(address newGovernorAdmin) external;
 
     function setFeeReceiver(address newFeeReceiver) external;
@@ -279,24 +315,6 @@ interface IGovernance {
     function setDebtSocialization(bool newValue) external;
 
     function setUnitOfAccount(address newUnitOfAccount) external;
-
-    function getGovernorAdmin() external view returns (address);
-
-    function getLTV(address collateral) external view returns (uint16);
-
-    function getLTVList() external view returns (address[] memory);
-
-    function interestRateModel() external view returns (address);
-
-    function getMarketPolicy() external view returns (uint32 pauseBitmask, uint16 supplyCap, uint16 borrowCap);
-
-    function feeReceiver() external view returns (address);
-
-    function debtSocialization() external view returns (bool);
-
-    function unitOfAccount() external view returns (address);
-
-    function oracle() external view returns (address);
 }
 
 interface IRiskManager is IVault {

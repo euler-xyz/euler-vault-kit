@@ -7,7 +7,7 @@ import "./types/Types.sol";
 abstract contract Storage {
     bool initialized;
 
-    address internal governorAdmin;
+    address internal governorAdminAddress;
     address internal feeReceiverAddress;
 
     MarketStorage marketStorage;
@@ -61,7 +61,7 @@ abstract contract Storage {
         bool debtSocialization;
 
         // Packed slot 20 + 2 = 22
-        address interestRateModel; // external market if address(0) (FIXME: not anymore: now it means 0% interest, or MIN_INTEREST?)
+        address interestRateModel; // 0% interest, if zero address
         uint16 interestFee;
 
         address unitOfAccount;

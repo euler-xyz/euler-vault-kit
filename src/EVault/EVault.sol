@@ -151,7 +151,7 @@ contract EVault is
 
     function dToken() external view override useView(MODULE_BORROWING) returns (address) {}
 
-    function getEVC() external view override useView(MODULE_BORROWING) returns (address) {}
+    function EVC() external view override useView(MODULE_BORROWING) returns (address) {}
 
 
 
@@ -191,6 +191,7 @@ contract EVault is
 
     function protocolFeeReceiver() external view override useView(MODULE_FEES) returns (address) {}
 
+
     function convertFees() external override callThroughEVC use(MODULE_FEES) {}
 
     function skimAssets() external override use(MODULE_FEES) {}
@@ -211,6 +212,25 @@ contract EVault is
 
     // ----------------- Governance -----------------
 
+    function governorAdmin() external override useView(MODULE_GOVERNANCE) view returns (address) {}
+
+    function LTV(address collateral) external override useView(MODULE_GOVERNANCE) view returns (uint16) {}
+
+    function LTVList() external override useView(MODULE_GOVERNANCE) view returns (address[] memory) {}
+
+    function interestRateModel() external override useView(MODULE_GOVERNANCE) view returns (address) {}
+
+    function marketPolicy() external override useView(MODULE_GOVERNANCE) view returns (uint32 pauseBitmask, uint16 supplyCap, uint16 borrowCap) {}
+
+    function feeReceiver() external override useView(MODULE_GOVERNANCE) view returns (address) {}
+
+    function debtSocialization() external override useView(MODULE_GOVERNANCE) view returns (bool) {}
+
+    function unitOfAccount() external override useView(MODULE_GOVERNANCE) view returns (address) {}
+
+    function oracle() external override useView(MODULE_GOVERNANCE) view returns (address) {}
+
+
     function setGovernorAdmin(address newGovernorAdmin) external override use(MODULE_GOVERNANCE) {}
 
     function setFeeReceiver(address newFeeReceiver) external override use(MODULE_GOVERNANCE) {}
@@ -228,24 +248,6 @@ contract EVault is
     function setDebtSocialization(bool newValue) external override use(MODULE_GOVERNANCE) {}
 
     function setUnitOfAccount(address newUnitOfAccount) external override use(MODULE_GOVERNANCE) {}
-
-    function getGovernorAdmin() external override useView(MODULE_GOVERNANCE) view returns (address) {}
-
-    function getLTV(address collateral) external override useView(MODULE_GOVERNANCE) view returns (uint16) {}
-
-    function getLTVList() external override useView(MODULE_GOVERNANCE) view returns (address[] memory) {}
-
-    function interestRateModel() external override useView(MODULE_GOVERNANCE) view returns (address) {}
-
-    function getMarketPolicy() external override useView(MODULE_GOVERNANCE) view returns (uint32 pauseBitmask, uint16 supplyCap, uint16 borrowCap) {}
-
-    function feeReceiver() external override useView(MODULE_GOVERNANCE) view returns (address) {}
-
-    function debtSocialization() external override useView(MODULE_GOVERNANCE) view returns (bool) {}
-
-    function unitOfAccount() external override useView(MODULE_GOVERNANCE) view returns (address) {}
-
-    function oracle() external override useView(MODULE_GOVERNANCE) view returns (address) {}
 
 
 

@@ -46,7 +46,7 @@ abstract contract LiquidationModule is ILiquidation, Base, BalanceUtils, BorrowU
         virtual
         reentrantOK
     {
-        // non-reentrant // TODO can be reentranOk as well
+        // non-reentrant
         (MarketCache memory marketCache, address liquidator) = initLiquidation(violator);
 
         // reentrancy allowed for static call
@@ -114,16 +114,16 @@ abstract contract LiquidationModule is ILiquidation, Base, BalanceUtils, BorrowU
         MarketCache memory marketCache,
         Assets owed
     ) private view returns (LiquidationCache memory){
-        (uint256 totalCollateralValueRA, uint256 liabilityValue) = computeLiquidity(marketCache, liqCache.violator, liqCache.collaterals);
+        (uint256 totalCollateralValueRiskAdjusted, uint256 liabilityValue) = computeLiquidity(marketCache, liqCache.violator, liqCache.collaterals);
 
         // no violation
-        if (totalCollateralValueRA >= liabilityValue) return liqCache;
+        if (totalCollateralValueRiskAdjusted >= liabilityValue) return liqCache;
 
         // At this point healthScore must be < 1 since collateral < liability
 
         // Compute discount
 
-        uint256 discountFactor = totalCollateralValueRA * 1e18 / liabilityValue; // 1 - health score
+        uint256 discountFactor = totalCollateralValueRiskAdjusted * 1e18 / liabilityValue; // 1 - health score
 
         if (discountFactor < 1e18 - MAXIMUM_LIQUIDATION_DISCOUNT) {
             discountFactor = 1e18 - MAXIMUM_LIQUIDATION_DISCOUNT;

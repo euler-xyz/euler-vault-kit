@@ -2,6 +2,8 @@
 
 pragma solidity ^0.8.0;
 
+import {LTVConfig} from "./types/LTVConfig.sol";
+
 abstract contract Events {
     event EVaultCreated(address indexed creator, address indexed asset, address dToken);
 
@@ -47,4 +49,14 @@ abstract contract Events {
     event SkimAssets(address indexed admin, address indexed receiver, uint256 assets);
 
     event BalanceForwarderStatus(address indexed account, bool status);
+
+    event GovSetGovernorAdmin(address indexed newGovernorAdmin);
+    event GovSetFeeReceiver(address indexed newFeeReceiver);
+    event GovSetLTV(address indexed collateral, LTVConfig newLTV);
+    event GovSetIRM(address interestRateModel, bytes resetParams);
+    event GovSetOracle(address oracle);
+    event GovSetMarketPolicy(uint32 newPauseBitmask, uint64 newSupplyCap, uint64 newBorrowCap);
+    event GovSetInterestFee(uint16 newFee);
+    event GovSetDebtSocialization(bool debtSocialization);
+    event GovSetUnitOfAccount(address newUnitOfAccount);
 }
