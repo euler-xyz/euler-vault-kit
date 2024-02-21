@@ -133,7 +133,7 @@ abstract contract RiskManagerModule is IRiskManager, Base, BorrowUtils {
 
     function updateInterestRate(MarketCache memory marketCache) private returns (uint72) {
         uint256 newInterestRate;
-        address irm = marketConfig.interestRateModel;
+        address irm = interestStorage.interestRateModel;
 
         if (irm != address(0)) {
             uint256 borrows = marketCache.totalBorrows.toAssetsUp().toUint();
@@ -150,7 +150,7 @@ abstract contract RiskManagerModule is IRiskManager, Base, BorrowUtils {
 
         if (newInterestRate > MAX_ALLOWED_INTEREST_RATE) newInterestRate = MAX_ALLOWED_INTEREST_RATE;
 
-        marketStorage.interestRate = uint72(newInterestRate);
+        interestStorage.interestRate = uint72(newInterestRate);
 
         return uint72(newInterestRate);
     }

@@ -30,7 +30,7 @@ abstract contract GovernanceModule is IGovernance, Base {
 
     /// @inheritdoc IGovernance
     function interestRateModel() external virtual view returns (address) {
-        return marketConfig.interestRateModel;
+        return interestStorage.interestRateModel;
     }
 
     /// @inheritdoc IGovernance
@@ -101,7 +101,7 @@ abstract contract GovernanceModule is IGovernance, Base {
     function setIRM(address newModel, bytes calldata resetParams) external virtual nonReentrant governorOnly {
         // TODO IIRM reset ?
 
-        marketConfig.interestRateModel = newModel;
+        interestStorage.interestRateModel = newModel;
 
         emit GovSetIRM(newModel, resetParams);
     }
@@ -126,11 +126,11 @@ abstract contract GovernanceModule is IGovernance, Base {
     function setInterestFee(uint16 newInterestFee) external virtual nonReentrant governorOnly {
         if (newInterestFee > CONFIG_SCALE) revert RM_BadFee();
 
-        if (newInterestFee == marketConfig.interestFee) return;
+        if (newInterestFee == interestStorage.interestFee) return;
 
         if (!protocolConfig.isValidInterestFee(address(this), newInterestFee)) revert RM_BadFee();
 
-        marketConfig.interestFee = newInterestFee;
+        interestStorage.interestFee = newInterestFee;
 
         emit GovSetInterestFee(newInterestFee);
     }

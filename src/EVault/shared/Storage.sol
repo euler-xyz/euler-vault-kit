@@ -9,6 +9,7 @@ abstract contract Storage {
 
     MarketStorage marketStorage;
     MarketConfig marketConfig;
+    InterestStorage interestStorage;
 
     mapping(address collateral => LTVConfig) internal ltvLookup;
     address[] internal ltvList;
@@ -42,9 +43,6 @@ abstract contract Storage {
 
         MarketSnapshot marketSnapshot;
 
-        // Read in the first batch item in a block. Written to during health checks.
-        uint72 interestRate;
-
         mapping(address account => UserStorage) users;
         mapping(address owner => mapping(address spender => uint256 allowance)) eVaultAllowance;
     }
@@ -57,10 +55,6 @@ abstract contract Storage {
         address oracle;
         bool debtSocialization;
 
-        // Packed slot 20 + 2 = 22
-        address interestRateModel; // 0% interest, if zero address
-        uint16 interestFee;
-
         address unitOfAccount;
 
         string name;
@@ -68,5 +62,12 @@ abstract contract Storage {
 
         address governorAdmin;
         address feeReceiver;
+    }
+
+    struct InterestStorage {
+        // Packed slot 20 + 2 + 9 = 31
+        address interestRateModel; // 0% interest, if zero address
+        uint16 interestFee;
+        uint72 interestRate;
     }
 }

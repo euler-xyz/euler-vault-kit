@@ -28,7 +28,7 @@ abstract contract FeesModule is IFees, Base, BalanceUtils {
 
     /// @inheritdoc IFees
     function interestFee() external view virtual reentrantOK returns (uint16) {
-        return marketConfig.interestFee;
+        return interestStorage.interestFee;
     }
 
     /// @inheritdoc IFees

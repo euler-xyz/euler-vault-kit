@@ -60,7 +60,7 @@ abstract contract BorrowingModule is IBorrowing, Base, AssetTransfers, BalanceUt
     function interestRate() external view virtual reentrantOK returns (uint72) {
         if (isVaultStatusCheckDeferred()) revert E_VaultStatusCheckDeferred();
 
-        return marketStorage.interestRate;
+        return interestStorage.interestRate;
     }
 
     /// @inheritdoc IBorrowing
