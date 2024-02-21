@@ -126,17 +126,7 @@ abstract contract RiskManagerModule is IRiskManager, Base, BorrowUtils {
 
         if (oldSnapshot.performedOperations == 0) revert E_InvalidSnapshot();
 
-        checkVaultStatusInternal(
-            oldSnapshot.performedOperations,
-            Snapshot({
-                poolSize: oldSnapshot.poolSize.toUint(),
-                totalBorrows: oldSnapshot.totalBorrows.toUint()
-            }),
-            Snapshot({
-                poolSize: currentSnapshot.poolSize.toUint(),
-                totalBorrows: currentSnapshot.totalBorrows.toUint()
-            })
-        );
+        checkVaultStatusInternal(oldSnapshot.performedOperations, oldSnapshot, currentSnapshot);
 
         magicValue = VAULT_STATUS_CHECK_RETURN_VALUE;
     }
@@ -165,17 +155,11 @@ abstract contract RiskManagerModule is IRiskManager, Base, BorrowUtils {
         return uint72(newInterestRate);
     }
 
-    struct Snapshot {
-        uint256 poolSize;
-        uint256 totalBorrows;
-    }
-
     function checkVaultStatusInternal(
         uint32 performedOperations,
-        Snapshot memory oldSnapshot,
-        Snapshot memory currentSnapshot
+        MarketSnapshot memory oldSnapshot,
+        MarketSnapshot memory currentSnapshot
     ) private view {
-        // TODO optimize reads
         uint256 pauseBitmask = marketConfig.pauseBitmask;
         uint256 supplyCap = marketConfig.supplyCap.toAmount();
         uint256 borrowCap = marketConfig.borrowCap.toAmount();
@@ -184,10 +168,10 @@ abstract contract RiskManagerModule is IRiskManager, Base, BorrowUtils {
 
         if (supplyCap == 0 && borrowCap == 0) return;
 
-        uint256 totalAssets = currentSnapshot.poolSize + currentSnapshot.totalBorrows;
-        if (totalAssets > supplyCap && totalAssets > (oldSnapshot.poolSize + oldSnapshot.totalBorrows)) revert RM_SupplyCapExceeded();
+        uint256 totalAssets = currentSnapshot.poolSize.toUint() + currentSnapshot.totalBorrows.toUint();
+        if (totalAssets > supplyCap && totalAssets > (oldSnapshot.poolSize.toUint() + oldSnapshot.totalBorrows.toUint())) revert RM_SupplyCapExceeded();
 
-        if (currentSnapshot.totalBorrows > borrowCap && currentSnapshot.totalBorrows > oldSnapshot.totalBorrows) revert RM_BorrowCapExceeded();
+        if (currentSnapshot.totalBorrows.toUint() > borrowCap && currentSnapshot.totalBorrows > oldSnapshot.totalBorrows) revert RM_BorrowCapExceeded();
     }
 
     function verifyController(address account) private view {
