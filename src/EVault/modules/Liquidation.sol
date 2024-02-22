@@ -210,16 +210,6 @@ abstract contract LiquidationModule is ILiquidation, Base, BalanceUtils, BorrowU
             liqCache.liquidator, liqCache.violator, liqCache.collateral, liqCache.repay.toUint(), liqCache.yieldBalance
         );
     }
-
-    function increaseFees(MarketCache memory marketCache, uint256 amount) private {
-        uint256 newFeesBalance = marketCache.feesBalance.toUint() + amount;
-        uint256 newTotalShares = marketCache.totalShares.toUint() + amount;
-
-        if (newFeesBalance <= MAX_SANE_SMALL_AMOUNT && newTotalShares <= MAX_SANE_AMOUNT) {
-            marketStorage.feesBalance = marketCache.feesBalance = newFeesBalance.toFees();
-            marketStorage.totalShares = marketCache.totalShares = newTotalShares.toShares();
-        }
-    }
 }
 
 contract Liquidation is LiquidationModule {
