@@ -77,8 +77,8 @@ contract Errors {
     error RM_ExcessiveRepayAmount();
     error RM_TransientState();
     error RM_InvalidAmountCap();
-    error RM_SupplyCapExceeded();
-    error RM_BorrowCapExceeded();
+    error E_SupplyCapExceeded();
+    error E_BorrowCapExceeded();
     error RM_InvalidLiquidationState();
     error RM_InvalidLTVAsset();
 }

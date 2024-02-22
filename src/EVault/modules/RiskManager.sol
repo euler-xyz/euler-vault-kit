@@ -10,6 +10,8 @@ import "../../interestRateModels/IIRM.sol";
 
 import "../shared/types/Types.sol";
 
+import "hardhat/console.sol";
+
 abstract contract RiskManagerModule is IRiskManager, Base, BorrowUtils {
     using TypesLib for uint256;
 
@@ -120,15 +122,15 @@ abstract contract RiskManagerModule is IRiskManager, Base, BorrowUtils {
         uint256 borrowCap = marketConfig.borrowCap.toAmount();
 
         if (supplyCap != 0 || borrowCap != 0) {
-            uint256 oldSnapshotTotalBorrows = snapshotTotalBorrows.toUint();
-            uint256 currentSnapshotTotalBorrows = marketCache.totalBorrows.toAssetsUp().toUint();
+            uint256 prevBorrows = snapshotTotalBorrows.toUint();
+            uint256 borrows = marketCache.totalBorrows.toAssetsUp().toUint();
 
-            if (currentSnapshotTotalBorrows > borrowCap && currentSnapshotTotalBorrows > oldSnapshotTotalBorrows) revert RM_BorrowCapExceeded();
+            if (borrows > borrowCap && borrows > prevBorrows) revert E_BorrowCapExceeded();
 
-            uint256 oldSnapshotTotalAssets = snapshotPoolSize.toUint() + oldSnapshotTotalBorrows;        
-            uint256 currentSnapshotTotalAssets = marketCache.poolSize.toUint() + currentSnapshotTotalBorrows;
+            uint256 prevSupply = snapshotPoolSize.toUint() + prevBorrows;
+            uint256 supply = marketCache.poolSize.toUint() + borrows;
 
-            if (currentSnapshotTotalAssets > supplyCap && currentSnapshotTotalAssets > oldSnapshotTotalAssets) revert RM_SupplyCapExceeded();
+            if (supply > supplyCap && supply > prevSupply) revert E_SupplyCapExceeded();
         }
 
         magicValue = VAULT_STATUS_CHECK_RETURN_VALUE;
