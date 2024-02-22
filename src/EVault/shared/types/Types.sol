@@ -6,6 +6,7 @@ import "../Errors.sol";
 import "../Constants.sol";
 import {Storage} from "../Storage.sol";
 
+import "./BitField.sol";
 import "./Shares.sol";
 import "./Assets.sol";
 import "./Owed.sol";
@@ -13,6 +14,8 @@ import "./Fees.sol";
 import "./UserStorage.sol";
 import "./AmountCap.sol";
 import "./LTVConfig.sol";
+
+type BitField is uint32;
 
 type Shares is uint112;
 
@@ -24,6 +27,7 @@ type Fees is uint96;
 
 type AmountCap is uint16;
 
+using BitFieldLib for BitField global;
 using SharesLib for Shares global;
 using {
     addShares as +, subShares as -, eqShares as ==, neqShares as !=, gtShares as >, ltShares as <

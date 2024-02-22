@@ -41,10 +41,11 @@ contract Cache is Storage, Errors {
 
         marketCache.lastInterestAccumulatorUpdate = marketStorage.lastInterestAccumulatorUpdate;
         marketCache.poolSize = marketStorage.poolSize;
-        marketCache.feesBalance = marketStorage.feesBalance;
 
         marketCache.totalShares = marketStorage.totalShares;
         marketCache.totalBorrows = marketStorage.totalBorrows;
+
+        marketCache.feesBalance = marketStorage.feesBalance;
 
         marketCache.interestAccumulator = marketStorage.interestAccumulator;
 
@@ -55,8 +56,8 @@ contract Cache is Storage, Errors {
 
             // Compute new values. Use full precision for intermediate results.
 
-            uint72 interestRate = interestStorage.interestRate;
-            uint16 interestFee = interestStorage.interestFee;
+            uint72 interestRate = marketStorage.interestRate;
+            uint16 interestFee = marketStorage.interestFee;
 
             uint256 deltaT = block.timestamp - marketCache.lastInterestAccumulatorUpdate;
             uint256 newInterestAccumulator =

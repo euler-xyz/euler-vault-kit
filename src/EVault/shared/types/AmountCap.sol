@@ -15,7 +15,7 @@ import "../Errors.sol";
 
 library AmountCapLib {
     // FIXME: should this actually return an Amount type?
-    function toAmount(AmountCap self) internal pure returns (uint256) {
+    function toUint(AmountCap self) internal pure returns (uint256) {
         uint256 amountCap = AmountCap.unwrap(self);
 
         if (amountCap == 0) return MAX_SANE_AMOUNT;
@@ -29,7 +29,7 @@ library AmountCapLib {
     }
 
     function validate(AmountCap self) internal pure returns (AmountCap) {
-        if (self.toAmount() > MAX_SANE_AMOUNT) revert Errors.RM_InvalidAmountCap();
+        if (self.toUint() > MAX_SANE_AMOUNT) revert Errors.RM_InvalidAmountCap();
         return self;
     }
 

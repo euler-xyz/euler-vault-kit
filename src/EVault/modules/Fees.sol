@@ -28,7 +28,7 @@ abstract contract FeesModule is IFees, Base, BalanceUtils {
 
     /// @inheritdoc IFees
     function interestFee() external view virtual reentrantOK returns (uint16) {
-        return interestStorage.interestFee;
+        return marketStorage.interestFee;
     }
 
     /// @inheritdoc IFees
@@ -52,14 +52,15 @@ abstract contract FeesModule is IFees, Base, BalanceUtils {
             marketCache.totalShares = marketCache.totalShares - marketCache.feesBalance.toShares();
 
         (address protocolReceiver, uint256 protocolFee) = protocolConfig.feeConfig(address(this));
-        address feeReceiver = marketConfig.feeReceiver;
+        address feeReceiver = marketStorage.feeReceiver;
 
         if (feeReceiver == address(0)) protocolFee = 1e18; // governor forfeits fees
         else if (protocolFee > MAX_PROTOCOL_FEE_SHARE) protocolFee = MAX_PROTOCOL_FEE_SHARE;
 
-        Shares governorShares = marketCache.feesBalance.mulDiv(1e18 - protocolFee, 1e18).toShares();
-        Shares protocolShares = marketCache.feesBalance.toShares() - governorShares;
-        marketStorage.feesBalance = marketCache.feesBalance = Fees.wrap(0);
+        Fees currentFeesBalance = marketStorage.feesBalance;
+        Shares governorShares = currentFeesBalance.mulDiv(1e18 - protocolFee, 1e18).toShares();
+        Shares protocolShares = currentFeesBalance.toShares() - governorShares;
+        marketStorage.feesBalance = Fees.wrap(0);
 
         increaseBalance(
             marketCache, feeReceiver, address(0), governorShares, governorShares.toAssetsDown(marketCache)

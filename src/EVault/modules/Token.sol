@@ -15,12 +15,12 @@ abstract contract TokenModule is IToken, Base, BalanceUtils {
 
     /// @inheritdoc IERC20
     function name() external view virtual reentrantOK returns (string memory) {
-        return marketConfig.name;
+        return marketStorage.name;
     }
 
     /// @inheritdoc IERC20
     function symbol() external view virtual reentrantOK returns (string memory) {
-        return marketConfig.symbol;
+        return marketStorage.symbol;
     }
 
     /// @inheritdoc IERC20

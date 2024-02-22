@@ -16,8 +16,8 @@ abstract contract BorrowUtils is Base {
         view
         returns (uint256 collateralValue, uint256 liabilityValue)
     {
-        address unitOfAccount = marketConfig.unitOfAccount;
-        address oracle = marketConfig.oracle;
+        address unitOfAccount = marketStorage.unitOfAccount;
+        address oracle = marketStorage.oracle;
 
         uint256 owed = getCurrentOwed(marketCache, account).toAssetsUp().toUint();
 

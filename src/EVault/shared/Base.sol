@@ -7,7 +7,6 @@ import {Cache} from "./Cache.sol";
 
 import {IProtocolConfig} from "../../IProtocolConfig.sol";
 import {IBalanceTracker} from "../../IBalanceTracker.sol";
-
 import "./types/Types.sol";
 
 abstract contract Base is EVCClient, Cache {
@@ -24,15 +23,15 @@ abstract contract Base is EVCClient, Cache {
     } // documentation only
 
     modifier nonReentrant() {
-        if (marketStorage.reentrancyLock != REENTRANCYLOCK__UNLOCKED) revert E_Reentrancy();
+        if (marketStorage.bitField.get(BF_REENTRANCYLOCK)) revert E_Reentrancy();
 
-        marketStorage.reentrancyLock = REENTRANCYLOCK__LOCKED;
+        marketStorage.bitField = marketStorage.bitField.set(BF_REENTRANCYLOCK);
         _;
-        marketStorage.reentrancyLock = REENTRANCYLOCK__UNLOCKED;
+        marketStorage.bitField = marketStorage.bitField.clear(BF_REENTRANCYLOCK);
     }
 
     modifier nonReentrantView() {
-        if (marketStorage.reentrancyLock != REENTRANCYLOCK__UNLOCKED) revert E_Reentrancy();
+        if (marketStorage.bitField.get(BF_REENTRANCYLOCK)) revert E_Reentrancy();
         _;
     }
 
@@ -58,14 +57,14 @@ abstract contract Base is EVCClient, Cache {
         private
         returns (MarketCache memory marketCache, address account)
     {
-        if (marketConfig.pauseBitmask & operation != 0) {
+        if (marketStorage.bitField.get(operation)) {
             revert E_OperationPaused();
         }
 
         marketCache = updateMarket();
 
-        if (!marketStorage.snapshotInitialized) {
-            marketStorage.snapshotInitialized = true;
+        if (!marketStorage.bitField.get(BF_SNAPSHOT)) {
+            marketStorage.bitField = marketStorage.bitField.set(BF_SNAPSHOT);
             snapshotPoolSize = marketCache.poolSize;
             snapshotTotalBorrows = marketCache.totalBorrows.toAssetsUp();
         }

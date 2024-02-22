@@ -220,11 +220,8 @@ abstract contract ERC4626Module is IERC4626, Base, AssetTransfers, BalanceUtils 
 
     function maxDepositInternal(address) private view returns (uint256) {
         // TODO optimize read
-        AmountCap supplyAmountCap = marketConfig.supplyCap;
-        uint256 pauseBitmask = marketConfig.pauseBitmask;
-
-        if (pauseBitmask & OP_DEPOSIT != 0) return 0;
-        uint256 supplyCap = supplyAmountCap.toAmount();
+        if (marketStorage.bitField.get(OP_DEPOSIT)) return 0;
+        uint256 supplyCap = marketStorage.supplyCap.toUint();
 
         uint256 currentSupply = totalAssetsInternal();
         uint256 max = currentSupply < supplyCap ? supplyCap - currentSupply : 0;
@@ -234,8 +231,7 @@ abstract contract ERC4626Module is IERC4626, Base, AssetTransfers, BalanceUtils 
 
     function isPausedOperation(uint32 operations) private view returns (bool) {
         // TODO optimize read
-        uint256 pauseBitmask = marketConfig.pauseBitmask;
-        return operations & pauseBitmask > 0;
+        return marketStorage.bitField.get(operations);
     }
 }
 

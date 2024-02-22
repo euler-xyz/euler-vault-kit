@@ -19,9 +19,6 @@ uint256 constant MAX_SANE_AMOUNT = type(uint112).max;
 uint256 constant MAX_SANE_DEBT_AMOUNT = uint256(MAX_SANE_AMOUNT) << INTERNAL_DEBT_PRECISION;
 uint256 constant MAX_SANE_SMALL_AMOUNT = type(uint96).max;
 
-uint8 constant REENTRANCYLOCK__UNLOCKED = 1;
-uint8 constant REENTRANCYLOCK__LOCKED = 2;
-
 uint256 constant PROXY_METADATA_LENGTH = 20; // 1 address: asset
 
 address constant ACCOUNTCHECK_NONE = address(0);
@@ -54,3 +51,10 @@ uint32 constant OP_PULL_DEBT = 1 << 9;
 uint32 constant OP_CONVERT_FEES = 1 << 10;
 uint32 constant OP_LIQUIDATE = 1 << 11;
 uint32 constant OP_TOUCH = 1 << 12;
+
+// Reserved bits
+
+uint32 constant BF_DEBTSOCIALIZATION = 1 << 29;
+uint32 constant BF_SNAPSHOT = 1 << 30;
+uint32 constant BF_REENTRANCYLOCK = 1 << 31;
+uint32 constant BF_RESERVED = BF_DEBTSOCIALIZATION | BF_SNAPSHOT | BF_REENTRANCYLOCK;
