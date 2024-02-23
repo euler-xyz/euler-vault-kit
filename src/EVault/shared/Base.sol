@@ -57,11 +57,11 @@ abstract contract Base is EVCClient, Cache {
         private
         returns (MarketCache memory marketCache, address account)
     {
-        if (marketStorage.disabledOps.get(operation)) {
+        marketCache = updateMarket();
+
+        if (marketCache.disabledOps.get(operation)) {
             revert E_OperationDisabled();
         }
-
-        marketCache = updateMarket();
 
         if (!marketCache.snapshotInitialized && (marketCache.supplyCap < MAX_SANE_AMOUNT || marketCache.borrowCap < MAX_SANE_AMOUNT)) {
             marketStorage.snapshotInitialized = marketCache.snapshotInitialized = true;

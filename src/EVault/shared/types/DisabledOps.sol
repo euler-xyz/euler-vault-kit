@@ -5,14 +5,6 @@ pragma solidity ^0.8.0;
 import "./Types.sol";
 
 library DisabledOpsLib {
-    function set(DisabledOps self, uint32 bitMask) internal returns (DisabledOps) {
-        return DisabledOps.wrap(DisabledOps.unwrap(self) | bitMask);
-    }
-
-    function clear(DisabledOps self, uint32 bitMask) internal pure returns (DisabledOps) {
-        return DisabledOps.wrap(DisabledOps.unwrap(self) & ~bitMask);
-    }
-
     function get(DisabledOps self, uint32 bitMask) internal pure returns (bool) {
         return (DisabledOps.unwrap(self) & bitMask) != 0;
     }

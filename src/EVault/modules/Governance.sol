@@ -115,7 +115,7 @@ abstract contract GovernanceModule is IGovernance, Base {
 
     /// @inheritdoc IGovernance
     function setMarketPolicy(uint32 disabledOps, uint16 supplyCap, uint16 borrowCap) external virtual nonReentrant governorOnly {
-        marketStorage.disabledOps = marketStorage.disabledOps.set(disabledOps);
+        marketStorage.disabledOps = DisabledOps.wrap(disabledOps);
         marketStorage.supplyCap = AmountCap.wrap(supplyCap).validate();
         marketStorage.borrowCap = AmountCap.wrap(borrowCap).validate();
 

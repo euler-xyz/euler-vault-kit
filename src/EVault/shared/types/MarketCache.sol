@@ -17,5 +17,6 @@ struct MarketCache {
 
     uint256 supplyCap;
     uint256 borrowCap;
+    DisabledOps disabledOps;
     bool snapshotInitialized;
 }
