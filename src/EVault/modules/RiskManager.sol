@@ -10,8 +10,6 @@ import "../../interestRateModels/IIRM.sol";
 
 import "../shared/types/Types.sol";
 
-import "hardhat/console.sol";
-
 abstract contract RiskManagerModule is IRiskManager, Base, BorrowUtils {
     using TypesLib for uint256;
 
@@ -114,23 +112,20 @@ abstract contract RiskManagerModule is IRiskManager, Base, BorrowUtils {
 
         logMarketStatus(marketCache, newInterestRate);
 
-        if (!marketStorage.snapshotInitialized) revert E_InvalidSnapshot();
+        // If snaposhot is initialized, then caps were configured.
+        // If caps are set in the middle of a batch, then snapshots represent the state of the vault at that time.
+        if (marketCache.snapshotInitialized) {
+            marketStorage.snapshotInitialized = marketCache.snapshotInitialized = false;
 
-        marketStorage.snapshotInitialized = false;
-
-        uint256 supplyCap = marketConfig.supplyCap.toAmount();
-        uint256 borrowCap = marketConfig.borrowCap.toAmount();
-
-        if (supplyCap != 0 || borrowCap != 0) {
             uint256 prevBorrows = snapshotTotalBorrows.toUint();
             uint256 borrows = marketCache.totalBorrows.toAssetsUp().toUint();
 
-            if (borrows > borrowCap && borrows > prevBorrows) revert E_BorrowCapExceeded();
+            if (borrows > marketCache.borrowCap && borrows > prevBorrows) revert E_BorrowCapExceeded();
 
             uint256 prevSupply = snapshotPoolSize.toUint() + prevBorrows;
             uint256 supply = marketCache.poolSize.toUint() + borrows;
 
-            if (supply > supplyCap && supply > prevSupply) revert E_SupplyCapExceeded();
+            if (supply > marketCache.supplyCap && supply > prevSupply) revert E_SupplyCapExceeded();
         }
 
         magicValue = VAULT_STATUS_CHECK_RETURN_VALUE;
@@ -138,7 +133,10 @@ abstract contract RiskManagerModule is IRiskManager, Base, BorrowUtils {
 
     function updateInterestRate(MarketCache memory marketCache) private returns (uint72) {
         uint256 newInterestRate;
-        address irm = interestStorage.interestRateModel;
+
+        // single SLOAD
+        address irm = marketStorage.interestRateModel;
+        uint16 interestFee = marketStorage.interestFee;
 
         if (irm != address(0)) {
             uint256 borrows = marketCache.totalBorrows.toAssetsUp().toUint();
@@ -155,7 +153,10 @@ abstract contract RiskManagerModule is IRiskManager, Base, BorrowUtils {
 
         if (newInterestRate > MAX_ALLOWED_INTEREST_RATE) newInterestRate = MAX_ALLOWED_INTEREST_RATE;
 
-        interestStorage.interestRate = uint72(newInterestRate);
+        // single SSTORE
+        marketStorage.interestRateModel = irm;
+        marketStorage.interestFee = interestFee;
+        marketStorage.interestRate = uint72(newInterestRate);
 
         return uint72(newInterestRate);
     }

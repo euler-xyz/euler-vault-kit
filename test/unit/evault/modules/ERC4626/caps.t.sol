@@ -21,12 +21,12 @@ contract ERC4626Test_Caps is EVaultTestBase {
     }
 
     function test_SetMarketPolicy_Integrity(
-        uint32 pauseBitmask, 
+        uint16 pauseBitmask, 
         uint16 supplyCap, 
         uint16 borrowCap
     ) public {
-        uint256 supplyCapAmount = AmountCap.wrap(supplyCap).toAmount();
-        uint256 borrowCapAmount = AmountCap.wrap(borrowCap).toAmount();
+        uint256 supplyCapAmount = AmountCap.wrap(supplyCap).toUint();
+        uint256 borrowCapAmount = AmountCap.wrap(borrowCap).toUint();
         vm.assume(supplyCapAmount <= MAX_SANE_AMOUNT && borrowCapAmount <= MAX_SANE_AMOUNT);
 
         vm.expectEmit();
@@ -41,7 +41,7 @@ contract ERC4626Test_Caps is EVaultTestBase {
     }
 
     function test_SetMarketPolicy_SupplyCapMaxMethods(uint16 supplyCap, address userA) public {
-        uint256 supplyCapAmount = AmountCap.wrap(supplyCap).toAmount();
+        uint256 supplyCapAmount = AmountCap.wrap(supplyCap).toUint();
         vm.assume(supplyCapAmount <= MAX_SANE_AMOUNT);
 
         eTST.setMarketPolicy(0, supplyCap, 0);
@@ -51,13 +51,13 @@ contract ERC4626Test_Caps is EVaultTestBase {
     }
 
     function test_SetMarketPolicy_RevertsWhen_AmountTooLarge(
-        uint32 pauseBitmask, 
+        uint16 pauseBitmask, 
         uint16 supplyCap, 
         uint16 borrowCap
     ) public {
         vm.assume(
-            AmountCap.wrap(supplyCap).toAmount() > MAX_SANE_AMOUNT || 
-            AmountCap.wrap(borrowCap).toAmount() > MAX_SANE_AMOUNT
+            AmountCap.wrap(supplyCap).toUint() > MAX_SANE_AMOUNT || 
+            AmountCap.wrap(borrowCap).toUint() > MAX_SANE_AMOUNT
         );
 
         vm.expectRevert(Errors.RM_InvalidAmountCap.selector);
@@ -161,7 +161,7 @@ contract ERC4626Test_Caps is EVaultTestBase {
     function test_SupplyCap_WhenUnder_DecreasingActions(uint16 supplyCap, uint256 initAmount, uint256 amount) public {
         setUpCollateral();
         uint256 remaining = setUpUnderSupplyCap(supplyCap, initAmount);
-        amount = bound(amount, 1, AmountCap.wrap(supplyCap).toAmount() - remaining);
+        amount = bound(amount, 1, AmountCap.wrap(supplyCap).toUint() - remaining);
         uint256 snapshot = vm.snapshot();
 
         vm.revertTo(snapshot); 
@@ -180,7 +180,7 @@ contract ERC4626Test_Caps is EVaultTestBase {
     function test_SupplyCap_WhenAt_DecreasingActions(uint16 supplyCap, uint256 amount) public {
         setUpCollateral();
         setUpAtSupplyCap(supplyCap);
-        amount = bound(amount, 1, AmountCap.wrap(supplyCap).toAmount());
+        amount = bound(amount, 1, AmountCap.wrap(supplyCap).toUint());
         uint256 snapshot = vm.snapshot();
 
         vm.revertTo(snapshot); 
@@ -199,7 +199,7 @@ contract ERC4626Test_Caps is EVaultTestBase {
     function test_SupplyCap_WhenOver_DecreasingActions(uint16 supplyCapOrig, uint16 supplyCapNow, uint256 amount) public {
         setUpCollateral();
         setUpOverSupplyCap(supplyCapOrig, supplyCapNow);
-        amount = bound(amount, 1, AmountCap.wrap(supplyCapNow).toAmount());
+        amount = bound(amount, 1, AmountCap.wrap(supplyCapNow).toUint());
         uint256 snapshot = vm.snapshot();
 
         vm.revertTo(snapshot); 
@@ -297,7 +297,7 @@ contract ERC4626Test_Caps is EVaultTestBase {
 
     function test_BorrowCap_WhenUnder_DecreasingActions(uint16 borrowCap, uint256 initAmount, uint256 amount) public {
         uint256 remaining = setUpUnderBorrowCap(borrowCap, initAmount);
-        amount = bound(amount, 0, AmountCap.wrap(borrowCap).toAmount() - remaining);
+        amount = bound(amount, 0, AmountCap.wrap(borrowCap).toUint() - remaining);
         uint256 snapshot = vm.snapshot();
         
         vm.revertTo(snapshot); 
@@ -311,7 +311,7 @@ contract ERC4626Test_Caps is EVaultTestBase {
 
     function test_BorrowCap_WhenAt_DecreasingActions(uint16 borrowCap, uint256 amount) public {
         setUpAtBorrowCap(borrowCap);
-        amount = bound(amount, 1, AmountCap.wrap(borrowCap).toAmount());
+        amount = bound(amount, 1, AmountCap.wrap(borrowCap).toUint());
         uint256 snapshot = vm.snapshot();
         
         vm.revertTo(snapshot); 
@@ -325,7 +325,7 @@ contract ERC4626Test_Caps is EVaultTestBase {
 
     function test_BorrowCap_WhenOver_DecreasingActions(uint16 borrowCapOrig, uint16 borrowCapNow, uint256 amount) public {
         setUpOverBorrowCap(borrowCapOrig, borrowCapNow);
-        amount = bound(amount, 1, AmountCap.wrap(borrowCapOrig).toAmount());
+        amount = bound(amount, 1, AmountCap.wrap(borrowCapOrig).toUint());
         uint256 snapshot = vm.snapshot();
         
         vm.revertTo(snapshot); 
@@ -338,7 +338,7 @@ contract ERC4626Test_Caps is EVaultTestBase {
     }
 
     function setUpUnderSupplyCap(uint16 supplyCap, uint256 initAmount) internal returns (uint256) {
-        uint256 supplyCapAmount = AmountCap.wrap(supplyCap).toAmount();
+        uint256 supplyCapAmount = AmountCap.wrap(supplyCap).toUint();
         vm.assume(supplyCapAmount > 1 && supplyCapAmount < MAX_SANE_AMOUNT);
         eTST.setMarketPolicy(0, supplyCap, 0);
 
@@ -351,7 +351,7 @@ contract ERC4626Test_Caps is EVaultTestBase {
     }
 
     function setUpAtSupplyCap(uint16 supplyCap) internal {
-        uint256 supplyCapAmount = AmountCap.wrap(supplyCap).toAmount();
+        uint256 supplyCapAmount = AmountCap.wrap(supplyCap).toUint();
         vm.assume(supplyCapAmount != 0 && supplyCapAmount <= MAX_SANE_AMOUNT);
 
         eTST.setMarketPolicy(0, supplyCap, 0);
@@ -360,8 +360,8 @@ contract ERC4626Test_Caps is EVaultTestBase {
     }
 
     function setUpOverSupplyCap(uint16 supplyCapOrig, uint16 supplyCapNow) internal {
-        uint256 supplyCapOrigAmount = AmountCap.wrap(supplyCapOrig).toAmount();
-        uint256 supplyCapNowAmount = AmountCap.wrap(supplyCapNow).toAmount();
+        uint256 supplyCapOrigAmount = AmountCap.wrap(supplyCapOrig).toUint();
+        uint256 supplyCapNowAmount = AmountCap.wrap(supplyCapNow).toUint();
         vm.assume(supplyCapOrigAmount > 1 && supplyCapOrigAmount <= MAX_SANE_AMOUNT);
         vm.assume(supplyCapNowAmount != 0 && supplyCapNowAmount < supplyCapOrigAmount);
 
@@ -374,7 +374,7 @@ contract ERC4626Test_Caps is EVaultTestBase {
     function setUpUnderBorrowCap(uint16 borrowCap, uint256 initAmount) internal returns (uint256) {
         setUpCollateral();
 
-        uint256 borrowCapAmount = AmountCap.wrap(borrowCap).toAmount();
+        uint256 borrowCapAmount = AmountCap.wrap(borrowCap).toUint();
         vm.assume(borrowCapAmount > 1 && borrowCapAmount < MAX_SANE_AMOUNT);
         eTST.setMarketPolicy(0, 0, borrowCap);
 
@@ -391,7 +391,7 @@ contract ERC4626Test_Caps is EVaultTestBase {
     function setUpAtBorrowCap(uint16 borrowCap) internal {
         setUpCollateral();
 
-        uint256 borrowCapAmount = AmountCap.wrap(borrowCap).toAmount();
+        uint256 borrowCapAmount = AmountCap.wrap(borrowCap).toUint();
         vm.assume(borrowCapAmount != 0 && borrowCapAmount < MAX_SANE_AMOUNT);
         eTST.setMarketPolicy(0, 0, borrowCap);
 
@@ -402,8 +402,8 @@ contract ERC4626Test_Caps is EVaultTestBase {
     }
 
     function setUpOverBorrowCap(uint16 borrowCapOrig, uint16 borrowCapNow) internal {
-        uint256 borrowCapOrigAmount = AmountCap.wrap(borrowCapOrig).toAmount();
-        uint256 borrowCapNowAmount = AmountCap.wrap(borrowCapNow).toAmount();
+        uint256 borrowCapOrigAmount = AmountCap.wrap(borrowCapOrig).toUint();
+        uint256 borrowCapNowAmount = AmountCap.wrap(borrowCapNow).toUint();
         vm.assume(borrowCapOrigAmount > 1 && borrowCapOrigAmount <= MAX_SANE_AMOUNT);
         vm.assume(borrowCapNowAmount != 0 && borrowCapNowAmount < borrowCapOrigAmount);
 

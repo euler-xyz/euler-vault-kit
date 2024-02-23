@@ -7,7 +7,6 @@ import {Cache} from "./Cache.sol";
 
 import {IProtocolConfig} from "../../IProtocolConfig.sol";
 import {IBalanceTracker} from "../../IBalanceTracker.sol";
-
 import "./types/Types.sol";
 
 abstract contract Base is EVCClient, Cache {
@@ -24,15 +23,15 @@ abstract contract Base is EVCClient, Cache {
     } // documentation only
 
     modifier nonReentrant() {
-        if (marketStorage.reentrancyLock != REENTRANCYLOCK__UNLOCKED) revert E_Reentrancy();
+        if (marketStorage.reentrancyLock) revert E_Reentrancy();
 
-        marketStorage.reentrancyLock = REENTRANCYLOCK__LOCKED;
+        marketStorage.reentrancyLock = true;
         _;
-        marketStorage.reentrancyLock = REENTRANCYLOCK__UNLOCKED;
+        marketStorage.reentrancyLock = false;
     }
 
     modifier nonReentrantView() {
-        if (marketStorage.reentrancyLock != REENTRANCYLOCK__UNLOCKED) revert E_Reentrancy();
+        if (marketStorage.reentrancyLock) revert E_Reentrancy();
         _;
     }
 
@@ -58,14 +57,14 @@ abstract contract Base is EVCClient, Cache {
         private
         returns (MarketCache memory marketCache, address account)
     {
-        if (marketConfig.pauseBitmask & operation != 0) {
-            revert E_OperationPaused();
-        }
-
         marketCache = updateMarket();
 
-        if (!marketStorage.snapshotInitialized) {
-            marketStorage.snapshotInitialized = true;
+        if (marketCache.disabledOps.get(operation)) {
+            revert E_OperationDisabled();
+        }
+
+        if (!marketCache.snapshotInitialized && (marketCache.supplyCap < MAX_SANE_AMOUNT || marketCache.borrowCap < MAX_SANE_AMOUNT)) {
+            marketStorage.snapshotInitialized = marketCache.snapshotInitialized = true;
             snapshotPoolSize = marketCache.poolSize;
             snapshotTotalBorrows = marketCache.totalBorrows.toAssetsUp();
         }

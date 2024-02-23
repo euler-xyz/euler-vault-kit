@@ -9,13 +9,13 @@ import "../shared/types/Types.sol";
 
 abstract contract GovernanceModule is IGovernance, Base {
     modifier governorOnly() {
-        if (msg.sender != marketConfig.governorAdmin) revert RM_Unauthorized();
+        if (msg.sender != marketStorage.governorAdmin) revert RM_Unauthorized();
         _;
     }
 
     /// @inheritdoc IGovernance
     function governorAdmin() external virtual view returns (address) {
-        return marketConfig.governorAdmin;
+        return marketStorage.governorAdmin;
     }
 
     /// @inheritdoc IGovernance
@@ -30,55 +30,55 @@ abstract contract GovernanceModule is IGovernance, Base {
 
     /// @inheritdoc IGovernance
     function interestRateModel() external virtual view returns (address) {
-        return interestStorage.interestRateModel;
+        return marketStorage.interestRateModel;
     }
 
     /// @inheritdoc IGovernance
-    function marketPolicy() external virtual view returns (uint32 pauseBitmask, uint16 supplyCap, uint16 borrowCap) {
-        return (marketConfig.pauseBitmask, marketConfig.supplyCap.toUint16(), marketConfig.borrowCap.toUint16());
+    function marketPolicy() external virtual view returns (uint32 disabledOps, uint16 supplyCap, uint16 borrowCap) {
+        return (marketStorage.disabledOps.toUint32(), marketStorage.supplyCap.toUint16(), marketStorage.borrowCap.toUint16());
     }
 
     /// @inheritdoc IGovernance
     function feeReceiver() external virtual view returns (address) {
-        return marketConfig.feeReceiver;
+        return marketStorage.feeReceiver;
     }
 
     /// @inheritdoc IGovernance
     function debtSocialization() external virtual view returns (bool) {
-        return marketConfig.debtSocialization;
+        return marketStorage.debtSocialization;
     }
 
     /// @inheritdoc IGovernance
     function unitOfAccount() external virtual view returns (address) {
-        return marketConfig.unitOfAccount;
+        return marketStorage.unitOfAccount;
     }
 
     /// @inheritdoc IGovernance
     function oracle() external virtual view returns (address) {
-        return marketConfig.oracle;
+        return marketStorage.oracle;
     }
 
     /// @inheritdoc IGovernance
     function setName(string calldata newName) external virtual nonReentrant governorOnly {
-        marketConfig.name = newName;
+        marketStorage.name = newName;
         emit GovSetName(newName);
     }
 
     /// @inheritdoc IGovernance
     function setSymbol(string calldata newSymbol) external virtual nonReentrant governorOnly {
-        marketConfig.symbol = newSymbol;
+        marketStorage.symbol = newSymbol;
         emit GovSetSymbol(newSymbol);
     }
 
     /// @inheritdoc IGovernance
     function setGovernorAdmin(address newGovernorAdmin) external virtual nonReentrant governorOnly {
-        marketConfig.governorAdmin = newGovernorAdmin;
+        marketStorage.governorAdmin = newGovernorAdmin;
         emit GovSetGovernorAdmin(newGovernorAdmin);
     }
 
     /// @inheritdoc IGovernance
     function setFeeReceiver(address newFeeReceiver) external virtual nonReentrant governorOnly {
-        marketConfig.feeReceiver = newFeeReceiver;
+        marketStorage.feeReceiver = newFeeReceiver;
         emit GovSetFeeReceiver(newFeeReceiver);
     }
 
@@ -101,50 +101,50 @@ abstract contract GovernanceModule is IGovernance, Base {
     function setIRM(address newModel, bytes calldata resetParams) external virtual nonReentrant governorOnly {
         // TODO IIRM reset ?
 
-        interestStorage.interestRateModel = newModel;
+        marketStorage.interestRateModel = newModel;
 
         emit GovSetIRM(newModel, resetParams);
     }
 
     /// @inheritdoc IGovernance
     function setOracle(address newOracle) external virtual nonReentrant governorOnly {
-        marketConfig.oracle = newOracle;
+        marketStorage.oracle = newOracle;
 
         emit GovSetOracle(newOracle);
     }
 
     /// @inheritdoc IGovernance
-    function setMarketPolicy(uint32 pauseBitmask, uint16 supplyCap, uint16 borrowCap) external virtual nonReentrant governorOnly {
-        marketConfig.pauseBitmask = pauseBitmask;
-        marketConfig.supplyCap = AmountCap.wrap(supplyCap).validate();
-        marketConfig.borrowCap = AmountCap.wrap(borrowCap).validate();
+    function setMarketPolicy(uint32 disabledOps, uint16 supplyCap, uint16 borrowCap) external virtual nonReentrant governorOnly {
+        marketStorage.disabledOps = DisabledOps.wrap(disabledOps);
+        marketStorage.supplyCap = AmountCap.wrap(supplyCap).validate();
+        marketStorage.borrowCap = AmountCap.wrap(borrowCap).validate();
 
-        emit GovSetMarketPolicy(pauseBitmask, supplyCap, borrowCap);
+        emit GovSetMarketPolicy(disabledOps, supplyCap, borrowCap);
     }
 
     /// @inheritdoc IGovernance
     function setInterestFee(uint16 newInterestFee) external virtual nonReentrant governorOnly {
         if (newInterestFee > CONFIG_SCALE) revert RM_BadFee();
 
-        if (newInterestFee == interestStorage.interestFee) return;
+        if (newInterestFee == marketStorage.interestFee) return;
 
         if (!protocolConfig.isValidInterestFee(address(this), newInterestFee)) revert RM_BadFee();
 
-        interestStorage.interestFee = newInterestFee;
+        marketStorage.interestFee = newInterestFee;
 
         emit GovSetInterestFee(newInterestFee);
     }
 
     /// @inheritdoc IGovernance
     function setDebtSocialization(bool newValue) external virtual nonReentrant governorOnly {
-        marketConfig.debtSocialization = newValue;
+        marketStorage.debtSocialization = newValue;
 
         emit GovSetDebtSocialization(newValue);
     }
 
     /// @inheritdoc IGovernance
     function setUnitOfAccount(address newUnitOfAccount) external virtual nonReentrant governorOnly {
-        marketConfig.unitOfAccount = newUnitOfAccount;
+        marketStorage.unitOfAccount = newUnitOfAccount;
 
         emit GovSetUnitOfAccount(newUnitOfAccount);
     }

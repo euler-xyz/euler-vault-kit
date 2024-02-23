@@ -2,14 +2,12 @@
 
 pragma solidity ^0.8.0;
 
-import "../Errors.sol";
-import "../Constants.sol";
-import {Storage} from "../Storage.sol";
-
+import "./MarketStorage.sol";
 import "./Shares.sol";
 import "./Assets.sol";
 import "./Owed.sol";
 import "./Fees.sol";
+import "./DisabledOps.sol";
 import "./UserStorage.sol";
 import "./AmountCap.sol";
 import "./LTVConfig.sol";
@@ -23,6 +21,8 @@ type Owed is uint144;
 type Fees is uint96;
 
 type AmountCap is uint16;
+
+type DisabledOps is uint32;
 
 using SharesLib for Shares global;
 using {
@@ -41,6 +41,7 @@ using FeesLib for Fees global;
 using {addFees as +} for Fees global;
 
 using AmountCapLib for AmountCap global;
+using DisabledOpsLib for DisabledOps global;
 
 library TypesLib {
     function toShares(uint256 amount) internal pure returns (Shares) {

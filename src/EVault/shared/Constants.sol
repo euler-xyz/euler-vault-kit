@@ -19,9 +19,6 @@ uint256 constant MAX_SANE_AMOUNT = type(uint112).max;
 uint256 constant MAX_SANE_DEBT_AMOUNT = uint256(MAX_SANE_AMOUNT) << INTERNAL_DEBT_PRECISION;
 uint256 constant MAX_SANE_SMALL_AMOUNT = type(uint96).max;
 
-uint8 constant REENTRANCYLOCK__UNLOCKED = 1;
-uint8 constant REENTRANCYLOCK__LOCKED = 2;
-
 uint256 constant PROXY_METADATA_LENGTH = 20; // 1 address: asset
 
 address constant ACCOUNTCHECK_NONE = address(0);

@@ -59,7 +59,7 @@ abstract contract BorrowingModule is IBorrowing, Base, AssetTransfers, BalanceUt
     function interestRate() external view virtual reentrantOK returns (uint72) {
         if (isVaultStatusCheckDeferred()) revert E_VaultStatusCheckDeferred();
 
-        return interestStorage.interestRate;
+        return marketStorage.interestRate;
     }
 
     /// @inheritdoc IBorrowing
@@ -104,8 +104,8 @@ abstract contract BorrowingModule is IBorrowing, Base, AssetTransfers, BalanceUt
         {
             // TODO use direct quote (below) when oracle supports both directions
             // uint extraCollateralBalance = IPriceOracle(oracle).getQuote(extraCollateralValue, referenceAsset, collateral);
-            address unitOfAccount = marketConfig.unitOfAccount;
-            address oracle = marketConfig.oracle;
+            address unitOfAccount = marketStorage.unitOfAccount;
+            address oracle = marketStorage.oracle;
 
             uint256 collateralPrice = IPriceOracle(oracle).getQuote(1e18, collateral, unitOfAccount);
             if (collateralPrice == 0) return 0; // worthless / unpriced collateral is not locked TODO what happens in liquidation??

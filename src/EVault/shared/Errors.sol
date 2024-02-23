@@ -13,7 +13,7 @@ contract Errors {
     error E_InsufficientPoolSize();
     error E_FlashLoanNotRepaid();
     error E_Reentrancy();
-    error E_OperationPaused();
+    error E_OperationDisabled();
     error E_OutstandingDebt();
     error E_InsufficientBalance();
     error E_CreateProxyInvalidModule();
