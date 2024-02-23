@@ -220,7 +220,7 @@ contract EVault is
 
     function interestRateModel() external override useView(MODULE_GOVERNANCE) view returns (address) {}
 
-    function marketPolicy() external override useView(MODULE_GOVERNANCE) view returns (uint32 pauseBitmask, uint16 supplyCap, uint16 borrowCap) {}
+    function marketPolicy() external override useView(MODULE_GOVERNANCE) view returns (uint32 disabledOps, uint16 supplyCap, uint16 borrowCap) {}
 
     function feeReceiver() external override useView(MODULE_GOVERNANCE) view returns (address) {}
 
@@ -245,7 +245,7 @@ contract EVault is
 
     function setOracle(address newOracle) external override use(MODULE_GOVERNANCE) {}
 
-    function setMarketPolicy(uint32 pauseBitmask, uint16 supplyCap, uint16 borrowCap) external override use(MODULE_GOVERNANCE) {}
+    function setMarketPolicy(uint32 disabledOps, uint16 supplyCap, uint16 borrowCap) external override use(MODULE_GOVERNANCE) {}
 
     function setInterestFee(uint16 newFee) external override use(MODULE_GOVERNANCE) {}
 

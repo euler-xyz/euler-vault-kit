@@ -57,7 +57,7 @@ abstract contract Events {
     event GovSetLTV(address indexed collateral, LTVConfig newLTV);
     event GovSetIRM(address interestRateModel, bytes resetParams);
     event GovSetOracle(address oracle);
-    event GovSetMarketPolicy(uint32 newPauseBitmask, uint16 newSupplyCap, uint16 newBorrowCap);
+    event GovSetMarketPolicy(uint32 newDisabledOps, uint16 newSupplyCap, uint16 newBorrowCap);
     event GovSetInterestFee(uint16 newFee);
     event GovSetDebtSocialization(bool debtSocialization);
     event GovSetUnitOfAccount(address newUnitOfAccount);

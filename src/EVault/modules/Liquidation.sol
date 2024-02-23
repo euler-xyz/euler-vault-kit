@@ -135,7 +135,7 @@ abstract contract LiquidationModule is ILiquidation, Base, BalanceUtils, BorrowU
         uint256 collateralValue;
         {
             address oracle = marketStorage.oracle;
-            liqCache.debtSocialization = marketStorage.bitField.get(BF_DEBTSOCIALIZATION); // TODO confirm optimization takes place 
+            liqCache.debtSocialization = marketStorage.debtSocialization;
             collateralValue = IPriceOracle(oracle).getQuote(collateralBalance, liqCache.collateral, marketStorage.unitOfAccount);
         }
 

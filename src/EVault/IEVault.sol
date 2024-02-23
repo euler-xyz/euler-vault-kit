@@ -280,10 +280,10 @@ interface IGovernance {
     function interestRateModel() external view returns (address);
 
     /// @notice Retrieves the policy set for the market
-    /// @return pauseBitmask Bitmask indicating which operations are paused.
+    /// @return disabledOps Bitmask indicating which operations are disabled.
     /// @return supplyCap Supply cap in AmountCap format
     /// @return borrowCap Borrow cap in AmountCap format
-    function marketPolicy() external view returns (uint32 pauseBitmask, uint16 supplyCap, uint16 borrowCap);
+    function marketPolicy() external view returns (uint32 disabledOps, uint16 supplyCap, uint16 borrowCap);
 
     /// @notice Retrieves address of the governance fee receiver
     function feeReceiver() external view returns (address);
@@ -312,7 +312,7 @@ interface IGovernance {
 
     function setOracle(address newOracle) external;
 
-    function setMarketPolicy(uint32 pauseBitmask, uint16 supplyCap, uint16 borrowCap) external;
+    function setMarketPolicy(uint32 disabledOps, uint16 supplyCap, uint16 borrowCap) external;
 
     function setInterestFee(uint16 newFee) external;
 

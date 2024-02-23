@@ -112,9 +112,9 @@ abstract contract RiskManagerModule is IRiskManager, Base, BorrowUtils {
 
         logMarketStatus(marketCache, newInterestRate);
 
-        if (!marketStorage.bitField.get(BF_SNAPSHOT)) revert E_InvalidSnapshot();
+        if (!marketStorage.snapshotInitialized) revert E_InvalidSnapshot();
 
-        marketStorage.bitField = marketStorage.bitField.clear(BF_SNAPSHOT);
+        marketStorage.snapshotInitialized = false;
 
         uint256 supplyCap = marketStorage.supplyCap.toUint();
         uint256 borrowCap = marketStorage.borrowCap.toUint();
@@ -136,7 +136,10 @@ abstract contract RiskManagerModule is IRiskManager, Base, BorrowUtils {
 
     function updateInterestRate(MarketCache memory marketCache) private returns (uint72) {
         uint256 newInterestRate;
+
+        // single SLOAD
         address irm = marketStorage.interestRateModel;
+        uint16 interestFee = marketStorage.interestFee;
 
         if (irm != address(0)) {
             uint256 borrows = marketCache.totalBorrows.toAssetsUp().toUint();
@@ -153,6 +156,9 @@ abstract contract RiskManagerModule is IRiskManager, Base, BorrowUtils {
 
         if (newInterestRate > MAX_ALLOWED_INTEREST_RATE) newInterestRate = MAX_ALLOWED_INTEREST_RATE;
 
+        // single SSTORE
+        marketStorage.interestRateModel = irm;
+        marketStorage.interestFee = interestFee;
         marketStorage.interestRate = uint72(newInterestRate);
 
         return uint72(newInterestRate);

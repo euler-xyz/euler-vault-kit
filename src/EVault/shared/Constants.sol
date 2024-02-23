@@ -51,10 +51,3 @@ uint32 constant OP_PULL_DEBT = 1 << 9;
 uint32 constant OP_CONVERT_FEES = 1 << 10;
 uint32 constant OP_LIQUIDATE = 1 << 11;
 uint32 constant OP_TOUCH = 1 << 12;
-
-// Reserved bits
-
-uint32 constant BF_DEBTSOCIALIZATION = 1 << 29;
-uint32 constant BF_SNAPSHOT = 1 << 30;
-uint32 constant BF_REENTRANCYLOCK = 1 << 31;
-uint32 constant BF_RESERVED = BF_DEBTSOCIALIZATION | BF_SNAPSHOT | BF_REENTRANCYLOCK;

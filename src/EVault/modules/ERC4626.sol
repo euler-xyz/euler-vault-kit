@@ -64,7 +64,7 @@ abstract contract ERC4626Module is IERC4626, Base, AssetTransfers, BalanceUtils 
 
     /// @inheritdoc IERC4626
     function maxWithdraw(address owner) external view virtual nonReentrantView returns (uint256) {
-        if (isPausedOperation(OP_WITHDRAW)) return 0;
+        if (isOperationDisabled(OP_WITHDRAW)) return 0;
 
         MarketCache memory marketCache = loadMarket();
         return maxRedeemInternal(owner).toAssetsDown(marketCache).toUint();
@@ -78,7 +78,7 @@ abstract contract ERC4626Module is IERC4626, Base, AssetTransfers, BalanceUtils 
 
     /// @inheritdoc IERC4626
     function maxRedeem(address owner) public view virtual nonReentrantView returns (uint256) {
-        if (isPausedOperation(OP_REDEEM)) return 0;
+        if (isOperationDisabled(OP_REDEEM)) return 0;
 
         return maxRedeemInternal(owner).toUint();
     }
@@ -220,7 +220,7 @@ abstract contract ERC4626Module is IERC4626, Base, AssetTransfers, BalanceUtils 
 
     function maxDepositInternal(address) private view returns (uint256) {
         // TODO optimize read
-        if (marketStorage.bitField.get(OP_DEPOSIT)) return 0;
+        if (marketStorage.disabledOps.get(OP_DEPOSIT)) return 0;
         uint256 supplyCap = marketStorage.supplyCap.toUint();
 
         uint256 currentSupply = totalAssetsInternal();
@@ -229,9 +229,9 @@ abstract contract ERC4626Module is IERC4626, Base, AssetTransfers, BalanceUtils 
         return max > MAX_SANE_AMOUNT ? MAX_SANE_AMOUNT : max;
     }
 
-    function isPausedOperation(uint32 operations) private view returns (bool) {
+    function isOperationDisabled(uint32 operations) private view returns (bool) {
         // TODO optimize read
-        return marketStorage.bitField.get(operations);
+        return marketStorage.disabledOps.get(operations);
     }
 }
 

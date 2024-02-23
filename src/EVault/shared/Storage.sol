@@ -9,7 +9,7 @@ abstract contract Storage {
 
     MarketStorage marketStorage;
 
-    // keep it outside of MarketStorage awaiting for transient keyword
+    // Transient data
     Assets snapshotPoolSize;
     Assets snapshotTotalBorrows;
 

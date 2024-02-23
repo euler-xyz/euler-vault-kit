@@ -34,8 +34,8 @@ abstract contract GovernanceModule is IGovernance, Base {
     }
 
     /// @inheritdoc IGovernance
-    function marketPolicy() external virtual view returns (uint32 pauseBitmask, uint16 supplyCap, uint16 borrowCap) {
-        return (marketStorage.bitField.clear(BF_RESERVED).toUint32(), marketStorage.supplyCap.toUint16(), marketStorage.borrowCap.toUint16());
+    function marketPolicy() external virtual view returns (uint32 disabledOps, uint16 supplyCap, uint16 borrowCap) {
+        return (marketStorage.disabledOps.toUint32(), marketStorage.supplyCap.toUint16(), marketStorage.borrowCap.toUint16());
     }
 
     /// @inheritdoc IGovernance
@@ -45,7 +45,7 @@ abstract contract GovernanceModule is IGovernance, Base {
 
     /// @inheritdoc IGovernance
     function debtSocialization() external virtual view returns (bool) {
-        return marketStorage.bitField.get(BF_DEBTSOCIALIZATION);
+        return marketStorage.debtSocialization;
     }
 
     /// @inheritdoc IGovernance
@@ -114,16 +114,12 @@ abstract contract GovernanceModule is IGovernance, Base {
     }
 
     /// @inheritdoc IGovernance
-    function setMarketPolicy(uint32 pauseBitmask, uint16 supplyCap, uint16 borrowCap) external virtual nonReentrant governorOnly {
-        // clear the reserved bits just in case
-        // TODO: or maybe ability to set the reentrancy lock would be useful to disable everything?
-        pauseBitmask = BitField.wrap(pauseBitmask).clear(BF_RESERVED).toUint32();
-        
-        marketStorage.bitField = marketStorage.bitField.set(pauseBitmask);
+    function setMarketPolicy(uint32 disabledOps, uint16 supplyCap, uint16 borrowCap) external virtual nonReentrant governorOnly {
+        marketStorage.disabledOps = marketStorage.disabledOps.set(disabledOps);
         marketStorage.supplyCap = AmountCap.wrap(supplyCap).validate();
         marketStorage.borrowCap = AmountCap.wrap(borrowCap).validate();
 
-        emit GovSetMarketPolicy(pauseBitmask, supplyCap, borrowCap);
+        emit GovSetMarketPolicy(disabledOps, supplyCap, borrowCap);
     }
 
     /// @inheritdoc IGovernance
@@ -141,11 +137,7 @@ abstract contract GovernanceModule is IGovernance, Base {
 
     /// @inheritdoc IGovernance
     function setDebtSocialization(bool newValue) external virtual nonReentrant governorOnly {
-        if (newValue) {
-            marketStorage.bitField = marketStorage.bitField.set(BF_DEBTSOCIALIZATION);
-        } else {
-            marketStorage.bitField = marketStorage.bitField.clear(BF_DEBTSOCIALIZATION);
-        }
+        marketStorage.debtSocialization = newValue;
 
         emit GovSetDebtSocialization(newValue);
     }

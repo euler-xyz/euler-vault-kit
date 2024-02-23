@@ -23,15 +23,15 @@ abstract contract Base is EVCClient, Cache {
     } // documentation only
 
     modifier nonReentrant() {
-        if (marketStorage.bitField.get(BF_REENTRANCYLOCK)) revert E_Reentrancy();
+        if (marketStorage.reentrancyLock) revert E_Reentrancy();
 
-        marketStorage.bitField = marketStorage.bitField.set(BF_REENTRANCYLOCK);
+        marketStorage.reentrancyLock = true;
         _;
-        marketStorage.bitField = marketStorage.bitField.clear(BF_REENTRANCYLOCK);
+        marketStorage.reentrancyLock = false;
     }
 
     modifier nonReentrantView() {
-        if (marketStorage.bitField.get(BF_REENTRANCYLOCK)) revert E_Reentrancy();
+        if (marketStorage.reentrancyLock) revert E_Reentrancy();
         _;
     }
 
@@ -57,14 +57,14 @@ abstract contract Base is EVCClient, Cache {
         private
         returns (MarketCache memory marketCache, address account)
     {
-        if (marketStorage.bitField.get(operation)) {
-            revert E_OperationPaused();
+        if (marketStorage.disabledOps.get(operation)) {
+            revert E_OperationDisabled();
         }
 
         marketCache = updateMarket();
 
-        if (!marketStorage.bitField.get(BF_SNAPSHOT)) {
-            marketStorage.bitField = marketStorage.bitField.set(BF_SNAPSHOT);
+        if (!marketStorage.snapshotInitialized) {
+            marketStorage.snapshotInitialized = true;
             snapshotPoolSize = marketCache.poolSize;
             snapshotTotalBorrows = marketCache.totalBorrows.toAssetsUp();
         }

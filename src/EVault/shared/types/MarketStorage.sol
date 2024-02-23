@@ -5,12 +5,15 @@ pragma solidity ^0.8.0;
 import "./Types.sol";
 
 struct MarketStorage {
-    // Packed slot 4 + 5 + 14 + 2 + 2 = 27
-    BitField bitField;
+    // Packed slot 5 + 14 + 2 + 2 + 4 + 1 = 28
     uint40 lastInterestAccumulatorUpdate;
     Assets poolSize;
     AmountCap supplyCap;
     AmountCap borrowCap;
+    DisabledOps disabledOps;
+    bool reentrancyLock;
+    bool snapshotInitialized;
+    bool debtSocialization;
 
     // Packed slot 14 + 18 = 32
     Shares totalShares;
@@ -21,7 +24,7 @@ struct MarketStorage {
     address oracle;
 
     uint256 interestAccumulator;
-    
+
     address unitOfAccount;
 
     // Packed slot 20 + 2 + 9 = 31
