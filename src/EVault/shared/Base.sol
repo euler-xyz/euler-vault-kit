@@ -63,8 +63,8 @@ abstract contract Base is EVCClient, Cache {
 
         marketCache = updateMarket();
 
-        if (!marketStorage.snapshotInitialized) {
-            marketStorage.snapshotInitialized = true;
+        if (!marketCache.snapshotInitialized && (marketCache.supplyCap < MAX_SANE_AMOUNT || marketCache.borrowCap < MAX_SANE_AMOUNT)) {
+            marketStorage.snapshotInitialized = marketCache.snapshotInitialized = true;
             snapshotPoolSize = marketCache.poolSize;
             snapshotTotalBorrows = marketCache.totalBorrows.toAssetsUp();
         }

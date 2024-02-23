@@ -14,4 +14,8 @@ struct MarketCache {
     Assets poolSize;
     Fees feesBalance;
     uint256 interestAccumulator;
+
+    uint256 supplyCap;
+    uint256 borrowCap;
+    bool snapshotInitialized;
 }

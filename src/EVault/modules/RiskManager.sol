@@ -112,23 +112,20 @@ abstract contract RiskManagerModule is IRiskManager, Base, BorrowUtils {
 
         logMarketStatus(marketCache, newInterestRate);
 
-        if (!marketStorage.snapshotInitialized) revert E_InvalidSnapshot();
+        // If snaposhot is initialized, then caps were configured.
+        // If caps are set in the middle of a batch, then snapshots represent the state of the vault at that time.
+        if (marketCache.snapshotInitialized) {
+            marketStorage.snapshotInitialized = marketCache.snapshotInitialized = false;
 
-        marketStorage.snapshotInitialized = false;
-
-        uint256 supplyCap = marketStorage.supplyCap.toUint();
-        uint256 borrowCap = marketStorage.borrowCap.toUint();
-
-        if (supplyCap < MAX_SANE_AMOUNT || borrowCap < MAX_SANE_AMOUNT) {
             uint256 prevBorrows = snapshotTotalBorrows.toUint();
             uint256 borrows = marketCache.totalBorrows.toAssetsUp().toUint();
 
-            if (borrows > borrowCap && borrows > prevBorrows) revert E_BorrowCapExceeded();
+            if (borrows > marketCache.borrowCap && borrows > prevBorrows) revert E_BorrowCapExceeded();
 
             uint256 prevSupply = snapshotPoolSize.toUint() + prevBorrows;
             uint256 supply = marketCache.poolSize.toUint() + borrows;
 
-            if (supply > supplyCap && supply > prevSupply) revert E_SupplyCapExceeded();
+            if (supply > marketCache.supplyCap && supply > prevSupply) revert E_SupplyCapExceeded();
         }
 
         magicValue = VAULT_STATUS_CHECK_RETURN_VALUE;

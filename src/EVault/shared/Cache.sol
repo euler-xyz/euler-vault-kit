@@ -41,6 +41,9 @@ contract Cache is Storage, Errors {
 
         marketCache.lastInterestAccumulatorUpdate = marketStorage.lastInterestAccumulatorUpdate;
         marketCache.poolSize = marketStorage.poolSize;
+        marketCache.supplyCap = marketStorage.supplyCap.toUint();
+        marketCache.borrowCap = marketStorage.borrowCap.toUint();
+        marketCache.snapshotInitialized = marketStorage.snapshotInitialized;
 
         marketCache.totalShares = marketStorage.totalShares;
         marketCache.totalBorrows = marketStorage.totalBorrows;
