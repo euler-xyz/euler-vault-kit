@@ -49,7 +49,7 @@ abstract contract FeesModule is IFees, Base, BalanceUtils {
 
         // Decrease totalShares because increaseBalance will increase it by that total amount
         marketStorage.totalShares =
-            marketCache.totalShares = marketCache.totalShares - marketCache.feesBalance.toShares();
+            marketCache.totalShares = marketCache.totalShares - marketCache.feesBalance;
 
         (address protocolReceiver, uint256 protocolFee) = protocolConfig.feeConfig(address(this));
         address feeReceiver = marketStorage.feeReceiver;
@@ -57,10 +57,10 @@ abstract contract FeesModule is IFees, Base, BalanceUtils {
         if (feeReceiver == address(0)) protocolFee = 1e18; // governor forfeits fees
         else if (protocolFee > MAX_PROTOCOL_FEE_SHARE) protocolFee = MAX_PROTOCOL_FEE_SHARE;
 
-        Fees currentFeesBalance = marketStorage.feesBalance;
-        Shares governorShares = currentFeesBalance.mulDiv(1e18 - protocolFee, 1e18).toShares();
-        Shares protocolShares = currentFeesBalance.toShares() - governorShares;
-        marketStorage.feesBalance = Fees.wrap(0);
+
+        Shares governorShares = marketCache.feesBalance.mulDiv(1e18 - protocolFee, 1e18);
+        Shares protocolShares = marketCache.feesBalance - governorShares;
+        marketStorage.feesBalance = marketCache.feesBalance = Shares.wrap(0);
 
         increaseBalance(
             marketCache, feeReceiver, address(0), governorShares, governorShares.toAssetsDown(marketCache)
@@ -96,6 +96,6 @@ abstract contract FeesModule is IFees, Base, BalanceUtils {
     }
 }
 
-contract FeesInstance is FeesModule {
+contract Fees is FeesModule {
     constructor(address evc, address protocolConfig, address balanceTracker) Base(evc, protocolConfig, balanceTracker) {}
 }

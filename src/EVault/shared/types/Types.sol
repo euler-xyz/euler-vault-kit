@@ -6,7 +6,6 @@ import "./MarketStorage.sol";
 import "./Shares.sol";
 import "./Assets.sol";
 import "./Owed.sol";
-import "./Fees.sol";
 import "./DisabledOps.sol";
 import "./UserStorage.sol";
 import "./AmountCap.sol";
@@ -17,8 +16,6 @@ type Shares is uint112;
 type Assets is uint112;
 
 type Owed is uint144;
-
-type Fees is uint96;
 
 type AmountCap is uint16;
 
@@ -37,9 +34,6 @@ using {
 using OwedLib for Owed global;
 using {addOwed as +, subOwed as -, eqOwed as ==, neqOwed as !=, gtOwed as >, ltOwed as <} for Owed global;
 
-using FeesLib for Fees global;
-using {addFees as +} for Fees global;
-
 using AmountCapLib for AmountCap global;
 using DisabledOpsLib for DisabledOps global;
 
@@ -57,10 +51,5 @@ library TypesLib {
     function toOwed(uint256 amount) internal pure returns (Owed) {
         if (amount > MAX_SANE_DEBT_AMOUNT) revert Errors.E_DebtAmountTooLargeToEncode();
         return Owed.wrap(uint144(amount));
-    }
-
-    function toFees(uint256 amount) internal pure returns (Fees) {
-        if (amount > MAX_SANE_SMALL_AMOUNT) revert Errors.E_SmallAmountTooLargeToEncode();
-        return Fees.wrap(uint96(amount));
     }
 }

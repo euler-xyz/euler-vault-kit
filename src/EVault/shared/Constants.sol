@@ -17,7 +17,6 @@ uint256 constant INTERNAL_DEBT_PRECISION = 31;
 uint256 constant MAX_SANE_AMOUNT = type(uint112).max;
 // Max debt amount fits in uint144 (112 + 31 bits). Last 31 bits are zeros to enusure max debt rounded up equals max sane amount.
 uint256 constant MAX_SANE_DEBT_AMOUNT = uint256(MAX_SANE_AMOUNT) << INTERNAL_DEBT_PRECISION;
-uint256 constant MAX_SANE_SMALL_AMOUNT = type(uint96).max;
 
 uint256 constant PROXY_METADATA_LENGTH = 60; // 3 addresses: asset, oracle, unit of account
 

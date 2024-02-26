@@ -12,11 +12,11 @@ struct MarketCache {
     IPriceOracle oracle;
     address unitOfAccount;
 
-    Shares totalShares;
-    Owed totalBorrows;
     uint40 lastInterestAccumulatorUpdate;
     Assets poolSize;
-    Fees feesBalance;
+    Owed totalBorrows;
+    Shares totalShares;
+    Shares feesBalance;
     uint256 interestAccumulator;
 
     uint256 supplyCap;

@@ -28,6 +28,10 @@ library SharesLib {
             return TypesLib.toAssets((amount.toUint() * totalAssets + (totalShares - 1)) / totalShares);
         }
     }
+
+    function mulDiv(Shares self, uint256 multiplier, uint256 divisor) internal pure returns (Shares) {
+        return TypesLib.toShares(uint256(Shares.unwrap(self)) * multiplier / divisor);
+    }
 }
 
 function addShares(Shares a, Shares b) pure returns (Shares) {

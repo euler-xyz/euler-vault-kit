@@ -81,18 +81,15 @@ contract Cache is Storage, Errors {
                 newFeesBalance += newTotalShares - marketCache.totalShares.toUint();
             }
 
-            // Store new values in marketCache, only if no overflows will occur
+            // Store new values in marketCache, only if no overflows will occur. Fees are not larger than total shares, since they are included in them.
 
-            if (
-                newTotalShares <= MAX_SANE_AMOUNT && newTotalBorrows <= MAX_SANE_DEBT_AMOUNT
-                    && newFeesBalance <= MAX_SANE_SMALL_AMOUNT
-            ) {
+            if (newTotalShares <= MAX_SANE_AMOUNT && newTotalBorrows <= MAX_SANE_DEBT_AMOUNT) {
                 marketCache.totalBorrows = newTotalBorrows.toOwed();
                 marketCache.interestAccumulator = newInterestAccumulator;
                 marketCache.lastInterestAccumulatorUpdate = uint40(block.timestamp);
 
                 if (newTotalShares != Shares.unwrap(marketCache.totalShares)) {
-                    marketCache.feesBalance = newFeesBalance.toFees();
+                    marketCache.feesBalance = newFeesBalance.toShares();
                     marketCache.totalShares = newTotalShares.toShares();
                 }
             }

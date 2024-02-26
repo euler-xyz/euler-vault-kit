@@ -14,7 +14,7 @@ import {Token} from "src/EVault/modules/Token.sol";
 import {ERC4626} from "src/EVault/modules/ERC4626.sol";
 import {Borrowing} from "src/EVault/modules/Borrowing.sol";
 import {Liquidation} from "src/EVault/modules/Liquidation.sol";
-import {FeesInstance} from "src/EVault/modules/Fees.sol";
+import {Fees} from "src/EVault/modules/Fees.sol";
 import {BalanceForwarder} from "src/EVault/modules/BalanceForwarder.sol";
 import {Governance} from "src/EVault/modules/Governance.sol";
 import {RiskManager} from "src/EVault/modules/RiskManager.sol";
@@ -66,7 +66,7 @@ contract EVaultTestBase is Test, AssertionsCustomTypes {
         address erc4626Module = address(new ERC4626(address(evc), protocolConfig, balanceTracker));
         address borrowingModule = address(new Borrowing(address(evc), protocolConfig, balanceTracker));
         address liquidationModule = address(new Liquidation(address(evc), protocolConfig, balanceTracker));
-        address feesModule = address(new FeesInstance(address(evc), protocolConfig, balanceTracker));
+        address feesModule = address(new Fees(address(evc), protocolConfig, balanceTracker));
         address balanceForwarderModule = address(new BalanceForwarder(address(evc), protocolConfig, balanceTracker));
         address governanceModule = address(new Governance(address(evc), protocolConfig, balanceTracker));
         address riskManagerModule = address(new RiskManager(address(evc), protocolConfig, balanceTracker));
