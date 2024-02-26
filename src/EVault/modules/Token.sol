@@ -15,12 +15,12 @@ abstract contract TokenModule is IToken, Base, BalanceUtils {
 
     /// @inheritdoc IERC20
     function name() external view virtual reentrantOK returns (string memory) {
-        return marketStorage.name;
+        return bytes(marketStorage.name).length > 0 ? marketStorage.name : "Unnamed Euler Vault";
     }
 
     /// @inheritdoc IERC20
     function symbol() external view virtual reentrantOK returns (string memory) {
-        return marketStorage.symbol;
+        return bytes(marketStorage.symbol).length > 0 ? marketStorage.symbol : "UNKNOWN";
     }
 
     /// @inheritdoc IERC20

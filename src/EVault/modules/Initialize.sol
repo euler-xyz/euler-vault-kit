@@ -27,7 +27,7 @@ abstract contract InitializeModule is IInitialize, Base, BorrowUtils {
             address(asset) == address(0) || address(asset) == address(evc) || address(asset).code.length == 0
         ) revert E_BadAddress(); // TODO should this validation be removed in favor of product lines?
 
-        // Create companion DToken
+        // Create sidecar DToken
 
         address dToken = address(new DToken());
 
@@ -36,28 +36,12 @@ abstract contract InitializeModule is IInitialize, Base, BorrowUtils {
         marketStorage.lastInterestAccumulatorUpdate = uint40(block.timestamp);
         marketStorage.interestAccumulator = INITIAL_INTEREST_ACCUMULATOR;
         marketStorage.interestFee = DEFAULT_INTEREST_FEE;
-        marketStorage.name = defaultName(asset);
-        marketStorage.symbol = defaultSymbol(asset);
         marketStorage.governorAdmin = creator;
 
         // Emit logs
 
         emit EVaultCreated(creator, address(asset), dToken);
         logMarketStatus(loadMarket(), 0);
-    }
-
-    function defaultName(IERC20 asset) private view returns (string memory) {
-        // Handle MKR like tokens returning bytes32
-        (bool success, bytes memory data) = address(asset).staticcall(abi.encodeWithSelector(IERC20.name.selector));
-        if (!success) RevertBytes.revertBytes(data);
-        return string.concat("Euler Pool: ", data.length == 32 ? string(data) : abi.decode(data, (string)));
-    }
-
-    function defaultSymbol(IERC20 asset) private view returns (string memory) {
-        // Handle MKR like tokens returning bytes32
-        (bool success, bytes memory data) = address(asset).staticcall(abi.encodeWithSelector(IERC20.symbol.selector));
-        if (!success) RevertBytes.revertBytes(data);
-        return string.concat("e", data.length == 32 ? string(data) : abi.decode(data, (string)));
     }
 }
 
