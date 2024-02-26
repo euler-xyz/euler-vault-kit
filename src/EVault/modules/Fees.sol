@@ -84,7 +84,7 @@ abstract contract FeesModule is IFees, Base, BalanceUtils {
         if (msg.sender != admin) revert E_Unauthorized();
         if (receiver == address(0) || receiver == address(this)) revert E_BadAddress();
 
-        (IERC20 asset) = ProxyUtils.metadata();
+        (IERC20 asset,,) = ProxyUtils.metadata();
 
         uint256 balance = asset.callBalanceOf(address(this));
         uint256 poolSize = marketStorage.poolSize.toUint();

@@ -243,15 +243,11 @@ contract EVault is
 
     function setIRM(address newModel, bytes calldata resetParams) external override use(MODULE_GOVERNANCE) {}
 
-    function setOracle(address newOracle) external override use(MODULE_GOVERNANCE) {}
-
     function setMarketPolicy(uint32 disabledOps, uint16 supplyCap, uint16 borrowCap) external override use(MODULE_GOVERNANCE) {}
 
     function setInterestFee(uint16 newFee) external override use(MODULE_GOVERNANCE) {}
 
     function setDebtSocialization(bool newValue) external override use(MODULE_GOVERNANCE) {}
-
-    function setUnitOfAccount(address newUnitOfAccount) external override use(MODULE_GOVERNANCE) {}
 
 
 

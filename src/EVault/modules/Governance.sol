@@ -4,6 +4,7 @@ pragma solidity ^0.8.0;
 
 import {IGovernance} from "../IEVault.sol";
 import {Base} from "../shared/Base.sol";
+import {ProxyUtils} from "../shared/lib/ProxyUtils.sol";
 
 import "../shared/types/Types.sol";
 
@@ -50,12 +51,14 @@ abstract contract GovernanceModule is IGovernance, Base {
 
     /// @inheritdoc IGovernance
     function unitOfAccount() external virtual view returns (address) {
-        return marketStorage.unitOfAccount;
+        (,, address _unitOfAccount) = ProxyUtils.metadata();
+        return _unitOfAccount;
     }
 
     /// @inheritdoc IGovernance
     function oracle() external virtual view returns (address) {
-        return marketStorage.oracle;
+        (, IPriceOracle _oracle,) = ProxyUtils.metadata();
+        return address(_oracle);
     }
 
     /// @inheritdoc IGovernance
@@ -107,13 +110,6 @@ abstract contract GovernanceModule is IGovernance, Base {
     }
 
     /// @inheritdoc IGovernance
-    function setOracle(address newOracle) external virtual nonReentrant governorOnly {
-        marketStorage.oracle = newOracle;
-
-        emit GovSetOracle(newOracle);
-    }
-
-    /// @inheritdoc IGovernance
     function setMarketPolicy(uint32 disabledOps, uint16 supplyCap, uint16 borrowCap) external virtual nonReentrant governorOnly {
         AmountCap _supplyCap = AmountCap.wrap(supplyCap);
         // Max total assets is a sum of max pool size and max total debt, both Assets type
@@ -147,13 +143,6 @@ abstract contract GovernanceModule is IGovernance, Base {
         marketStorage.debtSocialization = newValue;
 
         emit GovSetDebtSocialization(newValue);
-    }
-
-    /// @inheritdoc IGovernance
-    function setUnitOfAccount(address newUnitOfAccount) external virtual nonReentrant governorOnly {
-        marketStorage.unitOfAccount = newUnitOfAccount;
-
-        emit GovSetUnitOfAccount(newUnitOfAccount);
     }
 }
 

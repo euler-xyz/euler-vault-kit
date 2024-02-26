@@ -310,15 +310,11 @@ interface IGovernance {
 
     function setIRM(address newModel, bytes calldata resetParams) external;
 
-    function setOracle(address newOracle) external;
-
     function setMarketPolicy(uint32 disabledOps, uint16 supplyCap, uint16 borrowCap) external;
 
     function setInterestFee(uint16 newFee) external;
 
     function setDebtSocialization(bool newValue) external;
-
-    function setUnitOfAccount(address newUnitOfAccount) external;
 }
 
 interface IRiskManager is IVault {

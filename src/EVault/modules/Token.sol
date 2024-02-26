@@ -25,7 +25,7 @@ abstract contract TokenModule is IToken, Base, BalanceUtils {
 
     /// @inheritdoc IERC20
     function decimals() external view virtual reentrantOK returns (uint8) {
-        (IERC20 asset) = ProxyUtils.metadata();
+        (IERC20 asset,,) = ProxyUtils.metadata();
 
         return asset.decimals();
     }

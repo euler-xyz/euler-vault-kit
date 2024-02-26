@@ -19,13 +19,9 @@ struct MarketStorage {
     Shares totalShares;
     Owed totalBorrows;
 
-    // Packed slot 12 + 20 = 32
     Fees feesBalance;
-    address oracle;
 
     uint256 interestAccumulator;
-
-    address unitOfAccount;
 
     // Packed slot 20 + 2 + 9 = 31
     address interestRateModel; // 0% interest, if zero address

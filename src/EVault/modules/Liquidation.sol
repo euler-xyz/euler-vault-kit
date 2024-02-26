@@ -7,7 +7,6 @@ import {Base} from "../shared/Base.sol";
 import {BalanceUtils} from "../shared/BalanceUtils.sol";
 import {BorrowUtils} from "../shared/BorrowUtils.sol";
 import {IEVC} from "ethereum-vault-connector/interfaces/IEthereumVaultConnector.sol";
-import "../../IPriceOracle.sol";
 
 import "../shared/types/Types.sol";
 
@@ -134,9 +133,8 @@ abstract contract LiquidationModule is ILiquidation, Base, BalanceUtils, BorrowU
         uint256 collateralBalance = IERC20(liqCache.collateral).balanceOf(liqCache.violator);
         uint256 collateralValue;
         {
-            address oracle = marketStorage.oracle;
             liqCache.debtSocialization = marketStorage.debtSocialization;
-            collateralValue = IPriceOracle(oracle).getQuote(collateralBalance, liqCache.collateral, marketStorage.unitOfAccount);
+            collateralValue = marketCache.oracle.getQuote(collateralBalance, liqCache.collateral, marketCache.unitOfAccount);
         }
 
         uint256 maxRepayValue = liabilityValue;

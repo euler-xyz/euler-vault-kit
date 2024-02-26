@@ -94,14 +94,10 @@ contract EVaultTestBase is Test, AssertionsCustomTypes {
         assetTST = new TestERC20("Test Token", "TST", 18, false);
         assetTST2 = new TestERC20("Test Token 2", "TST2", 18, false);
 
-        eTST = IEVault(factory.createProxy(true, abi.encodePacked(address(assetTST))));
+        eTST = IEVault(factory.createProxy(true, abi.encodePacked(address(assetTST), address(oracle), unitOfAccount)));
         eTST.setIRM(address(new IRMClassStable()), "");
-        eTST.setOracle(address(oracle));
-        eTST.setUnitOfAccount(unitOfAccount);
 
-        eTST2 = IEVault(factory.createProxy(true, abi.encodePacked(address(assetTST2))));
+        eTST2 = IEVault(factory.createProxy(true, abi.encodePacked(address(assetTST2), address(oracle), unitOfAccount)));
         eTST2.setIRM(address(new IRMClassStable()), "");
-        eTST2.setOracle(address(oracle));
-        eTST2.setUnitOfAccount(unitOfAccount);
     }
 }

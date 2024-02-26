@@ -3,11 +3,14 @@
 pragma solidity ^0.8.0;
 
 import {IERC20} from "../../IEVault.sol";
+import {IPriceOracle} from "../../../IPriceOracle.sol";
 
 library ProxyUtils {
-    function metadata() internal pure returns (IERC20 marketAsset) {
+    function metadata() internal pure returns (IERC20 asset, IPriceOracle oracle, address unitOfAccount) {
         assembly {
-            marketAsset := shr(96, calldataload(sub(calldatasize(), 20)))
+            asset := shr(96, calldataload(sub(calldatasize(), 60)))
+            oracle := shr(96, calldataload(sub(calldatasize(), 40)))
+            unitOfAccount := shr(96, calldataload(sub(calldatasize(), 20)))
         }
     }
 }

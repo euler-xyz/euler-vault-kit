@@ -4,7 +4,7 @@ pragma solidity ^0.8.0;
 
 import {Base} from "./Base.sol";
 import {DToken} from "../DToken.sol";
-import "../../IPriceOracle.sol";
+
 
 import "./types/Types.sol";
 
@@ -16,14 +16,11 @@ abstract contract BorrowUtils is Base {
         view
         returns (uint256 collateralValue, uint256 liabilityValue)
     {
-        address unitOfAccount = marketStorage.unitOfAccount;
-        address oracle = marketStorage.oracle;
-
         uint256 owed = getCurrentOwed(marketCache, account).toAssetsUp().toUint();
 
-        liabilityValue = address(marketCache.asset) == unitOfAccount ?
+        liabilityValue = address(marketCache.asset) == marketCache.unitOfAccount ?
             owed :
-            IPriceOracle(oracle).getQuote(owed, address(marketCache.asset), unitOfAccount);
+            marketCache.oracle.getQuote(owed, address(marketCache.asset), marketCache.unitOfAccount);
 
         for (uint256 i; i < collaterals.length; ++i) {
             address collateral = collaterals[i];
@@ -33,7 +30,7 @@ abstract contract BorrowUtils is Base {
             uint256 balance = IERC20(collateral).balanceOf(account); // TODO low level and read directly for self?
             if (balance == 0) continue;
 
-            uint256 currentCollateralValue = IPriceOracle(oracle).getQuote(balance, collateral, unitOfAccount);
+            uint256 currentCollateralValue = marketCache.oracle.getQuote(balance, collateral, marketCache.unitOfAccount);
 
             collateralValue += currentCollateralValue * ltv / CONFIG_SCALE;
         }

@@ -10,7 +10,6 @@ import {AssetTransfers} from "../shared/AssetTransfers.sol";
 import {SafeERC20Lib} from "../shared/lib/SafeERC20Lib.sol";
 import {ProxyUtils} from "../shared/lib/ProxyUtils.sol";
 
-import "../../IPriceOracle.sol";
 import {IEVC} from "ethereum-vault-connector/interfaces/IEthereumVaultConnector.sol";
 
 import "../shared/types/Types.sol";
@@ -81,7 +80,8 @@ abstract contract BorrowingModule is IBorrowing, Base, AssetTransfers, BalanceUt
         if (!isCollateralEnabled(account, collateral)) return 0;
 
         address[] memory collaterals = getCollaterals(account);
-        (uint256 totalCollateralValueRA, uint256 liabilityValue) = computeLiquidity(loadMarket(), account, collaterals);
+        MarketCache memory marketCache = loadMarket();
+        (uint256 totalCollateralValueRA, uint256 liabilityValue) = computeLiquidity(marketCache, account, collaterals);
 
         // if there is no liability or it has no value, collateral will not be locked
         if (liabilityValue == 0) return 0;
@@ -104,10 +104,8 @@ abstract contract BorrowingModule is IBorrowing, Base, AssetTransfers, BalanceUt
         {
             // TODO use direct quote (below) when oracle supports both directions
             // uint extraCollateralBalance = IPriceOracle(oracle).getQuote(extraCollateralValue, referenceAsset, collateral);
-            address unitOfAccount = marketStorage.unitOfAccount;
-            address oracle = marketStorage.oracle;
 
-            uint256 collateralPrice = IPriceOracle(oracle).getQuote(1e18, collateral, unitOfAccount);
+            uint256 collateralPrice = marketCache.oracle.getQuote(1e18, collateral, marketCache.unitOfAccount);
             if (collateralPrice == 0) return 0; // worthless / unpriced collateral is not locked TODO what happens in liquidation??
             extraCollateralBalance = extraCollateralValue * 1e18 / collateralPrice;
         }
@@ -235,16 +233,16 @@ abstract contract BorrowingModule is IBorrowing, Base, AssetTransfers, BalanceUt
 
     /// @inheritdoc IBorrowing
     function flashLoan(uint256 assets, bytes calldata data) external virtual nonReentrant {
-        (IERC20 asset_) = ProxyUtils.metadata();
+        (IERC20 asset,,) = ProxyUtils.metadata();
         address account = EVCAuthenticate();
 
-        uint256 origBalance = asset_.balanceOf(address(this));
+        uint256 origBalance = asset.balanceOf(address(this));
 
-        asset_.safeTransfer(account, assets);
+        asset.safeTransfer(account, assets);
 
         IFlashLoan(account).onFlashLoan(data);
 
-        if (asset_.balanceOf(address(this)) < origBalance) revert E_FlashLoanNotRepaid();
+        if (asset.balanceOf(address(this)) < origBalance) revert E_FlashLoanNotRepaid();
     }
 }
 

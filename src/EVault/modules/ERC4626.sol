@@ -17,8 +17,8 @@ abstract contract ERC4626Module is IERC4626, Base, AssetTransfers, BalanceUtils 
 
     /// @inheritdoc IERC4626
     function asset() external view virtual reentrantOK returns (address) {
-        (IERC20 asset_) = ProxyUtils.metadata();
-        return address(asset_);
+        (IERC20 _asset,,) = ProxyUtils.metadata();
+        return address(_asset);
     }
 
     /// @inheritdoc IERC4626
@@ -214,7 +214,7 @@ abstract contract ERC4626Module is IERC4626, Base, AssetTransfers, BalanceUtils 
         return max;
     }
 
-    function maxDepositInternal(MarketCache memory marketCache, address) private view returns (uint256) {
+    function maxDepositInternal(MarketCache memory marketCache, address) private pure returns (uint256) {
         if (marketCache.disabledOps.get(OP_DEPOSIT)) return 0;
 
         uint256 supply = totalAssetsInternal(marketCache);
