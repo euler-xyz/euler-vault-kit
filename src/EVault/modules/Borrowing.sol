@@ -159,7 +159,7 @@ abstract contract BorrowingModule is IBorrowing, Base, AssetTransfers, BalanceUt
     }
 
     /// @inheritdoc IBorrowing
-    function wind(uint256 amount, address sharesReceiver) external virtual nonReentrant returns (uint256) {
+    function loop(uint256 amount, address sharesReceiver) external virtual nonReentrant returns (uint256) {
         (MarketCache memory marketCache, address account) = initOperationForBorrow(OP_WIND);
 
         if (sharesReceiver == address(0)) sharesReceiver = account;
@@ -179,7 +179,7 @@ abstract contract BorrowingModule is IBorrowing, Base, AssetTransfers, BalanceUt
     }
 
     /// @inheritdoc IBorrowing
-    function unwind(uint256 amount, address debtFrom) external virtual nonReentrant returns (uint256) {
+    function deloop(uint256 amount, address debtFrom) external virtual nonReentrant returns (uint256) {
         (MarketCache memory marketCache, address account) = initOperation(OP_UNWIND, ACCOUNTCHECK_CALLER);
 
         if (debtFrom == address(0)) debtFrom = account;

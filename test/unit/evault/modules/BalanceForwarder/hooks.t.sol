@@ -209,7 +209,7 @@ contract BalanceForwarderTest_Hooks is EVaultTestBase {
         setUpBorrow(alice);
 
         vm.prank(alice);
-        eTST.wind(1 ether, alice);
+        eTST.loop(1 ether, alice);
         assertEq(MBT.calls(alice, 11 ether, false), 1);
         assertBalance(alice, 11 ether);
     }
@@ -218,7 +218,7 @@ contract BalanceForwarderTest_Hooks is EVaultTestBase {
         setUpBorrow(alice);
 
         vm.prank(alice);
-        eTST.wind(1 ether, bob);
+        eTST.loop(1 ether, bob);
         assertEq(MBT.calls(bob, 1 ether, false), 1);
         assertBalance(bob, 1 ether);
         assertBalance(alice, 10 ether);
@@ -228,8 +228,8 @@ contract BalanceForwarderTest_Hooks is EVaultTestBase {
         setUpBorrow(alice);
 
         vm.startPrank(alice);
-        eTST.wind(2 ether, alice);
-        eTST.unwind(1 ether, alice);
+        eTST.loop(2 ether, alice);
+        eTST.deloop(1 ether, alice);
         assertEq(MBT.calls(alice, 11 ether, false), 1);
         assertBalance(alice, 11 ether);
     }
@@ -238,10 +238,10 @@ contract BalanceForwarderTest_Hooks is EVaultTestBase {
         setUpBorrow(alice);
 
         vm.prank(alice);
-        eTST.wind(2 ether, alice);
+        eTST.loop(2 ether, alice);
 
         vm.prank(alice);
-        eTST.unwind(1 ether, bob);
+        eTST.deloop(1 ether, bob);
         assertEq(MBT.calls(alice, 12 ether, false), 1);
         assertBalance(alice, 12 ether);
     }

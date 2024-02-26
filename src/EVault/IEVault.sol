@@ -191,13 +191,13 @@ interface IBorrowing {
     /// @param assets In underlying units
     /// @param sharesReceiver Account to receive the created shares.
     /// @return Amount of shares created
-    function wind(uint256 assets, address sharesReceiver) external returns (uint256);
+    function loop(uint256 assets, address sharesReceiver) external returns (uint256);
 
     /// @notice Pay off dToken liability with shares ("self-repay")
     /// @param assets In underlying units (use max uint to repay the debt in full or up to the available underlying balance)
     /// @param debtFrom Account to remove debt from by burning sender's shares.
     /// @return Amount of shares burned
-    function unwind(uint256 assets, address debtFrom) external returns (uint256);
+    function deloop(uint256 assets, address debtFrom) external returns (uint256);
 
     function pullDebt(uint256 assets, address from) external;
 
