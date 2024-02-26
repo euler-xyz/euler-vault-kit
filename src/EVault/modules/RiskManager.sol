@@ -112,7 +112,7 @@ abstract contract RiskManagerModule is IRiskManager, Base, BorrowUtils {
 
         logMarketStatus(marketCache, newInterestRate);
 
-        // If snaposhot is initialized, then caps were configured.
+        // If snapshot is initialized, then caps are configured.
         // If caps are set in the middle of a batch, then snapshots represent the state of the vault at that time.
         if (marketCache.snapshotInitialized) {
             marketStorage.snapshotInitialized = marketCache.snapshotInitialized = false;
@@ -123,7 +123,7 @@ abstract contract RiskManagerModule is IRiskManager, Base, BorrowUtils {
             if (borrows > marketCache.borrowCap && borrows > prevBorrows) revert E_BorrowCapExceeded();
 
             uint256 prevSupply = snapshotPoolSize.toUint() + prevBorrows;
-            uint256 supply = marketCache.poolSize.toUint() + borrows;
+            uint256 supply = totalAssetsInternal(marketCache);
 
             if (supply > marketCache.supplyCap && supply > prevSupply) revert E_SupplyCapExceeded();
         }

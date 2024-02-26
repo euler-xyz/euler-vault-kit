@@ -59,6 +59,8 @@ contract Errors {
     error E_EmptyError();
     error E_InterestFeeInit();
     error E_VaultStatusCheckDeferred();
+    error E_BadBorrowCap();
+    error E_BadSupplyCap();
 
     // FIXME: normalise these to E_ namespace
 
@@ -76,7 +78,7 @@ contract Errors {
     error RM_BadFee();
     error RM_ExcessiveRepayAmount();
     error RM_TransientState();
-    error RM_InvalidAmountCap();
+    error E_InvalidAmountCap();
     error E_SupplyCapExceeded();
     error E_BorrowCapExceeded();
     error RM_InvalidLiquidationState();

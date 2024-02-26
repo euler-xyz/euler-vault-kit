@@ -35,7 +35,7 @@ abstract contract GovernanceModule is IGovernance, Base {
 
     /// @inheritdoc IGovernance
     function marketPolicy() external virtual view returns (uint32 disabledOps, uint16 supplyCap, uint16 borrowCap) {
-        return (marketStorage.disabledOps.toUint32(), marketStorage.supplyCap.toUint16(), marketStorage.borrowCap.toUint16());
+        return (marketStorage.disabledOps.toUint32(), marketStorage.supplyCap.toRawUint16(), marketStorage.borrowCap.toRawUint16());
     }
 
     /// @inheritdoc IGovernance
@@ -115,9 +115,16 @@ abstract contract GovernanceModule is IGovernance, Base {
 
     /// @inheritdoc IGovernance
     function setMarketPolicy(uint32 disabledOps, uint16 supplyCap, uint16 borrowCap) external virtual nonReentrant governorOnly {
+        AmountCap _supplyCap = AmountCap.wrap(supplyCap);
+        // Max total assets is a sum of max pool size and max total debt, both Assets type
+        if (supplyCap > 0 && _supplyCap.toUint() > 2 * MAX_SANE_AMOUNT) revert E_BadSupplyCap();
+
+        AmountCap _borrowCap = AmountCap.wrap(borrowCap);
+        if (borrowCap > 0 && _borrowCap.toUint() > MAX_SANE_AMOUNT) revert E_BadBorrowCap();
+
         marketStorage.disabledOps = DisabledOps.wrap(disabledOps);
-        marketStorage.supplyCap = AmountCap.wrap(supplyCap).validate();
-        marketStorage.borrowCap = AmountCap.wrap(borrowCap).validate();
+        marketStorage.supplyCap = _supplyCap;
+        marketStorage.borrowCap = _borrowCap;
 
         emit GovSetMarketPolicy(disabledOps, supplyCap, borrowCap);
     }

@@ -50,17 +50,33 @@ contract ERC4626Test_Caps is EVaultTestBase {
         assertEq(eTST.maxMint(userA), supplyCapAmount);
     }
 
-    function test_SetMarketPolicy_RevertsWhen_AmountTooLarge(
+    function test_SetMarketPolicy_RevertsWhen_SupplyCap_AmountTooLarge(
         uint16 pauseBitmask, 
         uint16 supplyCap, 
         uint16 borrowCap
     ) public {
         vm.assume(
-            AmountCap.wrap(supplyCap).toUint() > MAX_SANE_AMOUNT || 
+            supplyCap > 0 &&
+            AmountCap.wrap(supplyCap).toUint() > 2 * MAX_SANE_AMOUNT &&
+            AmountCap.wrap(borrowCap).toUint() < MAX_SANE_AMOUNT
+        );
+
+        vm.expectRevert(Errors.E_BadSupplyCap.selector);
+        eTST.setMarketPolicy(pauseBitmask, supplyCap, borrowCap);
+    }
+
+    function test_SetMarketPolicy_RevertsWhen_BorrowCap_AmountTooLarge(
+        uint16 pauseBitmask, 
+        uint16 supplyCap, 
+        uint16 borrowCap
+    ) public {
+        vm.assume(
+            AmountCap.wrap(supplyCap).toUint() < 2 * MAX_SANE_AMOUNT && 
+            borrowCap > 0 &&
             AmountCap.wrap(borrowCap).toUint() > MAX_SANE_AMOUNT
         );
 
-        vm.expectRevert(Errors.RM_InvalidAmountCap.selector);
+        vm.expectRevert(Errors.E_BadBorrowCap.selector);
         eTST.setMarketPolicy(pauseBitmask, supplyCap, borrowCap);
     }
 

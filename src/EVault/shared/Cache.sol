@@ -98,4 +98,9 @@ contract Cache is Storage, Errors {
             }
         }
     }
+
+    function totalAssetsInternal(MarketCache memory marketCache) internal pure returns (uint256) {
+        // total assets can exceed Assets max amount (MAX_SANE_AMOUNT)
+        return marketCache.poolSize.toUint() + marketCache.totalBorrows.toAssetsUp().toUint();
+    }
 }
