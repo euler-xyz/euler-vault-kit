@@ -4,11 +4,12 @@ pragma solidity ^0.8.0;
 
 import {IGovernance} from "../IEVault.sol";
 import {Base} from "../shared/Base.sol";
+import {BalanceUtils} from "../shared/BalanceUtils.sol";
 import {ProxyUtils} from "../shared/lib/ProxyUtils.sol";
 
 import "../shared/types/Types.sol";
 
-abstract contract GovernanceModule is IGovernance, Base {
+abstract contract GovernanceModule is IGovernance, Base, BalanceUtils {
     modifier governorOnly() {
         if (msg.sender != marketStorage.governorAdmin) revert RM_Unauthorized();
         _;
@@ -17,6 +18,23 @@ abstract contract GovernanceModule is IGovernance, Base {
     /// @inheritdoc IGovernance
     function governorAdmin() external virtual view returns (address) {
         return marketStorage.governorAdmin;
+    }
+
+    /// @inheritdoc IGovernance
+    function interestFee() external view virtual reentrantOK returns (uint16) {
+        return marketStorage.interestFee;
+    }
+
+    /// @inheritdoc IGovernance
+    function protocolFeeShare() external view virtual reentrantOK returns (uint256) {
+        (, uint256 protocolShare) = protocolConfig.feeConfig(address(this));
+        return protocolShare;
+    }
+
+    /// @inheritdoc IGovernance
+    function protocolFeeReceiver() external view virtual reentrantOK returns (address) {
+        (address protocolReceiver,) = protocolConfig.feeConfig(address(this));
+        return protocolReceiver;
     }
 
     /// @inheritdoc IGovernance
@@ -59,6 +77,41 @@ abstract contract GovernanceModule is IGovernance, Base {
     function oracle() external virtual view returns (address) {
         (, IPriceOracle _oracle,) = ProxyUtils.metadata();
         return address(_oracle);
+    }
+
+     /// @inheritdoc IGovernance
+    function convertFees() external virtual nonReentrant {
+        (MarketCache memory marketCache, address account) = initOperation(OP_CONVERT_FEES, ACCOUNTCHECK_NONE);
+
+        // Decrease totalShares because increaseBalance will increase it by that total amount
+        marketStorage.totalShares =
+            marketCache.totalShares = marketCache.totalShares - marketCache.feesBalance;
+
+        (address protocolReceiver, uint256 protocolFee) = protocolConfig.feeConfig(address(this));
+        address governorReceiver = marketStorage.feeReceiver;
+
+        if (governorReceiver == address(0)) protocolFee = 1e18; // governor forfeits fees
+        else if (protocolFee > MAX_PROTOCOL_FEE_SHARE) protocolFee = MAX_PROTOCOL_FEE_SHARE;
+
+
+        Shares governorShares = marketCache.feesBalance.mulDiv(1e18 - protocolFee, 1e18);
+        Shares protocolShares = marketCache.feesBalance - governorShares;
+        marketStorage.feesBalance = marketCache.feesBalance = Shares.wrap(0);
+
+        increaseBalance(
+            marketCache, governorReceiver, address(0), governorShares, governorShares.toAssetsDown(marketCache)
+        ); // TODO confirm address(0)
+        increaseBalance(
+            marketCache, protocolReceiver, address(0), protocolShares, protocolShares.toAssetsDown(marketCache)
+        );
+
+        emit ConvertFees(
+            account,
+            protocolReceiver,
+            governorReceiver,
+            protocolShares.toAssetsDown(marketCache).toUint(),
+            governorShares.toAssetsDown(marketCache).toUint()
+        );
     }
 
     /// @inheritdoc IGovernance

@@ -13,6 +13,7 @@ import "../shared/types/Types.sol";
 abstract contract RiskManagerModule is IRiskManager, Base, BorrowUtils {
     using TypesLib for uint256;
 
+    /// @inheritdoc IRiskManager
     function computeAccountLiquidity(address account) external virtual view returns (uint256 collateralValue, uint256 liabilityValue) {
         MarketCache memory marketCache = loadMarket();
 
@@ -26,12 +27,7 @@ abstract contract RiskManagerModule is IRiskManager, Base, BorrowUtils {
         );
     }
 
-    struct MarketLiquidity {
-        address market;
-        uint256 collateralValue;
-        uint256 liabilityValue;
-    }
-
+    /// @inheritdoc IRiskManager
     function computeAccountLiquidityPerMarket(address account) external virtual view returns (MarketLiquidity[] memory) {
         MarketCache memory marketCache = loadMarket();
 

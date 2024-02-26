@@ -4,10 +4,9 @@ pragma solidity ^0.8.0;
 
 import {Base} from "./shared/Base.sol";
 import {TokenModule} from "./modules/Token.sol";
-import {ERC4626Module} from "./modules/ERC4626.sol";
+import {VaultModule} from "./modules/Vault.sol";
 import {BorrowingModule} from "./modules/Borrowing.sol";
 import {LiquidationModule} from "./modules/Liquidation.sol";
-import {FeesModule} from "./modules/Fees.sol";
 import {InitializeModule} from "./modules/Initialize.sol";
 import {BalanceForwarderModule} from "./modules/BalanceForwarder.sol";
 import {ModuleDispatch} from "./modules/ModuleDispatch.sol";
@@ -18,20 +17,18 @@ contract EVault is
     ModuleDispatch,
     InitializeModule,
     TokenModule,
-    ERC4626Module,
+    VaultModule,
     BorrowingModule,
     LiquidationModule,
-    FeesModule,
     BalanceForwarderModule,
     GovernanceModule,
     RiskManagerModule
 {
     address immutable MODULE_INITIALIZE;
     address immutable MODULE_TOKEN;
-    address immutable MODULE_ERC4626;
+    address immutable MODULE_VAULT;
     address immutable MODULE_BORROWING;
     address immutable MODULE_LIQUIDATION;
-    address immutable MODULE_FEES;
     address immutable MODULE_BALANCE_FORWARDER;
     address immutable MODULE_GOVERNANCE;
     address immutable MODULE_RISKMANAGER;
@@ -42,20 +39,18 @@ contract EVault is
         address balanceTracker,
         address MODULE_INITIALIZE_,
         address MODULE_TOKEN_,
-        address MODULE_ERC4626_,
+        address MODULE_VAULT_,
         address MODULE_BORROWING_,
         address MODULE_LIQUIDATION_,
-        address MODULE_FEES_,
         address MODULE_BALANCE_FORWARDER_,
         address MODULE_GOVERNANCE_,
         address MODULE_RISKMANAGER_
     ) Base(evc, protocolConfig, balanceTracker) {
         MODULE_INITIALIZE = MODULE_INITIALIZE_;
         MODULE_TOKEN = MODULE_TOKEN_;
-        MODULE_ERC4626 = MODULE_ERC4626_;
+        MODULE_VAULT = MODULE_VAULT_;
         MODULE_BORROWING = MODULE_BORROWING_;
         MODULE_LIQUIDATION = MODULE_LIQUIDATION_;
-        MODULE_FEES = MODULE_FEES_;
         MODULE_BALANCE_FORWARDER = MODULE_BALANCE_FORWARDER_;
         MODULE_GOVERNANCE = MODULE_GOVERNANCE_;
         MODULE_RISKMANAGER = MODULE_RISKMANAGER_;
@@ -79,9 +74,8 @@ contract EVault is
 
     function balanceOf(address account) external view override useView(MODULE_TOKEN) returns (uint256) {}
 
-
-
     function allowance(address holder, address spender) external view override useView(MODULE_TOKEN) returns (uint256) {}
+
 
     function transfer(address to, uint256 amount) external override callThroughEVC use(MODULE_TOKEN) returns (bool) {}
 
@@ -93,41 +87,46 @@ contract EVault is
 
 
 
-    // ----------------- ERC4626 -----------------
+    // ----------------- Vault -----------------
 
-    function asset() external view override useView(MODULE_ERC4626) returns (address) {}
+    function asset() external view override useView(MODULE_VAULT) returns (address) {}
 
-    function totalAssets() external view override useView(MODULE_ERC4626) returns (uint256) {}
+    function totalAssets() external view override useView(MODULE_VAULT) returns (uint256) {}
 
-    function convertToAssets(uint256 shares) public view override useView(MODULE_ERC4626) returns (uint256) {}
+    function convertToAssets(uint256 shares) public view override useView(MODULE_VAULT) returns (uint256) {}
 
-    function convertToShares(uint256 assets) public view override useView(MODULE_ERC4626) returns (uint256) {}
+    function convertToShares(uint256 assets) public view override useView(MODULE_VAULT) returns (uint256) {}
 
-    function maxDeposit(address) public view override useView(MODULE_ERC4626) returns (uint256) {}
+    function maxDeposit(address) public view override useView(MODULE_VAULT) returns (uint256) {}
 
-    function previewDeposit(uint256 assets) external view override useView(MODULE_ERC4626) returns (uint256) {}
+    function previewDeposit(uint256 assets) external view override useView(MODULE_VAULT) returns (uint256) {}
 
-    function maxMint(address) external view override useView(MODULE_ERC4626) returns (uint256) {}
+    function maxMint(address) external view override useView(MODULE_VAULT) returns (uint256) {}
 
-    function previewMint(uint256 shares) external view override useView(MODULE_ERC4626) returns (uint256) {}
+    function previewMint(uint256 shares) external view override useView(MODULE_VAULT) returns (uint256) {}
 
-    function maxWithdraw(address owner) external view override useView(MODULE_ERC4626) returns (uint256) {}
+    function maxWithdraw(address owner) external view override useView(MODULE_VAULT) returns (uint256) {}
 
-    function previewWithdraw(uint256 assets) external view override useView(MODULE_ERC4626) returns (uint256) {}
+    function previewWithdraw(uint256 assets) external view override useView(MODULE_VAULT) returns (uint256) {}
 
-    function maxRedeem(address owner) public view override useView(MODULE_ERC4626) returns (uint256) {}
+    function maxRedeem(address owner) public view override useView(MODULE_VAULT) returns (uint256) {}
 
-    function previewRedeem(uint256 shares) external view override useView(MODULE_ERC4626) returns (uint256) {}
+    function previewRedeem(uint256 shares) external view override useView(MODULE_VAULT) returns (uint256) {}
+
+    function feesBalance() external view override useView(MODULE_VAULT) returns (uint256) {}
+
+    function feesBalanceAssets() external view override useView(MODULE_VAULT) returns (uint256) {}
 
 
+    function deposit(uint256 assets, address receiver) external override callThroughEVC use(MODULE_VAULT) returns (uint256) {}
 
-    function deposit(uint256 assets, address receiver) external override callThroughEVC use(MODULE_ERC4626) returns (uint256) {}
+    function mint(uint256 shares, address receiver) external override callThroughEVC use(MODULE_VAULT) returns (uint256) {}
 
-    function mint(uint256 shares, address receiver) external override callThroughEVC use(MODULE_ERC4626) returns (uint256) {}
+    function withdraw(uint256 assets, address receiver, address owner) external override callThroughEVC use(MODULE_VAULT) returns (uint256) {}
 
-    function withdraw(uint256 assets, address receiver, address owner) external override callThroughEVC use(MODULE_ERC4626) returns (uint256) {}
+    function redeem(uint256 shares, address receiver, address owner) external override callThroughEVC use(MODULE_VAULT) returns (uint256) {}
 
-    function redeem(uint256 shares, address receiver, address owner) external override callThroughEVC use(MODULE_ERC4626) returns (uint256) {}
+    function skimAssets() external override use(MODULE_VAULT) {}
 
 
 
@@ -154,7 +153,6 @@ contract EVault is
     function EVC() external view override useView(MODULE_BORROWING) returns (address) {}
 
 
-
     function borrow(uint256 assets, address receiver) external override callThroughEVC use(MODULE_BORROWING) {}
 
     function repay(uint256 assets, address receiver) external override callThroughEVC use(MODULE_BORROWING) {}
@@ -179,30 +177,12 @@ contract EVault is
 
 
 
-    // ----------------- Fees -----------------
-
-    function feesBalance() external view override useView(MODULE_FEES) returns (uint256) {}
-
-    function feesBalanceUnderlying() external view override useView(MODULE_FEES) returns (uint256) {}
-
-    function interestFee() external view override useView(MODULE_FEES) returns (uint16) {}
-
-    function protocolFeeShare() external view override useView(MODULE_FEES) returns (uint256) {}
-
-    function protocolFeeReceiver() external view override useView(MODULE_FEES) returns (address) {}
-
-
-    function convertFees() external override callThroughEVC use(MODULE_FEES) {}
-
-    function skimAssets() external override use(MODULE_FEES) {}
-
-
-
     // ----------------- Balance Forwarder -----------------
 
     function balanceTrackerAddress() external view useView(MODULE_BALANCE_FORWARDER) override returns (address) {}
 
     function balanceForwarderEnabled(address account) external view useView(MODULE_BALANCE_FORWARDER) override returns (bool) {}
+
 
     function enableBalanceForwarder() external override use(MODULE_BALANCE_FORWARDER) {}
 
@@ -213,6 +193,12 @@ contract EVault is
     // ----------------- Governance -----------------
 
     function governorAdmin() external override useView(MODULE_GOVERNANCE) view returns (address) {}
+
+    function interestFee() external view override useView(MODULE_GOVERNANCE) returns (uint16) {}
+
+    function protocolFeeShare() external view override useView(MODULE_GOVERNANCE) returns (uint256) {}
+
+    function protocolFeeReceiver() external view override useView(MODULE_GOVERNANCE) returns (address) {}
 
     function LTV(address collateral) external override useView(MODULE_GOVERNANCE) view returns (uint16) {}
 
@@ -230,6 +216,8 @@ contract EVault is
 
     function oracle() external override useView(MODULE_GOVERNANCE) view returns (address) {}
 
+
+    function convertFees() external override callThroughEVC use(MODULE_GOVERNANCE) {}
 
     function setName(string calldata newName) external override use(MODULE_GOVERNANCE) {}
 
@@ -253,13 +241,14 @@ contract EVault is
 
     // ----------------- RiskManager -----------------
 
+    function computeAccountLiquidity(address account) external override view useView(MODULE_RISKMANAGER) returns (uint256 collateralValue, uint256 liabilityValue) {}
+
+    function computeAccountLiquidityPerMarket(address account) external override view useView(MODULE_RISKMANAGER) returns (MarketLiquidity[] memory) {}
+
+
     function disableController() external override use(MODULE_RISKMANAGER) {}
 
     function checkAccountStatus(address account, address[] calldata collaterals) external override use(MODULE_RISKMANAGER) returns (bytes4) {}
 
     function checkVaultStatus() external override use(MODULE_RISKMANAGER) returns (bytes4) {}
-
-    function computeAccountLiquidity(address account) external override view useView(MODULE_RISKMANAGER) returns (uint256 collateralValue, uint256 liabilityValue) {}
-
-    function computeAccountLiquidityPerMarket(address account) external override view useView(MODULE_RISKMANAGER) returns (MarketLiquidity[] memory) {}
 }

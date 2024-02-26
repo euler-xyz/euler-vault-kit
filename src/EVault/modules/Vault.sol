@@ -2,7 +2,7 @@
 
 pragma solidity ^0.8.0;
 
-import {IERC4626, IEVault} from "../IEVault.sol";
+import {IVault, IEVault, IERC4626} from "../IEVault.sol";
 import {Base} from "../shared/Base.sol";
 import {BalanceUtils} from "../shared/BalanceUtils.sol";
 import {AssetTransfers} from "../shared/AssetTransfers.sol";
@@ -11,7 +11,7 @@ import {ProxyUtils} from "../shared/lib/ProxyUtils.sol";
 
 import "../shared/types/Types.sol";
 
-abstract contract ERC4626Module is IERC4626, Base, AssetTransfers, BalanceUtils {
+abstract contract VaultModule is IVault, Base, AssetTransfers, BalanceUtils {
     using TypesLib for uint256;
     using SafeERC20Lib for IERC20;
 
@@ -89,6 +89,19 @@ abstract contract ERC4626Module is IERC4626, Base, AssetTransfers, BalanceUtils 
         return convertToAssets(shares);
     }
 
+    /// @inheritdoc IVault
+    function feesBalance() external view virtual nonReentrantView returns (uint256) {
+        return loadMarket().feesBalance.toUint();
+    }
+
+    /// @inheritdoc IVault
+    function feesBalanceAssets() external view virtual nonReentrantView returns (uint256) {
+        MarketCache memory marketCache = loadMarket();
+
+        return marketCache.feesBalance.toAssetsDown(marketCache).toUint();
+    }
+
+
     /// @inheritdoc IERC4626
     function deposit(uint256 amount, address receiver) external virtual nonReentrant returns (uint256) {
         (MarketCache memory marketCache, address account) = initOperation(OP_DEPOSIT, ACCOUNTCHECK_NONE);
@@ -162,6 +175,24 @@ abstract contract ERC4626Module is IERC4626, Base, AssetTransfers, BalanceUtils 
         return assets.toUint();
     }
 
+    /// @inheritdoc IVault
+    function skimAssets() external virtual nonReentrant {
+        // TODO make it callable directly only, just to be double safe?
+        (address admin, address receiver) = protocolConfig.skimConfig(address(this));
+        if (msg.sender != admin) revert E_Unauthorized();
+        if (receiver == address(0) || receiver == address(this)) revert E_BadAddress();
+
+        (IERC20 _asset,,) = ProxyUtils.metadata();
+
+        uint256 balance = _asset.callBalanceOf(address(this));
+        uint256 poolSize = marketStorage.poolSize.toUint();
+        if (balance > poolSize) {
+            uint256 amount = balance - poolSize;
+            _asset.transfer(receiver, amount);
+            emit SkimAssets(admin, receiver, amount);
+        }
+    }
+
     function finalizeDeposit(
         MarketCache memory marketCache,
         Assets assets,
@@ -224,6 +255,6 @@ abstract contract ERC4626Module is IERC4626, Base, AssetTransfers, BalanceUtils 
     }
 }
 
-contract ERC4626 is ERC4626Module {
+contract Vault is VaultModule {
     constructor(address evc, address protocolConfig, address balanceTracker) Base(evc, protocolConfig, balanceTracker) {}
 }

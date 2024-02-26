@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 pragma solidity ^0.8.0;
 
-import {IVault} from "ethereum-vault-connector/interfaces/IVault.sol";
+import {IVault as IEVCVault} from "ethereum-vault-connector/interfaces/IVault.sol";
 
 // Protocol parameters
 
@@ -23,8 +23,8 @@ uint256 constant PROXY_METADATA_LENGTH = 60; // 3 addresses: asset, oracle, unit
 address constant ACCOUNTCHECK_NONE = address(0);
 address constant ACCOUNTCHECK_CALLER = address(1);
 
-bytes4 constant ACCOUNT_STATUS_CHECK_RETURN_VALUE = IVault.checkAccountStatus.selector;
-bytes4 constant VAULT_STATUS_CHECK_RETURN_VALUE = IVault.checkVaultStatus.selector;
+bytes4 constant ACCOUNT_STATUS_CHECK_RETURN_VALUE = IEVCVault.checkAccountStatus.selector;
+bytes4 constant VAULT_STATUS_CHECK_RETURN_VALUE = IEVCVault.checkVaultStatus.selector;
 
 uint256 constant VIRTUAL_DEPOSIT_AMOUNT = 1e6;
 

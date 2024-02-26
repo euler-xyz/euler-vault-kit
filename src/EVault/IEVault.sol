@@ -2,7 +2,7 @@
 
 pragma solidity ^0.8.0;
 
-import {IVault} from "ethereum-vault-connector/interfaces/IVault.sol";
+import {IVault as IEVCVault} from "ethereum-vault-connector/interfaces/IVault.sol";
 
 
 interface IInitialize {
@@ -131,6 +131,16 @@ interface IERC4626 {
     function redeem(uint256 shares, address receiver, address owner) external returns (uint256);
 }
 
+interface IVault is IERC4626 {
+    /// @notice Balance of the fees accumulator, in internal book-keeping units (non-increasing)
+    function feesBalance() external view returns (uint256);
+
+    /// @notice Balance of the fees accumulator, in underlying units (increases as interest is earned)
+    function feesBalanceAssets() external view returns (uint256);
+
+    function skimAssets() external;
+}
+
 interface IBorrowing {
     /// @notice Sum of all outstanding debts, in underlying units (increases as interest is accrued)
     function totalBorrows() external view returns (uint256);
@@ -223,28 +233,6 @@ interface ILiquidation {
         external;
 }
 
-interface IFees {
-    /// @notice Balance of the fees accumulator, in internal book-keeping units (non-increasing)
-    function feesBalance() external view returns (uint256);
-
-    /// @notice Balance of the fees accumulator, in underlying units (increases as interest is earned)
-    function feesBalanceUnderlying() external view returns (uint256);
-
-    /// @notice Retrieves the interest fee in effect for a market
-    /// @return Amount of interest that is redirected as a fee, as a fraction scaled by INTEREST_FEE_SCALE (4e9)
-    function interestFee() external view returns (uint16);
-
-    /// @notice Retrieves the protocol fee share
-    /// @return A percentage share of fees accrued belonging to the protocol. In wad scale (1e18)
-    function protocolFeeShare() external view returns (uint256);
-
-    function protocolFeeReceiver() external view returns (address);
-
-    function convertFees() external;
-
-    function skimAssets() external;
-}
-
 interface IBalanceForwarder {
     function balanceTrackerAddress() external view returns (address);
 
@@ -262,8 +250,17 @@ interface IBalanceForwarder {
 }
 
 interface IGovernance {
-    
     function governorAdmin() external view returns (address);
+
+    /// @notice Retrieves the interest fee in effect for a market
+    /// @return Amount of interest that is redirected as a fee, as a fraction scaled by INTEREST_FEE_SCALE (4e9)
+    function interestFee() external view returns (uint16);
+
+    /// @notice Retrieves the protocol fee share
+    /// @return A percentage share of fees accrued belonging to the protocol. In wad scale (1e18)
+    function protocolFeeShare() external view returns (uint256);
+
+    function protocolFeeReceiver() external view returns (address);
 
     /// @notice Retrieves LTV config for a collateral
     /// @param collateral Collateral asset
@@ -298,6 +295,8 @@ interface IGovernance {
     function oracle() external view returns (address);
 
 
+    function convertFees() external;
+
     function setName(string calldata newName) external;
 
     function setSymbol(string calldata newSymbol) external;
@@ -317,8 +316,17 @@ interface IGovernance {
     function setDebtSocialization(bool newValue) external;
 }
 
-interface IRiskManager is IVault {
-    // FIXME: missing funcs
+interface IRiskManager is IEVCVault {
+    struct MarketLiquidity {
+        address market;
+        uint256 collateralValue;
+        uint256 liabilityValue;
+    }
+
+    function computeAccountLiquidity(address account) external view returns (uint256 collateralValue, uint256 liabilityValue);
+
+    function computeAccountLiquidityPerMarket(address account) external view returns (MarketLiquidity[] memory);
+
 
     /// @notice Release control of the account on EVC if no outstanding debt is present
     function disableController() external;
@@ -337,4 +345,4 @@ interface IRiskManager is IVault {
     function checkVaultStatus() external returns (bytes4);
 }
 
-interface IEVault is IInitialize, IToken, IERC4626, IBorrowing, ILiquidation, IFees, IBalanceForwarder, IGovernance, IRiskManager {}
+interface IEVault is IInitialize, IToken, IVault, IBorrowing, ILiquidation, IBalanceForwarder, IGovernance, IRiskManager {}
