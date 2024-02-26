@@ -49,4 +49,5 @@ uint32 constant OP_UNWIND = 1 << 8;
 uint32 constant OP_PULL_DEBT = 1 << 9;
 uint32 constant OP_CONVERT_FEES = 1 << 10;
 uint32 constant OP_LIQUIDATE = 1 << 11;
-uint32 constant OP_TOUCH = 1 << 12;
+uint32 constant OP_FLASHLOAN = 1 << 12;
+uint32 constant OP_TOUCH = 1 << 13;
