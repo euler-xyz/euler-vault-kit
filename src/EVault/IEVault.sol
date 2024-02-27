@@ -323,9 +323,9 @@ interface IRiskManager is IEVCVault {
         uint256 liabilityValue;
     }
 
-    function computeAccountLiquidity(address account) external view returns (uint256 collateralValue, uint256 liabilityValue);
+    function computeAccountLiquidity(address account, bool liquidation) external view returns (uint256 collateralValue, uint256 liabilityValue);
 
-    function computeAccountLiquidityPerMarket(address account) external view returns (MarketLiquidity[] memory);
+    function computeAccountLiquidityPerMarket(address account, bool liquidation) external view returns (MarketLiquidity[] memory);
 
 
     /// @notice Release control of the account on EVC if no outstanding debt is present

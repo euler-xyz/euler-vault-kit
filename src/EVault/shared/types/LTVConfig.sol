@@ -14,7 +14,11 @@ library LTVConfigLib {
         return self.targetTimestamp != 0;
     }
 
-    function getLTV(LTVConfig memory self) internal view returns (uint16) {
+    function getLTV(LTVConfig memory self) internal pure returns (uint16) {
+        return self.targetLTV;
+    }
+
+    function getRampedLTV(LTVConfig memory self) internal view returns (uint16) {
         if (block.timestamp >= self.targetTimestamp) return self.targetLTV;
 
         uint256 timeElapsed = block.timestamp - self.targetTimestamp - self.rampDuration;
