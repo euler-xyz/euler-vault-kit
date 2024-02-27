@@ -61,6 +61,7 @@ contract Errors {
     error E_VaultStatusCheckDeferred();
     error E_BadBorrowCap();
     error E_BadSupplyCap();
+    error E_BadCollateral();
 
     // FIXME: normalise these to E_ namespace
 

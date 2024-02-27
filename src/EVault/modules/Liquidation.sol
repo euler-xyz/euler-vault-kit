@@ -86,6 +86,7 @@ abstract contract LiquidationModule is ILiquidation, Base, BalanceUtils, BorrowU
         if (liqCache.violator == liqCache.liquidator) revert E_SelfLiquidation();
         if (getController(liqCache.violator) != address(this)) revert E_ControllerDisabled();
         if (!isCollateralEnabled(liqCache.violator, liqCache.collateral)) revert E_CollateralDisabled();
+        if (ltvLookup[liqCache.collateral].getLTV() == 0) revert E_BadCollateral();
 
 
         Assets owed = getCurrentOwed(marketCache, violator).toAssetsUp();
