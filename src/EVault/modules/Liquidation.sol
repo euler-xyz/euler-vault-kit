@@ -19,6 +19,7 @@ abstract contract LiquidationModule is ILiquidation, Base, BalanceUtils, BorrowU
         address collateral;
         address[] collaterals;
         bool debtSocialization;
+        Assets owed;
 
         Assets repay;
         uint256 yieldBalance;
@@ -89,13 +90,13 @@ abstract contract LiquidationModule is ILiquidation, Base, BalanceUtils, BorrowU
         if (ltvLookup[liqCache.collateral].getLTV() == 0) revert E_BadCollateral();
 
 
-        Assets owed = getCurrentOwed(marketCache, violator).toAssetsUp();
+        liqCache.owed = getCurrentOwed(marketCache, violator).toAssetsUp();
         // violator has no liabilities
-        if (owed.isZero()) return liqCache;
+        if (liqCache.owed.isZero()) return liqCache;
 
         liqCache.collaterals = IEVC(evc).getCollaterals(violator);
 
-        liqCache = calculateMaxLiquidation(liqCache, marketCache, owed);
+        liqCache = calculateMaxLiquidation(liqCache, marketCache);
         if (liqCache.repay.isZero()) return liqCache;
 
         // Adjust for desired repay
@@ -111,8 +112,7 @@ abstract contract LiquidationModule is ILiquidation, Base, BalanceUtils, BorrowU
 
     function calculateMaxLiquidation(
         LiquidationCache memory liqCache,
-        MarketCache memory marketCache,
-        Assets owed
+        MarketCache memory marketCache
     ) private view returns (LiquidationCache memory) {
         (uint256 liquidityCollateralValue, uint256 liquidityLiabilityValue) = computeLiquidity(marketCache, liqCache.violator, liqCache.collaterals);
 
@@ -134,12 +134,15 @@ abstract contract LiquidationModule is ILiquidation, Base, BalanceUtils, BorrowU
         uint256 collateralBalance = IERC20(liqCache.collateral).balanceOf(liqCache.violator);
         uint256 collateralValue = marketCache.oracle.getQuote(collateralBalance, liqCache.collateral, marketCache.unitOfAccount);
 
+        // no collateral balance, or worthless collateral
+        if (collateralValue == 0) return liqCache;
+
         uint256 liabilityValue;
         if (address(marketCache.asset) == marketCache.unitOfAccount) {
-            liabilityValue = owed.toUint();
+            liabilityValue = liqCache.owed.toUint();
         } else {
             // liquidation, in contract to liquidity calculation, uses mid-point pricing instead of bid/ask
-            liabilityValue = marketCache.oracle.getQuote(owed.toUint(), address(marketCache.asset), marketCache.unitOfAccount);
+            liabilityValue = marketCache.oracle.getQuote(liqCache.owed.toUint(), address(marketCache.asset), marketCache.unitOfAccount);
         }
 
         uint256 maxRepayValue = liabilityValue;
@@ -153,7 +156,7 @@ abstract contract LiquidationModule is ILiquidation, Base, BalanceUtils, BorrowU
             maxYieldValue = collateralValue;
         }
 
-        liqCache.repay = (maxRepayValue * owed.toUint() / liabilityValue).toAssets();
+        liqCache.repay = (maxRepayValue * liqCache.owed.toUint() / liabilityValue).toAssets();
         liqCache.yieldBalance = maxYieldValue * collateralBalance / collateralValue;
         liqCache.debtSocialization = marketStorage.debtSocialization;
 
@@ -193,11 +196,11 @@ abstract contract LiquidationModule is ILiquidation, Base, BalanceUtils, BorrowU
         transferBorrow(marketCache, liqCache.violator, liqCache.liquidator, liqCache.repay);
 
         // Handle debt socialization
-        if (liqCache.debtSocialization) {
+        if (liqCache.owed > liqCache.repay && liqCache.debtSocialization) {
             (uint256 collateralValue,) = computeLiquidity(marketCache, liqCache.violator, liqCache.collaterals);
 
             if (collateralValue == 0) {
-                Assets owedRemaining = getCurrentOwed(marketCache, liqCache.violator).toAssetsUp();
+                Assets owedRemaining = liqCache.owed - liqCache.repay;
                 decreaseBorrow(marketCache, liqCache.violator, owedRemaining);
 
                 // decreaseBorrow emits Repay without any assets entering the vault. Emit Withdraw from and to zero address to cover the missing amount for offchain trackers.
