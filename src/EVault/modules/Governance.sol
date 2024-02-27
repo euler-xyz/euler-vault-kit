@@ -11,7 +11,7 @@ import "../shared/types/Types.sol";
 
 abstract contract GovernanceModule is IGovernance, Base, BalanceUtils {
     modifier governorOnly() {
-        if (msg.sender != marketStorage.governorAdmin) revert RM_Unauthorized();
+        if (msg.sender != marketStorage.governorAdmin) revert E_Unauthorized();
         _;
     }
 
@@ -141,7 +141,7 @@ abstract contract GovernanceModule is IGovernance, Base, BalanceUtils {
     /// @inheritdoc IGovernance
     function setLTV(address collateral, uint16 ltv, uint24 rampDuration) external virtual nonReentrant governorOnly {
         MarketCache memory marketCache = loadMarket();
-        if (collateral == address(marketCache.asset)) revert RM_InvalidLTVAsset();
+        if (collateral == address(marketCache.asset)) revert E_InvalidLTVAsset();
 
         LTVConfig memory origLTV = ltvLookup[collateral].setLTV(ltv, rampDuration);
         LTVConfig memory newLTV = origLTV.setLTV(ltv, rampDuration);
@@ -180,11 +180,11 @@ abstract contract GovernanceModule is IGovernance, Base, BalanceUtils {
 
     /// @inheritdoc IGovernance
     function setInterestFee(uint16 newInterestFee) external virtual nonReentrant governorOnly {
-        if (newInterestFee > CONFIG_SCALE) revert RM_BadFee();
+        if (newInterestFee > CONFIG_SCALE) revert E_BadFee();
 
         if (newInterestFee == marketStorage.interestFee) return;
 
-        if (!protocolConfig.isValidInterestFee(address(this), newInterestFee)) revert RM_BadFee();
+        if (!protocolConfig.isValidInterestFee(address(this), newInterestFee)) revert E_BadFee();
 
         marketStorage.interestFee = newInterestFee;
 

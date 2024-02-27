@@ -63,26 +63,13 @@ contract Errors {
     error E_BadSupplyCap();
     error E_BadCollateral();
 
-    // FIXME: normalise these to E_ namespace
-
-    error RM_Unauthorized();
-    error RM_AccountLiquidity();
-    error RM_MarketActivated();
-    error RM_InvalidUnderlying();
-
-    error RM_NoLiability();
-    error RM_NotController();
-    error RM_EmptyError();
-    error RM_ExcessiveRepay();
-    error RM_ExcessiveYield();
-    error RM_InsufficientBalance();
-    error RM_BadFee();
-    error RM_ExcessiveRepayAmount();
-    error RM_TransientState();
+    error E_AccountLiquidity();
+    error E_NoLiability();
+    error E_NotController();
+    error E_BadFee();
     error E_InvalidAmountCap();
     error E_SupplyCapExceeded();
     error E_BorrowCapExceeded();
-    error RM_InvalidLiquidationState();
-    error RM_InvalidLTVAsset();
+    error E_InvalidLTVAsset();
     error E_NoPriceOracle();
 }

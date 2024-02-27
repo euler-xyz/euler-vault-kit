@@ -82,7 +82,7 @@ contract ERC4626Test_Caps is EVaultTestBase {
 
     function test_SetMarketPolicy_AccessControl(address caller) public {
         vm.assume(caller != eTST.governorAdmin());
-        vm.expectRevert(Errors.RM_Unauthorized.selector);
+        vm.expectRevert(Errors.E_Unauthorized.selector);
         vm.prank(caller);
         eTST.setMarketPolicy(0, 0, 0);
     }

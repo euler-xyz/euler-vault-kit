@@ -102,7 +102,7 @@ abstract contract LiquidationModule is ILiquidation, Base, BalanceUtils, BorrowU
 
         if (desiredRepay != type(uint256).max) {
             uint256 maxRepay = liqCache.repay.toUint();
-            if (desiredRepay > maxRepay) revert RM_ExcessiveRepayAmount();
+            if (desiredRepay > maxRepay) revert E_ExcessiveRepayAmount();
 
             liqCache.yieldBalance = desiredRepay * liqCache.yieldBalance / maxRepay;
             liqCache.repay = desiredRepay.toAssets();

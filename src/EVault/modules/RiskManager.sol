@@ -92,7 +92,7 @@ abstract contract RiskManagerModule is IRiskManager, Base, BorrowUtils {
         if (!marketStorage.users[account].getOwed().isZero()) {
             MarketCache memory marketCache = loadMarket();
             (uint256 collateralValue, uint256 liabilityValue) = computeLiquidity(marketCache, account, collaterals);
-            if (collateralValue < liabilityValue) revert RM_AccountLiquidity();
+            if (collateralValue < liabilityValue) revert E_AccountLiquidity();
         }
 
         magicValue = ACCOUNT_STATUS_CHECK_RETURN_VALUE;
@@ -159,9 +159,9 @@ abstract contract RiskManagerModule is IRiskManager, Base, BorrowUtils {
     function verifyController(address account) private view {
         address[] memory controllers = IEVC(evc).getControllers(account);
 
-        if (controllers.length > 1) revert RM_TransientState();
-        if (controllers.length == 0) revert RM_NoLiability();
-        if (controllers[0] != address(this)) revert RM_NotController();
+        if (controllers.length > 1) revert E_TransientState();
+        if (controllers.length == 0) revert E_NoLiability();
+        if (controllers[0] != address(this)) revert E_NotController();
     }
 }
 
