@@ -18,9 +18,12 @@ abstract contract BorrowUtils is Base {
     {
         uint256 owed = getCurrentOwed(marketCache, account).toAssetsUp().toUint();
 
-        liabilityValue = address(marketCache.asset) == marketCache.unitOfAccount ?
-            owed :
-            marketCache.oracle.getQuote(owed, address(marketCache.asset), marketCache.unitOfAccount);
+        if (address(marketCache.asset) == marketCache.unitOfAccount) {
+            liabilityValue = owed;
+        } else {
+            // ask price for liability
+            (, liabilityValue) = marketCache.oracle.getQuotes(owed, address(marketCache.asset), marketCache.unitOfAccount);
+        }
 
         for (uint256 i; i < collaterals.length; ++i) {
             address collateral = collaterals[i];
@@ -30,7 +33,8 @@ abstract contract BorrowUtils is Base {
             uint256 balance = IERC20(collateral).balanceOf(account); // TODO low level and read directly for self?
             if (balance == 0) continue;
 
-            uint256 currentCollateralValue = marketCache.oracle.getQuote(balance, collateral, marketCache.unitOfAccount);
+            // bid price for collateral
+            (uint256 currentCollateralValue,) = marketCache.oracle.getQuotes(balance, collateral, marketCache.unitOfAccount);
 
             collateralValue += currentCollateralValue * ltv / CONFIG_SCALE;
         }

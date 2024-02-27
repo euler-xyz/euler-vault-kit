@@ -112,17 +112,17 @@ abstract contract LiquidationModule is ILiquidation, Base, BalanceUtils, BorrowU
         LiquidationCache memory liqCache,
         MarketCache memory marketCache,
         Assets owed
-    ) private view returns (LiquidationCache memory){
-        (uint256 totalCollateralValueRiskAdjusted, uint256 liabilityValue) = computeLiquidity(marketCache, liqCache.violator, liqCache.collaterals);
+    ) private view returns (LiquidationCache memory) {
+        (uint256 liquidityCollateralValue, uint256 liquidityLiabilityValue) = computeLiquidity(marketCache, liqCache.violator, liqCache.collaterals);
 
         // no violation
-        if (totalCollateralValueRiskAdjusted >= liabilityValue) return liqCache;
+        if (liquidityCollateralValue >= liquidityLiabilityValue) return liqCache;
 
         // At this point healthScore must be < 1 since collateral < liability
 
         // Compute discount
 
-        uint256 discountFactor = totalCollateralValueRiskAdjusted * 1e18 / liabilityValue; // 1 - health score
+        uint256 discountFactor = liquidityCollateralValue * 1e18 / liquidityLiabilityValue; // 1 - health score
 
         if (discountFactor < 1e18 - MAXIMUM_LIQUIDATION_DISCOUNT) {
             discountFactor = 1e18 - MAXIMUM_LIQUIDATION_DISCOUNT;
@@ -131,10 +131,14 @@ abstract contract LiquidationModule is ILiquidation, Base, BalanceUtils, BorrowU
         // Compute maximum yield
 
         uint256 collateralBalance = IERC20(liqCache.collateral).balanceOf(liqCache.violator);
-        uint256 collateralValue;
-        {
-            liqCache.debtSocialization = marketStorage.debtSocialization;
-            collateralValue = marketCache.oracle.getQuote(collateralBalance, liqCache.collateral, marketCache.unitOfAccount);
+        uint256 collateralValue = marketCache.oracle.getQuote(collateralBalance, liqCache.collateral, marketCache.unitOfAccount);
+
+        uint256 liabilityValue;
+        if (address(marketCache.asset) == marketCache.unitOfAccount) {
+            liabilityValue = owed.toUint();
+        } else {
+            // liquidation, in contract to liquidity calculation, uses mid-point pricing instead of bid/ask
+            liabilityValue = marketCache.oracle.getQuote(owed.toUint(), address(marketCache.asset), marketCache.unitOfAccount);
         }
 
         uint256 maxRepayValue = liabilityValue;
@@ -150,6 +154,7 @@ abstract contract LiquidationModule is ILiquidation, Base, BalanceUtils, BorrowU
 
         liqCache.repay = (maxRepayValue * owed.toUint() / liabilityValue).toAssets();
         liqCache.yieldBalance = maxYieldValue * collateralBalance / collateralValue;
+        liqCache.debtSocialization = marketStorage.debtSocialization;
 
         return liqCache;
     }
