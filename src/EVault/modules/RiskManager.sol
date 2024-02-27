@@ -89,9 +89,8 @@ abstract contract RiskManagerModule is IRiskManager, Base, BorrowUtils {
         onlyEVCChecks
         returns (bytes4 magicValue)
     {
-        MarketCache memory marketCache = loadMarket();
-
         if (!marketStorage.users[account].getOwed().isZero()) {
+            MarketCache memory marketCache = loadMarket();
             (uint256 collateralValue, uint256 liabilityValue) = computeLiquidity(marketCache, account, collaterals);
             if (collateralValue < liabilityValue) revert RM_AccountLiquidity();
         }
