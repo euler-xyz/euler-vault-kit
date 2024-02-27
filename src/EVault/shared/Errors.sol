@@ -83,4 +83,5 @@ contract Errors {
     error E_BorrowCapExceeded();
     error RM_InvalidLiquidationState();
     error RM_InvalidLTVAsset();
+    error E_NoPriceOracle();
 }

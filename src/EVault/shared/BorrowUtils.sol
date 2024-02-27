@@ -16,6 +16,8 @@ abstract contract BorrowUtils is Base {
         view
         returns (uint256 collateralValue, uint256 liabilityValue)
     {
+        if (address(marketCache.oracle) == address(0)) revert E_NoPriceOracle();
+
         uint256 owed = getCurrentOwed(marketCache, account).toAssetsUp().toUint();
 
         if (address(marketCache.asset) == marketCache.unitOfAccount) {
