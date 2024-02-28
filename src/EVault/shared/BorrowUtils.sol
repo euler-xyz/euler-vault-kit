@@ -11,37 +11,6 @@ import "./types/Types.sol";
 abstract contract BorrowUtils is Base {
     using TypesLib for uint256;
 
-    function computeLiquidity(MarketCache memory marketCache, address account, address[] memory collaterals)
-        internal
-        view
-        returns (uint256 collateralValue, uint256 liabilityValue)
-    {
-        if (address(marketCache.oracle) == address(0)) revert E_NoPriceOracle();
-
-        uint256 owed = getCurrentOwed(marketCache, account).toAssetsUp().toUint();
-
-        if (address(marketCache.asset) == marketCache.unitOfAccount) {
-            liabilityValue = owed;
-        } else {
-            // ask price for liability
-            (, liabilityValue) = marketCache.oracle.getQuotes(owed, address(marketCache.asset), marketCache.unitOfAccount);
-        }
-
-        for (uint256 i; i < collaterals.length; ++i) {
-            address collateral = collaterals[i];
-            uint256 ltv = ltvLookup[collateral].getLTV();
-            if (ltv == 0) continue;
-
-            uint256 balance = IERC20(collateral).balanceOf(account); // TODO low level and read directly for self?
-            if (balance == 0) continue;
-
-            // bid price for collateral
-            (uint256 currentCollateralValue,) = marketCache.oracle.getQuotes(balance, collateral, marketCache.unitOfAccount);
-
-            collateralValue += currentCollateralValue * ltv / CONFIG_SCALE;
-        }
-    }
-
     function getCurrentOwed(MarketCache memory marketCache, address account, Owed owed) internal view returns (Owed) {
         // Don't bother loading the user's accumulator
         if (owed.isZero()) return Owed.wrap(0);

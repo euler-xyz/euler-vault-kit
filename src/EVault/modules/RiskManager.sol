@@ -4,31 +4,32 @@ pragma solidity ^0.8.0;
 
 import {IRiskManager, IEVault} from "../IEVault.sol";
 import {Base} from "../shared/Base.sol";
-import {BorrowUtils} from "../shared/BorrowUtils.sol";
+import {LiquidityUtils} from "../shared/LiquidityUtils.sol";
 import {IEVC} from "ethereum-vault-connector/interfaces/IEthereumVaultConnector.sol";
 import "../../interestRateModels/IIRM.sol";
 
 import "../shared/types/Types.sol";
 
-abstract contract RiskManagerModule is IRiskManager, Base, BorrowUtils {
+abstract contract RiskManagerModule is IRiskManager, Base, LiquidityUtils {
     using TypesLib for uint256;
 
     /// @inheritdoc IRiskManager
-    function computeAccountLiquidity(address account) external virtual view returns (uint256 collateralValue, uint256 liabilityValue) {
+    function computeAccountLiquidity(address account, bool liquidation) external virtual view returns (uint256 collateralValue, uint256 liabilityValue) {
         MarketCache memory marketCache = loadMarket();
 
         verifyController(account);
         address[] memory collaterals = IEVC(evc).getCollaterals(account);
 
-        return computeLiquidity(
+        return liquidityCalculate(
             marketCache,
             account,
-            collaterals
+            collaterals,
+            liquidation
         );
     }
 
     /// @inheritdoc IRiskManager
-    function computeAccountLiquidityPerMarket(address account) external virtual view returns (MarketLiquidity[] memory) {
+    function computeAccountLiquidityPerMarket(address account, bool liquidation) external virtual view returns (MarketLiquidity[] memory) {
         MarketCache memory marketCache = loadMarket();
 
         verifyController(account);
@@ -51,7 +52,7 @@ abstract contract RiskManagerModule is IRiskManager, Base, BorrowUtils {
             singleCollateral[0] = collaterals[i];
 
             (output[i].collateralValue, output[i].liabilityValue) =
-                computeLiquidity(marketCache, account, singleCollateral);
+                liquidityCalculate(marketCache, account, singleCollateral, liquidation);
             if (collaterals[i] != address(this)) output[i].liabilityValue = 0;
         }
 
@@ -62,7 +63,7 @@ abstract contract RiskManagerModule is IRiskManager, Base, BorrowUtils {
 
             output[index].market = address(this);
             (output[index].collateralValue, output[index].liabilityValue) =
-                computeLiquidity(marketCache, account, singleCollateral);
+                liquidityCalculate(marketCache, account, singleCollateral, liquidation);
         }
 
         return output;
@@ -89,11 +90,7 @@ abstract contract RiskManagerModule is IRiskManager, Base, BorrowUtils {
         onlyEVCChecks
         returns (bytes4 magicValue)
     {
-        if (!marketStorage.users[account].getOwed().isZero()) {
-            MarketCache memory marketCache = loadMarket();
-            (uint256 collateralValue, uint256 liabilityValue) = computeLiquidity(marketCache, account, collaterals);
-            if (collateralValue < liabilityValue) revert E_AccountLiquidity();
-        }
+        liquidityCheck(account, collaterals);
 
         magicValue = ACCOUNT_STATUS_CHECK_RETURN_VALUE;
     }

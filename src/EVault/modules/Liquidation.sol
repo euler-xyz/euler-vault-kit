@@ -5,12 +5,12 @@ pragma solidity ^0.8.0;
 import {ILiquidation} from "../IEVault.sol";
 import {Base} from "../shared/Base.sol";
 import {BalanceUtils} from "../shared/BalanceUtils.sol";
-import {BorrowUtils} from "../shared/BorrowUtils.sol";
+import {LiquidityUtils} from "../shared/LiquidityUtils.sol";
 import {IEVC} from "ethereum-vault-connector/interfaces/IEthereumVaultConnector.sol";
 
 import "../shared/types/Types.sol";
 
-abstract contract LiquidationModule is ILiquidation, Base, BalanceUtils, BorrowUtils {
+abstract contract LiquidationModule is ILiquidation, Base, BalanceUtils, LiquidityUtils {
     using TypesLib for uint256;
 
     struct LiquidationCache {
@@ -87,7 +87,8 @@ abstract contract LiquidationModule is ILiquidation, Base, BalanceUtils, BorrowU
         if (liqCache.violator == liqCache.liquidator) revert E_SelfLiquidation();
         if (getController(liqCache.violator) != address(this)) revert E_ControllerDisabled();
         if (!isCollateralEnabled(liqCache.violator, liqCache.collateral)) revert E_CollateralDisabled();
-        if (ltvLookup[liqCache.collateral].getLTV() == 0) revert E_BadCollateral();
+        // critical safety check - only liquidate approved collaterals
+        if (ltvLookup[liqCache.collateral].getRampedLTV() == 0) revert E_BadCollateral();
 
 
         liqCache.owed = getCurrentOwed(marketCache, violator).toAssetsUp();
@@ -114,7 +115,7 @@ abstract contract LiquidationModule is ILiquidation, Base, BalanceUtils, BorrowU
         LiquidationCache memory liqCache,
         MarketCache memory marketCache
     ) private view returns (LiquidationCache memory) {
-        (uint256 liquidityCollateralValue, uint256 liquidityLiabilityValue) = computeLiquidity(marketCache, liqCache.violator, liqCache.collaterals);
+        (uint256 liquidityCollateralValue, uint256 liquidityLiabilityValue) = liquidityCalculate(marketCache, liqCache.violator, liqCache.collaterals, true);
 
         // no violation
         if (liquidityCollateralValue >= liquidityLiabilityValue) return liqCache;
@@ -197,9 +198,7 @@ abstract contract LiquidationModule is ILiquidation, Base, BalanceUtils, BorrowU
 
         // Handle debt socialization
         if (liqCache.owed > liqCache.repay && liqCache.debtSocialization) {
-            (uint256 collateralValue,) = computeLiquidity(marketCache, liqCache.violator, liqCache.collaterals);
-
-            if (collateralValue == 0) {
+            if (liquidityNoCollateralExists(liqCache.violator, liqCache.collaterals)) {
                 Assets owedRemaining = liqCache.owed - liqCache.repay;
                 decreaseBorrow(marketCache, liqCache.violator, owedRemaining);
 

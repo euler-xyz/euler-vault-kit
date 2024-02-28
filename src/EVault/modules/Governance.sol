@@ -43,6 +43,22 @@ abstract contract GovernanceModule is IGovernance, Base, BalanceUtils {
     }
 
     /// @inheritdoc IGovernance
+    function LTVRamped(address collateral) external virtual view returns (uint16) {
+        return ltvLookup[collateral].getRampedLTV();
+    }
+
+    /// @inheritdoc IGovernance
+    function LTVFull(address collateral) external virtual view returns (uint40, uint16, uint24, uint16) {
+        LTVConfig memory ltv = ltvLookup[collateral];
+        return (
+            ltv.targetTimestamp,
+            ltv.targetLTV,
+            ltv.rampDuration,
+            ltv.originalLTV
+        );
+    }
+
+    /// @inheritdoc IGovernance
     function LTVList() external virtual view returns (address[] memory) {
         return ltvList;
     }
@@ -143,14 +159,15 @@ abstract contract GovernanceModule is IGovernance, Base, BalanceUtils {
         MarketCache memory marketCache = loadMarket();
         if (collateral == address(marketCache.asset)) revert E_InvalidLTVAsset();
 
-        LTVConfig memory origLTV = ltvLookup[collateral].setLTV(ltv, rampDuration);
+        // LTVConfig memory origLTV = ltvLookup[collateral].setLTV(ltv, rampDuration); // TODO should it setLTV? then it's initialized always. Correcting below
+        LTVConfig memory origLTV = ltvLookup[collateral];
         LTVConfig memory newLTV = origLTV.setLTV(ltv, rampDuration);
 
         ltvLookup[collateral] = newLTV;
 
         if (!origLTV.initialised()) ltvList.push(collateral);
 
-        emit GovSetLTV(collateral, newLTV);
+        emit GovSetLTV(collateral, newLTV.targetTimestamp, newLTV.targetLTV, newLTV.rampDuration, newLTV.originalLTV);
     }
 
     /// @inheritdoc IGovernance

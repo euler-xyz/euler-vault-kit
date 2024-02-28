@@ -54,7 +54,7 @@ abstract contract Events {
     event GovSetSymbol(string newSymbol);
     event GovSetGovernorAdmin(address indexed newGovernorAdmin);
     event GovSetFeeReceiver(address indexed newFeeReceiver);
-    event GovSetLTV(address indexed collateral, LTVConfig newLTV);
+    event GovSetLTV(address indexed collateral, uint40 targetTimestamp, uint16 targetLTV, uint24 rampDuration, uint16 originalLTV);
     event GovSetIRM(address interestRateModel, bytes resetParams);
     event GovSetOracle(address oracle);
     event GovSetMarketPolicy(uint32 newDisabledOps, uint16 newSupplyCap, uint16 newBorrowCap);

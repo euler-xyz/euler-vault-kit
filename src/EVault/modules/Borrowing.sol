@@ -5,7 +5,7 @@ pragma solidity ^0.8.0;
 import {IBorrowing} from "../IEVault.sol";
 import {Base} from "../shared/Base.sol";
 import {BalanceUtils} from "../shared/BalanceUtils.sol";
-import {BorrowUtils} from "../shared/BorrowUtils.sol";
+import {LiquidityUtils} from "../shared/LiquidityUtils.sol";
 import {AssetTransfers} from "../shared/AssetTransfers.sol";
 import {SafeERC20Lib} from "../shared/lib/SafeERC20Lib.sol";
 import {ProxyUtils} from "../shared/lib/ProxyUtils.sol";
@@ -19,7 +19,7 @@ interface IFlashLoan {
     function onFlashLoan(bytes memory data) external;
 }
 
-abstract contract BorrowingModule is IBorrowing, Base, AssetTransfers, BalanceUtils, BorrowUtils {
+abstract contract BorrowingModule is IBorrowing, Base, AssetTransfers, BalanceUtils, LiquidityUtils {
     using TypesLib for uint256;
     using SafeERC20Lib for IERC20;
 
@@ -81,7 +81,7 @@ abstract contract BorrowingModule is IBorrowing, Base, AssetTransfers, BalanceUt
 
         address[] memory collaterals = getCollaterals(account);
         MarketCache memory marketCache = loadMarket();
-        (uint256 totalCollateralValueRA, uint256 liabilityValue) = computeLiquidity(marketCache, account, collaterals);
+        (uint256 totalCollateralValueRiskAdjusted, uint256 liabilityValue) = liquidityCalculate(marketCache, account, collaterals, false);
 
         // if there is no liability or it has no value, collateral will not be locked
         if (liabilityValue == 0) return 0;
@@ -89,7 +89,7 @@ abstract contract BorrowingModule is IBorrowing, Base, AssetTransfers, BalanceUt
         uint256 collateralBalance = IERC20(collateral).balanceOf(account);
 
         // if account is not healthy, all of the collateral will be locked
-        if (liabilityValue >= totalCollateralValueRA) {
+        if (liabilityValue >= totalCollateralValueRiskAdjusted) {
             return collateralBalance;
         }
 
@@ -98,7 +98,7 @@ abstract contract BorrowingModule is IBorrowing, Base, AssetTransfers, BalanceUt
         if (ltv == 0) return 0;
 
         // calculate extra collateral value in terms of requested collateral shares (balance)
-        uint256 extraCollateralValue = (totalCollateralValueRA - liabilityValue) * CONFIG_SCALE / ltv;
+        uint256 extraCollateralValue = (totalCollateralValueRiskAdjusted - liabilityValue) * CONFIG_SCALE / ltv;
 
         uint256 extraCollateralBalance;
         {

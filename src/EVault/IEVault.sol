@@ -262,10 +262,21 @@ interface IGovernance {
 
     function protocolFeeReceiver() external view returns (address);
 
-    /// @notice Retrieves LTV config for a collateral
+    /// @notice Retrieves regular LTV set for the collateral, which is used to determine the health of the account
     /// @param collateral Collateral asset
-    /// @return LTV set for the collateral
     function LTV(address collateral) external view returns (uint16);
+
+    /// @notice Retrieves current ramped value of LTV, which is used to determine liquidation penalty
+    /// @param collateral Collateral asset
+    function LTVRamped(address collateral) external view returns (uint16);
+
+    /// @notice Retrieves LTV detailed config for a collateral
+    /// @param collateral Collateral asset
+    /// @return targetTimestamp the timestamp when the ramp ends
+    /// @return targetLTV current regular LTV or target LTV that the ramped LTV will reach after ramp is over
+    /// @return rampDuration ramp duration in seconds
+    /// @return originalLTV previous LTV value, where the ramp starts
+    function LTVFull(address collateral) external view returns (uint40 targetTimestamp, uint16 targetLTV, uint24 rampDuration, uint16 originalLTV);
 
     /// @notice Retrieves a list of collaterals with configured LTVs
     /// @return List of asset collaterals
@@ -323,9 +334,9 @@ interface IRiskManager is IEVCVault {
         uint256 liabilityValue;
     }
 
-    function computeAccountLiquidity(address account) external view returns (uint256 collateralValue, uint256 liabilityValue);
+    function computeAccountLiquidity(address account, bool liquidation) external view returns (uint256 collateralValue, uint256 liabilityValue);
 
-    function computeAccountLiquidityPerMarket(address account) external view returns (MarketLiquidity[] memory);
+    function computeAccountLiquidityPerMarket(address account, bool liquidation) external view returns (MarketLiquidity[] memory);
 
 
     /// @notice Release control of the account on EVC if no outstanding debt is present
