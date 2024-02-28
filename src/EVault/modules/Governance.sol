@@ -194,7 +194,6 @@ abstract contract GovernanceModule is IGovernance, Base, BalanceUtils {
         MarketCache memory marketCache = loadMarket();
         if (collateral == address(marketCache.asset)) revert E_InvalidLTVAsset();
 
-        // LTVConfig memory origLTV = ltvLookup[collateral].setLTV(ltv, rampDuration); // TODO should it setLTV? then it's initialized always. Correcting below
         LTVConfig memory origLTV = ltvLookup[collateral];
         LTVConfig memory newLTV = origLTV.setLTV(ltv, rampDuration);
 

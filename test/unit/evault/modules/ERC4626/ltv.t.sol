@@ -8,7 +8,7 @@ import {Events} from "src/EVault/shared/Events.sol";
 import "src/EVault/shared/types/Types.sol";
 import "src/EVault/shared/Constants.sol";
 
-contract ERC4626Test_LTVRamp is EVaultTestBase {
+contract ERC4626Test_LTV is EVaultTestBase {
     using TypesLib for uint256;
 
     address depositor;
@@ -98,6 +98,48 @@ contract ERC4626Test_LTVRamp is EVaultTestBase {
 
         assertEq(eTST.LTV(address(eTST2)), cfgScale(0.1e3));
         assertEq(eTST.LTVRamped(address(eTST2)), cfgScale(0.1e3));
+    }
+
+
+    function test_ltvRange() public {
+        vm.expectRevert(Errors.E_InvalidLTV.selector);
+        eTST.setLTV(address(eTST2), uint16(CONFIG_SCALE + 1), 0);
+    }
+
+    function test_ltvList() public {
+        assertEq(eTST.LTVList().length, 0);
+
+        eTST.setLTV(address(eTST2), cfgScale(0.8e3), 0);
+
+        assertEq(eTST.LTVList().length, 1);
+        assertEq(eTST.LTVList()[0], address(eTST2));
+
+        eTST.setLTV(address(eTST2), cfgScale(0.0e3), 0);
+
+        assertEq(eTST.LTVList().length, 1);
+        assertEq(eTST.LTVList()[0], address(eTST2));
+
+        eTST.setLTV(address(eTST2), cfgScale(0.4e3), 0);
+
+        assertEq(eTST.LTVList().length, 1);
+        assertEq(eTST.LTVList()[0], address(eTST2));
+    }
+
+    function test_ltvList_explicitZero() public {
+        assertEq(eTST.LTVList().length, 0);
+
+        eTST.setLTV(address(eTST2), cfgScale(0.0e3), 0);
+
+        assertEq(eTST.LTV(address(eTST2)), cfgScale(0.0e3));
+        assertEq(eTST.LTVRamped(address(eTST2)), cfgScale(0.0e3));
+
+        assertEq(eTST.LTVList().length, 1);
+        assertEq(eTST.LTVList()[0], address(eTST2));
+
+        eTST.setLTV(address(eTST2), cfgScale(0.0e3), 0);
+
+        assertEq(eTST.LTVList().length, 1);
+        assertEq(eTST.LTVList()[0], address(eTST2));
     }
 
 

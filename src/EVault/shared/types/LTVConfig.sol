@@ -2,6 +2,9 @@
 
 pragma solidity ^0.8.0;
 
+import {Errors} from "../Errors.sol";
+import "../Constants.sol";
+
 struct LTVConfig {
     uint40 targetTimestamp;
     uint16 targetLTV;
@@ -37,6 +40,8 @@ library LTVConfigLib {
     }
 
     function setLTV(LTVConfig memory self, uint16 targetLTV, uint24 rampDuration) internal view returns (LTVConfig memory newLTV) {
+        if (targetLTV > CONFIG_SCALE) revert Errors.E_InvalidLTV();
+
         newLTV.targetTimestamp = uint40(block.timestamp + rampDuration);
         newLTV.targetLTV = targetLTV;
         newLTV.rampDuration = rampDuration;

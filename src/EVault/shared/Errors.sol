@@ -71,5 +71,6 @@ contract Errors {
     error E_SupplyCapExceeded();
     error E_BorrowCapExceeded();
     error E_InvalidLTVAsset();
+    error E_InvalidLTV();
     error E_NoPriceOracle();
 }
