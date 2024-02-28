@@ -9,6 +9,8 @@ import {ProxyUtils} from "../shared/lib/ProxyUtils.sol";
 
 import "../shared/types/Types.sol";
 
+// review: reentrantOK missing for a couple functions
+
 abstract contract GovernanceModule is IGovernance, Base, BalanceUtils {
     modifier governorOnly() {
         if (msg.sender != marketStorage.governorAdmin) revert E_Unauthorized();
@@ -39,6 +41,7 @@ abstract contract GovernanceModule is IGovernance, Base, BalanceUtils {
 
     /// @inheritdoc IGovernance
     function LTV(address collateral) external virtual view returns (uint16) {
+        // review: getLTV or getRampedLTV? also, we have no getter for LTVConfig struct
         return ltvLookup[collateral].getLTV();
     }
 
@@ -53,6 +56,7 @@ abstract contract GovernanceModule is IGovernance, Base, BalanceUtils {
     }
 
     /// @inheritdoc IGovernance
+    // review: wouldn't it be nicer if supply cap and borrow cap were returned as Assets?
     function marketPolicy() external virtual view returns (uint32 disabledOps, uint16 supplyCap, uint16 borrowCap) {
         return (marketStorage.disabledOps.toUint32(), marketStorage.supplyCap.toRawUint16(), marketStorage.borrowCap.toRawUint16());
     }
@@ -83,6 +87,8 @@ abstract contract GovernanceModule is IGovernance, Base, BalanceUtils {
     function convertFees() external virtual nonReentrant {
         (MarketCache memory marketCache, address account) = initOperation(OP_CONVERT_FEES, ACCOUNTCHECK_NONE);
 
+        // review: exit early if feesBalance is zero
+
         // Decrease totalShares because increaseBalance will increase it by that total amount
         marketStorage.totalShares =
             marketCache.totalShares = marketCache.totalShares - marketCache.feesBalance;
@@ -98,6 +104,7 @@ abstract contract GovernanceModule is IGovernance, Base, BalanceUtils {
         Shares protocolShares = marketCache.feesBalance - governorShares;
         marketStorage.feesBalance = marketCache.feesBalance = Shares.wrap(0);
 
+        // review: optimization - use variables for converted assets not to call `toAssetsDown` twice
         increaseBalance(
             marketCache, governorReceiver, address(0), governorShares, governorShares.toAssetsDown(marketCache)
         ); // TODO confirm address(0)
@@ -141,8 +148,14 @@ abstract contract GovernanceModule is IGovernance, Base, BalanceUtils {
     /// @inheritdoc IGovernance
     function setLTV(address collateral, uint16 ltv, uint24 rampDuration) external virtual nonReentrant governorOnly {
         MarketCache memory marketCache = loadMarket();
+
+        // review: what is our goal here? no self-collateralization allowed anymore? if so, it should be checked as follows:
+        // if (collateral == address(this))
+        // I don't get why we're checking if collateral is not the asset. i.e. it wouldn't work for the liability vaults where 
+        // the underlying is the ERC20Collateral token (this would be a valid way to enable self-collateralization)
         if (collateral == address(marketCache.asset)) revert E_InvalidLTVAsset();
 
+        // review: why do we set LTV twice? we should first simply read the old struct and then set the new one
         LTVConfig memory origLTV = ltvLookup[collateral].setLTV(ltv, rampDuration);
         LTVConfig memory newLTV = origLTV.setLTV(ltv, rampDuration);
 
@@ -163,6 +176,7 @@ abstract contract GovernanceModule is IGovernance, Base, BalanceUtils {
     }
 
     /// @inheritdoc IGovernance
+    // review: why don't we separate setting disabledOps and supplyCap, borrowCap?
     function setMarketPolicy(uint32 disabledOps, uint16 supplyCap, uint16 borrowCap) external virtual nonReentrant governorOnly {
         AmountCap _supplyCap = AmountCap.wrap(supplyCap);
         // Max total assets is a sum of max pool size and max total debt, both Assets type
@@ -182,6 +196,7 @@ abstract contract GovernanceModule is IGovernance, Base, BalanceUtils {
     function setInterestFee(uint16 newInterestFee) external virtual nonReentrant governorOnly {
         if (newInterestFee > CONFIG_SCALE) revert E_BadFee();
 
+        // review: for other config values we don't exit early if the value is the same
         if (newInterestFee == marketStorage.interestFee) return;
 
         if (!protocolConfig.isValidInterestFee(address(this), newInterestFee)) revert E_BadFee();

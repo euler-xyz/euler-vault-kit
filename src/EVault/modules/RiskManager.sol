@@ -18,6 +18,7 @@ abstract contract RiskManagerModule is IRiskManager, Base, LiquidityUtils {
         MarketCache memory marketCache = loadMarket();
 
         verifyController(account);
+        // review: use the EVCClient function rather than call the EVC directly
         address[] memory collaterals = IEVC(evc).getCollaterals(account);
 
         return liquidityCalculate(
@@ -33,8 +34,10 @@ abstract contract RiskManagerModule is IRiskManager, Base, LiquidityUtils {
         MarketCache memory marketCache = loadMarket();
 
         verifyController(account);
+        // review: use the EVCClient function rather than call the EVC directly
         address[] memory collaterals = IEVC(evc).getCollaterals(account);
 
+        // review: if self-collateralization not supported, this function can be simplified it seems
         uint256 numMarkets = collaterals.length + 1;
         for (uint256 i; i < collaterals.length; ++i) {
             if (collaterals[i] == address(this)) {
@@ -138,6 +141,7 @@ abstract contract RiskManagerModule is IRiskManager, Base, LiquidityUtils {
                 ? 0 // empty pool arbitrarily given utilisation of 0
                 : uint32(borrows * (uint256(type(uint32).max) * 1e18) / poolAssets / 1e18);
 
+            // review: address(this) rather than msg.sender?
             try IIRM(irm).computeInterestRate(msg.sender, address(marketCache.asset), utilisation) returns (uint256 ir) {
                 newInterestRate = ir;
             } catch {}
@@ -153,6 +157,7 @@ abstract contract RiskManagerModule is IRiskManager, Base, LiquidityUtils {
         return uint72(newInterestRate);
     }
 
+    // review: move this to the EVCClient
     function verifyController(address account) private view {
         address[] memory controllers = IEVC(evc).getControllers(account);
 

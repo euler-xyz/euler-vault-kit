@@ -56,6 +56,8 @@ abstract contract BorrowingModule is IBorrowing, Base, AssetTransfers, BalanceUt
 
     /// @inheritdoc IBorrowing
     function interestRate() external view virtual reentrantOK returns (uint72) {
+        // review: it's enough to check if the snapshot was taken here. 
+        // if it was, it means that the vault status check is deferred
         if (isVaultStatusCheckDeferred()) revert E_VaultStatusCheckDeferred();
 
         return marketStorage.interestRate;
@@ -74,6 +76,7 @@ abstract contract BorrowingModule is IBorrowing, Base, AssetTransfers, BalanceUt
         nonReentrantView
         returns (uint256)
     {
+        // review: use verifyController function when moved to EVCClient
         if (getController(account) != address(this)) revert E_ControllerDisabled();
 
         // if collateral is not enabled, it will not be locked
@@ -148,7 +151,7 @@ abstract contract BorrowingModule is IBorrowing, Base, AssetTransfers, BalanceUt
         if (receiver == address(0)) receiver = account;
 
         uint256 owed = getCurrentOwed(marketCache, receiver).toAssetsUp().toUint();
-        if (owed == 0) return;
+        if (owed == 0) return; // review: check below is sufficient, this if is redundant
 
         Assets assets = (amount > owed ? owed : amount).toAssets();
         if (assets.isZero()) return;

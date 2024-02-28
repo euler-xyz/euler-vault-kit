@@ -19,6 +19,7 @@ struct MarketStorage {
     Shares totalShares;
     Owed totalBorrows;
 
+    // review: let's put it in the same storage slot as i.e. the admin or feeReceiver?
     Shares feesBalance;
 
     uint256 interestAccumulator;
@@ -35,5 +36,7 @@ struct MarketStorage {
     address feeReceiver;
 
     mapping(address account => UserStorage) users;
+
+    // review: maybe it would be better to move the allowance to the UserStorage? OTOH, it would probably be more expensive gas-wise
     mapping(address owner => mapping(address spender => uint256 allowance)) eVaultAllowance;
 }

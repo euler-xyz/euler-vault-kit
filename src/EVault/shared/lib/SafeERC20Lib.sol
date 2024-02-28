@@ -23,6 +23,7 @@ library SafeERC20Lib {
     function callBalanceOf(IERC20 token, address account) internal view returns (uint256) {
         // We set a gas limit so that a malicious token can't eat up all gas and cause a liquidity check to fail.
 
+        // review: maybe we could remove the gas limit now?
         (bool success, bytes memory data) =
             address(token).staticcall{gas: 200000}(abi.encodeWithSelector(IERC20.balanceOf.selector, account));
 

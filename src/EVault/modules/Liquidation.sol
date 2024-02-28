@@ -85,9 +85,17 @@ abstract contract LiquidationModule is ILiquidation, Base, BalanceUtils, Liquidi
         liqCache.yieldBalance = 0;
 
         if (liqCache.violator == liqCache.liquidator) revert E_SelfLiquidation();
+        // review: use verifyController function when moved to EVCClient.
+        // OTOH, do we need to check that? if the violator has liability on this vault, it must be its controller
         if (getController(liqCache.violator) != address(this)) revert E_ControllerDisabled();
+        // review: if no self-collateralization possible, then there's no need to check that. `collateralControl` will do its thing
         if (!isCollateralEnabled(liqCache.violator, liqCache.collateral)) revert E_CollateralDisabled();
         // critical safety check - only liquidate approved collaterals
+        // review: we need some other metrics here to assess whether the collateral is trusted or not. imagine that we have a trusted
+        // collateral that gets slowly phased out. due to some reason the liquidation was not picked up in time and if the LTV converges
+        // to zero, the liquidation will not be possible anymore.
+        // I was thinking about using `initialised` here. it would mean though that once the collateral is once trusted, it will be 
+        // trusted forever. how about an additional `trusted` flag in the LTVConfig? we have a plenty of space there
         if (ltvLookup[liqCache.collateral].getRampedLTV() == 0) revert E_BadCollateral();
 
 
@@ -95,6 +103,7 @@ abstract contract LiquidationModule is ILiquidation, Base, BalanceUtils, Liquidi
         // violator has no liabilities
         if (liqCache.owed.isZero()) return liqCache;
 
+        // review: use the EVCClient function rather than call the EVC directly
         liqCache.collaterals = IEVC(evc).getCollaterals(violator);
 
         liqCache = calculateMaxLiquidation(liqCache, marketCache);
@@ -173,6 +182,7 @@ abstract contract LiquidationModule is ILiquidation, Base, BalanceUtils, Liquidi
 
         // Handle yield
 
+        // review: decide if self-collateralization supported
         if (liqCache.collateral != address(this)) {
             enforceCollateralTransfer(
                 liqCache.collateral, liqCache.yieldBalance, liqCache.violator, liqCache.liquidator
@@ -194,6 +204,11 @@ abstract contract LiquidationModule is ILiquidation, Base, BalanceUtils, Liquidi
 
         // Handle repay: liquidator takes on violator's debt:
 
+        // review: why don't we move it before collateral transfer? theoretically, all the collaterals must be trusted to 
+        // for the system to work properly and we have a re-entrancy lock. however, if we move it up it would feel safer.
+        // if by any chance the collateral allows to execute liquidator's code on collateral transfer, the liquidator 
+        // can disable the controller because they don't have the debt yet at this point (nonReentrant stops this but still).
+        // this means that the debt they will take on would never get repaid
         transferBorrow(marketCache, liqCache.violator, liqCache.liquidator, liqCache.repay);
 
         // Handle debt socialization

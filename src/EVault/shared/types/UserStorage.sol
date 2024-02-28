@@ -21,6 +21,7 @@ library UserStorageLib {
         return unpackBalanceForwarder(self.data);
     }
 
+    // review: make 112 a constant rather than a magic number
     function getOwed(UserStorage storage self) internal view returns (Owed) {
         return Owed.wrap(uint144((PackedUserSlot.unwrap(self.data) & OWED_MASK) >> 112));
     }

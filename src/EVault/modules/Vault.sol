@@ -41,6 +41,7 @@ abstract contract VaultModule is IVault, Base, AssetTransfers, BalanceUtils {
 
     /// @inheritdoc IERC4626
     function maxDeposit(address account) public view virtual nonReentrantView returns (uint256) {
+        // review: should we check disabledOps here?
         MarketCache memory marketCache = loadMarket();
         return maxDepositInternal(marketCache, account);
     }
@@ -52,6 +53,7 @@ abstract contract VaultModule is IVault, Base, AssetTransfers, BalanceUtils {
 
     /// @inheritdoc IERC4626
     function maxMint(address account) external view virtual nonReentrantView returns (uint256) {
+        // review: should we check disabledOps here?
         MarketCache memory marketCache = loadMarket();
         return maxDepositInternal(marketCache, account).toAssets().toSharesDown(marketCache).toUint();
     }
@@ -226,6 +228,8 @@ abstract contract VaultModule is IVault, Base, AssetTransfers, BalanceUtils {
         if (max.isZero()) return Shares.wrap(0);
 
         // When checks are deferred, all of the balance can be withdrawn, even if only temporarily
+        // review: instead of checking if the account status check is already deferred, we should check if msg.sender is the EVC.
+        // if it is, we know that we're in the deferred context and if somebody redeems, the account status check will eventually be scheduled.
         if (!isAccountStatusCheckDeferred(owner)) {
             address controller = getController(owner);
 
@@ -246,6 +250,7 @@ abstract contract VaultModule is IVault, Base, AssetTransfers, BalanceUtils {
     }
 
     function maxDepositInternal(MarketCache memory marketCache, address) private pure returns (uint256) {
+        // review: this should checked in the calling function, depending on the operation
         if (marketCache.disabledOps.get(OP_DEPOSIT)) return 0;
 
         uint256 supply = totalAssetsInternal(marketCache);

@@ -21,9 +21,15 @@ library LTVConfigLib {
     function getRampedLTV(LTVConfig memory self) internal view returns (uint16) {
         if (block.timestamp >= self.targetTimestamp) return self.targetLTV;
 
+        // review: is it correct? I see two issues:
+        // 1) there will be an underflow because block.timestamp < self.targetTimestamp
+        // 2) the formula is incorrect, rampDuration should be added, not subtracted
+        // uint256 timeElapsed = self.rampDuration - (self.targetTimestamp - block.timestamp);
         uint256 timeElapsed = block.timestamp - self.targetTimestamp - self.rampDuration;
         uint256 ltv = self.originalLTV;
 
+        // review: the calculation is incorrect. 
+        // only delta should be multiplied by timeElapsed and divided by rampDuration, not the whole LTV
         if (self.targetLTV > self.originalLTV) {
             ltv += (self.targetLTV - self.originalLTV);
         } else {
@@ -34,6 +40,7 @@ library LTVConfigLib {
     }
 
     function setLTV(LTVConfig memory self, uint16 targetLTV, uint24 rampDuration) internal view returns (LTVConfig memory newLTV) {
+        // review: shouldn't we first set originalLTV by calling getRampedLTV on the old struct and then set targetTimestamp, targetLTV and rampDuration?
         newLTV.targetTimestamp = uint40(block.timestamp + rampDuration);
         newLTV.targetLTV = targetLTV;
         newLTV.rampDuration = rampDuration;
