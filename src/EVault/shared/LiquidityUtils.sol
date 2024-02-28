@@ -55,7 +55,7 @@ abstract contract LiquidityUtils is BorrowUtils {
             uint256 ltv = ltvLookup[collateral].getRampedLTV(); // TODO confirm ramped, not target
             if (ltv == 0) continue;
 
-            uint256 balance = IERC20(collateral).balanceOf(account); // TODO low level and read directly for self?
+            uint256 balance = IERC20(collateral).balanceOf(account); // TODO Read directly for self collateral?
             if (balance > 0) return false;
         }
 
@@ -83,7 +83,7 @@ abstract contract LiquidityUtils is BorrowUtils {
             uint256 ltv = isLiquidation ? ltvLookup[collateral].getRampedLTV() : ltvLookup[collateral].getLTV();
             if (ltv == 0) return 0;
 
-            uint256 balance = IERC20(collateral).balanceOf(account); // TODO low level and read directly for self?
+            uint256 balance = IERC20(collateral).balanceOf(account); // TODO Read directly for self?
             if (balance == 0) return 0;
 
             // bid price for collateral

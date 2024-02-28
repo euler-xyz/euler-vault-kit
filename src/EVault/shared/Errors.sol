@@ -72,4 +72,9 @@ contract Errors {
     error E_BorrowCapExceeded();
     error E_InvalidLTVAsset();
     error E_NoPriceOracle();
+
+    error E_ExpiredSignature();
+    error E_InvalidSignatureS();
+    error E_InvalidSignature();
+    error E_InvalidSigner();
 }

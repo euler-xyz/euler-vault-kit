@@ -76,6 +76,10 @@ contract EVault is
 
     function allowance(address holder, address spender) external view override useView(MODULE_TOKEN) returns (uint256) {}
 
+    function DOMAIN_SEPARATOR() external view override useView(MODULE_TOKEN) returns (bytes32) {}
+
+    function nonces(address owner) external view override useView(MODULE_TOKEN) returns (uint256) {}
+
 
     function transfer(address to, uint256 amount) external override callThroughEVC use(MODULE_TOKEN) returns (bool) {}
 
@@ -84,6 +88,8 @@ contract EVault is
     function approve(address spender, uint256 amount) external override use(MODULE_TOKEN) returns (bool) {}
 
     function transferFromMax(address from, address to) external override callThroughEVC use(MODULE_TOKEN) returns (bool) {}
+
+    function permit(address owner, address spender, uint256 value, uint256 deadline, uint8 v, bytes32 r, bytes32 s) external override use(MODULE_TOKEN) {}
 
 
 
