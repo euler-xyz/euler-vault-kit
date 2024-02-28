@@ -20,18 +20,18 @@ contract EVault is
     VaultModule,
     BorrowingModule,
     LiquidationModule,
+    RiskManagerModule,
     BalanceForwarderModule,
-    GovernanceModule,
-    RiskManagerModule
+    GovernanceModule
 {
     address immutable MODULE_INITIALIZE;
     address immutable MODULE_TOKEN;
     address immutable MODULE_VAULT;
     address immutable MODULE_BORROWING;
     address immutable MODULE_LIQUIDATION;
+    address immutable MODULE_RISKMANAGER;
     address immutable MODULE_BALANCE_FORWARDER;
     address immutable MODULE_GOVERNANCE;
-    address immutable MODULE_RISKMANAGER;
 
     constructor(
         address evc,
@@ -42,18 +42,18 @@ contract EVault is
         address MODULE_VAULT_,
         address MODULE_BORROWING_,
         address MODULE_LIQUIDATION_,
+        address MODULE_RISKMANAGER_,
         address MODULE_BALANCE_FORWARDER_,
-        address MODULE_GOVERNANCE_,
-        address MODULE_RISKMANAGER_
+        address MODULE_GOVERNANCE_
     ) Base(evc, protocolConfig, balanceTracker) {
         MODULE_INITIALIZE = MODULE_INITIALIZE_;
         MODULE_TOKEN = MODULE_TOKEN_;
         MODULE_VAULT = MODULE_VAULT_;
         MODULE_BORROWING = MODULE_BORROWING_;
         MODULE_LIQUIDATION = MODULE_LIQUIDATION_;
+        MODULE_RISKMANAGER = MODULE_RISKMANAGER_;
         MODULE_BALANCE_FORWARDER = MODULE_BALANCE_FORWARDER_;
         MODULE_GOVERNANCE = MODULE_GOVERNANCE_;
-        MODULE_RISKMANAGER = MODULE_RISKMANAGER_;
     }
 
     // ------------ Initialization -------------
@@ -177,6 +177,21 @@ contract EVault is
 
 
 
+    // ----------------- RiskManager -----------------
+
+    function computeAccountLiquidity(address account, bool liquidation) external override view useView(MODULE_RISKMANAGER) returns (uint256 collateralValue, uint256 liabilityValue) {}
+
+    function computeAccountLiquidityPerMarket(address account, bool liquidation) external override view useView(MODULE_RISKMANAGER) returns (MarketLiquidity[] memory) {}
+
+
+    function disableController() external override use(MODULE_RISKMANAGER) {}
+
+    function checkAccountStatus(address account, address[] calldata collaterals) external override use(MODULE_RISKMANAGER) returns (bytes4) {}
+
+    function checkVaultStatus() external override use(MODULE_RISKMANAGER) returns (bytes4) {}
+
+
+
     // ----------------- Balance Forwarder -----------------
 
     function balanceTrackerAddress() external view useView(MODULE_BALANCE_FORWARDER) override returns (address) {}
@@ -194,11 +209,13 @@ contract EVault is
 
     function governorAdmin() external override useView(MODULE_GOVERNANCE) view returns (address) {}
 
-    function interestFee() external view override useView(MODULE_GOVERNANCE) returns (uint16) {}
+    function pauseGuardian() external override useView(MODULE_GOVERNANCE) view returns (address) {}
 
-    function protocolFeeShare() external view override useView(MODULE_GOVERNANCE) returns (uint256) {}
+    function interestFee() external override useView(MODULE_GOVERNANCE) view returns (uint16) {}
 
-    function protocolFeeReceiver() external view override useView(MODULE_GOVERNANCE) returns (address) {}
+    function protocolFeeShare() external override useView(MODULE_GOVERNANCE) view returns (uint256) {}
+
+    function protocolFeeReceiver() external override useView(MODULE_GOVERNANCE) view returns (address) {}
 
     function LTV(address collateral) external override useView(MODULE_GOVERNANCE) view returns (uint16) {}
 
@@ -210,7 +227,9 @@ contract EVault is
 
     function interestRateModel() external override useView(MODULE_GOVERNANCE) view returns (address) {}
 
-    function marketPolicy() external override useView(MODULE_GOVERNANCE) view returns (uint32 disabledOps, uint16 supplyCap, uint16 borrowCap) {}
+    function disabledOps() external override useView(MODULE_GOVERNANCE) view returns (uint32) {}
+
+    function caps() external override useView(MODULE_GOVERNANCE) view returns (uint16, uint16) {}
 
     function feeReceiver() external override useView(MODULE_GOVERNANCE) view returns (address) {}
 
@@ -229,30 +248,19 @@ contract EVault is
 
     function setGovernorAdmin(address newGovernorAdmin) external override use(MODULE_GOVERNANCE) {}
 
+    function setPauseGuardian(address newGovernorAdmin) external override use(MODULE_GOVERNANCE) {}
+
     function setFeeReceiver(address newFeeReceiver) external override use(MODULE_GOVERNANCE) {}
 
     function setLTV(address collateral, uint16 ltv, uint24 rampDuration) external override use(MODULE_GOVERNANCE) {}
 
     function setIRM(address newModel, bytes calldata resetParams) external override use(MODULE_GOVERNANCE) {}
 
-    function setMarketPolicy(uint32 disabledOps, uint16 supplyCap, uint16 borrowCap) external override use(MODULE_GOVERNANCE) {}
+    function setDisabledOps(uint32 newDisabledOps) external override use(MODULE_GOVERNANCE) {}
+
+    function setCaps(uint16 supplyCap, uint16 borrowCap) external override use(MODULE_GOVERNANCE) {}
 
     function setInterestFee(uint16 newFee) external override use(MODULE_GOVERNANCE) {}
 
     function setDebtSocialization(bool newValue) external override use(MODULE_GOVERNANCE) {}
-
-
-
-    // ----------------- RiskManager -----------------
-
-    function computeAccountLiquidity(address account, bool liquidation) external override view useView(MODULE_RISKMANAGER) returns (uint256 collateralValue, uint256 liabilityValue) {}
-
-    function computeAccountLiquidityPerMarket(address account, bool liquidation) external override view useView(MODULE_RISKMANAGER) returns (MarketLiquidity[] memory) {}
-
-
-    function disableController() external override use(MODULE_RISKMANAGER) {}
-
-    function checkAccountStatus(address account, address[] calldata collaterals) external override use(MODULE_RISKMANAGER) returns (bytes4) {}
-
-    function checkVaultStatus() external override use(MODULE_RISKMANAGER) returns (bytes4) {}
 }

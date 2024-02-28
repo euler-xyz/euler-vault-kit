@@ -36,7 +36,7 @@ abstract contract InitializeModule is IInitialize, Base, BorrowUtils {
         marketStorage.lastInterestAccumulatorUpdate = uint40(block.timestamp);
         marketStorage.interestAccumulator = INITIAL_INTEREST_ACCUMULATOR;
         marketStorage.interestFee = DEFAULT_INTEREST_FEE;
-        marketStorage.governorAdmin = creator;
+        marketStorage.governorAdmin = marketStorage.pauseGuardian = creator;
 
         // Emit logs
 

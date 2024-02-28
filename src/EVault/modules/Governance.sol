@@ -10,14 +10,38 @@ import {ProxyUtils} from "../shared/lib/ProxyUtils.sol";
 import "../shared/types/Types.sol";
 
 abstract contract GovernanceModule is IGovernance, Base, BalanceUtils {
+    event GovSetName(string newName);
+    event GovSetSymbol(string newSymbol);
+    event GovSetGovernorAdmin(address indexed newGovernorAdmin);
+    event GovSetPauseGuardian(address newPauseGuardian);
+    event GovSetFeeReceiver(address indexed newFeeReceiver);
+    event GovSetLTV(address indexed collateral, uint40 targetTimestamp, uint16 targetLTV, uint24 rampDuration, uint16 originalLTV);
+    event GovSetIRM(address interestRateModel, bytes resetParams);
+    event GovSetOracle(address oracle);
+    event GovSetDisabledOps(uint32 newDisabledOps);
+    event GovSetCaps(uint16 newSupplyCap, uint16 newBorrowCap);
+    event GovSetInterestFee(uint16 newFee);
+    event GovSetDebtSocialization(bool debtSocialization);
+    event GovSetUnitOfAccount(address newUnitOfAccount);
+
     modifier governorOnly() {
         if (msg.sender != marketStorage.governorAdmin) revert E_Unauthorized();
+        _;
+    }
+
+    modifier pauseGuardianOnly() {
+        if (msg.sender != marketStorage.pauseGuardian) revert E_Unauthorized();
         _;
     }
 
     /// @inheritdoc IGovernance
     function governorAdmin() external virtual view returns (address) {
         return marketStorage.governorAdmin;
+    }
+
+    /// @inheritdoc IGovernance
+    function pauseGuardian() external virtual view returns (address) {
+        return marketStorage.pauseGuardian;
     }
 
     /// @inheritdoc IGovernance
@@ -69,8 +93,13 @@ abstract contract GovernanceModule is IGovernance, Base, BalanceUtils {
     }
 
     /// @inheritdoc IGovernance
-    function marketPolicy() external virtual view returns (uint32 disabledOps, uint16 supplyCap, uint16 borrowCap) {
-        return (marketStorage.disabledOps.toUint32(), marketStorage.supplyCap.toRawUint16(), marketStorage.borrowCap.toRawUint16());
+    function disabledOps() external virtual view returns (uint32) {
+        return (marketStorage.disabledOps.toUint32());
+    }
+
+    /// @inheritdoc IGovernance
+    function caps() external virtual view returns (uint16, uint16) {
+        return (marketStorage.supplyCap.toRawUint16(), marketStorage.borrowCap.toRawUint16());
     }
 
     /// @inheritdoc IGovernance
@@ -149,6 +178,12 @@ abstract contract GovernanceModule is IGovernance, Base, BalanceUtils {
     }
 
     /// @inheritdoc IGovernance
+    function setPauseGuardian(address newPauseGuardian) external virtual nonReentrant governorOnly {
+        marketStorage.pauseGuardian = newPauseGuardian;
+        emit GovSetPauseGuardian(newPauseGuardian);
+    }
+
+    /// @inheritdoc IGovernance
     function setFeeReceiver(address newFeeReceiver) external virtual nonReentrant governorOnly {
         marketStorage.feeReceiver = newFeeReceiver;
         emit GovSetFeeReceiver(newFeeReceiver);
@@ -180,7 +215,13 @@ abstract contract GovernanceModule is IGovernance, Base, BalanceUtils {
     }
 
     /// @inheritdoc IGovernance
-    function setMarketPolicy(uint32 disabledOps, uint16 supplyCap, uint16 borrowCap) external virtual nonReentrant governorOnly {
+    function setDisabledOps(uint32 newDisabledOps) external virtual nonReentrant pauseGuardianOnly {
+        marketStorage.disabledOps = DisabledOps.wrap(newDisabledOps);
+        emit GovSetDisabledOps(newDisabledOps);
+    }
+
+    /// @inheritdoc IGovernance
+    function setCaps(uint16 supplyCap, uint16 borrowCap) external virtual nonReentrant governorOnly {
         AmountCap _supplyCap = AmountCap.wrap(supplyCap);
         // Max total assets is a sum of max pool size and max total debt, both Assets type
         if (supplyCap > 0 && _supplyCap.toUint() > 2 * MAX_SANE_AMOUNT) revert E_BadSupplyCap();
@@ -188,11 +229,10 @@ abstract contract GovernanceModule is IGovernance, Base, BalanceUtils {
         AmountCap _borrowCap = AmountCap.wrap(borrowCap);
         if (borrowCap > 0 && _borrowCap.toUint() > MAX_SANE_AMOUNT) revert E_BadBorrowCap();
 
-        marketStorage.disabledOps = DisabledOps.wrap(disabledOps);
         marketStorage.supplyCap = _supplyCap;
         marketStorage.borrowCap = _borrowCap;
 
-        emit GovSetMarketPolicy(disabledOps, supplyCap, borrowCap);
+        emit GovSetCaps(supplyCap, borrowCap);
     }
 
     /// @inheritdoc IGovernance

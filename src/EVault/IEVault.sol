@@ -233,6 +233,35 @@ interface ILiquidation {
         external;
 }
 
+interface IRiskManager is IEVCVault {
+    struct MarketLiquidity {
+        address market;
+        uint256 collateralValue;
+        uint256 liabilityValue;
+    }
+
+    function computeAccountLiquidity(address account, bool liquidation) external view returns (uint256 collateralValue, uint256 liabilityValue);
+
+    function computeAccountLiquidityPerMarket(address account, bool liquidation) external view returns (MarketLiquidity[] memory);
+
+
+    /// @notice Release control of the account on EVC if no outstanding debt is present
+    function disableController() external;
+
+    /// @notice Checks the status of an account.
+    /// @param account The address of the account to be checked.
+    /// @return magicValue Must return the bytes4 magic value 0xb168c58f (which is a selector of this function) when
+    /// account status is valid, or revert otherwise.
+    /// @dev Only callable by EVC during status checks
+    function checkAccountStatus(address account, address[] calldata collaterals) external returns (bytes4);
+
+    /// @notice Checks the status of the vault.
+    /// @return magicValue Must return the bytes4 magic value 0x4b3d1223 (which is a selector of this function) when
+    /// account status is valid, or revert otherwise.
+    /// @dev Only callable by EVC during status checks
+    function checkVaultStatus() external returns (bytes4);
+}
+
 interface IBalanceForwarder {
     function balanceTrackerAddress() external view returns (address);
 
@@ -251,6 +280,8 @@ interface IBalanceForwarder {
 
 interface IGovernance {
     function governorAdmin() external view returns (address);
+
+    function pauseGuardian() external view returns (address);
 
     /// @notice Retrieves the interest fee in effect for a market
     /// @return Amount of interest that is redirected as a fee, as a fraction scaled by INTEREST_FEE_SCALE (4e9)
@@ -287,11 +318,11 @@ interface IGovernance {
     /// @return Address of the interest rate contract or address zero to indicate 0% interest
     function interestRateModel() external view returns (address);
 
-    /// @notice Retrieves the policy set for the market
-    /// @return disabledOps Bitmask indicating which operations are disabled.
-    /// @return supplyCap Supply cap in AmountCap format
-    /// @return borrowCap Borrow cap in AmountCap format
-    function marketPolicy() external view returns (uint32 disabledOps, uint16 supplyCap, uint16 borrowCap);
+    /// @notice Retrieves a bitmask indicating which operations are disabled.
+    function disabledOps() external view returns (uint32);
+
+    /// @notice Retrieves supply and borrow caps in AmountCap format
+    function caps() external view returns (uint16 supplyCap, uint16 borrowCap);
 
     /// @notice Retrieves address of the governance fee receiver
     function feeReceiver() external view returns (address);
@@ -314,46 +345,21 @@ interface IGovernance {
 
     function setGovernorAdmin(address newGovernorAdmin) external;
 
+    function setPauseGuardian(address newPauseGuardian) external;
+
     function setFeeReceiver(address newFeeReceiver) external;
 
     function setLTV(address collateral, uint16 ltv, uint24 rampDuration) external;
 
     function setIRM(address newModel, bytes calldata resetParams) external;
 
-    function setMarketPolicy(uint32 disabledOps, uint16 supplyCap, uint16 borrowCap) external;
+    function setDisabledOps(uint32 newDisabledOps) external;
+
+    function setCaps(uint16 supplyCap, uint16 borrowCap) external;
 
     function setInterestFee(uint16 newFee) external;
 
     function setDebtSocialization(bool newValue) external;
 }
 
-interface IRiskManager is IEVCVault {
-    struct MarketLiquidity {
-        address market;
-        uint256 collateralValue;
-        uint256 liabilityValue;
-    }
-
-    function computeAccountLiquidity(address account, bool liquidation) external view returns (uint256 collateralValue, uint256 liabilityValue);
-
-    function computeAccountLiquidityPerMarket(address account, bool liquidation) external view returns (MarketLiquidity[] memory);
-
-
-    /// @notice Release control of the account on EVC if no outstanding debt is present
-    function disableController() external;
-
-    /// @notice Checks the status of an account.
-    /// @param account The address of the account to be checked.
-    /// @return magicValue Must return the bytes4 magic value 0xb168c58f (which is a selector of this function) when
-    /// account status is valid, or revert otherwise.
-    /// @dev Only callable by EVC during status checks
-    function checkAccountStatus(address account, address[] calldata collaterals) external returns (bytes4);
-
-    /// @notice Checks the status of the vault.
-    /// @return magicValue Must return the bytes4 magic value 0x4b3d1223 (which is a selector of this function) when
-    /// account status is valid, or revert otherwise.
-    /// @dev Only callable by EVC during status checks
-    function checkVaultStatus() external returns (bytes4);
-}
-
-interface IEVault is IInitialize, IToken, IVault, IBorrowing, ILiquidation, IBalanceForwarder, IGovernance, IRiskManager {}
+interface IEVault is IInitialize, IToken, IVault, IBorrowing, ILiquidation, IRiskManager, IBalanceForwarder, IGovernance {}

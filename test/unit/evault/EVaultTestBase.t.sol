@@ -65,9 +65,9 @@ contract EVaultTestBase is Test, AssertionsCustomTypes {
         address vaultModule = address(new Vault(address(evc), protocolConfig, balanceTracker));
         address borrowingModule = address(new Borrowing(address(evc), protocolConfig, balanceTracker));
         address liquidationModule = address(new Liquidation(address(evc), protocolConfig, balanceTracker));
+        address riskManagerModule = address(new RiskManager(address(evc), protocolConfig, balanceTracker));
         address balanceForwarderModule = address(new BalanceForwarder(address(evc), protocolConfig, balanceTracker));
         address governanceModule = address(new Governance(address(evc), protocolConfig, balanceTracker));
-        address riskManagerModule = address(new RiskManager(address(evc), protocolConfig, balanceTracker));
 
         address evaultImpl = address(
             new EVault(
@@ -79,9 +79,9 @@ contract EVaultTestBase is Test, AssertionsCustomTypes {
                 vaultModule,
                 borrowingModule,
                 liquidationModule,
+                riskManagerModule,
                 balanceForwarderModule,
-                governanceModule,
-                riskManagerModule
+                governanceModule
             )
         );
 

@@ -4,7 +4,7 @@ pragma solidity ^0.8.0;
 
 import {EVaultTestBase} from "test/unit/evault/EVaultTestBase.t.sol";
 import {Errors} from "src/EVault/shared/Errors.sol";
-import {Events} from "src/EVault/shared/Events.sol";
+import {GovernanceModule} from "src/EVault/modules/Governance.sol";
 import "src/EVault/shared/types/Types.sol";
 
 contract ERC4626Test_Caps is EVaultTestBase {
@@ -20,8 +20,7 @@ contract ERC4626Test_Caps is EVaultTestBase {
         assetTST.approve(address(eTST), type(uint256).max);
     }
 
-    function test_SetMarketPolicy_Integrity(
-        uint16 pauseBitmask, 
+    function test_SetCaps_Integrity(
         uint16 supplyCap, 
         uint16 borrowCap
     ) public {
@@ -30,28 +29,26 @@ contract ERC4626Test_Caps is EVaultTestBase {
         vm.assume(supplyCapAmount <= MAX_SANE_AMOUNT && borrowCapAmount <= MAX_SANE_AMOUNT);
 
         vm.expectEmit();
-        emit Events.GovSetMarketPolicy(pauseBitmask, supplyCap, borrowCap);
+        emit GovernanceModule.GovSetCaps(supplyCap, borrowCap);
 
-        eTST.setMarketPolicy(pauseBitmask, supplyCap, borrowCap);
+        eTST.setCaps(supplyCap, borrowCap);
 
-        (uint32 pauseBitmask_, uint16 supplyCap_, uint16 borrowCap_) = eTST.marketPolicy();
-        assertEq(pauseBitmask_, pauseBitmask);
+        (uint16 supplyCap_, uint16 borrowCap_) = eTST.caps();
         assertEq(supplyCap_, supplyCap);
         assertEq(borrowCap_, borrowCap);
     }
 
-    function test_SetMarketPolicy_SupplyCapMaxMethods(uint16 supplyCap, address userA) public {
+    function test_SetCaps_SupplyCapMaxMethods(uint16 supplyCap, address userA) public {
         uint256 supplyCapAmount = AmountCap.wrap(supplyCap).toUint();
         vm.assume(supplyCapAmount <= MAX_SANE_AMOUNT);
 
-        eTST.setMarketPolicy(0, supplyCap, 0);
+        eTST.setCaps(supplyCap, 0);
 
         assertEq(eTST.maxDeposit(userA), supplyCapAmount);
         assertEq(eTST.maxMint(userA), supplyCapAmount);
     }
 
-    function test_SetMarketPolicy_RevertsWhen_SupplyCap_AmountTooLarge(
-        uint16 pauseBitmask, 
+    function test_SetCaps_RevertsWhen_SupplyCap_AmountTooLarge(
         uint16 supplyCap, 
         uint16 borrowCap
     ) public {
@@ -62,11 +59,10 @@ contract ERC4626Test_Caps is EVaultTestBase {
         );
 
         vm.expectRevert(Errors.E_BadSupplyCap.selector);
-        eTST.setMarketPolicy(pauseBitmask, supplyCap, borrowCap);
+        eTST.setCaps(supplyCap, borrowCap);
     }
 
-    function test_SetMarketPolicy_RevertsWhen_BorrowCap_AmountTooLarge(
-        uint16 pauseBitmask, 
+    function test_SetCaps_RevertsWhen_BorrowCap_AmountTooLarge(
         uint16 supplyCap, 
         uint16 borrowCap
     ) public {
@@ -77,18 +73,18 @@ contract ERC4626Test_Caps is EVaultTestBase {
         );
 
         vm.expectRevert(Errors.E_BadBorrowCap.selector);
-        eTST.setMarketPolicy(pauseBitmask, supplyCap, borrowCap);
+        eTST.setCaps(supplyCap, borrowCap);
     }
 
-    function test_SetMarketPolicy_AccessControl(address caller) public {
+    function test_SetCaps_AccessControl(address caller) public {
         vm.assume(caller != eTST.governorAdmin());
         vm.expectRevert(Errors.E_Unauthorized.selector);
         vm.prank(caller);
-        eTST.setMarketPolicy(0, 0, 0);
+        eTST.setCaps(0, 0);
     }
 
     function test_SupplyCap_UnlimitedByDefault() public {
-        (, uint16 supplyCap,) = eTST.marketPolicy();
+        (uint16 supplyCap,) = eTST.caps();
         assertEq(supplyCap, 0);
 
         vm.prank(user);
@@ -101,7 +97,7 @@ contract ERC4626Test_Caps is EVaultTestBase {
     }
 
     function test_SupplyCap_CanBeZero() public {
-        eTST.setMarketPolicy(0, 1, 0);
+        eTST.setCaps(1, 0);
         vm.expectRevert();
         vm.prank(user);
         eTST.deposit(1, user);
@@ -113,7 +109,7 @@ contract ERC4626Test_Caps is EVaultTestBase {
         amount = bound(amount, 1, MAX_SANE_AMOUNT);
         bool shouldRevert = amount > remaining;
         uint256 snapshot = vm.snapshot();
-        
+
         vm.revertTo(snapshot); 
         if (shouldRevert) vm.expectRevert();
         vm.prank(user);
@@ -135,7 +131,7 @@ contract ERC4626Test_Caps is EVaultTestBase {
         setUpAtSupplyCap(supplyCap);
         amount = bound(amount, 1, MAX_SANE_AMOUNT);
         uint256 snapshot = vm.snapshot();
-        
+
         vm.revertTo(snapshot); 
         vm.expectRevert();
         vm.prank(user);
@@ -157,7 +153,7 @@ contract ERC4626Test_Caps is EVaultTestBase {
         setUpOverSupplyCap(supplyCapOrig, supplyCapNow);
         amount = bound(amount, 1, MAX_SANE_AMOUNT);
         uint256 snapshot = vm.snapshot();
-        
+
         vm.revertTo(snapshot); 
         vm.expectRevert();
         vm.prank(user);
@@ -236,7 +232,7 @@ contract ERC4626Test_Caps is EVaultTestBase {
         vm.prank(user);
         eTST.deposit(MAX_SANE_AMOUNT, user);
 
-        (,, uint16 borrowCap) = eTST.marketPolicy();
+        (, uint16 borrowCap) = eTST.caps();
         assertEq(borrowCap, 0);
 
         vm.prank(user);
@@ -252,7 +248,7 @@ contract ERC4626Test_Caps is EVaultTestBase {
         vm.prank(user);
         eTST.deposit(MAX_SANE_AMOUNT, user);
 
-        eTST.setMarketPolicy(0, 0, 1);
+        eTST.setCaps(0, 1);
 
         vm.expectRevert();
         vm.prank(user);
@@ -356,7 +352,7 @@ contract ERC4626Test_Caps is EVaultTestBase {
     function setUpUnderSupplyCap(uint16 supplyCap, uint256 initAmount) internal returns (uint256) {
         uint256 supplyCapAmount = AmountCap.wrap(supplyCap).toUint();
         vm.assume(supplyCapAmount > 1 && supplyCapAmount < MAX_SANE_AMOUNT);
-        eTST.setMarketPolicy(0, supplyCap, 0);
+        eTST.setCaps(supplyCap, 0);
 
         initAmount = bound(initAmount, 1, supplyCapAmount - 1);
 
@@ -370,7 +366,7 @@ contract ERC4626Test_Caps is EVaultTestBase {
         uint256 supplyCapAmount = AmountCap.wrap(supplyCap).toUint();
         vm.assume(supplyCapAmount != 0 && supplyCapAmount <= MAX_SANE_AMOUNT);
 
-        eTST.setMarketPolicy(0, supplyCap, 0);
+        eTST.setCaps(supplyCap, 0);
         vm.prank(user);
         eTST.deposit(supplyCapAmount, user);
     }
@@ -381,10 +377,10 @@ contract ERC4626Test_Caps is EVaultTestBase {
         vm.assume(supplyCapOrigAmount > 1 && supplyCapOrigAmount <= MAX_SANE_AMOUNT);
         vm.assume(supplyCapNowAmount != 0 && supplyCapNowAmount < supplyCapOrigAmount);
 
-        eTST.setMarketPolicy(0, supplyCapOrig, 0);
+        eTST.setCaps(supplyCapOrig, 0);
         vm.prank(user);
         eTST.deposit(supplyCapOrigAmount, user);
-        eTST.setMarketPolicy(0, supplyCapNow, 0);
+        eTST.setCaps(supplyCapNow, 0);
     }
 
     function setUpUnderBorrowCap(uint16 borrowCap, uint256 initAmount) internal returns (uint256) {
@@ -392,7 +388,7 @@ contract ERC4626Test_Caps is EVaultTestBase {
 
         uint256 borrowCapAmount = AmountCap.wrap(borrowCap).toUint();
         vm.assume(borrowCapAmount > 1 && borrowCapAmount < MAX_SANE_AMOUNT);
-        eTST.setMarketPolicy(0, 0, borrowCap);
+        eTST.setCaps(0, borrowCap);
 
         initAmount = bound(initAmount, 0, borrowCapAmount - 1);
 
@@ -409,7 +405,7 @@ contract ERC4626Test_Caps is EVaultTestBase {
 
         uint256 borrowCapAmount = AmountCap.wrap(borrowCap).toUint();
         vm.assume(borrowCapAmount != 0 && borrowCapAmount < MAX_SANE_AMOUNT);
-        eTST.setMarketPolicy(0, 0, borrowCap);
+        eTST.setCaps(0, borrowCap);
 
         vm.prank(user);
         eTST.deposit(borrowCapAmount, user);
@@ -425,12 +421,12 @@ contract ERC4626Test_Caps is EVaultTestBase {
 
         setUpCollateral();
 
-        eTST.setMarketPolicy(0, 0, borrowCapOrig);
+        eTST.setCaps(0, borrowCapOrig);
         vm.prank(user);
         eTST.deposit(borrowCapOrigAmount, user);
         vm.prank(user);
         eTST.borrow(borrowCapOrigAmount, user);
-        eTST.setMarketPolicy(0, 0, borrowCapNow);
+        eTST.setCaps(0, borrowCapNow);
     }
 
     function setUpCollateral() internal {
