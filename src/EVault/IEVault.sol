@@ -145,7 +145,7 @@ interface IBorrowing {
     /// @notice Sum of all outstanding debts, in underlying units (increases as interest is accrued)
     function totalBorrows() external view returns (uint256);
 
-    /// @notice Sum of all outstanding debts, in underlying units scaled up by 9 decimals (FIXME: not scaled by 9 decimals anymore)
+    /// @notice Sum of all outstanding debts, in underlying units scaled up by INTERNAL_DEBT_PRECISION bits
     function totalBorrowsExact() external view returns (uint256);
 
     /// @notice Balance of vault assets as tracked by daposits/withdrawals and borrows/repays
@@ -154,7 +154,7 @@ interface IBorrowing {
     /// @notice Debt owed by a particular account, in underlying units
     function debtOf(address account) external view returns (uint256);
 
-    /// @notice Debt owed by a particular account, in underlying units scaled up by 9 decimals (FIXME: not scaled by 9 decimals anymore)
+    /// @notice Debt owed by a particular account, in underlying units scaled up by INTERNAL_DEBT_PRECISION bits
     function debtOfExact(address account) external view returns (uint256);
 
     /// @notice Retrieves the current interest rate for an asset
