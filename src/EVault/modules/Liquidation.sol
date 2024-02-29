@@ -6,7 +6,6 @@ import {ILiquidation} from "../IEVault.sol";
 import {Base} from "../shared/Base.sol";
 import {BalanceUtils} from "../shared/BalanceUtils.sol";
 import {LiquidityUtils} from "../shared/LiquidityUtils.sol";
-import {IEVC} from "ethereum-vault-connector/interfaces/IEthereumVaultConnector.sol";
 
 import "../shared/types/Types.sol";
 
@@ -84,8 +83,8 @@ abstract contract LiquidationModule is ILiquidation, Base, BalanceUtils, Liquidi
         liqCache.repay = Assets.wrap(0);
         liqCache.yieldBalance = 0;
 
+        verifyController(liqCache.violator);
         if (liqCache.violator == liqCache.liquidator) revert E_SelfLiquidation();
-        if (getController(liqCache.violator) != address(this)) revert E_ControllerDisabled();
         if (!isCollateralEnabled(liqCache.violator, liqCache.collateral)) revert E_CollateralDisabled();
         // critical security check - only liquidate approved collaterals
         if (ltvLookup[liqCache.collateral].getRampedLTV() == 0) revert E_BadCollateral();
@@ -95,7 +94,7 @@ abstract contract LiquidationModule is ILiquidation, Base, BalanceUtils, Liquidi
         // violator has no liabilities
         if (liqCache.owed.isZero()) return liqCache;
 
-        liqCache.collaterals = IEVC(evc).getCollaterals(violator);
+        liqCache.collaterals = getCollaterals(violator);
 
         liqCache = calculateMaxLiquidation(liqCache, marketCache);
         if (liqCache.repay.isZero()) return liqCache;
@@ -171,6 +170,10 @@ abstract contract LiquidationModule is ILiquidation, Base, BalanceUtils, Liquidi
     ) private {
         if (minYieldBalance > liqCache.yieldBalance) revert E_MinYield();
 
+        // Handle repay: liquidator takes on violator's debt:
+
+        transferBorrow(marketCache, liqCache.violator, liqCache.liquidator, liqCache.repay);
+
         // Handle yield
 
         if (liqCache.collateral != address(this)) {
@@ -191,10 +194,6 @@ abstract contract LiquidationModule is ILiquidation, Base, BalanceUtils, Liquidi
         } else {
             transferBalance(liqCache.violator, liqCache.liquidator, liqCache.yieldBalance.toShares());
         }
-
-        // Handle repay: liquidator takes on violator's debt:
-
-        transferBorrow(marketCache, liqCache.violator, liqCache.liquidator, liqCache.repay);
 
         // Handle debt socialization
         if (liqCache.owed > liqCache.repay && liqCache.debtSocialization) {

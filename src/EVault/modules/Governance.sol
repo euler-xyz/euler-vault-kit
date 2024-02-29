@@ -35,12 +35,12 @@ abstract contract GovernanceModule is IGovernance, Base, BalanceUtils {
     }
 
     /// @inheritdoc IGovernance
-    function governorAdmin() external virtual view returns (address) {
+    function governorAdmin() external view virtual reentrantOK returns (address) {
         return marketStorage.governorAdmin;
     }
 
     /// @inheritdoc IGovernance
-    function pauseGuardian() external virtual view returns (address) {
+    function pauseGuardian() external view virtual reentrantOK returns (address) {
         return marketStorage.pauseGuardian;
     }
 
@@ -62,17 +62,17 @@ abstract contract GovernanceModule is IGovernance, Base, BalanceUtils {
     }
 
     /// @inheritdoc IGovernance
-    function LTV(address collateral) external virtual view returns (uint16) {
+    function LTV(address collateral) external view virtual reentrantOK returns (uint16) {
         return ltvLookup[collateral].getLTV();
     }
 
     /// @inheritdoc IGovernance
-    function LTVRamped(address collateral) external virtual view returns (uint16) {
+    function LTVRamped(address collateral) external view virtual reentrantOK returns (uint16) {
         return ltvLookup[collateral].getRampedLTV();
     }
 
     /// @inheritdoc IGovernance
-    function LTVFull(address collateral) external virtual view returns (uint40, uint16, uint24, uint16) {
+    function LTVFull(address collateral) external view virtual reentrantOK returns (uint40, uint16, uint24, uint16) {
         LTVConfig memory ltv = ltvLookup[collateral];
         return (
             ltv.targetTimestamp,
@@ -83,43 +83,43 @@ abstract contract GovernanceModule is IGovernance, Base, BalanceUtils {
     }
 
     /// @inheritdoc IGovernance
-    function LTVList() external virtual view returns (address[] memory) {
+    function LTVList() external view virtual reentrantOK returns (address[] memory) {
         return ltvList;
     }
 
     /// @inheritdoc IGovernance
-    function interestRateModel() external virtual view returns (address) {
+    function interestRateModel() external view virtual reentrantOK returns (address) {
         return marketStorage.interestRateModel;
     }
 
     /// @inheritdoc IGovernance
-    function disabledOps() external virtual view returns (uint32) {
+    function disabledOps() external view virtual reentrantOK returns (uint32) {
         return (marketStorage.disabledOps.toUint32());
     }
 
     /// @inheritdoc IGovernance
-    function caps() external virtual view returns (uint16, uint16) {
+    function caps() external view virtual reentrantOK returns (uint16, uint16) {
         return (marketStorage.supplyCap.toRawUint16(), marketStorage.borrowCap.toRawUint16());
     }
 
     /// @inheritdoc IGovernance
-    function feeReceiver() external virtual view returns (address) {
+    function feeReceiver() external view virtual reentrantOK returns (address) {
         return marketStorage.feeReceiver;
     }
 
     /// @inheritdoc IGovernance
-    function debtSocialization() external virtual view returns (bool) {
+    function debtSocialization() external view virtual reentrantOK returns (bool) {
         return marketStorage.debtSocialization;
     }
 
     /// @inheritdoc IGovernance
-    function unitOfAccount() external virtual view returns (address) {
+    function unitOfAccount() external view virtual reentrantOK returns (address) {
         (,, address _unitOfAccount) = ProxyUtils.metadata();
         return _unitOfAccount;
     }
 
     /// @inheritdoc IGovernance
-    function oracle() external virtual view returns (address) {
+    function oracle() external view virtual reentrantOK returns (address) {
         (, IPriceOracle _oracle,) = ProxyUtils.metadata();
         return address(_oracle);
     }
@@ -127,6 +127,8 @@ abstract contract GovernanceModule is IGovernance, Base, BalanceUtils {
      /// @inheritdoc IGovernance
     function convertFees() external virtual nonReentrant {
         (MarketCache memory marketCache, address account) = initOperation(OP_CONVERT_FEES, ACCOUNTCHECK_NONE);
+
+        if (marketCache.feesBalance.isZero()) return;
 
         // Decrease totalShares because increaseBalance will increase it by that total amount
         marketStorage.totalShares =
@@ -141,21 +143,25 @@ abstract contract GovernanceModule is IGovernance, Base, BalanceUtils {
 
         Shares governorShares = marketCache.feesBalance.mulDiv(1e18 - protocolFee, 1e18);
         Shares protocolShares = marketCache.feesBalance - governorShares;
+
         marketStorage.feesBalance = marketCache.feesBalance = Shares.wrap(0);
 
+        Assets governorAssets = governorShares.toAssetsDown(marketCache);
+        Assets protocolAssets = protocolShares.toAssetsDown(marketCache);
+
         increaseBalance(
-            marketCache, governorReceiver, address(0), governorShares, governorShares.toAssetsDown(marketCache)
+            marketCache, governorReceiver, address(0), governorShares, governorAssets
         ); // TODO confirm address(0)
         increaseBalance(
-            marketCache, protocolReceiver, address(0), protocolShares, protocolShares.toAssetsDown(marketCache)
+            marketCache, protocolReceiver, address(0), protocolShares, protocolAssets
         );
 
         emit ConvertFees(
             account,
             protocolReceiver,
             governorReceiver,
-            protocolShares.toAssetsDown(marketCache).toUint(),
-            governorShares.toAssetsDown(marketCache).toUint()
+            protocolAssets.toUint(),
+            governorAssets.toUint()
         );
     }
 
@@ -237,8 +243,6 @@ abstract contract GovernanceModule is IGovernance, Base, BalanceUtils {
     /// @inheritdoc IGovernance
     function setInterestFee(uint16 newInterestFee) external virtual nonReentrant governorOnly {
         if (newInterestFee > CONFIG_SCALE) revert E_BadFee();
-
-        if (newInterestFee == marketStorage.interestFee) return;
 
         // Interest fees between 1 and 50% are always allowed, otherwise ask protocolConfig
         if (newInterestFee < (CONFIG_SCALE * 1 / 100) || newInterestFee > (CONFIG_SCALE * 50 / 100)) {

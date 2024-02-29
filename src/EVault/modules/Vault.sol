@@ -42,6 +42,8 @@ abstract contract VaultModule is IVault, Base, AssetTransfers, BalanceUtils {
     /// @inheritdoc IERC4626
     function maxDeposit(address account) public view virtual nonReentrantView returns (uint256) {
         MarketCache memory marketCache = loadMarket();
+        if (marketCache.disabledOps.get(OP_DEPOSIT)) return 0;
+
         return maxDepositInternal(marketCache, account);
     }
 
@@ -53,6 +55,8 @@ abstract contract VaultModule is IVault, Base, AssetTransfers, BalanceUtils {
     /// @inheritdoc IERC4626
     function maxMint(address account) external view virtual nonReentrantView returns (uint256) {
         MarketCache memory marketCache = loadMarket();
+
+        if (marketCache.disabledOps.get(OP_MINT)) return 0;
         return maxDepositInternal(marketCache, account).toAssets().toSharesDown(marketCache).toUint();
     }
 
@@ -246,8 +250,6 @@ abstract contract VaultModule is IVault, Base, AssetTransfers, BalanceUtils {
     }
 
     function maxDepositInternal(MarketCache memory marketCache, address) private pure returns (uint256) {
-        if (marketCache.disabledOps.get(OP_DEPOSIT)) return 0;
-
         uint256 supply = totalAssetsInternal(marketCache);
 
         uint256 max = supply < marketCache.supplyCap ? marketCache.supplyCap - supply : 0;
