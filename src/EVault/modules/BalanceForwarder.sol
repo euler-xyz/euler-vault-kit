@@ -21,13 +21,13 @@ abstract contract BalanceForwarderModule is IBalanceForwarder, Base {
     function enableBalanceForwarder() external virtual reentrantOK {
         if (address(balanceTracker) == address(0)) revert E_BalanceForwarderUnsupported();
 
-        address msgSender = EVCAuthenticate();
-        bool wasBalanceForwarderEnabled = marketStorage.users[msgSender].getBalanceForwarderEnabled();
+        address account = EVCAuthenticate();
+        bool wasBalanceForwarderEnabled = marketStorage.users[account].getBalanceForwarderEnabled();
 
-        marketStorage.users[msgSender].setBalanceForwarder(true);
-        balanceTracker.balanceTrackerHook(msgSender, marketStorage.users[msgSender].getBalance().toUint(), false);
+        marketStorage.users[account].setBalanceForwarder(true);
+        balanceTracker.balanceTrackerHook(account, marketStorage.users[account].getBalance().toUint(), false);
 
-        if (!wasBalanceForwarderEnabled) emit BalanceForwarderStatus(msgSender, true);
+        if (!wasBalanceForwarderEnabled) emit BalanceForwarderStatus(account, true);
     }
 
     /// @inheritdoc IBalanceForwarder

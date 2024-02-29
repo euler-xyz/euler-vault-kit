@@ -167,7 +167,6 @@ abstract contract VaultModule is IVault, Base, AssetTransfers, BalanceUtils {
         if (shares.isZero()) return 0;
 
         Assets assets = shares.toAssetsDown(marketCache);
-
         if (assets.isZero()) revert E_ZeroAssets();
 
         finalizeWithdraw(marketCache, assets, shares, account, receiver, owner);
