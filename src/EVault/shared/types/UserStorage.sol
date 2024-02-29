@@ -63,7 +63,7 @@ library UserStorageLib {
 
     function useNonce(UserStorage storage self) internal returns (uint256 nonce) {
         nonce = self.nonce;
-        unchecked { ++self.nonce; }
+        unchecked { self.nonce = nonce + 1; }
     }
 }
 

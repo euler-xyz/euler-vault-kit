@@ -3,13 +3,14 @@
 pragma solidity ^0.8.0;
 
 import {Base} from "./shared/Base.sol";
+import {ModuleDispatch} from "./modules/ModuleDispatch.sol";
+
 import {TokenModule} from "./modules/Token.sol";
 import {VaultModule} from "./modules/Vault.sol";
 import {BorrowingModule} from "./modules/Borrowing.sol";
 import {LiquidationModule} from "./modules/Liquidation.sol";
 import {InitializeModule} from "./modules/Initialize.sol";
 import {BalanceForwarderModule} from "./modules/BalanceForwarder.sol";
-import {ModuleDispatch} from "./modules/ModuleDispatch.sol";
 import {GovernanceModule} from "./modules/Governance.sol";
 import {RiskManagerModule} from "./modules/RiskManager.sol";
 
