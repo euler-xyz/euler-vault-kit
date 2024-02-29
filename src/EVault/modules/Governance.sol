@@ -240,7 +240,10 @@ abstract contract GovernanceModule is IGovernance, Base, BalanceUtils {
 
         if (newInterestFee == marketStorage.interestFee) return;
 
-        if (!protocolConfig.isValidInterestFee(address(this), newInterestFee)) revert E_BadFee();
+        // Interest fees between 1 and 50% are always allowed, otherwise ask protocolConfig
+        if (newInterestFee < (CONFIG_SCALE * 1 / 100) || newInterestFee > (CONFIG_SCALE * 50 / 100)) {
+            if (!protocolConfig.isValidInterestFee(address(this), newInterestFee)) revert E_BadFee();
+        }
 
         marketStorage.interestFee = newInterestFee;
 

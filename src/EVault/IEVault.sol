@@ -284,7 +284,7 @@ interface IGovernance {
     function pauseGuardian() external view returns (address);
 
     /// @notice Retrieves the interest fee in effect for a market
-    /// @return Amount of interest that is redirected as a fee, as a fraction scaled by INTEREST_FEE_SCALE (4e9)
+    /// @return Amount of interest that is redirected as a fee, as a fraction scaled by CONFIG_SCALE (60_000)
     function interestFee() external view returns (uint16);
 
     /// @notice Retrieves the protocol fee share

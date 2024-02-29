@@ -37,7 +37,7 @@ contract EVaultTestBase is Test, AssertionsCustomTypes {
     EthereumVaultConnector public evc;
     address admin;
     address feeReceiver;
-    address protocolConfig;
+    ProtocolConfig protocolConfig;
     address balanceTracker;
     MockPriceOracle oracle;
     address unitOfAccount;
@@ -55,24 +55,24 @@ contract EVaultTestBase is Test, AssertionsCustomTypes {
         factory = new GenericFactory(admin);
 
         evc = new EthereumVaultConnector();
-        protocolConfig = address(new ProtocolConfig(admin, feeReceiver));
+        protocolConfig = new ProtocolConfig(admin, feeReceiver);
         balanceTracker = address(new MockBalanceTracker());
         oracle = new MockPriceOracle();
         unitOfAccount = address(1);
 
-        address initializeModule = address(new Initialize(address(evc), protocolConfig, balanceTracker));
-        address tokenModule = address(new Token(address(evc), protocolConfig, balanceTracker));
-        address vaultModule = address(new Vault(address(evc), protocolConfig, balanceTracker));
-        address borrowingModule = address(new Borrowing(address(evc), protocolConfig, balanceTracker));
-        address liquidationModule = address(new Liquidation(address(evc), protocolConfig, balanceTracker));
-        address riskManagerModule = address(new RiskManager(address(evc), protocolConfig, balanceTracker));
-        address balanceForwarderModule = address(new BalanceForwarder(address(evc), protocolConfig, balanceTracker));
-        address governanceModule = address(new Governance(address(evc), protocolConfig, balanceTracker));
+        address initializeModule = address(new Initialize(address(evc), address(protocolConfig), balanceTracker));
+        address tokenModule = address(new Token(address(evc), address(protocolConfig), balanceTracker));
+        address vaultModule = address(new Vault(address(evc), address(protocolConfig), balanceTracker));
+        address borrowingModule = address(new Borrowing(address(evc), address(protocolConfig), balanceTracker));
+        address liquidationModule = address(new Liquidation(address(evc), address(protocolConfig), balanceTracker));
+        address riskManagerModule = address(new RiskManager(address(evc), address(protocolConfig), balanceTracker));
+        address balanceForwarderModule = address(new BalanceForwarder(address(evc), address(protocolConfig), balanceTracker));
+        address governanceModule = address(new Governance(address(evc), address(protocolConfig), balanceTracker));
 
         address evaultImpl = address(
             new EVault(
                 address(evc),
-                protocolConfig,
+                address(protocolConfig),
                 balanceTracker,
                 initializeModule,
                 tokenModule,
