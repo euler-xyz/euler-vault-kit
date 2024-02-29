@@ -9,6 +9,6 @@ function totals(MarketCache memory marketCache) pure returns (uint256 totalAsset
     unchecked {
         totalAssets =
             marketCache.poolSize.toUint() + marketCache.totalBorrows.toAssetsUp().toUint() + VIRTUAL_DEPOSIT_AMOUNT;
+        totalShares = marketCache.totalShares.toUint() + VIRTUAL_DEPOSIT_AMOUNT;
     }
-    totalShares = marketCache.totalShares.toUint() + VIRTUAL_DEPOSIT_AMOUNT;
 }
