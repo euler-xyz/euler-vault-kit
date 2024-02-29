@@ -186,9 +186,9 @@ contract EVault is
 
     // ----------------- RiskManager -----------------
 
-    function computeAccountLiquidity(address account, bool liquidation) external override view useView(MODULE_RISKMANAGER) returns (uint256 collateralValue, uint256 liabilityValue) {}
+    function accountLiquidity(address account, bool liquidation) external view override useView(MODULE_RISKMANAGER) returns (uint256, uint256) {}
 
-    function computeAccountLiquidityPerMarket(address account, bool liquidation) external override view useView(MODULE_RISKMANAGER) returns (MarketLiquidity[] memory) {}
+    function accountLiquidityFull(address account, bool liquidation) external view override useView(MODULE_RISKMANAGER) returns (address[] memory, uint256[] memory, uint256) {}
 
 
     function disableController() external override use(MODULE_RISKMANAGER) {}

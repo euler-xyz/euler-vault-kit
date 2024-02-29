@@ -55,7 +55,7 @@ abstract contract LiquidityUtils is BorrowUtils {
             uint256 ltv = ltvLookup[collateral].getRampedLTV(); // TODO confirm ramped, not target
             if (ltv == 0) continue;
 
-            uint256 balance = IERC20(collateral).balanceOf(account); // TODO Read directly for self collateral?
+            uint256 balance = IERC20(collateral).balanceOf(account);
             if (balance > 0) return false;
         }
 
@@ -64,11 +64,7 @@ abstract contract LiquidityUtils is BorrowUtils {
 
 
 
-    function validateOracle(MarketCache memory marketCache) private pure {
-        if (address(marketCache.oracle) == address(0)) revert E_NoPriceOracle();
-    }
-
-    function getLiabilityValue(MarketCache memory marketCache, address account) private view returns (uint value) {
+    function getLiabilityValue(MarketCache memory marketCache, address account) internal view returns (uint value) {
         uint256 owed = getCurrentOwed(marketCache, account).toAssetsUp().toUint();
 
         if (address(marketCache.asset) == marketCache.unitOfAccount) {
@@ -79,16 +75,20 @@ abstract contract LiquidityUtils is BorrowUtils {
         }
     }
 
-    function getCollateralValue(MarketCache memory marketCache, address account, address collateral, bool isLiquidation) private view returns (uint value) {
+    function getCollateralValue(MarketCache memory marketCache, address account, address collateral, bool isLiquidation) internal view returns (uint value) {
             uint256 ltv = isLiquidation ? ltvLookup[collateral].getRampedLTV() : ltvLookup[collateral].getLTV();
             if (ltv == 0) return 0;
 
-            uint256 balance = IERC20(collateral).balanceOf(account); // TODO Read directly for self?
+            uint256 balance = IERC20(collateral).balanceOf(account);
             if (balance == 0) return 0;
 
             // bid price for collateral
             (uint256 currentCollateralValue,) = marketCache.oracle.getQuotes(balance, collateral, marketCache.unitOfAccount);
 
             return currentCollateralValue * ltv / CONFIG_SCALE;
+    }
+
+    function validateOracle(MarketCache memory marketCache) private pure {
+        if (address(marketCache.oracle) == address(0)) revert E_NoPriceOracle();
     }
 }

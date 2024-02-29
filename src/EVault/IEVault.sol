@@ -242,16 +242,9 @@ interface ILiquidation {
 }
 
 interface IRiskManager is IEVCVault {
-    struct MarketLiquidity {
-        address market;
-        uint256 collateralValue;
-        uint256 liabilityValue;
-    }
+    function accountLiquidity(address account, bool liquidation) external view returns (uint256 collateralValue, uint256 liabilityValue);
 
-    function computeAccountLiquidity(address account, bool liquidation) external view returns (uint256 collateralValue, uint256 liabilityValue);
-
-    function computeAccountLiquidityPerMarket(address account, bool liquidation) external view returns (MarketLiquidity[] memory);
-
+    function accountLiquidityFull(address account, bool liquidation) external view returns (address[] memory collaterals, uint256[] memory collateralValues, uint256 liabilityValue);
 
     /// @notice Release control of the account on EVC if no outstanding debt is present
     function disableController() external;

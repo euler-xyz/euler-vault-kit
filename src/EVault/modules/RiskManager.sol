@@ -14,7 +14,7 @@ abstract contract RiskManagerModule is IRiskManager, Base, LiquidityUtils {
     using TypesLib for uint256;
 
     /// @inheritdoc IRiskManager
-    function computeAccountLiquidity(address account, bool liquidation) external virtual view returns (uint256 collateralValue, uint256 liabilityValue) {
+    function accountLiquidity(address account, bool liquidation) external view virtual nonReentrantView returns (uint256 collateralValue, uint256 liabilityValue) {
         MarketCache memory marketCache = loadMarket();
 
         verifyController(account);
@@ -29,44 +29,18 @@ abstract contract RiskManagerModule is IRiskManager, Base, LiquidityUtils {
     }
 
     /// @inheritdoc IRiskManager
-    function computeAccountLiquidityPerMarket(address account, bool liquidation) external virtual view returns (MarketLiquidity[] memory) {
+    function accountLiquidityFull(address account, bool liquidation) external view virtual nonReentrantView returns (address[] memory collaterals, uint256[] memory collateralValues, uint256 liabilityValue) {
+        verifyController(account);
         MarketCache memory marketCache = loadMarket();
 
         verifyController(account);
-        address[] memory collaterals = IEVC(evc).getCollaterals(account);
+        collaterals = getCollaterals(account);
 
-        uint256 numMarkets = collaterals.length + 1;
         for (uint256 i; i < collaterals.length; ++i) {
-            if (collaterals[i] == address(this)) {
-                numMarkets--;
-                break;
-            }
+            collateralValues[i] = getCollateralValue(marketCache, account, collaterals[i], liquidation);
         }
 
-        MarketLiquidity[] memory output = new MarketLiquidity[](numMarkets);
-        address[] memory singleCollateral = new address[](1);
-
-        // account also supplies collateral in liability market
-        for (uint256 i; i < collaterals.length; ++i) {
-            output[i].market = collaterals[i];
-            singleCollateral[0] = collaterals[i];
-
-            (output[i].collateralValue, output[i].liabilityValue) =
-                liquidityCalculate(marketCache, account, singleCollateral, liquidation);
-            if (collaterals[i] != address(this)) output[i].liabilityValue = 0;
-        }
-
-        // liability market is not included in supplied collaterals
-        if (numMarkets > collaterals.length) {
-            singleCollateral[0] = address(this);
-            uint256 index = numMarkets - 1;
-
-            output[index].market = address(this);
-            (output[index].collateralValue, output[index].liabilityValue) =
-                liquidityCalculate(marketCache, account, singleCollateral, liquidation);
-        }
-
-        return output;
+        liabilityValue = getLiabilityValue(marketCache, account);
     }
 
     /// @inheritdoc IRiskManager

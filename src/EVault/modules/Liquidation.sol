@@ -171,41 +171,41 @@ abstract contract LiquidationModule is ILiquidation, Base, BalanceUtils, Liquidi
     ) private {
         if (minYieldBalance > liqCache.yieldBalance) revert E_MinYield();
 
-        // Handle yield
-
-        if (liqCache.collateral != address(this)) {
-            enforceCollateralTransfer(
-                liqCache.collateral, liqCache.yieldBalance, liqCache.violator, liqCache.liquidator
-            );
-
-            // Remove scheduled health check for the violator's account. This operation is safe, because:
-            // 1. `liquidate` function is enforcing that the violator is not in deferred checks state,
-            //    therefore there were no prior batch operations that could have registered a health check,
-            //    and if the check is present now, it must have been triggered by the enforced transfer.
-            // 2. Markets with collateral factor 0 are never invoked during liquidation, and markets with
-            //    non-zero collateral factors are assumed to have trusted transfer methods that make no external calls
-            //    FIXME FIXME make sure this is true ^^^
-            // 3. Any additional operations on violator's account in a batch will register the health check again, and it
-            //    will be executed normally at the end of the batch.
-            forgiveAccountStatusCheck(liqCache.violator);
-        } else {
-            transferBalance(liqCache.violator, liqCache.liquidator, liqCache.yieldBalance.toShares());
-        }
-
         // Handle repay: liquidator takes on violator's debt:
 
         transferBorrow(marketCache, liqCache.violator, liqCache.liquidator, liqCache.repay);
 
-        // Handle debt socialization
-        if (liqCache.owed > liqCache.repay && liqCache.debtSocialization) {
-            if (liquidityNoCollateralExists(liqCache.violator, liqCache.collaterals)) {
-                Assets owedRemaining = liqCache.owed - liqCache.repay;
-                decreaseBorrow(marketCache, liqCache.violator, owedRemaining);
+        // Handle yield: liquidator receives violator's collateral
 
-                // decreaseBorrow emits Repay without any assets entering the vault. Emit Withdraw from and to zero address to cover the missing amount for offchain trackers.
-                emit Withdraw(liqCache.liquidator, address(0), address(0), owedRemaining.toUint(), 0);
-                emit DebtSocialized(liqCache.violator, owedRemaining.toUint());
-            }
+        // Impersonate violator on the EVC to seize collateral and remove scheduled health check for the violator's account.
+        // This operation is safe, because:
+        // 1. `liquidate` function is enforcing that the violator is not in deferred checks state,
+        //    therefore there were no prior batch operations that could have registered a health check,
+        //    and if the check is present now, it must have been triggered by the enforced transfer.
+        // 2. Markets with collateral factor 0 are never invoked during liquidation, and markets with
+        //    non-zero collateral factors are assumed to have trusted transfer methods that make no external calls
+        //    FIXME FIXME make sure this is true ^^^
+        // 3. Any additional operations on violator's account in a batch will register the health check again, and it
+        //    will be executed normally at the end of the batch.
+
+        enforceCollateralTransfer(
+            liqCache.collateral, liqCache.yieldBalance, liqCache.violator, liqCache.liquidator
+        );
+
+        forgiveAccountStatusCheck(liqCache.violator);
+
+        // Handle debt socialization
+        if (
+            liqCache.debtSocialization &&
+            liqCache.owed > liqCache.repay &&
+            liquidityNoCollateralExists(liqCache.violator, liqCache.collaterals)
+        ) {
+            Assets owedRemaining = liqCache.owed - liqCache.repay;
+            decreaseBorrow(marketCache, liqCache.violator, owedRemaining);
+
+            // decreaseBorrow emits Repay without any assets entering the vault. Emit Withdraw from and to zero address to cover the missing amount for offchain trackers.
+            emit Withdraw(liqCache.liquidator, address(0), address(0), owedRemaining.toUint(), 0);
+            emit DebtSocialized(liqCache.violator, owedRemaining.toUint());
         }
 
         emitLiquidationLog(liqCache);
