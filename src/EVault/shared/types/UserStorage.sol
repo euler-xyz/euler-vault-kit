@@ -10,13 +10,14 @@ struct UserStorage {
     PackedUserSlot data;
 
     uint256 interestAccumulator;
+    uint256 nonce;
 }
 
-uint256 constant BALANCE_FORWARDER_MASK = 0x8000000000000000000000000000000000000000000000000000000000000000;
-uint256 constant OWED_MASK = 0x7FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF0000000000000000000000000000;
-uint256 constant SHARES_MASK = 0x000000000000000000000000000000000000FFFFFFFFFFFFFFFFFFFFFFFFFFFF;
 
 library UserStorageLib {
+    uint256 constant BALANCE_FORWARDER_MASK = 0x8000000000000000000000000000000000000000000000000000000000000000;
+    uint256 constant OWED_MASK = 0x7FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF0000000000000000000000000000;
+    uint256 constant SHARES_MASK = 0x000000000000000000000000000000000000FFFFFFFFFFFFFFFFFFFFFFFFFFFF;
     function getBalanceForwarderEnabled(UserStorage storage self) internal view returns (bool) {
         return unpackBalanceForwarder(self.data);
     }
@@ -58,6 +59,11 @@ library UserStorageLib {
 
     function unpackBalanceForwarder(PackedUserSlot data) private pure returns (bool) {
         return (PackedUserSlot.unwrap(data) & BALANCE_FORWARDER_MASK) > 0;
+    }
+
+    function useNonce(UserStorage storage self) internal returns (uint256 nonce) {
+        nonce = self.nonce;
+        unchecked { ++self.nonce; }
     }
 }
 

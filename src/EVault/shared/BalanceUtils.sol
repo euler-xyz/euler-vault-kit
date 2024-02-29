@@ -92,16 +92,23 @@ abstract contract BalanceUtils is Base {
 
     // Allowance
 
-    function decreaseAllowance(address from, address to, Shares amount) internal {
+    function setAllowance(address owner, address spender, uint256 amount) internal {
+        if (spender == owner) revert E_SelfApproval();
+
+        marketStorage.eVaultAllowance[owner][spender] = amount;
+        emit Approval(owner, spender, amount);
+    }
+
+    function decreaseAllowance(address owner, address spender, Shares amount) internal {
         if (amount.isZero()) return;
-        uint256 allowanceCache = marketStorage.eVaultAllowance[from][to];
-        if (from != to && allowanceCache != type(uint256).max) {
-            if (allowanceCache < amount.toUint()) revert E_InsufficientAllowance();
+        uint256 allowance = marketStorage.eVaultAllowance[owner][spender];
+        if (owner != spender && allowance != type(uint256).max) {
+            if (allowance < amount.toUint()) revert E_InsufficientAllowance();
             unchecked {
-                allowanceCache -= amount.toUint();
+                allowance -= amount.toUint();
             }
-            marketStorage.eVaultAllowance[from][to] = allowanceCache;
-            emit Approval(from, to, allowanceCache);
+            marketStorage.eVaultAllowance[owner][spender] = allowance;
+            emit Approval(owner, spender, allowance);
         }
     }
 }

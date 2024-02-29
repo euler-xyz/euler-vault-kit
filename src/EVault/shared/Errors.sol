@@ -73,4 +73,9 @@ contract Errors {
     error E_InvalidLTVAsset();
     error E_InvalidLTV();
     error E_NoPriceOracle();
+
+    error E_ExpiredSignature();
+    error E_InvalidSignatureS();
+    error E_InvalidSignature();
+    error E_InvalidSigner();
 }
