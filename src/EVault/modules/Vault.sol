@@ -113,7 +113,7 @@ abstract contract VaultModule is IVault, Base, AssetTransfers, BalanceUtils {
         if (receiver == address(0)) receiver = account;
 
         Assets assets =
-            amount == type(uint256).max ? marketCache.asset.callBalanceOf(account).toAssets() : amount.toAssets();
+            amount == type(uint256).max ? marketCache.asset.balanceOf(account).toAssets() : amount.toAssets();
         if (assets.isZero()) return 0;
 
         Shares shares = assets.toSharesDown(marketCache);
@@ -188,7 +188,7 @@ abstract contract VaultModule is IVault, Base, AssetTransfers, BalanceUtils {
 
         (IERC20 _asset,,) = ProxyUtils.metadata();
 
-        uint256 balance = _asset.callBalanceOf(address(this));
+        uint256 balance = _asset.balanceOf(address(this));
         uint256 poolSize = marketStorage.poolSize.toUint();
         if (balance > poolSize) {
             uint256 amount = balance - poolSize;
