@@ -34,6 +34,7 @@ abstract contract RiskManagerModule is IRiskManager, Base, LiquidityUtils {
 
         verifyController(account);
         collaterals = getCollaterals(account);
+        collateralValues = new uint256[](collaterals.length);
 
         for (uint256 i; i < collaterals.length; ++i) {
             collateralValues[i] = getCollateralValue(marketCache, account, collaterals[i], liquidation);

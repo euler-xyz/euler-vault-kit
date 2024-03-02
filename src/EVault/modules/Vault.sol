@@ -233,9 +233,9 @@ abstract contract VaultModule is IVault, Base, AssetTransfers, BalanceUtils {
             address controller = getController(owner);
 
             if (controller != address(0)) {
-                try IEVault(controller).collateralUsed(address(this), owner) returns (uint256 locked) {
-                    if (locked >= max.toUint()) return Shares.wrap(0);
-                    max = max - locked.toShares();
+                try IEVault(controller).collateralUsed(address(this), owner) returns (uint256 used) {
+                    if (used >= max.toUint()) return Shares.wrap(0);
+                    max = max - used.toShares();
                 } catch {} // if controller doesn't implement the function, assume it will not block withdrawal
             }
         }
@@ -250,9 +250,12 @@ abstract contract VaultModule is IVault, Base, AssetTransfers, BalanceUtils {
 
     function maxDepositInternal(MarketCache memory marketCache, address) private pure returns (uint256) {
         uint256 supply = totalAssetsInternal(marketCache);
+        if(supply >= marketCache.supplyCap) return 0;
 
-        uint256 max = supply < marketCache.supplyCap ? marketCache.supplyCap - supply : 0;
-        return max > MAX_SANE_AMOUNT ? MAX_SANE_AMOUNT : max;
+        uint256 remainingSupply = marketCache.supplyCap - supply;
+        uint256 remainingPoolSize = MAX_SANE_AMOUNT - marketCache.poolSize.toUint();
+
+        return remainingPoolSize < remainingSupply ? remainingPoolSize : remainingSupply;
     }
 }
 
