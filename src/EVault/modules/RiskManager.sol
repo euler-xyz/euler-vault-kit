@@ -5,7 +5,6 @@ pragma solidity ^0.8.0;
 import {IRiskManager, IEVault} from "../IEVault.sol";
 import {Base} from "../shared/Base.sol";
 import {LiquidityUtils} from "../shared/LiquidityUtils.sol";
-import {IEVC} from "ethereum-vault-connector/interfaces/IEthereumVaultConnector.sol";
 import "../../interestRateModels/IIRM.sol";
 
 import "../shared/types/Types.sol";
@@ -18,7 +17,7 @@ abstract contract RiskManagerModule is IRiskManager, Base, LiquidityUtils {
         MarketCache memory marketCache = loadMarket();
 
         verifyController(account);
-        address[] memory collaterals = IEVC(evc).getCollaterals(account);
+        address[] memory collaterals = getCollaterals(account);
 
         return liquidityCalculate(
             marketCache,
@@ -35,6 +34,7 @@ abstract contract RiskManagerModule is IRiskManager, Base, LiquidityUtils {
 
         verifyController(account);
         collaterals = getCollaterals(account);
+        collateralValues = new uint256[](collaterals.length);
 
         for (uint256 i; i < collaterals.length; ++i) {
             collateralValues[i] = getCollateralValue(marketCache, account, collaterals[i], liquidation);
@@ -112,7 +112,7 @@ abstract contract RiskManagerModule is IRiskManager, Base, LiquidityUtils {
                 ? 0 // empty pool arbitrarily given utilisation of 0
                 : uint32(borrows * (uint256(type(uint32).max) * 1e18) / poolAssets / 1e18);
 
-            try IIRM(irm).computeInterestRate(msg.sender, address(marketCache.asset), utilisation) returns (uint256 ir) {
+            try IIRM(irm).computeInterestRate(address(this), address(marketCache.asset), utilisation) returns (uint256 ir) {
                 newInterestRate = ir;
             } catch {}
         }
@@ -125,14 +125,6 @@ abstract contract RiskManagerModule is IRiskManager, Base, LiquidityUtils {
         marketStorage.interestRate = uint72(newInterestRate);
 
         return uint72(newInterestRate);
-    }
-
-    function verifyController(address account) private view {
-        address[] memory controllers = IEVC(evc).getControllers(account);
-
-        if (controllers.length > 1) revert E_TransientState();
-        if (controllers.length == 0) revert E_NoLiability();
-        if (controllers[0] != address(this)) revert E_NotController();
     }
 }
 

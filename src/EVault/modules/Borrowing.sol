@@ -10,8 +10,6 @@ import {AssetTransfers} from "../shared/AssetTransfers.sol";
 import {SafeERC20Lib} from "../shared/lib/SafeERC20Lib.sol";
 import {ProxyUtils} from "../shared/lib/ProxyUtils.sol";
 
-import {IEVC} from "ethereum-vault-connector/interfaces/IEthereumVaultConnector.sol";
-
 import "../shared/types/Types.sol";
 
 /// @notice Definition of callback method that flashLoan will invoke on your contract
@@ -74,7 +72,7 @@ abstract contract BorrowingModule is IBorrowing, Base, AssetTransfers, BalanceUt
         nonReentrantView
         returns (uint256)
     {
-        if (getController(account) != address(this)) revert E_ControllerDisabled();
+        verifyController(account);
 
         // if collateral is not enabled, it will not be locked
         if (!isCollateralEnabled(account, collateral)) return 0;
@@ -148,7 +146,6 @@ abstract contract BorrowingModule is IBorrowing, Base, AssetTransfers, BalanceUt
         if (receiver == address(0)) receiver = account;
 
         uint256 owed = getCurrentOwed(marketCache, receiver).toAssetsUp().toUint();
-        if (owed == 0) return;
 
         Assets assets = (amount > owed ? owed : amount).toAssets();
         if (assets.isZero()) return;
@@ -160,7 +157,7 @@ abstract contract BorrowingModule is IBorrowing, Base, AssetTransfers, BalanceUt
 
     /// @inheritdoc IBorrowing
     function loop(uint256 amount, address sharesReceiver) external virtual nonReentrant returns (uint256) {
-        (MarketCache memory marketCache, address account) = initOperationForBorrow(OP_WIND);
+        (MarketCache memory marketCache, address account) = initOperationForBorrow(OP_LOOP);
 
         if (sharesReceiver == address(0)) sharesReceiver = account;
 
@@ -180,7 +177,7 @@ abstract contract BorrowingModule is IBorrowing, Base, AssetTransfers, BalanceUt
 
     /// @inheritdoc IBorrowing
     function deloop(uint256 amount, address debtFrom) external virtual nonReentrant returns (uint256) {
-        (MarketCache memory marketCache, address account) = initOperation(OP_UNWIND, ACCOUNTCHECK_CALLER);
+        (MarketCache memory marketCache, address account) = initOperation(OP_DELOOP, ACCOUNTCHECK_CALLER);
 
         if (debtFrom == address(0)) debtFrom = account;
 

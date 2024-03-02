@@ -42,6 +42,8 @@ abstract contract VaultModule is IVault, Base, AssetTransfers, BalanceUtils {
     /// @inheritdoc IERC4626
     function maxDeposit(address account) public view virtual nonReentrantView returns (uint256) {
         MarketCache memory marketCache = loadMarket();
+        if (marketCache.disabledOps.get(OP_DEPOSIT)) return 0;
+
         return maxDepositInternal(marketCache, account);
     }
 
@@ -53,6 +55,8 @@ abstract contract VaultModule is IVault, Base, AssetTransfers, BalanceUtils {
     /// @inheritdoc IERC4626
     function maxMint(address account) external view virtual nonReentrantView returns (uint256) {
         MarketCache memory marketCache = loadMarket();
+
+        if (marketCache.disabledOps.get(OP_MINT)) return 0;
         return maxDepositInternal(marketCache, account).toAssets().toSharesDown(marketCache).toUint();
     }
 
@@ -109,7 +113,7 @@ abstract contract VaultModule is IVault, Base, AssetTransfers, BalanceUtils {
         if (receiver == address(0)) receiver = account;
 
         Assets assets =
-            amount == type(uint256).max ? marketCache.asset.callBalanceOf(account).toAssets() : amount.toAssets();
+            amount == type(uint256).max ? marketCache.asset.balanceOf(account).toAssets() : amount.toAssets();
         if (assets.isZero()) return 0;
 
         Shares shares = assets.toSharesDown(marketCache);
@@ -183,7 +187,7 @@ abstract contract VaultModule is IVault, Base, AssetTransfers, BalanceUtils {
 
         (IERC20 _asset,,) = ProxyUtils.metadata();
 
-        uint256 balance = _asset.callBalanceOf(address(this));
+        uint256 balance = _asset.balanceOf(address(this));
         uint256 poolSize = marketStorage.poolSize.toUint();
         if (balance > poolSize) {
             uint256 amount = balance - poolSize;
@@ -229,9 +233,9 @@ abstract contract VaultModule is IVault, Base, AssetTransfers, BalanceUtils {
             address controller = getController(owner);
 
             if (controller != address(0)) {
-                try IEVault(controller).collateralUsed(address(this), owner) returns (uint256 locked) {
-                    if (locked >= max.toUint()) return Shares.wrap(0);
-                    max = max - locked.toShares();
+                try IEVault(controller).collateralUsed(address(this), owner) returns (uint256 used) {
+                    if (used >= max.toUint()) return Shares.wrap(0);
+                    max = max - used.toShares();
                 } catch {} // if controller doesn't implement the function, assume it will not block withdrawal
             }
         }
@@ -245,12 +249,13 @@ abstract contract VaultModule is IVault, Base, AssetTransfers, BalanceUtils {
     }
 
     function maxDepositInternal(MarketCache memory marketCache, address) private pure returns (uint256) {
-        if (marketCache.disabledOps.get(OP_DEPOSIT)) return 0;
-
         uint256 supply = totalAssetsInternal(marketCache);
+        if(supply >= marketCache.supplyCap) return 0;
 
-        uint256 max = supply < marketCache.supplyCap ? marketCache.supplyCap - supply : 0;
-        return max > MAX_SANE_AMOUNT ? MAX_SANE_AMOUNT : max;
+        uint256 remainingSupply = marketCache.supplyCap - supply;
+        uint256 remainingPoolSize = MAX_SANE_AMOUNT - marketCache.poolSize.toUint();
+
+        return remainingPoolSize < remainingSupply ? remainingPoolSize : remainingSupply;
     }
 }
 

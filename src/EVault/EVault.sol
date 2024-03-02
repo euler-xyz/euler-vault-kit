@@ -153,7 +153,7 @@ contract EVault is
 
     function interestAccumulator() external view override useView(MODULE_BORROWING) returns (uint256) {}
 
-    function collateralUsed(address collateral, address account) external view override useView(MODULE_BORROWING) returns (uint256 lockedBalance) {}
+    function collateralUsed(address collateral, address account) external view override useView(MODULE_BORROWING) returns (uint256) {}
 
     function dToken() external view override useView(MODULE_BORROWING) returns (address) {}
 
@@ -186,9 +186,9 @@ contract EVault is
 
     // ----------------- RiskManager -----------------
 
-    function accountLiquidity(address account, bool liquidation) external view override useView(MODULE_RISKMANAGER) returns (uint256, uint256) {}
+    function accountLiquidity(address account, bool liquidation) external view override useView(MODULE_RISKMANAGER) returns (uint256 collateralValue, uint256 liabilityValue) {}
 
-    function accountLiquidityFull(address account, bool liquidation) external view override useView(MODULE_RISKMANAGER) returns (address[] memory, uint256[] memory, uint256) {}
+    function accountLiquidityFull(address account, bool liquidation) external view override useView(MODULE_RISKMANAGER) returns (address[] memory collaterals, uint256[] memory collateralValues, uint256 liabilityValue) {}
 
 
     function disableController() external override use(MODULE_RISKMANAGER) {}
@@ -228,7 +228,7 @@ contract EVault is
 
     function LTVRamped(address collateral) external override useView(MODULE_GOVERNANCE) view returns (uint16) {}
 
-    function LTVFull(address collateral) external override useView(MODULE_GOVERNANCE) view returns (uint40, uint16, uint24, uint16) {}
+    function LTVFull(address collateral) external override useView(MODULE_GOVERNANCE) view returns (uint40 targetTimestamp, uint16 targetLTV, uint24 rampDuration, uint16 originalLTV) {}
 
     function LTVList() external override useView(MODULE_GOVERNANCE) view returns (address[] memory) {}
 
@@ -236,7 +236,7 @@ contract EVault is
 
     function disabledOps() external override useView(MODULE_GOVERNANCE) view returns (uint32) {}
 
-    function caps() external override useView(MODULE_GOVERNANCE) view returns (uint16, uint16) {}
+    function caps() external override useView(MODULE_GOVERNANCE) view returns (uint16 supplyCap, uint16 borrowCap) {}
 
     function feeReceiver() external override useView(MODULE_GOVERNANCE) view returns (address) {}
 
