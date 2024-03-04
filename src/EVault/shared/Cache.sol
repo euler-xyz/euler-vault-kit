@@ -14,6 +14,8 @@ contract Cache is Storage, Errors {
     using TypesLib for uint256;
     using SafeERC20Lib for IERC20;
 
+    // Returns an updated MarketCache
+    // If different from MarketStorage, updates MarketStorage
     function updateMarket() internal returns (MarketCache memory marketCache) {
         if (initMarketCache(marketCache)) {
             marketStorage.lastInterestAccumulatorUpdate = marketCache.lastInterestAccumulatorUpdate;
@@ -26,10 +28,14 @@ contract Cache is Storage, Errors {
         }
     }
 
+    // Returns an updated MarketCache 
     function loadMarket() internal view returns (MarketCache memory marketCache) {
         initMarketCache(marketCache);
     }
 
+    // Takes a MarketCache struct, overwrites it with MarketStorage data and, if time has passed since MarkeStorage
+    // was last updated, updates MarketCache.
+    // Returns a MarketCache updated to this block.
     function initMarketCache(MarketCache memory marketCache) private view returns (bool dirty) {
         dirty = false;
 
@@ -60,25 +66,25 @@ contract Cache is Storage, Errors {
 
             // Compute new values. Use full precision for intermediate results.
 
-            uint16 interestFee = marketStorage.interestFee;
-            uint256 interestRate = marketStorage.interestRate;
+            uint16 interestFee = marketStorage.interestFee; // r: Interest accrued by debt --- alcueca: To avoid accidental overflows you should use uint256 for all temporary variables
+            uint256 interestRate = marketStorage.interestRate; // f: Fee charged on the accrued interest as newly minted shares, accounted for in marketCache.feesBalance
 
             uint256 deltaT = block.timestamp - marketCache.lastInterestAccumulatorUpdate;
             uint256 newInterestAccumulator =
-                (RPow.rpow(interestRate + 1e27, deltaT, 1e27) * marketCache.interestAccumulator) / 1e27;
+                (RPow.rpow(interestRate + 1e27, deltaT, 1e27) * marketCache.interestAccumulator) / 1e27;  // a' = a * (r+1)^Δt
 
             uint256 newTotalBorrows =
-                marketCache.totalBorrows.toUint() * newInterestAccumulator / marketCache.interestAccumulator;
-            uint256 newFeesBalance = marketCache.feesBalance.toUint();
+                marketCache.totalBorrows.toUint() * newInterestAccumulator / marketCache.interestAccumulator;  // B' = B * (a' / a)
+            uint256 newFeeShares = marketCache.feesBalance.toUint(); // feesBalance should be renamed to feeShares
             uint256 newTotalShares = marketCache.totalShares.toUint();
 
-            uint256 feeAssets = (newTotalBorrows - marketCache.totalBorrows.toUint()) * interestFee
+            uint256 feeAssets = (newTotalBorrows - marketCache.totalBorrows.toUint()) * interestFee  // f = (B' - B) * i
                 / (CONFIG_SCALE << INTERNAL_DEBT_PRECISION);
 
             if (feeAssets != 0) {
-                uint256 poolAssets = marketCache.poolSize.toUint() + (newTotalBorrows >> INTERNAL_DEBT_PRECISION);
-                newTotalShares = poolAssets * newTotalShares / (poolAssets - feeAssets);
-                newFeesBalance += newTotalShares - marketCache.totalShares.toUint();
+                uint256 poolAssets = marketCache.poolSize.toUint() + (newTotalBorrows >> INTERNAL_DEBT_PRECISION); // alcueca: poolSize is the assets held by the Vault (rename to vaultAssets), poolAssets is assets held + debt issued (rename to vaultAssetsAndBorrows). We scale newTotalBorrows from debt to asset units.
+                newTotalShares = poolAssets * newTotalShares / (poolAssets - feeAssets); // alcueca: We want to issue new shares worth feeAssets, which proportionally decreases the assets that each share is worth.
+                newFeeShares += newTotalShares - marketCache.totalShares.toUint();
             }
 
             // Store new values in marketCache, only if no overflows will occur. Fees are not larger than total shares, since they are included in them.
@@ -89,7 +95,7 @@ contract Cache is Storage, Errors {
                 marketCache.lastInterestAccumulatorUpdate = uint40(block.timestamp);
 
                 if (newTotalShares != Shares.unwrap(marketCache.totalShares)) {
-                    marketCache.feesBalance = newFeesBalance.toShares();
+                    marketCache.feesBalance = newFeeShares.toShares();
                     marketCache.totalShares = newTotalShares.toShares();
                 }
             }

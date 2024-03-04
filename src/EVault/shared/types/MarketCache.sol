@@ -13,10 +13,10 @@ struct MarketCache {
     address unitOfAccount;
 
     uint40 lastInterestAccumulatorUpdate;
-    Assets poolSize;
+    Assets poolSize; // alcueca: If changing in MarketStorage, then change here as well.
     Owed totalBorrows;
     Shares totalShares;
-    Shares feesBalance;
+    Shares feesBalance; // alcueca: If changing to feeShares in MarketStorage, then change here as well.
     uint256 interestAccumulator;
 
     uint256 supplyCap;

@@ -7,7 +7,7 @@ import "./Types.sol";
 struct MarketStorage {
     // Packed slot 5 + 14 + 2 + 2 + 4 + 1 = 28
     uint40 lastInterestAccumulatorUpdate;
-    Assets poolSize;
+    Assets poolSize; // alcueca: This should be renamed to something like vaultAssets or vaultAssetsAndBorrows
     AmountCap supplyCap;
     AmountCap borrowCap;
     DisabledOps disabledOps;
@@ -19,7 +19,7 @@ struct MarketStorage {
     Shares totalShares;
     Owed totalBorrows;
 
-    Shares feesBalance;
+    Shares feesBalance; // alcueca: This should be renamed to feeShares
 
     uint256 interestAccumulator;
 

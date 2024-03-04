@@ -29,7 +29,7 @@ uint256 constant VIRTUAL_DEPOSIT_AMOUNT = 1e6;
 
 // Config
 
-uint256 constant CONFIG_SCALE = 60_000; // must fit into a uint16
+uint256 constant CONFIG_SCALE = 60_000; // must fit into a uint16 -- alcueca: It's unclear what this is, or why this value.
 uint16 constant DEFAULT_INTEREST_FEE = uint16(0.23 * 60_000);
 // Maximum liquidation discount that can be awarded under any conditions.
 uint256 constant MAXIMUM_LIQUIDATION_DISCOUNT = 0.2 * 1e18; // FIXME: move to liq module, make accessor (ie, public)
