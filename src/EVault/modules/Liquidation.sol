@@ -45,16 +45,19 @@ abstract contract LiquidationModule is ILiquidation, Base, BalanceUtils, Liquidi
         virtual
         reentrantOK
     {
-        // non-reentrant
+        // Note the function does not have a re-entrancy lock on purpose to allow calculateLiquidation to re-enter
+        // during pricing calls, in order to price the shares with convertToAssets
+
+        // initLiquidation is re-entrancy protected, although it only does safe external calls 
         (MarketCache memory marketCache, address liquidator) = initLiquidation(violator);
 
-        // reentrancy allowed for static call
+        // re-entrancy allowed for static call
         LiquidationCache memory liqCache =
             calculateLiquidation(marketCache, liquidator, violator, collateral, repayAssets);
 
         // liquidation is a no-op if there's no violation
         if (!liqCache.repay.isZero()) {
-            // non-reentrant
+            // non-reentrant execution of the liquidation
             executeLiquidation(marketCache, liqCache, minYieldBalance);
         }
     }
@@ -167,7 +170,7 @@ abstract contract LiquidationModule is ILiquidation, Base, BalanceUtils, Liquidi
         MarketCache memory marketCache,
         LiquidationCache memory liqCache,
         uint256 minYieldBalance
-    ) private {
+    ) private nonReentrant {
         if (minYieldBalance > liqCache.yieldBalance) revert E_MinYield();
 
         // Handle repay: liquidator takes on violator's debt:
