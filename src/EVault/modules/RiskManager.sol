@@ -32,7 +32,7 @@ abstract contract RiskManagerModule is IRiskManager, Base, LiquidityUtils {
         verifyController(account);
         MarketCache memory marketCache = loadMarket();
 
-        verifyController(account);
+        verifyController(account); // alcueca: We probably don't need to verufy the contrller twice
         collaterals = getCollaterals(account);
         collateralValues = new uint256[](collaterals.length);
 
@@ -72,12 +72,14 @@ abstract contract RiskManagerModule is IRiskManager, Base, LiquidityUtils {
     /// @inheritdoc IRiskManager
     /// @dev See comment about re-entrancy for `checkAccountStatus`
     function checkVaultStatus() external virtual reentrantOK onlyEVCChecks returns (bytes4 magicValue) {
+        // alcueca: Hijack the vault status check to make sure that the market storage is updated at the end of the batch
         // Use the updating variant to make sure interest is accrued in storage before the interest rate update
         MarketCache memory marketCache = updateMarket();
-        uint72 newInterestRate = updateInterestRate(marketCache);
+        uint72 newInterestRate = updateInterestRate(marketCache); // alcueca: Better to always use uint256 internally
 
-        logMarketStatus(marketCache, newInterestRate);
+        logMarketStatus(marketCache, newInterestRate); // alcueca: You can convert to uint72 inside `logMarketStatus`, if you need to.
 
+        // alcueca: We use the snapshot to check if the borrows or supply grew, and if so then we check the borrow and supply caps.
         // If snapshot is initialized, then caps are configured.
         // If caps are set in the middle of a batch, then snapshots represent the state of the vault at that time.
         if (marketCache.snapshotInitialized) {
@@ -97,32 +99,32 @@ abstract contract RiskManagerModule is IRiskManager, Base, LiquidityUtils {
         magicValue = VAULT_STATUS_CHECK_RETURN_VALUE;
     }
 
-    function updateInterestRate(MarketCache memory marketCache) private returns (uint72) {
+    function updateInterestRate(MarketCache memory marketCache) private returns (uint72) { // alcueca: Better to always use uint256 internally
         uint256 newInterestRate;
 
         // single SLOAD
         address irm = marketStorage.interestRateModel;
-        uint16 interestFee = marketStorage.interestFee;
+        uint16 interestFee = marketStorage.interestFee; // alcueca: Even if you are not going to use it, I would pull this as a uint256 and cast it back at the end, for consistency
 
         if (irm != address(0)) {
-            uint256 borrows = marketCache.totalBorrows.toAssetsUp().toUint();
-            uint256 poolAssets = marketCache.poolSize.toUint() + borrows;
+            uint256 borrows = marketCache.totalBorrows.toAssetsUp().toUint(); // alcueca: Is there some rule as to whether amounts are in assets or shares in marketCache/marketStorage?
+            uint256 poolAssets = marketCache.poolSize.toUint() + borrows; // alcueca: poolSize and poolAssets is a bit obscure. vaultAssets and vaultAssetsAndBorrows is a bit clearer.
 
             uint32 utilisation = poolAssets == 0
                 ? 0 // empty pool arbitrarily given utilisation of 0
-                : uint32(borrows * (uint256(type(uint32).max) * 1e18) / poolAssets / 1e18);
+                : uint32(borrows * (uint256(type(uint32).max) * 1e18) / poolAssets / 1e18); // alcueca: type(uint32).max used to maximize the uint32 for maximum precision (borrows/poolAssets < 1). Why not just `borrows * type(uint32).max / poolAssets`? I got tripped by `poolAssets` yet once again :/
 
             try IIRM(irm).computeInterestRate(address(this), address(marketCache.asset), utilisation) returns (uint256 ir) {
-                newInterestRate = ir;
-            } catch {}
+                newInterestRate = ir; // alcueca: If the IRM reverts the new interest rate is zero?
+            } catch {} // alcueca: Cool kids use (success, result)
         }
 
         if (newInterestRate > MAX_ALLOWED_INTEREST_RATE) newInterestRate = MAX_ALLOWED_INTEREST_RATE;
 
         // single SSTORE
         marketStorage.interestRateModel = irm;
-        marketStorage.interestFee = interestFee;
-        marketStorage.interestRate = uint72(newInterestRate);
+        marketStorage.interestFee = minterestFee;
+        marketStorage.interestRate = uint72(newInterestRate); // alcueca: Correct, here is where you convert from uint256 to uint72
 
         return uint72(newInterestRate);
     }

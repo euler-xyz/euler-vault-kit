@@ -9,6 +9,7 @@ import "./types/Types.sol";
 abstract contract LiquidityUtils is BorrowUtils {
     using TypesLib for uint256;
 
+    // alcueca: Calculate the value of liabilities, and the liquidation or borrowing tvl adjusted collateral value.
     function liquidityCalculate(MarketCache memory marketCache, address account, address[] memory collaterals, bool isLiquidation)
         internal
         view
@@ -17,11 +18,13 @@ abstract contract LiquidityUtils is BorrowUtils {
         validateOracle(marketCache);
         liabilityValue = getLiabilityValue(marketCache, account);
 
+        // alcueca: You are going to get told off in the audit for not caching the length of the arrays to save gas
         for (uint256 i; i < collaterals.length; ++i) {
             collateralValue += getCollateralValue(marketCache, account, collaterals[i], isLiquidation);
         }
     }
 
+    // alcueca: Check that the value of the collateral, adjusted for borrowing TVL, is equal or greater than the liability value.
     function liquidityCheck(address account, address[] memory collaterals)
         internal
         view
@@ -43,7 +46,7 @@ abstract contract LiquidityUtils is BorrowUtils {
         revert E_AccountLiquidity();
     }
 
-
+    // alcueca: Check if the account has no collateral of value, used for debt socialization. Maybe rename as `noCollateralCheck` or `zeroCollateralValue`.
     function liquidityNoCollateralExists(address account, address[] memory collaterals)
         internal
         view
@@ -62,8 +65,6 @@ abstract contract LiquidityUtils is BorrowUtils {
         return true;
     }
 
-
-
     function getLiabilityValue(MarketCache memory marketCache, address account) internal view returns (uint value) {
         uint256 owed = getCurrentOwed(marketCache, account).toAssetsUp().toUint();
 
@@ -75,7 +76,11 @@ abstract contract LiquidityUtils is BorrowUtils {
         }
     }
 
+    // alcueca: Technically, you are returning the tvl-adjusted collateral value.
+    // `isLiquidation` should be an enum TVL {LIQUIDATION, BORROWING} for clarity. It would be even nicer to get rid of the `isLiquidation` flag
+    // but code gets quite messy.
     function getCollateralValue(MarketCache memory marketCache, address account, address collateral, bool isLiquidation) internal view returns (uint value) {
+            // alcueca: indent left
             uint256 ltv = isLiquidation ? ltvLookup[collateral].getRampedLTV() : ltvLookup[collateral].getLTV();
             if (ltv == 0) return 0;
 

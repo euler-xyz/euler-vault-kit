@@ -10,6 +10,7 @@ abstract contract Storage {
     MarketStorage marketStorage;
 
     // Transient data
+    // alcueca: If the snapshot can't be placed in marketStorage, it might look cleaner to put it in a struct
     Assets snapshotPoolSize;
     Assets snapshotTotalBorrows;
 
