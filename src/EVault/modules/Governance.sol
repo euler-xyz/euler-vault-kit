@@ -195,9 +195,8 @@ abstract contract GovernanceModule is IGovernance, Base, BalanceUtils {
 
     /// @inheritdoc IGovernance
     function setLTV(address collateral, uint16 ltv, uint24 rampDuration) external virtual nonReentrant governorOnly {
-        MarketCache memory marketCache = loadMarket();
         // self-collateralization is not allowed
-        if (collateral == address(this) || collateral == address(marketCache.asset)) revert E_InvalidLTVAsset();
+        if (collateral == address(this)) revert E_InvalidLTVAsset();
 
         LTVConfig memory origLTV = ltvLookup[collateral];
         LTVConfig memory newLTV = origLTV.setLTV(ltv, rampDuration);
