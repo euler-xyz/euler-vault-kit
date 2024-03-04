@@ -261,6 +261,8 @@ contract EVault is
 
     function setLTV(address collateral, uint16 ltv, uint24 rampDuration) external override use(MODULE_GOVERNANCE) {}
 
+    function clearLTV(address collateral) external override use(MODULE_GOVERNANCE) {}
+
     function setIRM(address newModel, bytes calldata resetParams) external override use(MODULE_GOVERNANCE) {}
 
     function setDisabledOps(uint32 newDisabledOps) external override use(MODULE_GOVERNANCE) {}

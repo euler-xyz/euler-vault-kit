@@ -47,6 +47,13 @@ library LTVConfigLib {
         newLTV.rampDuration = rampDuration;
         newLTV.originalLTV = self.getRampedLTV();
     }
+
+    function clear(LTVConfig storage self) internal {
+        self.targetTimestamp = 0;
+        self.targetLTV = 0;
+        self.rampDuration = 0;
+        self.originalLTV = 0;
+    }
 }
 
 using LTVConfigLib for LTVConfig global;

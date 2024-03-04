@@ -209,6 +209,14 @@ abstract contract GovernanceModule is IGovernance, Base, BalanceUtils {
     }
 
     /// @inheritdoc IGovernance
+    function clearLTV(address collateral) external virtual nonReentrant governorOnly {
+        uint16 originalLTV = ltvLookup[collateral].getRampedLTV();
+        ltvLookup[collateral].clear();
+
+        emit GovSetLTV(collateral, 0, 0, 0, originalLTV);
+    }
+
+    /// @inheritdoc IGovernance
     function setIRM(address newModel, bytes calldata resetParams) external virtual nonReentrant governorOnly {
         // TODO IIRM reset ?
 

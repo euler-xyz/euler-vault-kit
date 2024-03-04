@@ -86,8 +86,8 @@ abstract contract LiquidationModule is ILiquidation, Base, BalanceUtils, Liquidi
         verifyController(liqCache.violator);
         if (liqCache.violator == liqCache.liquidator) revert E_SelfLiquidation();
         if (!isCollateralEnabled(liqCache.violator, liqCache.collateral)) revert E_CollateralDisabled();
-        // critical security check - only liquidate approved collaterals
-        if (ltvLookup[liqCache.collateral].getRampedLTV() == 0) revert E_BadCollateral();
+        // critical security check - only liquidate audited collaterals to make sure yield transfer has no side effects.
+        if (!ltvLookup[liqCache.collateral].initialised()) revert E_BadCollateral();
 
 
         liqCache.owed = getCurrentOwed(marketCache, violator).toAssetsUp();

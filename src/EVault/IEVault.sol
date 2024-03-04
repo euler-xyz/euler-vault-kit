@@ -389,6 +389,10 @@ interface IGovernance {
     /// @param rampDuration Ramp duration in seconds
     function setLTV(address collateral, uint16 ltv, uint24 rampDuration) external;
 
+    /// @notice Completely clears LTV configuratrion, signalling the collateral is not considered safe to liquidate anymore
+    /// @param collateral Address of collateral
+    function clearLTV(address collateral) external;
+
     /// @notice Set a new interest rate model contract
     /// @param newModel Address of the contract
     /// @param resetParams Data to use in the `reset` function called on the IRM contract after setting it
