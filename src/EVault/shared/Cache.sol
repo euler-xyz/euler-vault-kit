@@ -61,23 +61,23 @@ contract Cache is Storage, Errors {
             // Compute new values. Use full precision for intermediate results.
 
             uint16 interestFee = marketStorage.interestFee;
-            uint72 interestRate = marketStorage.interestRate;
+            uint256 interestRate = marketStorage.interestRate;
 
             uint256 deltaT = block.timestamp - marketCache.lastInterestAccumulatorUpdate;
             uint256 newInterestAccumulator =
-                (RPow.rpow(uint256(interestRate) + 1e27, deltaT, 1e27) * marketCache.interestAccumulator) / 1e27;
+                (RPow.rpow(interestRate + 1e27, deltaT, 1e27) * marketCache.interestAccumulator) / 1e27;
 
             uint256 newTotalBorrows =
                 marketCache.totalBorrows.toUint() * newInterestAccumulator / marketCache.interestAccumulator;
             uint256 newFeesBalance = marketCache.feesBalance.toUint();
             uint256 newTotalShares = marketCache.totalShares.toUint();
 
-            uint256 feeAmount = (newTotalBorrows - marketCache.totalBorrows.toUint()) * interestFee
+            uint256 feeAssets = (newTotalBorrows - marketCache.totalBorrows.toUint()) * interestFee
                 / (CONFIG_SCALE << INTERNAL_DEBT_PRECISION);
 
-            if (feeAmount != 0) {
+            if (feeAssets != 0) {
                 uint256 poolAssets = marketCache.poolSize.toUint() + (newTotalBorrows >> INTERNAL_DEBT_PRECISION);
-                newTotalShares = poolAssets * newTotalShares / (poolAssets - feeAmount);
+                newTotalShares = poolAssets * newTotalShares / (poolAssets - feeAssets);
                 newFeesBalance += newTotalShares - marketCache.totalShares.toUint();
             }
 
