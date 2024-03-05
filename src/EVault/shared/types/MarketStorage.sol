@@ -2,7 +2,8 @@
 
 pragma solidity ^0.8.0;
 
-import "./Types.sol";
+import {Assets, Shares, Owed, AmountCap, ConfigAmount, DisabledOps} from "./Types.sol";
+import {UserStorage} from "./UserStorage.sol";
 
 struct MarketStorage {
     // Packed slot 5 + 14 + 2 + 2 + 4 + 1 = 28
@@ -25,7 +26,7 @@ struct MarketStorage {
 
     // Packed slot 20 + 2 + 9 = 31
     address interestRateModel; // 0% interest, if zero address
-    uint16 interestFee;
+    ConfigAmount interestFee;
     uint72 interestRate;
 
     string name;

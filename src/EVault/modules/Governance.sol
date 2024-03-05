@@ -3,6 +3,7 @@
 pragma solidity ^0.8.0;
 
 import {IGovernance} from "../IEVault.sol";
+import {IPriceOracle} from "../../IPriceOracle.sol";
 import {Base} from "../shared/Base.sol";
 import {BalanceUtils} from "../shared/BalanceUtils.sol";
 import {ProxyUtils} from "../shared/lib/ProxyUtils.sol";
@@ -10,6 +11,8 @@ import {ProxyUtils} from "../shared/lib/ProxyUtils.sol";
 import "../shared/types/Types.sol";
 
 abstract contract GovernanceModule is IGovernance, Base, BalanceUtils {
+    using TypesLib for uint16;
+
     event GovSetName(string newName);
     event GovSetSymbol(string newSymbol);
     event GovSetGovernorAdmin(address indexed newGovernorAdmin);
@@ -44,7 +47,7 @@ abstract contract GovernanceModule is IGovernance, Base, BalanceUtils {
 
     /// @inheritdoc IGovernance
     function interestFee() external view virtual reentrantOK returns (uint16) {
-        return marketStorage.interestFee;
+        return marketStorage.interestFee.toUint16();
     }
 
     /// @inheritdoc IGovernance
@@ -61,12 +64,12 @@ abstract contract GovernanceModule is IGovernance, Base, BalanceUtils {
 
     /// @inheritdoc IGovernance
     function LTV(address collateral) external view virtual reentrantOK returns (uint16) {
-        return ltvLookup[collateral].getLTV();
+        return ltvLookup[collateral].getLTV().toUint16();
     }
 
     /// @inheritdoc IGovernance
     function LTVRamped(address collateral) external view virtual reentrantOK returns (uint16) {
-        return ltvLookup[collateral].getRampedLTV();
+        return ltvLookup[collateral].getRampedLTV().toUint16();
     }
 
     /// @inheritdoc IGovernance
@@ -74,9 +77,9 @@ abstract contract GovernanceModule is IGovernance, Base, BalanceUtils {
         LTVConfig memory ltv = ltvLookup[collateral];
         return (
             ltv.targetTimestamp,
-            ltv.targetLTV,
+            ltv.targetLTV.toUint16(),
             ltv.rampDuration,
-            ltv.originalLTV
+            ltv.originalLTV.toUint16()
         );
     }
 
@@ -199,18 +202,18 @@ abstract contract GovernanceModule is IGovernance, Base, BalanceUtils {
         if (collateral == address(this)) revert E_InvalidLTVAsset();
 
         LTVConfig memory origLTV = ltvLookup[collateral];
-        LTVConfig memory newLTV = origLTV.setLTV(ltv, rampDuration);
+        LTVConfig memory newLTV = origLTV.setLTV(ltv.toConfigAmount(), rampDuration);
 
         ltvLookup[collateral] = newLTV;
 
         if (!origLTV.initialised()) ltvList.push(collateral);
 
-        emit GovSetLTV(collateral, newLTV.targetTimestamp, newLTV.targetLTV, newLTV.rampDuration, newLTV.originalLTV);
+        emit GovSetLTV(collateral, newLTV.targetTimestamp, newLTV.targetLTV.toUint16(), newLTV.rampDuration, newLTV.originalLTV.toUint16());
     }
 
     /// @inheritdoc IGovernance
     function clearLTV(address collateral) external virtual nonReentrant governorOnly {
-        uint16 originalLTV = ltvLookup[collateral].getRampedLTV();
+        uint16 originalLTV = ltvLookup[collateral].getRampedLTV().toUint16();
         ltvLookup[collateral].clear();
 
         emit GovSetLTV(collateral, 0, 0, 0, originalLTV);
@@ -248,14 +251,14 @@ abstract contract GovernanceModule is IGovernance, Base, BalanceUtils {
 
     /// @inheritdoc IGovernance
     function setInterestFee(uint16 newInterestFee) external virtual nonReentrant governorOnly {
-        if (newInterestFee > CONFIG_SCALE) revert E_BadFee();
+        ConfigAmount newInterestFeeConfig = newInterestFee.toConfigAmount();
 
         // Interest fees between 1 and 50% are always allowed, otherwise ask protocolConfig
-        if (newInterestFee < (CONFIG_SCALE * 1 / 100) || newInterestFee > (CONFIG_SCALE * 50 / 100)) {
+        if (newInterestFee < CONFIGAMOUNT_1_PERCENT || newInterestFee > CONFIGAMOUNT_50_PERCENT) {
             if (!protocolConfig.isValidInterestFee(address(this), newInterestFee)) revert E_BadFee();
         }
 
-        marketStorage.interestFee = newInterestFee;
+        marketStorage.interestFee = newInterestFeeConfig;
 
         emit GovSetInterestFee(newInterestFee);
     }

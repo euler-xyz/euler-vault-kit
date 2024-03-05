@@ -3,6 +3,7 @@
 pragma solidity ^0.8.0;
 
 import "./types/MarketStorage.sol";
+import {LTVConfig} from "./types/LTVConfig.sol";
 
 abstract contract Storage {
     bool initialized;

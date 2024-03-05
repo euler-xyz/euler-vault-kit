@@ -78,4 +78,6 @@ contract Errors {
     error E_InvalidSignatureS();
     error E_InvalidSignature();
     error E_InvalidSigner();
+
+    error E_InvalidConfigAmount();
 }

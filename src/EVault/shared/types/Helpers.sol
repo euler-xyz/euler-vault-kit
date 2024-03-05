@@ -2,7 +2,7 @@
 
 pragma solidity ^0.8.0;
 
-import "./MarketCache.sol";
+import {MarketCache} from "./MarketCache.sol";
 import "../Constants.sol";
 
 function totals(MarketCache memory marketCache) pure returns (uint256 totalAssets, uint256 totalShares) {

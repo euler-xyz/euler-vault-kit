@@ -101,7 +101,7 @@ abstract contract RiskManagerModule is IRiskManager, Base, LiquidityUtils {
 
         // single SLOAD
         address irm = marketStorage.interestRateModel;
-        uint16 interestFee = marketStorage.interestFee;
+        ConfigAmount interestFee = marketStorage.interestFee;
 
         if (irm != address(0)) {
             uint256 borrows = marketCache.totalBorrows.toAssetsUp().toUint();

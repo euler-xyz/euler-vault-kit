@@ -33,7 +33,7 @@ contract ProtocolConfig is IProtocolConfig {
         // TODO emit
     }
 
-    function isValidInterestFee(address vault, uint16 interestFee) external view returns (bool) {
+    function isValidInterestFee(address vault, uint256 interestFee) external view returns (bool) {
         InterestFeeRange memory range = interestFeeRanges[vault];
 
         if (range.exists) {

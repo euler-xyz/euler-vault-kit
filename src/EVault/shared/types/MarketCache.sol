@@ -5,7 +5,7 @@ pragma solidity ^0.8.0;
 import {IERC20} from "../../IEVault.sol";
 import {IPriceOracle} from "../../../IPriceOracle.sol";
 
-import "./Types.sol";
+import {Assets, Owed, Shares, DisabledOps} from "./Types.sol";
 
 struct MarketCache {
     IERC20 asset;

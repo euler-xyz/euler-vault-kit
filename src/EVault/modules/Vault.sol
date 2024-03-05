@@ -233,10 +233,13 @@ abstract contract VaultModule is IVault, Base, AssetTransfers, BalanceUtils {
             address controller = getController(owner);
 
             if (controller != address(0)) {
-                try IEVault(controller).collateralUsed(address(this), owner) returns (uint256 used) {
+                (bool success, bytes memory data) = controller.staticcall(abi.encodeCall(IBorrowing.collateralUsed, (address(this), owner)));
+                // if controller doesn't implement the function, assume it will not block withdrawal
+                if (success) {
+                    uint256 used = abi.decode(data, (uint256));
                     if (used >= max.toUint()) return Shares.wrap(0);
                     max = max - used.toShares();
-                } catch {} // if controller doesn't implement the function, assume it will not block withdrawal
+                }
             }
         }
 

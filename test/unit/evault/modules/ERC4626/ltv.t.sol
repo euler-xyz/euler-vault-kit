@@ -102,7 +102,7 @@ contract ERC4626Test_LTV is EVaultTestBase {
 
 
     function test_ltvRange() public {
-        vm.expectRevert(Errors.E_InvalidLTV.selector);
+        vm.expectRevert(Errors.E_InvalidConfigAmount.selector);
         eTST.setLTV(address(eTST2), uint16(CONFIG_SCALE + 1), 0);
     }
 

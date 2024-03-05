@@ -52,8 +52,8 @@ abstract contract LiquidityUtils is BorrowUtils {
         for (uint256 i; i < collaterals.length; ++i) {
             address collateral = collaterals[i];
 
-            uint256 ltv = ltvLookup[collateral].getRampedLTV(); // TODO confirm ramped, not target
-            if (ltv == 0) continue;
+            ConfigAmount ltv = ltvLookup[collateral].getRampedLTV(); // TODO confirm ramped, not target
+            if (ltv.isZero()) continue;
 
             uint256 balance = IERC20(collateral).balanceOf(account);
             if (balance > 0) return false;
@@ -76,8 +76,8 @@ abstract contract LiquidityUtils is BorrowUtils {
     }
 
     function getCollateralValue(MarketCache memory marketCache, address account, address collateral, bool isLiquidation) internal view returns (uint value) {
-            uint256 ltv = isLiquidation ? ltvLookup[collateral].getRampedLTV() : ltvLookup[collateral].getLTV();
-            if (ltv == 0) return 0;
+            ConfigAmount ltv = isLiquidation ? ltvLookup[collateral].getRampedLTV() : ltvLookup[collateral].getLTV();
+            if (ltv.isZero()) return 0;
 
             uint256 balance = IERC20(collateral).balanceOf(account);
             if (balance == 0) return 0;
@@ -85,7 +85,7 @@ abstract contract LiquidityUtils is BorrowUtils {
             // bid price for collateral
             (uint256 currentCollateralValue,) = marketCache.oracle.getQuotes(balance, collateral, marketCache.unitOfAccount);
 
-            return currentCollateralValue * ltv / CONFIG_SCALE;
+            return ltv.mul(currentCollateralValue);
     }
 
     function validateOracle(MarketCache memory marketCache) private pure {
