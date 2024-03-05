@@ -327,7 +327,7 @@ interface IGovernance {
     function LTV(address collateral) external view returns (uint16);
 
     /// @notice Retrieves current ramped value of LTV, which is used to determine liquidation penalty
-    function LTVRamped(address collateral) external view returns (uint16);
+    function LTVLiquidation(address collateral) external view returns (uint16);
 
     /// @notice Retrieves LTV detailed config for a collateral
     /// @param collateral Collateral asset

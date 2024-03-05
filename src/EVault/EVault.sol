@@ -226,7 +226,7 @@ contract EVault is
 
     function LTV(address collateral) external override useView(MODULE_GOVERNANCE) view returns (uint16) {}
 
-    function LTVRamped(address collateral) external override useView(MODULE_GOVERNANCE) view returns (uint16) {}
+    function LTVLiquidation(address collateral) external override useView(MODULE_GOVERNANCE) view returns (uint16) {}
 
     function LTVFull(address collateral) external override useView(MODULE_GOVERNANCE) view returns (uint40 targetTimestamp, uint16 targetLTV, uint24 rampDuration, uint16 originalLTV) {}
 

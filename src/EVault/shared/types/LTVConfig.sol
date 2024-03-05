@@ -22,7 +22,7 @@ library LTVConfigLib {
         return self.targetLTV;
     }
 
-    function getRampedLTV(LTVConfig memory self) internal view returns (ConfigAmount) {
+    function getLiquidationLTV(LTVConfig memory self) internal view returns (ConfigAmount) {
         if (block.timestamp >= self.targetTimestamp) return self.targetLTV;
 
         uint256 ltv = self.originalLTV.toUint16();
@@ -44,7 +44,7 @@ library LTVConfigLib {
         newLTV.targetTimestamp = uint40(block.timestamp + rampDuration);
         newLTV.targetLTV = targetLTV;
         newLTV.rampDuration = rampDuration;
-        newLTV.originalLTV = self.getRampedLTV();
+        newLTV.originalLTV = self.getLiquidationLTV();
     }
 
     function clear(LTVConfig storage self) internal {

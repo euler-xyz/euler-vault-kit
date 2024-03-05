@@ -68,8 +68,8 @@ abstract contract GovernanceModule is IGovernance, Base, BalanceUtils {
     }
 
     /// @inheritdoc IGovernance
-    function LTVRamped(address collateral) external view virtual reentrantOK returns (uint16) {
-        return ltvLookup[collateral].getRampedLTV().toUint16();
+    function LTVLiquidation(address collateral) external view virtual reentrantOK returns (uint16) {
+        return ltvLookup[collateral].getLiquidationLTV().toUint16();
     }
 
     /// @inheritdoc IGovernance
@@ -213,7 +213,7 @@ abstract contract GovernanceModule is IGovernance, Base, BalanceUtils {
 
     /// @inheritdoc IGovernance
     function clearLTV(address collateral) external virtual nonReentrant governorOnly {
-        uint16 originalLTV = ltvLookup[collateral].getRampedLTV().toUint16();
+        uint16 originalLTV = ltvLookup[collateral].getLiquidationLTV().toUint16();
         ltvLookup[collateral].clear();
 
         emit GovSetLTV(collateral, 0, 0, 0, originalLTV);

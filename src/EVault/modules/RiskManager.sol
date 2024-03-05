@@ -23,7 +23,7 @@ abstract contract RiskManagerModule is IRiskManager, Base, LiquidityUtils {
             marketCache,
             account,
             collaterals,
-            liquidation
+            liquidation ? LTVType.LIQUIDATION : LTVType.BORROWING
         );
     }
 
@@ -36,7 +36,7 @@ abstract contract RiskManagerModule is IRiskManager, Base, LiquidityUtils {
         collateralValues = new uint256[](collaterals.length);
 
         for (uint256 i; i < collaterals.length; ++i) {
-            collateralValues[i] = getCollateralValue(marketCache, account, collaterals[i], liquidation);
+            collateralValues[i] = getCollateralValue(marketCache, account, collaterals[i], liquidation ? LTVType.LIQUIDATION : LTVType.BORROWING);
         }
 
         liabilityValue = getLiabilityValue(marketCache, account);

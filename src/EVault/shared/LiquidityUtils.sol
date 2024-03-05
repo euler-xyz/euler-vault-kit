@@ -9,7 +9,11 @@ import "./types/Types.sol";
 abstract contract LiquidityUtils is BorrowUtils {
     using TypesLib for uint256;
 
-    function liquidityCalculate(MarketCache memory marketCache, address account, address[] memory collaterals, bool isLiquidation)
+    enum LTVType {
+        LIQUIDATION, BORROWING
+    }
+
+    function liquidityCalculate(MarketCache memory marketCache, address account, address[] memory collaterals, LTVType ltvType)
         internal
         view
         returns (uint256 collateralValue, uint256 liabilityValue)
@@ -18,7 +22,7 @@ abstract contract LiquidityUtils is BorrowUtils {
         liabilityValue = getLiabilityValue(marketCache, account);
 
         for (uint256 i; i < collaterals.length; ++i) {
-            collateralValue += getCollateralValue(marketCache, account, collaterals[i], isLiquidation);
+            collateralValue += getCollateralValue(marketCache, account, collaterals[i], ltvType);
         }
     }
 
@@ -36,7 +40,7 @@ abstract contract LiquidityUtils is BorrowUtils {
 
         uint collateralValue;
         for (uint256 i; i < collaterals.length; ++i) {
-            collateralValue += getCollateralValue(marketCache, account, collaterals[i], false);
+            collateralValue += getCollateralValue(marketCache, account, collaterals[i], LTVType.BORROWING);
             if (collateralValue >= liabilityValue) return;
         }
 
@@ -52,7 +56,7 @@ abstract contract LiquidityUtils is BorrowUtils {
         for (uint256 i; i < collaterals.length; ++i) {
             address collateral = collaterals[i];
 
-            ConfigAmount ltv = ltvLookup[collateral].getRampedLTV(); // TODO confirm ramped, not target
+            ConfigAmount ltv = ltvLookup[collateral].getLiquidationLTV(); // TODO confirm ramped, not target
             if (ltv.isZero()) continue;
 
             uint256 balance = IERC20(collateral).balanceOf(account);
@@ -75,8 +79,8 @@ abstract contract LiquidityUtils is BorrowUtils {
         }
     }
 
-    function getCollateralValue(MarketCache memory marketCache, address account, address collateral, bool isLiquidation) internal view returns (uint value) {
-            ConfigAmount ltv = isLiquidation ? ltvLookup[collateral].getRampedLTV() : ltvLookup[collateral].getLTV();
+    function getCollateralValue(MarketCache memory marketCache, address account, address collateral, LTVType ltvType) internal view returns (uint value) {
+            ConfigAmount ltv = ltvType == LTVType.LIQUIDATION ? ltvLookup[collateral].getLiquidationLTV() : ltvLookup[collateral].getLTV();
             if (ltv.isZero()) return 0;
 
             uint256 balance = IERC20(collateral).balanceOf(account);

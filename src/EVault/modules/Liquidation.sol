@@ -117,7 +117,7 @@ abstract contract LiquidationModule is ILiquidation, Base, BalanceUtils, Liquidi
         LiquidationCache memory liqCache,
         MarketCache memory marketCache
     ) private view returns (LiquidationCache memory) {
-        (uint256 liquidityCollateralValue, uint256 liquidityLiabilityValue) = liquidityCalculate(marketCache, liqCache.violator, liqCache.collaterals, true);
+        (uint256 liquidityCollateralValue, uint256 liquidityLiabilityValue) = liquidityCalculate(marketCache, liqCache.violator, liqCache.collaterals, LTVType.LIQUIDATION);
 
         // no violation
         if (liquidityCollateralValue >= liquidityLiabilityValue) return liqCache;
