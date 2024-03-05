@@ -13,6 +13,7 @@ abstract contract LiquidityUtils is BorrowUtils {
         LIQUIDATION, BORROWING
     }
 
+    // Calculate the value of liabilities, and the liquidation or borrowing LTV adjusted collateral value.
     function liquidityCalculate(MarketCache memory marketCache, address account, address[] memory collaterals, LTVType ltvType)
         internal
         view
@@ -26,6 +27,7 @@ abstract contract LiquidityUtils is BorrowUtils {
         }
     }
 
+    // Check that the value of the collateral, adjusted for borrowing TVL, is equal or greater than the liability value.
     function liquidityCheck(address account, address[] memory collaterals)
         internal
         view
@@ -48,6 +50,7 @@ abstract contract LiquidityUtils is BorrowUtils {
     }
 
 
+    // Check if the account has no collateral balance left, used for debt socialization
     function liquidityNoCollateralExists(address account, address[] memory collaterals)
         internal
         view
@@ -80,7 +83,10 @@ abstract contract LiquidityUtils is BorrowUtils {
     }
 
     function getCollateralValue(MarketCache memory marketCache, address account, address collateral, LTVType ltvType) internal view returns (uint value) {
-            ConfigAmount ltv = ltvType == LTVType.LIQUIDATION ? ltvLookup[collateral].getLiquidationLTV() : ltvLookup[collateral].getLTV();
+            ConfigAmount ltv = ltvType == LTVType.LIQUIDATION
+                ? ltvLookup[collateral].getLiquidationLTV()
+                : ltvLookup[collateral].getLTV();
+
             if (ltv.isZero()) return 0;
 
             uint256 balance = IERC20(collateral).balanceOf(account);

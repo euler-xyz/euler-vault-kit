@@ -77,6 +77,7 @@ abstract contract RiskManagerModule is IRiskManager, Base, LiquidityUtils {
 
         logMarketStatus(marketCache, newInterestRate);
 
+        // We use the snapshot to check if the borrows or supply grew, and if so then we check the borrow and supply caps.
         // If snapshot is initialized, then caps are configured.
         // If caps are set in the middle of a batch, then snapshots represent the state of the vault at that time.
         if (marketCache.snapshotInitialized) {

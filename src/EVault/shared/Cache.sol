@@ -14,6 +14,8 @@ contract Cache is Storage, Errors {
     using TypesLib for uint256;
     using SafeERC20Lib for IERC20;
 
+    // Returns an updated MarketCache
+    // If different from MarketStorage, updates MarketStorage
     function updateMarket() internal returns (MarketCache memory marketCache) {
         if (initMarketCache(marketCache)) {
             marketStorage.lastInterestAccumulatorUpdate = marketCache.lastInterestAccumulatorUpdate;
@@ -26,10 +28,14 @@ contract Cache is Storage, Errors {
         }
     }
 
+    // Returns an updated MarketCache 
     function loadMarket() internal view returns (MarketCache memory marketCache) {
         initMarketCache(marketCache);
     }
 
+    // Takes a MarketCache struct, overwrites it with MarketStorage data and, if time has passed since MarkeStorage
+    // was last updated, updates MarkeStorage.
+    // Returns a MarketCache updated to this block.
     function initMarketCache(MarketCache memory marketCache) private view returns (bool dirty) {
         dirty = false;
 
