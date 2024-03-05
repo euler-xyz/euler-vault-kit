@@ -26,7 +26,7 @@ contract IRMClassLido is BaseIRM {
     uint256 public immutable kink;
 
     struct IRMLidoStorage {
-        uint72 baseRate;
+        uint256 baseRate;
         uint64 lastCalled;
     }
 
@@ -40,7 +40,7 @@ contract IRMClassLido is BaseIRM {
         kink = 3435973836;
     }
 
-    function computeInterestRateImpl(address, address, uint32 utilisation) internal override returns (uint72) {
+    function computeInterestRateImpl(address, address, uint32 utilisation) internal override returns (uint256) {
         uint256 ir = 0;
         if (utilisation > 0) {
             IRMLidoStorage storage irmLido;
@@ -80,12 +80,12 @@ contract IRMClassLido is BaseIRM {
                     }
 
                     // update the storage only if the Lido oracle call was successful
-                    irmLido.baseRate = uint72(baseRate);
+                    irmLido.baseRate = uint256(baseRate);
                     irmLido.lastCalled = uint64(block.timestamp);
                 }
             }
 
-            ir = uint72(irmLido.baseRate);
+            ir = uint256(irmLido.baseRate);
 
             // avoids potential overflow in subsequent calculations
             if (ir > MAX_ALLOWED_LIDO_INTEREST_RATE) {
@@ -100,6 +100,6 @@ contract IRMClassLido is BaseIRM {
             ir += slope2 * (utilisation - kink);
         }
 
-        return uint72(ir);
+        return uint256(ir);
     }
 }

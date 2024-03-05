@@ -181,7 +181,7 @@ interface IBorrowing {
 
     /// @notice Retrieves the current interest rate for an asset
     /// @return The interest rate in yield-per-second, scaled by 10**27
-    function interestRate() external view returns (uint72);
+    function interestRate() external view returns (uint256);
 
     /// @notice Retrieves the current interest rate accumulator for an asset
     /// @return An opaque accumulator that increases as interest is accrued

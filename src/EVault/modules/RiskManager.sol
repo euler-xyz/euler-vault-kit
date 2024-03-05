@@ -32,7 +32,6 @@ abstract contract RiskManagerModule is IRiskManager, Base, LiquidityUtils {
         verifyController(account);
         MarketCache memory marketCache = loadMarket();
 
-        verifyController(account);
         collaterals = getCollaterals(account);
         collateralValues = new uint256[](collaterals.length);
 
@@ -74,7 +73,7 @@ abstract contract RiskManagerModule is IRiskManager, Base, LiquidityUtils {
     function checkVaultStatus() external virtual reentrantOK onlyEVCChecks returns (bytes4 magicValue) {
         // Use the updating variant to make sure interest is accrued in storage before the interest rate update
         MarketCache memory marketCache = updateMarket();
-        uint72 newInterestRate = updateInterestRate(marketCache);
+        uint256 newInterestRate = updateInterestRate(marketCache);
 
         logMarketStatus(marketCache, newInterestRate);
 
@@ -97,7 +96,7 @@ abstract contract RiskManagerModule is IRiskManager, Base, LiquidityUtils {
         magicValue = VAULT_STATUS_CHECK_RETURN_VALUE;
     }
 
-    function updateInterestRate(MarketCache memory marketCache) private returns (uint72) {
+    function updateInterestRate(MarketCache memory marketCache) private returns (uint256) {
         uint256 newInterestRate;
 
         // single SLOAD
@@ -112,9 +111,10 @@ abstract contract RiskManagerModule is IRiskManager, Base, LiquidityUtils {
                 ? 0 // empty pool arbitrarily given utilisation of 0
                 : uint32(borrows * (uint256(type(uint32).max) * 1e18) / poolAssets / 1e18);
 
-            try IIRM(irm).computeInterestRate(address(this), address(marketCache.asset), utilisation) returns (uint256 ir) {
-                newInterestRate = ir;
-            } catch {}
+            (bool success, bytes memory data) = irm.call(abi.encodeCall(IIRM.computeInterestRate, (address(this), address(marketCache.asset), utilisation)));
+            if (success) {
+                newInterestRate = abi.decode(data, (uint));
+            }
         }
 
         if (newInterestRate > MAX_ALLOWED_INTEREST_RATE) newInterestRate = MAX_ALLOWED_INTEREST_RATE;
@@ -124,7 +124,7 @@ abstract contract RiskManagerModule is IRiskManager, Base, LiquidityUtils {
         marketStorage.interestFee = interestFee;
         marketStorage.interestRate = uint72(newInterestRate);
 
-        return uint72(newInterestRate);
+        return newInterestRate;
     }
 }
 

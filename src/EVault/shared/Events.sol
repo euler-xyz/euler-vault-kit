@@ -34,7 +34,7 @@ abstract contract Events {
         uint256 feesBalance,
         uint256 poolSize,
         uint256 interestAccumulator,
-        uint72 interestRate,
+        uint256 interestRate,
         uint256 timestamp
     );
     event Liquidate(

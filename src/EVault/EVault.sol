@@ -149,7 +149,7 @@ contract EVault is
 
     function debtOfExact(address account) external view override useView(MODULE_BORROWING) returns (uint256) {}
 
-    function interestRate() external view override useView(MODULE_BORROWING) returns (uint72) {}
+    function interestRate() external view override useView(MODULE_BORROWING) returns (uint256) {}
 
     function interestAccumulator() external view override useView(MODULE_BORROWING) returns (uint256) {}
 

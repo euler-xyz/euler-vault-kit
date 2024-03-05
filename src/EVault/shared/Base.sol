@@ -72,7 +72,7 @@ abstract contract Base is EVCClient, Cache {
         account = EVCAuthenticateDeferred(checkController);
     }
 
-    function logMarketStatus(MarketCache memory a, uint72 interestRate) internal {
+    function logMarketStatus(MarketCache memory a, uint256 interestRate) internal {
         emit MarketStatus(
             a.totalShares.toUint(),
             a.totalBorrows.toAssetsUp().toUint(),

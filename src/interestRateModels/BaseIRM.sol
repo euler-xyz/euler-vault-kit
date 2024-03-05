@@ -7,12 +7,12 @@ import "./IIRM.sol";
 abstract contract BaseIRM is IIRM {
     uint256 internal constant SECONDS_PER_YEAR = 365.2425 * 86400; // Gregorian calendar
 
-    uint72 constant MAX_ALLOWED_INTEREST_RATE = uint72(uint256(5 * 1e27) / SECONDS_PER_YEAR); // 500% APR
+    uint256 constant MAX_ALLOWED_INTEREST_RATE = uint256(5 * 1e27) / SECONDS_PER_YEAR; // 500% APR
 
-    function computeInterestRateImpl(address, address, uint32) internal virtual returns (uint72);
+    function computeInterestRateImpl(address, address, uint32) internal virtual returns (uint256);
 
     function computeInterestRate(address market, address asset, uint32 utilisation) external returns (uint256) {
-        uint72 rate = computeInterestRateImpl(market, asset, utilisation);
+        uint256 rate = computeInterestRateImpl(market, asset, utilisation);
 
         if (rate > MAX_ALLOWED_INTEREST_RATE) rate = MAX_ALLOWED_INTEREST_RATE;
 
