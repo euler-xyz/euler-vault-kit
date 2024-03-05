@@ -19,7 +19,7 @@ abstract contract RiskManagerModule is IRiskManager, Base, LiquidityUtils {
         verifyController(account);
         address[] memory collaterals = getCollaterals(account);
 
-        return liquidityCalculate(
+        return calculateLiquidity(
             marketCache,
             account,
             collaterals,
@@ -63,7 +63,7 @@ abstract contract RiskManagerModule is IRiskManager, Base, LiquidityUtils {
         onlyEVCChecks
         returns (bytes4 magicValue)
     {
-        liquidityCheck(account, collaterals);
+        checkLiquidity(account, collaterals);
 
         magicValue = ACCOUNT_STATUS_CHECK_RETURN_VALUE;
     }
