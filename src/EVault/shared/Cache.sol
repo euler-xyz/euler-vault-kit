@@ -46,7 +46,7 @@ contract Cache is Storage, Errors {
         // Storage loads
 
         marketCache.lastInterestAccumulatorUpdate = marketStorage.lastInterestAccumulatorUpdate;
-        marketCache.poolSize = marketStorage.poolSize;
+        marketCache.cash = marketStorage.cash;
         marketCache.supplyCap = marketStorage.supplyCap.toUint();
         marketCache.borrowCap = marketStorage.borrowCap.toUint();
         marketCache.disabledOps = marketStorage.disabledOps;
@@ -81,7 +81,7 @@ contract Cache is Storage, Errors {
             uint256 feeAssets = interestFee.mulDiv(newTotalBorrows - marketCache.totalBorrows.toUint(), 1 << INTERNAL_DEBT_PRECISION);
 
             if (feeAssets != 0) {
-                uint256 newTotalAssets = marketCache.poolSize.toUint() + (newTotalBorrows >> INTERNAL_DEBT_PRECISION);
+                uint256 newTotalAssets = marketCache.cash.toUint() + (newTotalBorrows >> INTERNAL_DEBT_PRECISION);
                 newTotalShares = newTotalAssets * newTotalShares / (newTotalAssets - feeAssets);
                 newFeesBalance += newTotalShares - marketCache.totalShares.toUint();
             }
@@ -103,6 +103,6 @@ contract Cache is Storage, Errors {
 
     function totalAssetsInternal(MarketCache memory marketCache) internal pure returns (uint256) {
         // total assets can exceed Assets max amount (MAX_SANE_AMOUNT)
-        return marketCache.poolSize.toUint() + marketCache.totalBorrows.toAssetsUp().toUint();
+        return marketCache.cash.toUint() + marketCache.totalBorrows.toAssetsUp().toUint();
     }
 }

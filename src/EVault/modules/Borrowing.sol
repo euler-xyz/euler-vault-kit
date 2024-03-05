@@ -34,8 +34,8 @@ abstract contract BorrowingModule is IBorrowing, Base, AssetTransfers, BalanceUt
     }
 
     /// @inheritdoc IBorrowing
-    function poolSize() external view virtual nonReentrantView returns (uint256) {
-        return marketStorage.poolSize.toUint();
+    function cash() external view virtual nonReentrantView returns (uint256) {
+        return marketStorage.cash.toUint();
     }
 
     /// @inheritdoc IBorrowing
@@ -129,10 +129,10 @@ abstract contract BorrowingModule is IBorrowing, Base, AssetTransfers, BalanceUt
 
         if (receiver == address(0)) receiver = getAccountOwner(account);
 
-        Assets assets = amount == type(uint256).max ? marketCache.poolSize : amount.toAssets();
+        Assets assets = amount == type(uint256).max ? marketCache.cash : amount.toAssets();
         if (assets.isZero()) return;
 
-        if (assets > marketCache.poolSize) revert E_InsufficientPoolSize();
+        if (assets > marketCache.cash) revert E_InsufficientCash();
 
         increaseBorrow(marketCache, account, assets);
 

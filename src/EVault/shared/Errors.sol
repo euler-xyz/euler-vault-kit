@@ -10,7 +10,7 @@ contract Errors {
     error E_InsufficientAllowance();
     error E_UnauthorizedDebtTransfer();
     error E_TransferAmountMismatch();
-    error E_InsufficientPoolSize();
+    error E_InsufficientCash();
     error E_FlashLoanNotRepaid();
     error E_Reentrancy();
     error E_OperationDisabled();

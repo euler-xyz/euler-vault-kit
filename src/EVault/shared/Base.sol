@@ -81,7 +81,7 @@ abstract contract Base is EVCClient, Cache {
         // For this reason, the snapshot is disabled if both caps are disabled.
         if (!marketCache.snapshotInitialized && (marketCache.supplyCap < type(uint256).max || marketCache.borrowCap < type(uint256).max)) {
             marketStorage.snapshotInitialized = marketCache.snapshotInitialized = true;
-            snapshotPoolSize = marketCache.poolSize;
+            snapshotCash = marketCache.cash;
             snapshotTotalBorrows = marketCache.totalBorrows.toAssetsUp();
         }
 
@@ -93,7 +93,7 @@ abstract contract Base is EVCClient, Cache {
             a.totalShares.toUint(),
             a.totalBorrows.toAssetsUp().toUint(),
             a.feesBalance.toUint(),
-            a.poolSize.toUint(),
+            a.cash.toUint(),
             a.interestAccumulator,
             interestRate,
             block.timestamp

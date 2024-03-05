@@ -13,7 +13,7 @@ struct MarketCache {
     address unitOfAccount;
 
     uint40 lastInterestAccumulatorUpdate;
-    Assets poolSize;
+    Assets cash;
     Owed totalBorrows;
     Shares totalShares;
     Shares feesBalance;

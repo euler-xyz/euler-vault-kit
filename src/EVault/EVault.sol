@@ -143,7 +143,7 @@ contract EVault is
 
     function totalBorrowsExact() external view override useView(MODULE_BORROWING) returns (uint256) {}
 
-    function poolSize() external view override useView(MODULE_BORROWING) returns (uint256) {}
+    function cash() external view override useView(MODULE_BORROWING) returns (uint256) {}
 
     function debtOf(address account) external view override useView(MODULE_BORROWING) returns (uint256) {}
 

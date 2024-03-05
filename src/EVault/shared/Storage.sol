@@ -11,7 +11,7 @@ abstract contract Storage {
     MarketStorage marketStorage;
 
     // Transient data
-    Assets snapshotPoolSize;
+    Assets snapshotCash;
     Assets snapshotTotalBorrows;
 
     mapping(address collateral => LTVConfig) internal ltvLookup;

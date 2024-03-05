@@ -88,7 +88,7 @@ abstract contract RiskManagerModule is IRiskManager, Base, LiquidityUtils {
 
             if (borrows > marketCache.borrowCap && borrows > prevBorrows) revert E_BorrowCapExceeded();
 
-            uint256 prevSupply = snapshotPoolSize.toUint() + prevBorrows;
+            uint256 prevSupply = snapshotCash.toUint() + prevBorrows;
             uint256 supply = totalAssetsInternal(marketCache);
 
             if (supply > marketCache.supplyCap && supply > prevSupply) revert E_SupplyCapExceeded();
@@ -106,7 +106,7 @@ abstract contract RiskManagerModule is IRiskManager, Base, LiquidityUtils {
 
         if (irm != address(0)) {
             uint256 borrows = marketCache.totalBorrows.toAssetsUp().toUint();
-            uint256 totalAssets = marketCache.poolSize.toUint() + borrows;
+            uint256 totalAssets = marketCache.cash.toUint() + borrows;
 
             uint32 utilisation = totalAssets == 0
                 ? 0 // empty pool arbitrarily given utilisation of 0

@@ -171,7 +171,7 @@ interface IBorrowing {
     function totalBorrowsExact() external view returns (uint256);
 
     /// @notice Balance of vault assets as tracked by deposits/withdrawals and borrows/repays
-    function poolSize() external view returns (uint256);
+    function cash() external view returns (uint256);
 
     /// @notice Debt owed by a particular account, in underlying units
     function debtOf(address account) external view returns (uint256);

@@ -8,7 +8,7 @@ import {UserStorage} from "./UserStorage.sol";
 struct MarketStorage {
     // Packed slot 5 + 14 + 2 + 2 + 4 + 1 = 28
     uint40 lastInterestAccumulatorUpdate;
-    Assets poolSize;
+    Assets cash;
     AmountCap supplyCap;
     AmountCap borrowCap;
     DisabledOps disabledOps;

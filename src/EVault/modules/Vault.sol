@@ -188,9 +188,9 @@ abstract contract VaultModule is IVault, Base, AssetTransfers, BalanceUtils {
         (IERC20 _asset,,) = ProxyUtils.metadata();
 
         uint256 balance = _asset.balanceOf(address(this));
-        uint256 poolSize = marketStorage.poolSize.toUint();
-        if (balance > poolSize) {
-            uint256 amount = balance - poolSize;
+        uint256 cash = marketStorage.cash.toUint();
+        if (balance > cash) {
+            uint256 amount = balance - cash;
             _asset.transfer(receiver, amount);
             emit SkimAssets(admin, receiver, amount);
         }
@@ -216,7 +216,7 @@ abstract contract VaultModule is IVault, Base, AssetTransfers, BalanceUtils {
         address receiver,
         address owner
     ) private {
-        if (marketCache.poolSize < assets) revert E_InsufficientPoolSize();
+        if (marketCache.cash < assets) revert E_InsufficientCash();
 
         decreaseAllowance(owner, sender, shares);
         decreaseBalance(marketCache, owner, sender, receiver, shares, assets);
@@ -245,8 +245,8 @@ abstract contract VaultModule is IVault, Base, AssetTransfers, BalanceUtils {
 
         MarketCache memory marketCache = loadMarket();
 
-        Shares poolSize = marketCache.poolSize.toSharesDown(marketCache);
-        max = max > poolSize ? poolSize : max;
+        Shares cash = marketCache.cash.toSharesDown(marketCache);
+        max = max > cash ? cash : max;
 
         return max;
     }
@@ -256,9 +256,9 @@ abstract contract VaultModule is IVault, Base, AssetTransfers, BalanceUtils {
         if(supply >= marketCache.supplyCap) return 0;
 
         uint256 remainingSupply = marketCache.supplyCap - supply;
-        uint256 remainingPoolSize = MAX_SANE_AMOUNT - marketCache.poolSize.toUint();
+        uint256 remainingCash = MAX_SANE_AMOUNT - marketCache.cash.toUint();
 
-        return remainingPoolSize < remainingSupply ? remainingPoolSize : remainingSupply;
+        return remainingCash < remainingSupply ? remainingCash : remainingSupply;
     }
 }
 
