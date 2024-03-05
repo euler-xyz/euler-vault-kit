@@ -269,5 +269,5 @@ abstract contract GovernanceModule is IGovernance, Base, BalanceUtils {
 }
 
 contract Governance is GovernanceModule {
-    constructor(address evc, address protocolConfig, address balanceTracker) Base(evc, protocolConfig, balanceTracker) {}
+    constructor(Integrations memory integrations) Base(integrations) {}
 }

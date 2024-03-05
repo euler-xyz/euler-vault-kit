@@ -19,8 +19,8 @@ import {Governance} from "src/EVault/modules/Governance.sol";
 import {RiskManager} from "src/EVault/modules/RiskManager.sol";
 
 import {IEVault, IERC20} from "src/EVault/IEVault.sol";
-
 import {TypesLib} from "src/EVault/shared/types/Types.sol";
+import {Base} from "src/EVault/shared/Base.sol";
 
 import {EthereumVaultConnector} from "ethereum-vault-connector/EthereumVaultConnector.sol";
 
@@ -59,21 +59,20 @@ contract EVaultTestBase is Test, AssertionsCustomTypes {
         balanceTracker = address(new MockBalanceTracker());
         oracle = new MockPriceOracle();
         unitOfAccount = address(1);
+        Base.Integrations memory integrations = Base.Integrations(address(evc), address(protocolConfig), balanceTracker);
 
-        address initializeModule = address(new Initialize(address(evc), address(protocolConfig), balanceTracker));
-        address tokenModule = address(new Token(address(evc), address(protocolConfig), balanceTracker));
-        address vaultModule = address(new Vault(address(evc), address(protocolConfig), balanceTracker));
-        address borrowingModule = address(new Borrowing(address(evc), address(protocolConfig), balanceTracker));
-        address liquidationModule = address(new Liquidation(address(evc), address(protocolConfig), balanceTracker));
-        address riskManagerModule = address(new RiskManager(address(evc), address(protocolConfig), balanceTracker));
-        address balanceForwarderModule = address(new BalanceForwarder(address(evc), address(protocolConfig), balanceTracker));
-        address governanceModule = address(new Governance(address(evc), address(protocolConfig), balanceTracker));
+        address initializeModule = address(new Initialize(integrations));
+        address tokenModule = address(new Token(integrations));
+        address vaultModule = address(new Vault(integrations));
+        address borrowingModule = address(new Borrowing(integrations));
+        address liquidationModule = address(new Liquidation(integrations));
+        address riskManagerModule = address(new RiskManager(integrations));
+        address balanceForwarderModule = address(new BalanceForwarder(integrations));
+        address governanceModule = address(new Governance(integrations));
 
         address evaultImpl = address(
             new EVault(
-                address(evc),
-                address(protocolConfig),
-                balanceTracker,
+                integrations,
                 initializeModule,
                 tokenModule,
                 vaultModule,

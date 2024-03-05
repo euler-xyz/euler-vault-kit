@@ -129,5 +129,5 @@ abstract contract RiskManagerModule is IRiskManager, Base, LiquidityUtils {
 }
 
 contract RiskManager is RiskManagerModule {
-    constructor(address evc, address protocolConfig, address balanceTracker) Base(evc, protocolConfig, balanceTracker) {}
+    constructor(Integrations memory integrations) Base(integrations) {}
 }

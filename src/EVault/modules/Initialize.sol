@@ -46,5 +46,5 @@ abstract contract InitializeModule is IInitialize, Base, BorrowUtils {
 }
 
 contract Initialize is InitializeModule {
-    constructor(address evc, address protocolConfig, address balanceTracker) Base(evc, protocolConfig, balanceTracker) {}
+    constructor(Integrations memory integrations) Base(integrations) {}
 }

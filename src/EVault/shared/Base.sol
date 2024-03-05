@@ -13,9 +13,15 @@ abstract contract Base is EVCClient, Cache {
     IProtocolConfig immutable protocolConfig;
     IBalanceTracker immutable balanceTracker;
 
-    constructor(address _evc, address _protocolConfig, address _balanceTracker) EVCClient(_evc) {
-        protocolConfig = IProtocolConfig(_protocolConfig);
-        balanceTracker = IBalanceTracker(_balanceTracker);
+    struct Integrations {
+        address evc;
+        address protocolConfig;
+        address balanceTracker;
+    }
+
+    constructor(Integrations memory integrations) EVCClient(integrations.evc) {
+        protocolConfig = IProtocolConfig(integrations.protocolConfig);
+        balanceTracker = IBalanceTracker(integrations.balanceTracker);
     }
 
     modifier reentrantOK() {

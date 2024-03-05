@@ -260,5 +260,5 @@ abstract contract VaultModule is IVault, Base, AssetTransfers, BalanceUtils {
 }
 
 contract Vault is VaultModule {
-    constructor(address evc, address protocolConfig, address balanceTracker) Base(evc, protocolConfig, balanceTracker) {}
+    constructor(Integrations memory integrations) Base(integrations) {}
 }

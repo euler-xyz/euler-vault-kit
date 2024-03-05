@@ -221,5 +221,5 @@ abstract contract LiquidationModule is ILiquidation, Base, BalanceUtils, Liquidi
 }
 
 contract Liquidation is LiquidationModule {
-    constructor(address evc, address protocolConfig, address balanceTracker) Base(evc, protocolConfig, balanceTracker) {}
+    constructor(Integrations memory integrations) Base(integrations) {}
 }

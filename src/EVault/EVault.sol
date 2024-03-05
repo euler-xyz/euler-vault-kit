@@ -35,9 +35,7 @@ contract EVault is
     address immutable MODULE_GOVERNANCE;
 
     constructor(
-        address evc,
-        address protocolConfig,
-        address balanceTracker,
+        Integrations memory integrations,
         address MODULE_INITIALIZE_,
         address MODULE_TOKEN_,
         address MODULE_VAULT_,
@@ -46,7 +44,7 @@ contract EVault is
         address MODULE_RISKMANAGER_,
         address MODULE_BALANCE_FORWARDER_,
         address MODULE_GOVERNANCE_
-    ) Base(evc, protocolConfig, balanceTracker) {
+    ) Base(integrations) {
         MODULE_INITIALIZE = MODULE_INITIALIZE_;
         MODULE_TOKEN = MODULE_TOKEN_;
         MODULE_VAULT = MODULE_VAULT_;

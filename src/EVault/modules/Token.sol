@@ -120,5 +120,5 @@ abstract contract TokenModule is IToken, Base, BalanceUtils, PermitUtils {
 }
 
 contract Token is TokenModule {
-    constructor(address evc, address protocolConfig, address balanceTracker) Base(evc, protocolConfig, balanceTracker) {}
+    constructor(Integrations memory integrations) Base(integrations) {}
 }
