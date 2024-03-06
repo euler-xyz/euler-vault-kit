@@ -50,7 +50,7 @@ abstract contract LiquidationModule is ILiquidation, Base, BalanceUtils, Liquidi
 
         // As extra safety measure, `initOperationForBorrow` is wrapped in re-entrancy protected `initLiquidation`
         // although the wrapped function only calls externally to EVC to schedule the health checks, which is considered safe
-        (MarketCache memory marketCache, address liquidator) = initLiquidation(violator);
+        (MarketCache memory marketCache, address liquidator) = initLiquidation();
 
         // re-entrancy allowed for static call
         LiquidationCache memory liqCache =
@@ -63,7 +63,7 @@ abstract contract LiquidationModule is ILiquidation, Base, BalanceUtils, Liquidi
         }
     }
 
-    function initLiquidation(address violator)
+    function initLiquidation()
         private
         nonReentrant
         returns (MarketCache memory marketCache, address account)

@@ -205,7 +205,7 @@ contract BalanceForwarderTest_Hooks is EVaultTestBase {
         vm.skip(true);
     }
 
-    function test_OnWind_ToSelf() public {
+    function test_OnLoop_ToSelf() public {
         setUpBorrow(alice);
 
         vm.prank(alice);
@@ -214,7 +214,7 @@ contract BalanceForwarderTest_Hooks is EVaultTestBase {
         assertBalance(alice, 11 ether);
     }
 
-    function test_OnWind_ToOther() public {
+    function test_OnLoop_ToOther() public {
         setUpBorrow(alice);
 
         vm.prank(alice);
@@ -224,7 +224,7 @@ contract BalanceForwarderTest_Hooks is EVaultTestBase {
         assertBalance(alice, 10 ether);
     }
 
-    function test_OnUnwind_FromSelf() public {
+    function test_OnDeloopd_FromSelf() public {
         setUpBorrow(alice);
 
         vm.startPrank(alice);
@@ -234,7 +234,7 @@ contract BalanceForwarderTest_Hooks is EVaultTestBase {
         assertBalance(alice, 11 ether);
     }
 
-    function test_OnUnwind_FromOther() public {
+    function test_OnDeloopd_FromOther() public {
         setUpBorrow(alice);
 
         vm.prank(alice);
@@ -247,6 +247,13 @@ contract BalanceForwarderTest_Hooks is EVaultTestBase {
     }
 
     function test_OnConvertFees() public {
+        setUpBorrow(alice);
+
+        vm.prank(alice);
+        eTST.loop(1 ether, bob);
+
+        skip(300);
+
         address govFeeReceiver = makeAddr("govFeeReceiver");
         eTST.setFeeReceiver(govFeeReceiver);
 
@@ -255,14 +262,19 @@ contract BalanceForwarderTest_Hooks is EVaultTestBase {
         vm.prank(govFeeReceiver);
         eTST.enableBalanceForwarder();
 
+        uint256 fees = eTST.feesBalance();
+
         assertEq(MBT.calls(feeReceiver, 0, false), 1);
         assertEq(MBT.calls(govFeeReceiver, 0, false), 1);
 
         vm.prank(alice);
         eTST.convertFees();
 
-        assertEq(MBT.calls(feeReceiver, 0, false), 2);
-        assertEq(MBT.calls(govFeeReceiver, 0, false), 2);
+        uint256 governorFees = fees * 9e17 / 1e18;
+        uint256 protocolFees = fees - governorFees;
+
+        assertEq(MBT.calls(feeReceiver, protocolFees, false), 1);
+        assertEq(MBT.calls(govFeeReceiver, governorFees, false), 1);
 
     }
 
