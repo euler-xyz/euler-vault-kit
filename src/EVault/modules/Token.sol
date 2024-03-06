@@ -2,16 +2,15 @@
 
 pragma solidity ^0.8.0;
 
-import {IToken, IERC20, IERC2612} from "../IEVault.sol";
+import {IToken, IERC20} from "../IEVault.sol";
 import {Base} from "../shared/Base.sol";
 import {BalanceUtils} from "../shared/BalanceUtils.sol";
-import {PermitUtils} from "../shared/PermitUtils.sol";
 import {ProxyUtils} from "../shared/lib/ProxyUtils.sol";
 import {RevertBytes} from "../shared/lib/RevertBytes.sol";
 
 import "../shared/types/Types.sol";
 
-abstract contract TokenModule is IToken, Base, BalanceUtils, PermitUtils {
+abstract contract TokenModule is IToken, Base, BalanceUtils {
     using TypesLib for uint256;
 
     /// @inheritdoc IERC20
@@ -45,17 +44,6 @@ abstract contract TokenModule is IToken, Base, BalanceUtils, PermitUtils {
     function allowance(address holder, address spender) external view virtual nonReentrantView returns (uint256) {
         return marketStorage.eVaultAllowance[holder][spender];
     }
-
-    /// @inheritdoc IERC2612
-    function DOMAIN_SEPARATOR() external view virtual nonReentrantView returns (bytes32) {
-        return calculateDomainSeparator();
-    }
-
-    /// @inheritdoc IERC2612
-    function nonces(address owner) external view virtual nonReentrantView returns (uint256) {
-        return marketStorage.users[owner].nonce;
-    }
-
 
     /// @inheritdoc IERC20
     function transfer(address to, uint256 amount) external virtual reentrantOK returns (bool) {
@@ -91,32 +79,6 @@ abstract contract TokenModule is IToken, Base, BalanceUtils, PermitUtils {
         return true;
     }
 
-    /// @inheritdoc IERC2612
-    function permit(
-        address owner,
-        address spender,
-        uint256 value,
-        uint256 deadline,
-        uint8 v,
-        bytes32 r,
-        bytes32 s
-    ) external virtual nonReentrant {
-        if (owner == address(0)) revert E_InvalidSigner();
-
-        if (block.timestamp > deadline) {
-            revert E_ExpiredSignature();
-        }
-        uint256 nonce = marketStorage.users[owner].useNonce();
-        bytes32 structHash = keccak256(abi.encode(PERMIT_TYPEHASH, owner, spender, value, nonce, deadline));
-
-        bytes32 dataHash = permitHash(structHash);
-
-        if (owner != ECDSARecover(dataHash, v, r, s) && !isValidERC1271Signature(owner, dataHash, v, r, s)) {
-            revert E_Unauthorized();
-        }
-
-        setAllowance(owner, spender, value);
-    }
 }
 
 contract Token is TokenModule {

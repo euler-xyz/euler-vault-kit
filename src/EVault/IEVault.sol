@@ -50,25 +50,7 @@ interface IERC20 {
     function approve(address spender, uint256 amount) external returns (bool);
 }
 
-interface IERC2612 {
-    /// @notice Retrieve domain separator for ERC2612 permit
-    function DOMAIN_SEPARATOR() external view returns (bytes32);
-
-    /// @notice Retrieve current account nonce for ERC2612 permit
-    function nonces(address owner) external view returns (uint256);
-
-    /// @notice Apply signed ERC2612 permit to set allowance for a spender account
-    /// @param owner Account owner and signer
-    /// @param spender Account for which allowance will be set
-    /// @param value Amount of allowance
-    /// @param deadline Permit expiration timestamp
-    /// @param v Secp256k1 signature v byte
-    /// @param r Secp256k1 signature r value
-    /// @param s Secp256k1 signature s value
-    function permit(address owner, address spender, uint256 value, uint256 deadline, uint8 v, bytes32 r, bytes32 s) external;
-}
-
-interface IToken is IERC20, IERC2612 {
+interface IToken is IERC20 {
     /// @notice Transfer the full eToken balance of an address to another
     /// @param from This address must've approved the to address
     /// @param to Recipient account
