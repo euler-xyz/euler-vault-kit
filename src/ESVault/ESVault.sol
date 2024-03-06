@@ -127,15 +127,17 @@ contract EVault is
         revert NOT_SUPPORTED();
     }
 
-    function withdraw(uint256 assets, address receiver, address owner) external override callThroughEVC use(MODULE_VAULT) returns (uint256) {
+    function withdraw(uint256 assets, address receiver, address owner) external override returns (uint256) {
         revert NOT_SUPPORTED();
     }
 
-    function redeem(uint256 shares, address receiver, address owner) external override callThroughEVC use(MODULE_VAULT) returns (uint256) {
+    function redeem(uint256 shares, address receiver, address owner) external override returns (uint256) {
         revert NOT_SUPPORTED();
     }
 
-    function skim(address receiver) external override callThroughEVC use(MODULE_VAULT) returns (uint256) {}
+    function skim(address receiver) external override returns (uint256) {
+        revert NOT_SUPPORTED();
+    }
 
 
 
