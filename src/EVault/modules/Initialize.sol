@@ -27,6 +27,7 @@ abstract contract InitializeModule is IInitialize, Base, BorrowUtils {
         if (msg.data.length != 4 + 32 + PROXY_METADATA_LENGTH) revert E_ProxyMetadata();
         (IERC20 asset,,) = ProxyUtils.metadata();
         if (address(asset).code.length == 0) revert E_BadAddress();
+        // Other constraints on values should be enforced by product line
 
         // Create sidecar DToken
 

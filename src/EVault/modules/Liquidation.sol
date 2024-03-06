@@ -43,32 +43,17 @@ abstract contract LiquidationModule is ILiquidation, Base, BalanceUtils, Liquidi
     function liquidate(address violator, address collateral, uint256 repayAssets, uint256 minYieldBalance)
         external
         virtual
-        reentrantOK
+        nonReentrant
     {
-        // Note the function does not have a re-entrancy lock on purpose to allow `calculateLiquidation` to re-enter
-        // during pricing calls, e.g. if shares needed pricing with `convertToAssets`
+        (MarketCache memory marketCache, address liquidator) = initOperationForBorrow(OP_LIQUIDATE);
 
-        // As extra safety measure, `initOperationForBorrow` is wrapped in re-entrancy protected `initLiquidation`
-        // although the wrapped function only calls externally to EVC to schedule the health checks, which is considered safe
-        (MarketCache memory marketCache, address liquidator) = initLiquidation();
-
-        // re-entrancy allowed for static call
         LiquidationCache memory liqCache =
             calculateLiquidation(marketCache, liquidator, violator, collateral, repayAssets);
 
         // liquidation is a no-op if there's no violation
         if (!liqCache.repay.isZero()) {
-            // non-reentrant execution of the liquidation
             executeLiquidation(marketCache, liqCache, minYieldBalance);
         }
-    }
-
-    function initLiquidation()
-        private
-        nonReentrant
-        returns (MarketCache memory marketCache, address account)
-    {
-        (marketCache, account) = initOperationForBorrow(OP_LIQUIDATE);
     }
 
     function calculateLiquidation(
@@ -180,7 +165,7 @@ abstract contract LiquidationModule is ILiquidation, Base, BalanceUtils, Liquidi
         MarketCache memory marketCache,
         LiquidationCache memory liqCache,
         uint256 minYieldBalance
-    ) private nonReentrant {
+    ) private {
         if (minYieldBalance > liqCache.yieldBalance) revert E_MinYield();
 
         // Handle repay: liquidator takes on violator's debt:
