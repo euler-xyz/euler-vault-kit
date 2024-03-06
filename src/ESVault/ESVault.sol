@@ -168,11 +168,11 @@ contract EVault is
 
     function repay(uint256 assets, address receiver) external override callThroughEVC use(MODULE_BORROWING) {}
 
-    function loop(uint256 assets, address collateralReceiver) external override callThroughEVC use(MODULE_BORROWING) returns (uint256) {
+    function loop(uint256 assets, address collateralReceiver) external override returns (uint256) {
         revert NOT_SUPPORTED();
     }
 
-    function deloop(uint256 assets, address debtFrom) external override callThroughEVC use(MODULE_BORROWING) returns (uint256) {
+    function deloop(uint256 assets, address debtFrom) external override returns (uint256) {
         revert NOT_SUPPORTED();
     }
 
