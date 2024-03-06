@@ -45,10 +45,11 @@ abstract contract LiquidationModule is ILiquidation, Base, BalanceUtils, Liquidi
         virtual
         reentrantOK
     {
-        // Note the function does not have a re-entrancy lock on purpose to allow calculateLiquidation to re-enter
-        // during pricing calls, in order to price the shares with convertToAssets
+        // Note the function does not have a re-entrancy lock on purpose to allow `calculateLiquidation` to re-enter
+        // during pricing calls, e.g. if shares needed pricing with `convertToAssets`
 
-        // initLiquidation is re-entrancy protected, although it only does safe external calls 
+        // As extra safety measure, `initOperationForBorrow` is wrapped in re-entrancy protected `initLiquidation`
+        // although the wrapped function only calls externally to EVC to schedule the health checks, which is considered safe
         (MarketCache memory marketCache, address liquidator) = initLiquidation(violator);
 
         // re-entrancy allowed for static call
@@ -68,8 +69,6 @@ abstract contract LiquidationModule is ILiquidation, Base, BalanceUtils, Liquidi
         returns (MarketCache memory marketCache, address account)
     {
         (marketCache, account) = initOperationForBorrow(OP_LIQUIDATE);
-
-        if (isAccountStatusCheckDeferred(violator)) revert E_ViolatorLiquidityDeferred();
     }
 
     function calculateLiquidation(
@@ -86,12 +85,21 @@ abstract contract LiquidationModule is ILiquidation, Base, BalanceUtils, Liquidi
         liqCache.repay = Assets.wrap(0);
         liqCache.yieldBalance = 0;
 
-        verifyController(liqCache.violator);
-        if (liqCache.violator == liqCache.liquidator) revert E_SelfLiquidation();
-        if (!isCollateralEnabled(liqCache.violator, liqCache.collateral)) revert E_CollateralDisabled();
-        // critical security check - only liquidate audited collaterals to make sure yield transfer has no side effects.
-        if (!ltvLookup[liqCache.collateral].initialised()) revert E_BadCollateral();
+        // Checks
 
+        // Make sure violator has debt in this vault
+        verifyController(liqCache.violator);
+        // Self liquidation is not allowed
+        if (liqCache.violator == liqCache.liquidator) revert E_SelfLiquidation();
+        // Violator must have enabled the collateral
+        if (!isCollateralEnabled(liqCache.violator, liqCache.collateral)) revert E_CollateralDisabled();
+        // Only liquidate audited collaterals to make sure yield transfer has no side effects.
+        if (!ltvLookup[liqCache.collateral].initialised()) revert E_BadCollateral();
+        // Violator's health check must not be deferred, meaning no prior operations on violator's account 
+        // would possibly be forgiven after enforced collateral yield transfer
+        if (isAccountStatusCheckDeferred(violator)) revert E_ViolatorLiquidityDeferred();
+
+        // Calculate max yield and repay
 
         liqCache.owed = getCurrentOwed(marketCache, violator).toAssetsUp();
         // violator has no liabilities
@@ -179,14 +187,15 @@ abstract contract LiquidationModule is ILiquidation, Base, BalanceUtils, Liquidi
 
         // Handle yield: liquidator receives violator's collateral
 
-        // Impersonate violator on the EVC to seize collateral and remove scheduled health check for the violator's account.
+        // Impersonate violator on the EVC to seize collateral. The yield transfer will trigger a health check on the violator's
+        // account, which should be forgiven, because the violator's account is not guaranteed to be healthy after liquidation.
         // This operation is safe, because:
         // 1. `liquidate` function is enforcing that the violator is not in deferred checks state,
         //    therefore there were no prior batch operations that could have registered a health check,
         //    and if the check is present now, it must have been triggered by the enforced transfer.
-        // 2. Markets with collateral factor 0 are never invoked during liquidation, and markets with
-        //    non-zero collateral factors are assumed to have trusted transfer methods that make no external calls
-        //    FIXME FIXME make sure this is true ^^^
+        // 2. Only collaterals with initialized LTV settings can be liquidated and they are assumed to be audited
+        //    to have safe transfer methods, which make no external calls. In other words, yield transfer will not 
+        //    have any side effects, which would be wrongly forgiven.
         // 3. Any additional operations on violator's account in a batch will register the health check again, and it
         //    will be executed normally at the end of the batch.
 
@@ -197,6 +206,7 @@ abstract contract LiquidationModule is ILiquidation, Base, BalanceUtils, Liquidi
         forgiveAccountStatusCheck(liqCache.violator);
 
         // Handle debt socialization
+
         if (
             liqCache.debtSocialization &&
             liqCache.owed > liqCache.repay &&
