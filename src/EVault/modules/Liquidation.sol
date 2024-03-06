@@ -78,6 +78,8 @@ abstract contract LiquidationModule is ILiquidation, Base, BalanceUtils, Liquidi
         address collateral,
         uint256 desiredRepay
     ) private view returns (LiquidationCache memory liqCache) {
+        // Init cache
+
         liqCache.liquidator = liquidator;
         liqCache.violator = violator;
         liqCache.collateral = collateral;
@@ -101,14 +103,8 @@ abstract contract LiquidationModule is ILiquidation, Base, BalanceUtils, Liquidi
 
         // Calculate max yield and repay
 
-        liqCache.owed = getCurrentOwed(marketCache, violator).toAssetsUp();
-        // violator has no liabilities
-        if (liqCache.owed.isZero()) return liqCache;
-
-        liqCache.collaterals = getCollaterals(violator);
-
         liqCache = calculateMaxLiquidation(liqCache, marketCache);
-        if (liqCache.repay.isZero()) return liqCache;
+        if (liqCache.repay.isZero()) return liqCache; // no liquidation opportunity found
 
         // Adjust for desired repay
 
@@ -125,6 +121,12 @@ abstract contract LiquidationModule is ILiquidation, Base, BalanceUtils, Liquidi
         LiquidationCache memory liqCache,
         MarketCache memory marketCache
     ) private view returns (LiquidationCache memory) {
+        liqCache.owed = getCurrentOwed(marketCache, liqCache.violator).toAssetsUp();
+        // violator has no liabilities
+        if (liqCache.owed.isZero()) return liqCache;
+
+        liqCache.collaterals = getCollaterals(liqCache.violator);
+
         (uint256 liquidityCollateralValue, uint256 liquidityLiabilityValue) = calculateLiquidity(marketCache, liqCache.violator, liqCache.collaterals, LTVType.LIQUIDATION);
 
         // no violation
