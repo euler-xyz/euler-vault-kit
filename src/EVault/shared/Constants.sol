@@ -32,7 +32,7 @@ uint256 constant CONFIG_SCALE = 60_000; // used to scale values in ConfigAmount,
 
 uint16 constant DEFAULT_INTEREST_FEE = uint16(CONFIG_SCALE * 23 / 100); // 23%
 // Maximum liquidation discount that can be awarded under any conditions.
-uint256 constant MAXIMUM_LIQUIDATION_DISCOUNT = 0.2 * 1e18; // FIXME: move to liq module, make accessor (ie, public)
+uint256 constant MAXIMUM_LIQUIDATION_DISCOUNT = 0.2 * 1e18;
 
 // Operations
 

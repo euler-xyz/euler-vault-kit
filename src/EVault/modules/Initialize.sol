@@ -26,9 +26,7 @@ abstract contract InitializeModule is IInitialize, Base, BorrowUtils {
         // Calldata should include: signature and abi encoded creator address (4 + 32 bytes), followed by proxy metadata
         if (msg.data.length != 4 + 32 + PROXY_METADATA_LENGTH) revert E_ProxyMetadata();
         (IERC20 asset,,) = ProxyUtils.metadata();
-        if (
-            address(asset) == address(0) || address(asset) == address(evc) || address(asset).code.length == 0
-        ) revert E_BadAddress(); // TODO should this validation be removed in favor of product lines?
+        if (address(asset).code.length == 0) revert E_BadAddress();
 
         // Create sidecar DToken
 

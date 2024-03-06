@@ -51,6 +51,9 @@ abstract contract LiquidityUtils is BorrowUtils {
 
 
     // Check if the account has no collateral balance left, used for debt socialization
+    // If LTV is zero, the collateral can still be liquidated.
+    // If the price of collateral is zero, liquidations are not executed, so the check won't be performed.
+    // If there is no collateral balance at all, then debt socialization can happen.
     function checkNoCollateral(address account, address[] memory collaterals)
         internal
         view
@@ -58,9 +61,6 @@ abstract contract LiquidityUtils is BorrowUtils {
     {
         for (uint256 i; i < collaterals.length; ++i) {
             address collateral = collaterals[i];
-
-            ConfigAmount ltv = ltvLookup[collateral].getLiquidationLTV(); // TODO confirm ramped, not target
-            if (ltv.isZero()) continue;
 
             uint256 balance = IERC20(collateral).balanceOf(account);
             if (balance > 0) return false;

@@ -100,11 +100,8 @@ abstract contract BorrowingModule is IBorrowing, Base, AssetTransfers, BalanceUt
 
         uint256 extraCollateralBalance;
         {
-            // TODO use direct quote (below) when oracle supports both directions
-            // uint extraCollateralBalance = IPriceOracle(oracle).getQuote(extraCollateralValue, referenceAsset, collateral);
-
             uint256 collateralPrice = marketCache.oracle.getQuote(1e18, collateral, marketCache.unitOfAccount);
-            if (collateralPrice == 0) return 0; // worthless / unpriced collateral is not locked TODO what happens in liquidation??
+            if (collateralPrice == 0) return 0; // worthless / unpriced collateral is not locked
             extraCollateralBalance = extraCollateralValue * 1e18 / collateralPrice;
         }
 

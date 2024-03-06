@@ -152,7 +152,7 @@ abstract contract GovernanceModule is IGovernance, Base, BalanceUtils {
 
         increaseBalance(
             marketCache, governorReceiver, address(0), governorShares, governorAssets
-        ); // TODO confirm address(0)
+        );
         increaseBalance(
             marketCache, protocolReceiver, address(0), protocolShares, protocolAssets
         );
