@@ -53,12 +53,6 @@ contract ProtocolConfig is IProtocolConfig {
         return (feeReceiver, PROTOCOL_FEE_SHARE);
     }
 
-    function skimConfig(address) external view returns (address, address) {
-        // FIXME: skimReceiver variable
-        return (admin, feeReceiver);
-    }
-
-
     // Admin functions
 
     modifier onlyAdmin() {

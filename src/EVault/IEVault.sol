@@ -108,27 +108,27 @@ interface IERC4626 {
 
     /// @notice Transfer requested amount of underlying tokens from sender to the vault pool in return for shares
     /// @param assets In underlying units (use max uint for full underlying token balance)
-    /// @param receiver An account to receive the shares
+    /// @param receiver An account to receive the shares (use zero address for the authenticated account)
     /// @return Amount of shares minted
     /// @dev Deposit will round down the amount of assets that are converted to shares. To prevent losses consider using mint instead.
     function deposit(uint256 assets, address receiver) external returns (uint256);
 
     /// @notice Transfer underlying tokens from sender to the vault pool in return for requested amount of shares
     /// @param shares Amount of share to be minted
-    /// @param receiver An account to receive the shares
+    /// @param receiver An account to receive the shares (use zero address for the authenticated account)
     /// @return Amount of assets deposited
     function mint(uint256 shares, address receiver) external returns (uint256);
 
     /// @notice Transfer requested amount of underlying tokens from the vault and decrease account's shares balance
     /// @param assets In underlying units
-    /// @param receiver Account to receive the withdrawn assets
+    /// @param receiver Account to receive the withdrawn assets (use zero address for the authenticated account)
     /// @param owner Account holding the shares to burn
     /// @return Amount of shares burned
     function withdraw(uint256 assets, address receiver, address owner) external returns (uint256);
 
     /// @notice Burn requested shares and transfer corresponding underlying tokens from the vault to the receiver
     /// @param shares Amount of shares to burn (use max to burn full owner balance)
-    /// @param receiver Account to receive the withdrawn assets
+    /// @param receiver Account to receive the withdrawn assets (use zero address for the authenticated account)
     /// @param owner Account holding the shares to burn.
     /// @return Amount of assets transferred
     function redeem(uint256 shares, address receiver, address owner) external returns (uint256);
@@ -141,8 +141,11 @@ interface IVault is IERC4626 {
     /// @notice Balance of the fees accumulator, in underlying units
     function feesBalanceAssets() external view returns (uint256);
 
-    /// @notice Allows protocol admin to rescue funds transferred to the vault directly (instead of deposit/mint)
-    function skimAssets() external;
+    /// @notice Creates shares for the receiver, from excess asset balances of the vault (not accounted for in `cash`)
+    /// @param receiver An account to receive the shares (use zero address for the authenticated account)
+    /// @return Amount of shares minted
+    /// @dev Could be used as an alternative deposit flow in certain scenarios. E.g. swap directly to the vault, call `skim` to claim deposit.
+    function skim(address receiver) external returns (uint256);
 }
 
 interface IBorrowing {

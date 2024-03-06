@@ -125,7 +125,7 @@ contract EVault is
 
     function redeem(uint256 shares, address receiver, address owner) external override callThroughEVC use(MODULE_VAULT) returns (uint256) {}
 
-    function skimAssets() external override use(MODULE_VAULT) {}
+    function skim(address receiver) external override callThroughEVC use(MODULE_VAULT) returns (uint256) {}
 
 
 

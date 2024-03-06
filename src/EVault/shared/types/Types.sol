@@ -33,7 +33,7 @@ using {
 
 using AssetsLib for Assets global;
 using {
-    addAssets as +, subAssets as -, eqAssets as ==, neqAssets as !=, gtAssets as >, ltAssets as <
+    addAssets as +, subAssets as -, eqAssets as ==, neqAssets as !=, gtAssets as >, ltAssets as <, lteAssets as <=
 } for Assets global;
 
 using OwedLib for Owed global;

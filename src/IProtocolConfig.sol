@@ -6,6 +6,4 @@ interface IProtocolConfig {
     function isValidInterestFee(address vault, uint256 interestFee) external view returns (bool);
 
     function feeConfig(address vault) external view returns (address protocolFeeReceiver, uint256 protocolFeeShare);
-
-    function skimConfig(address vault) external view returns (address skimAdmin, address skimReceiver);
 }

@@ -179,21 +179,22 @@ abstract contract VaultModule is IVault, Base, AssetTransfers, BalanceUtils {
     }
 
     /// @inheritdoc IVault
-    function skimAssets() external virtual nonReentrant {
-        // TODO make it callable directly only, just to be double safe?
-        (address admin, address receiver) = protocolConfig.skimConfig(address(this));
-        if (msg.sender != admin) revert E_Unauthorized();
-        if (receiver == address(0) || receiver == address(this)) revert E_BadAddress();
+    function skim(address receiver) external virtual nonReentrant returns (uint256) {
+        (MarketCache memory marketCache, address account) = initOperation(OP_SKIM, ACCOUNTCHECK_NONE);
 
-        (IERC20 _asset,,) = ProxyUtils.metadata();
+        if (receiver == address(0)) receiver = account;
 
-        uint256 balance = _asset.balanceOf(address(this));
-        uint256 cash = marketStorage.cash.toUint();
-        if (balance > cash) {
-            uint256 amount = balance - cash;
-            _asset.transfer(receiver, amount);
-            emit SkimAssets(admin, receiver, amount);
-        }
+        Assets balance = marketCache.asset.balanceOf(address(this)).toAssets();
+        if (balance <= marketCache.cash) return 0;
+
+        Assets assets = balance - marketCache.cash;
+
+        Shares shares = assets.toSharesDown(marketCache);
+        if (shares.isZero()) revert E_ZeroShares();
+
+        increaseBalance(marketCache, receiver, account, shares, assets);
+
+        return shares.toUint();
     }
 
     function finalizeDeposit(
