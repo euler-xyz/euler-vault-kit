@@ -57,7 +57,7 @@ contract EVault is
 
     // ------------ Initialization -------------
 
-    function initialize(address creator) external override use(MODULE_INITIALIZE) {}
+    function initialize(address proxyCreator) external override use(MODULE_INITIALIZE) {}
 
 
 
@@ -115,6 +115,8 @@ contract EVault is
     function feesBalance() external view override useView(MODULE_VAULT) returns (uint256) {}
 
     function feesBalanceAssets() external view override useView(MODULE_VAULT) returns (uint256) {}
+
+    function creator() external view override useView(MODULE_VAULT) returns (address) {}
 
 
     function deposit(uint256 assets, address receiver) external override callThroughEVC use(MODULE_VAULT) returns (uint256) {}

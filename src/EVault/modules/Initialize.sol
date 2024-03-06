@@ -17,7 +17,7 @@ abstract contract InitializeModule is IInitialize, Base, BorrowUtils {
     using TypesLib for uint16;
 
     /// @inheritdoc IInitialize
-    function initialize(address creator) external virtual reentrantOK {
+    function initialize(address proxyCreator) external virtual reentrantOK {
         if (initialized) revert E_Initialized();
         initialized = true;
 
@@ -38,13 +38,13 @@ abstract contract InitializeModule is IInitialize, Base, BorrowUtils {
         marketStorage.lastInterestAccumulatorUpdate = uint40(block.timestamp);
         marketStorage.interestAccumulator = INITIAL_INTEREST_ACCUMULATOR;
         marketStorage.interestFee = DEFAULT_INTEREST_FEE.toConfigAmount();
-        marketStorage.governorAdmin = marketStorage.pauseGuardian = creator;
+        marketStorage.creator = marketStorage.governorAdmin = marketStorage.pauseGuardian = proxyCreator;
 
         snapshot.reset();
 
         // Emit logs
 
-        emit EVaultCreated(creator, address(asset), dToken);
+        emit EVaultCreated(proxyCreator, address(asset), dToken);
         logMarketStatus(loadMarket(), 0);
     }
 }

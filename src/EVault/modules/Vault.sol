@@ -105,6 +105,11 @@ abstract contract VaultModule is IVault, Base, AssetTransfers, BalanceUtils {
         return marketCache.feesBalance.toAssetsDown(marketCache).toUint();
     }
 
+    /// @inheritdoc IVault
+    function creator() external view virtual reentrantOK returns (address) {
+        return marketStorage.creator;
+    }
+
 
     /// @inheritdoc IERC4626
     function deposit(uint256 amount, address receiver) external virtual nonReentrant returns (uint256) {

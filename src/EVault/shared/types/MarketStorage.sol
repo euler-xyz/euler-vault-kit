@@ -32,6 +32,8 @@ struct MarketStorage {
     string name;
     string symbol;
 
+    address creator;
+
     address governorAdmin;
     address pauseGuardian;
     address feeReceiver;

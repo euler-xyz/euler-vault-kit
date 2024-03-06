@@ -141,6 +141,9 @@ interface IVault is IERC4626 {
     /// @notice Balance of the fees accumulator, in underlying units
     function feesBalanceAssets() external view returns (uint256);
 
+    /// @notice Address of the original vault creator
+    function creator() external view returns (address);
+
     /// @notice Creates shares for the receiver, from excess asset balances of the vault (not accounted for in `cash`)
     /// @param assets Amount of assets to claim (use max to claim all available assets)
     /// @param receiver An account to receive the shares (use zero address for the authenticated account)
