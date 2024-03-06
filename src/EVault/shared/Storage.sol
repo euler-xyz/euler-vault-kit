@@ -2,7 +2,7 @@
 
 pragma solidity ^0.8.0;
 
-import "./types/MarketStorage.sol";
+import {MarketStorage, Snapshot} from "./types/Types.sol";
 import {LTVConfig} from "./types/LTVConfig.sol";
 
 abstract contract Storage {
@@ -11,8 +11,7 @@ abstract contract Storage {
     MarketStorage marketStorage;
 
     // Transient data
-    Assets snapshotCash;
-    Assets snapshotTotalBorrows;
+    Snapshot snapshot;
 
     mapping(address collateral => LTVConfig) internal ltvLookup;
     address[] internal ltvList;

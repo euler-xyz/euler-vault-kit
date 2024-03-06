@@ -87,8 +87,7 @@ abstract contract Base is EVCClient, Cache {
         // For this reason, the snapshot is disabled if both caps are disabled.
         if (!marketCache.snapshotInitialized && (marketCache.supplyCap < type(uint256).max || marketCache.borrowCap < type(uint256).max)) {
             marketStorage.snapshotInitialized = marketCache.snapshotInitialized = true;
-            snapshotCash = marketCache.cash;
-            snapshotTotalBorrows = marketCache.totalBorrows.toAssetsUp();
+            snapshot.set(marketCache.cash, marketCache.totalBorrows.toAssetsUp());
         }
 
         account = EVCAuthenticateDeferred(checkController);

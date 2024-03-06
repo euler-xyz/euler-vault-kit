@@ -41,6 +41,8 @@ abstract contract InitializeModule is IInitialize, Base, BorrowUtils {
         marketStorage.interestFee = DEFAULT_INTEREST_FEE.toConfigAmount();
         marketStorage.governorAdmin = marketStorage.pauseGuardian = creator;
 
+        snapshot.reset();
+
         // Emit logs
 
         emit EVaultCreated(creator, address(asset), dToken);

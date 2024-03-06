@@ -5,14 +5,16 @@ pragma solidity ^0.8.0;
 import "../../IEVault.sol";
 
 import "./MarketStorage.sol";
+import "./Snapshot.sol";
+import "./UserStorage.sol";
+import "./LTVConfig.sol";
+
 import "./Shares.sol";
 import "./Assets.sol";
 import "./Owed.sol";
 import "./ConfigAmount.sol";
 import "./DisabledOps.sol";
-import "./UserStorage.sol";
 import "./AmountCap.sol";
-import "./LTVConfig.sol";
 
 type Shares is uint112;
 

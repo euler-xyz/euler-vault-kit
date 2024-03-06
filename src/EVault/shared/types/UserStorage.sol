@@ -19,6 +19,7 @@ library UserStorageLib {
     uint256 constant OWED_MASK = 0x7FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF0000000000000000000000000000;
     uint256 constant SHARES_MASK = 0x000000000000000000000000000000000000FFFFFFFFFFFFFFFFFFFFFFFFFFFF;
     uint256 constant OWED_OFFSET = 112;
+
     function getBalanceForwarderEnabled(UserStorage storage self) internal view returns (bool) {
         return unpackBalanceForwarder(self.data);
     }

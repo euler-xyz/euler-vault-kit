@@ -83,7 +83,10 @@ abstract contract RiskManagerModule is IRiskManager, Base, LiquidityUtils {
         if (marketCache.snapshotInitialized) {
             marketStorage.snapshotInitialized = marketCache.snapshotInitialized = false;
 
-            uint256 prevBorrows = snapshotTotalBorrows.toUint();
+            Assets snapshotCash = snapshot.cash;
+            Assets snapshotBorrows = snapshot.borrows;
+
+            uint256 prevBorrows = snapshotBorrows.toUint();
             uint256 borrows = marketCache.totalBorrows.toAssetsUp().toUint();
 
             if (borrows > marketCache.borrowCap && borrows > prevBorrows) revert E_BorrowCapExceeded();
@@ -92,6 +95,8 @@ abstract contract RiskManagerModule is IRiskManager, Base, LiquidityUtils {
             uint256 supply = totalAssetsInternal(marketCache);
 
             if (supply > marketCache.supplyCap && supply > prevSupply) revert E_SupplyCapExceeded();
+
+            snapshot.reset();
         }
 
         magicValue = VAULT_STATUS_CHECK_RETURN_VALUE;
