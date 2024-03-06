@@ -17,9 +17,18 @@ gas_reports = ["*"]
 
 
 [profile.default.fmt]
+line_length = 120
+tab_width = 4
+bracket_spacing = false
+int_types = "long"
+quote_style = "double"
+number_underscore = "preserve"
+override_spacing = true
 ignore = [
     "src/EVault/EVault.sol",
     "src/EVault/shared/Storage.sol"
+    "src/EVault/shared/types/MarketStorage.sol"
+    "src/EVault/shared/types/MarketCache.sol"
 ]
 
 
