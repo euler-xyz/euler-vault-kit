@@ -5,7 +5,7 @@ pragma solidity ^0.8.0;
 import {IRiskManager, IEVault} from "../IEVault.sol";
 import {Base} from "../shared/Base.sol";
 import {LiquidityUtils} from "../shared/LiquidityUtils.sol";
-import "../../interestRateModels/IIRM.sol";
+import {IIRM} from "../../interestRateModels/IIRM.sol";
 
 import "../shared/types/Types.sol";
 
@@ -29,9 +29,9 @@ abstract contract RiskManagerModule is IRiskManager, Base, LiquidityUtils {
 
     /// @inheritdoc IRiskManager
     function accountLiquidityFull(address account, bool liquidation) external view virtual nonReentrantView returns (address[] memory collaterals, uint256[] memory collateralValues, uint256 liabilityValue) {
-        verifyController(account);
         MarketCache memory marketCache = loadMarket();
 
+        verifyController(account);
         collaterals = getCollaterals(account);
         collateralValues = new uint256[](collaterals.length);
 

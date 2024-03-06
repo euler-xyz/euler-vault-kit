@@ -222,10 +222,6 @@ abstract contract LiquidationModule is ILiquidation, Base, BalanceUtils, Liquidi
             emit DebtSocialized(liqCache.violator, owedRemaining.toUint());
         }
 
-        emitLiquidationLog(liqCache);
-    }
-
-    function emitLiquidationLog(LiquidationCache memory liqCache) private {
         emit Liquidate(
             liqCache.liquidator, liqCache.violator, liqCache.collateral, liqCache.repay.toUint(), liqCache.yieldBalance
         );
