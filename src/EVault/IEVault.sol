@@ -142,10 +142,11 @@ interface IVault is IERC4626 {
     function feesBalanceAssets() external view returns (uint256);
 
     /// @notice Creates shares for the receiver, from excess asset balances of the vault (not accounted for in `cash`)
+    /// @param assets Amount of assets to claim (use max to claim all available assets)
     /// @param receiver An account to receive the shares (use zero address for the authenticated account)
     /// @return Amount of shares minted
     /// @dev Could be used as an alternative deposit flow in certain scenarios. E.g. swap directly to the vault, call `skim` to claim deposit.
-    function skim(address receiver) external returns (uint256);
+    function skim(uint256 assets, address receiver) external returns (uint256);
 }
 
 interface IBorrowing {

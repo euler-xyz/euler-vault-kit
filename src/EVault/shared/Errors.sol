@@ -9,6 +9,7 @@ contract Errors {
     error E_SelfTransfer();
     error E_InsufficientAllowance();
     error E_InsufficientCash();
+    error E_InsufficientAssets();
     error E_FlashLoanNotRepaid();
     error E_Reentrancy();
     error E_OperationDisabled();

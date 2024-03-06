@@ -179,15 +179,24 @@ abstract contract VaultModule is IVault, Base, AssetTransfers, BalanceUtils {
     }
 
     /// @inheritdoc IVault
-    function skim(address receiver) external virtual nonReentrant returns (uint256) {
+    function skim(uint256 amount, address receiver) external virtual nonReentrant returns (uint256) {
         (MarketCache memory marketCache, address account) = initOperation(OP_SKIM, ACCOUNTCHECK_NONE);
 
         if (receiver == address(0)) receiver = account;
 
         Assets balance = marketCache.asset.balanceOf(address(this)).toAssets();
-        if (balance <= marketCache.cash) return 0;
+        Assets available = balance <= marketCache.cash
+            ? Assets.wrap(0)
+            : balance - marketCache.cash;
 
-        Assets assets = balance - marketCache.cash;
+        Assets assets;
+        if (amount == type(uint256).max) {
+            assets = available;
+        } else {
+            assets = amount.toAssets();
+            if (assets > available) revert E_InsufficientAssets();
+        }
+        if (assets.isZero()) return 0;
 
         Shares shares = assets.toSharesDown(marketCache);
         if (shares.isZero()) revert E_ZeroShares();
