@@ -6,7 +6,7 @@ import {Test, console2, stdError} from "forge-std/Test.sol";
 import {GenericFactory} from "src/GenericFactory/GenericFactory.sol";
 
 import {EVault} from "src/EVault/EVault.sol";
-import {IRMClassStable} from "src/interestRateModels/IRMClassStable.sol";
+import {IRMDefault} from "src/interestRateModels/IRMDefault.sol";
 import {ProtocolConfig} from "src/ProtocolConfig/ProtocolConfig.sol";
 
 import {Initialize} from "src/EVault/modules/Initialize.sol";
@@ -91,9 +91,9 @@ contract EVaultTestBase is Test, AssertionsCustomTypes {
         assetTST2 = new TestERC20("Test Token 2", "TST2", 18, false);
 
         eTST = IEVault(factory.createProxy(true, abi.encodePacked(address(assetTST), address(oracle), unitOfAccount)));
-        eTST.setIRM(address(new IRMClassStable()), "");
+        eTST.setIRM(address(new IRMDefault()));
 
         eTST2 = IEVault(factory.createProxy(true, abi.encodePacked(address(assetTST2), address(oracle), unitOfAccount)));
-        eTST2.setIRM(address(new IRMClassStable()), "");
+        eTST2.setIRM(address(new IRMDefault()));
     }
 }
