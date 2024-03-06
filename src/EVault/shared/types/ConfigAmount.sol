@@ -27,6 +27,13 @@ library ConfigAmountLib {
         }
     }
 
+    // note assuming arithmetic checks are already performed
+    function mulInv(ConfigAmount self, uint256 multiplier) internal pure returns (uint256) {
+        unchecked {
+            return CONFIG_SCALE * multiplier / uint256(self.toUint16());
+        }
+    }
+
     function toUint16(ConfigAmount self) internal pure returns (uint16) {
         return ConfigAmount.unwrap(self);
     }

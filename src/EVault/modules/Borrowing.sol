@@ -95,8 +95,8 @@ abstract contract BorrowingModule is IBorrowing, Base, AssetTransfers, BalanceUt
         ConfigAmount ltv = ltvLookup[collateral].getLTV();
         if (ltv.isZero()) return 0;
 
-        // calculate extra collateral value in terms of requested collateral shares (balance)
-        uint256 extraCollateralValue = ltv.mul(totalCollateralValueRiskAdjusted - liabilityValue);
+        // calculate extra collateral value in terms of requested collateral shares (balance), by dividing by LTV
+        uint256 extraCollateralValue = ltv.mulInv(totalCollateralValueRiskAdjusted - liabilityValue);
 
         uint256 extraCollateralBalance;
         {
