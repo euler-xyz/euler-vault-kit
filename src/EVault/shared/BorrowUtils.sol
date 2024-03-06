@@ -47,13 +47,13 @@ abstract contract BorrowUtils is Base {
     }
 
     function decreaseBorrow(MarketCache memory marketCache, address account, Assets assets) internal {
-        (Owed owed, Owed prevOwed) = updateUserBorrow(marketCache, account); // alcueca: Owed must be in shares
+        (Owed owed, Owed prevOwed) = updateUserBorrow(marketCache, account); // alcueca: Owed are Assets with increased precision
         Assets debtAssets = owed.toAssetsUp();
 
         if (assets > debtAssets) revert E_RepayTooMuch();
         Assets debtAssetsRemaining;
         unchecked {
-            debtAssetsRemaining = debtAssets - assets; // alcueca: In `increaseBorrow` we do this operation in share terms, here we do it in asset terms. Choose one pattern for both functions if possible.
+            debtAssetsRemaining = debtAssets - assets; // alcueca: In `increaseBorrow` we do this operation in owed terms, here we do it in asset terms. Choose one pattern for both functions if possible.
         }
 
         if (owed > marketCache.totalBorrows) owed = marketCache.totalBorrows; // alcueca: What's the logic behind this?
