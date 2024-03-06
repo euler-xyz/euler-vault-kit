@@ -35,32 +35,32 @@ abstract contract BorrowUtils is Base {
     }
 
     function increaseBorrow(MarketCache memory marketCache, address account, Assets assets) internal {
-        Owed amount = assets.toOwed();
-        (Owed owed, Owed prevOwed) = updateUserBorrow(marketCache, account);
+        Owed amount = assets.toOwed(); // alcueca: Move this line down, to where it is needed. Also, would this be `owedIncrease`?
+        (Owed owed, Owed prevOwed) = updateUserBorrow(marketCache, account); // alcueca: We update the user borrows by the increase in the interestAccumulator
 
         owed = owed + amount;
 
-        marketStorage.users[account].setOwed(owed);
-        marketStorage.totalBorrows = marketCache.totalBorrows = marketCache.totalBorrows + amount;
+        marketStorage.users[account].setOwed(owed); // alcueca: We add `amount` to the user borrows
+        marketStorage.totalBorrows = marketCache.totalBorrows = marketCache.totalBorrows + amount; // alcueca: Where did we update the totalBorrows by the increase in the interestAccumulator applied to the user borrows?
 
         logBorrowChange(account, prevOwed, owed);
     }
 
     function decreaseBorrow(MarketCache memory marketCache, address account, Assets assets) internal {
-        (Owed owed, Owed prevOwed) = updateUserBorrow(marketCache, account);
+        (Owed owed, Owed prevOwed) = updateUserBorrow(marketCache, account); // alcueca: Owed must be in shares
         Assets debtAssets = owed.toAssetsUp();
 
         if (assets > debtAssets) revert E_RepayTooMuch();
         Assets debtAssetsRemaining;
         unchecked {
-            debtAssetsRemaining = debtAssets - assets;
+            debtAssetsRemaining = debtAssets - assets; // alcueca: In `increaseBorrow` we do this operation in share terms, here we do it in asset terms. Choose one pattern for both functions if possible.
         }
 
-        if (owed > marketCache.totalBorrows) owed = marketCache.totalBorrows;
+        if (owed > marketCache.totalBorrows) owed = marketCache.totalBorrows; // alcueca: What's the logic behind this?
 
         Owed owedRemaining = debtAssetsRemaining.toOwed();
         marketStorage.users[account].setOwed(owedRemaining);
-        marketStorage.totalBorrows = marketCache.totalBorrows = marketCache.totalBorrows - owed + owedRemaining;
+        marketStorage.totalBorrows = marketCache.totalBorrows = marketCache.totalBorrows - owed + owedRemaining; // alcueca: This would be `totalBorrows - amount` if following the pattern from `increaseBorrow`
 
         logBorrowChange(account, prevOwed, owedRemaining);
     }
@@ -71,19 +71,16 @@ abstract contract BorrowUtils is Base {
         (Owed fromOwed, Owed fromOwedPrev) = updateUserBorrow(marketCache, from);
         (Owed toOwed, Owed toOwedPrev) = updateUserBorrow(marketCache, to);
 
-        // If amount was rounded up, transfer exact amount owed
-        if (amount > fromOwed && (amount - fromOwed).isDust()) amount = fromOwed;
+        // If amount was rounded up, or dust is left over, transfer exact amount owed
+        if ((amount > fromOwed && (amount - fromOwed).isDust()) ||
+            (amount < fromOwed && (fromOwed - amount).isDust())) {
+            amount = fromOwed;
+        }
 
         if (amount > fromOwed) revert E_InsufficientBalance();
 
         unchecked {
             fromOwed = fromOwed - amount;
-        }
-
-        // Transfer any residual dust
-        if (fromOwed.isDust()) {
-            amount = amount + fromOwed;
-            fromOwed = Owed.wrap(0);
         }
 
         toOwed = toOwed + amount;

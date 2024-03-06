@@ -14,11 +14,11 @@ contract AssetTransfers is Storage, Errors {
 
     function pullTokens(MarketCache memory marketCache, address from, Assets amount) internal {
         marketCache.asset.safeTransferFrom(from, address(this), amount.toUint());
-        marketStorage.poolSize = marketCache.poolSize = marketCache.poolSize + amount;
+        marketStorage.poolSize = marketCache.poolSize = marketCache.poolSize + amount; // alcueca: Not CEI
     }
 
     function pushTokens(MarketCache memory marketCache, address to, Assets amount) internal {
         marketCache.asset.safeTransfer(to, amount.toUint());
-        marketStorage.poolSize = marketCache.poolSize = marketCache.poolSize - amount;
+        marketStorage.poolSize = marketCache.poolSize = marketCache.poolSize - amount; // alcueca: Not CEI
     }
 }

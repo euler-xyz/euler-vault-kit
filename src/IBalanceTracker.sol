@@ -8,9 +8,9 @@ pragma solidity ^0.8.23;
 interface IBalanceTracker {
     /// @notice Executes the balance tracking hook for an account
     /// @dev This function is called by the Balance Forwarder contract which was enabled for the account
-    /// @dev To prevent DOS attacks, forfeitRecentReward should be used appropriately
+    /// @dev To prevent DOS attacks, forfeitRecentReward should be used appropriately // alcueca: How?
     /// @param account The account address to execute the hook for
     /// @param newAccountBalance The new balance of the account
-    /// @param forfeitRecentReward Whether to forfeit the most recent reward and not update the accumulator
+    /// @param forfeitRecentReward Whether to forfeit the most recent reward and not update the accumulator // alcueca: There seems to be some implementation in mind here.
     function balanceTrackerHook(address account, uint256 newAccountBalance, bool forfeitRecentReward) external;
 }

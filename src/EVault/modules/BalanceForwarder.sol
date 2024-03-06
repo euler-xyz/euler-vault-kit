@@ -6,6 +6,10 @@ import {IBalanceForwarder} from "../IEVault.sol";
 import {IBalanceTracker} from "../../IBalanceTracker.sol";
 import {Base} from "../shared/Base.sol";
 
+
+// alcueca: Forward balance changes to the rewards contract. It doesn't forward any tokens, just information on balances.
+// As an abstract contract, it doesn't implement `balanceTrackerHook` which is where the logic on what to do with the
+// balance changes.
 abstract contract BalanceForwarderModule is IBalanceForwarder, Base {
     /// @inheritdoc IBalanceForwarder
     function balanceTrackerAddress() external view virtual reentrantOK returns (address) {

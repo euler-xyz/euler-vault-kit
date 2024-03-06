@@ -20,6 +20,7 @@ abstract contract BalanceUtils is Base {
         Shares amount,
         Assets assets
     ) internal {
+        // alcueca: Unlike in `transferBalance`, here we allow increasing balance by zero
         (Shares origBalance, bool balanceForwarderEnabled) =
             marketStorage.users[account].getBalanceAndBalanceForwarder();
         Shares newBalance = origBalance + amount;
@@ -43,6 +44,7 @@ abstract contract BalanceUtils is Base {
         Shares amount,
         Assets assets
     ) internal {
+        // alcueca: Unlike in `transferBalance`, here we allow decreasing balance by zero
         (Shares origBalance, bool balanceForwarderEnabled) =
             marketStorage.users[account].getBalanceAndBalanceForwarder();
         if (origBalance < amount) revert E_InsufficientBalance();
@@ -53,7 +55,7 @@ abstract contract BalanceUtils is Base {
         }
 
         if (balanceForwarderEnabled) {
-            balanceTracker.balanceTrackerHook(account, newBalance.toUint(), isControlCollateralInProgress());
+            balanceTracker.balanceTrackerHook(account, newBalance.toUint(), isControlCollateralInProgress()); // alcueca: We forfeit rewards when doing a liquidation
         }
 
         marketStorage.users[account].setBalance(newBalance);
@@ -77,7 +79,7 @@ abstract contract BalanceUtils is Base {
             Shares newToBalance = origToBalance + amount;
 
             if (fromBalanceForwarderEnabled) {
-                balanceTracker.balanceTrackerHook(from, newFromBalance.toUint(), isControlCollateralInProgress());
+                balanceTracker.balanceTrackerHook(from, newFromBalance.toUint(), isControlCollateralInProgress()); // alcueca: We forfeit rewards when doing a liquidation
             }
             if (toBalanceForwarderEnabled) {
                 balanceTracker.balanceTrackerHook(to, newToBalance.toUint(), false);
@@ -87,7 +89,7 @@ abstract contract BalanceUtils is Base {
             marketStorage.users[to].setBalance(newToBalance);
         }
 
-        emit Transfer(from, to, amount.toUint());
+        emit Transfer(from, to, amount.toUint()); // alcueca: I think that sending events for no-ops is bad practice
     }
 
     // Allowance
@@ -100,7 +102,7 @@ abstract contract BalanceUtils is Base {
     }
 
     function decreaseAllowance(address owner, address spender, Shares amount) internal {
-        if (amount.isZero()) return;
+        if (amount.isZero()) return; // alcueca: inconsistent with `increaseBalance` and `transferBalance`.
         uint256 allowance = marketStorage.eVaultAllowance[owner][spender];
         if (owner != spender && allowance != type(uint256).max) {
             if (allowance < amount.toUint()) revert E_InsufficientAllowance();

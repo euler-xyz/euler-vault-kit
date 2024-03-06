@@ -59,6 +59,8 @@ abstract contract PermitUtils is Storage, Errors {
     function calculateDomainSeparator() internal view returns (bytes32) {
         return keccak256(abi.encode(TYPE_HASH, keccak256(bytes(marketStorage.name)), keccak256("1"), block.chainid, address(this)));
     }
+    // alcueca: You might want to store the domain separator as an immutable, and calculate it again only if the chainid changes,
+    // which is very unlikely. https://github.com/WETH10/WETH10/blob/main/contracts/WETH10.sol
 
     // Based on:
     // https://github.com/OpenZeppelin/openzeppelin-contracts/blob/master/contracts/utils/cryptography/SignatureChecker.sol
