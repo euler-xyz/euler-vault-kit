@@ -14,6 +14,8 @@ contract Cache is Storage, Errors {
     using TypesLib for uint256;
     using SafeERC20Lib for IERC20;
 
+    // Returns an updated MarketCache
+    // If different from MarketStorage, updates MarketStorage
     function updateMarket() internal returns (MarketCache memory marketCache) {
         if (initMarketCache(marketCache)) {
             marketStorage.lastInterestAccumulatorUpdate = marketCache.lastInterestAccumulatorUpdate;
@@ -26,10 +28,14 @@ contract Cache is Storage, Errors {
         }
     }
 
+    // Returns an updated MarketCache 
     function loadMarket() internal view returns (MarketCache memory marketCache) {
         initMarketCache(marketCache);
     }
 
+    // Takes a MarketCache struct, overwrites it with MarketStorage data and, if time has passed since MarkeStorage
+    // was last updated, updates MarkeStorage.
+    // Returns a MarketCache updated to this block.
     function initMarketCache(MarketCache memory marketCache) private view returns (bool dirty) {
         dirty = false;
 
@@ -40,7 +46,7 @@ contract Cache is Storage, Errors {
         // Storage loads
 
         marketCache.lastInterestAccumulatorUpdate = marketStorage.lastInterestAccumulatorUpdate;
-        marketCache.poolSize = marketStorage.poolSize;
+        marketCache.cash = marketStorage.cash;
         marketCache.supplyCap = marketStorage.supplyCap.toUint();
         marketCache.borrowCap = marketStorage.borrowCap.toUint();
         marketCache.disabledOps = marketStorage.disabledOps;
@@ -60,7 +66,7 @@ contract Cache is Storage, Errors {
 
             // Compute new values. Use full precision for intermediate results.
 
-            uint16 interestFee = marketStorage.interestFee;
+            ConfigAmount interestFee = marketStorage.interestFee;
             uint256 interestRate = marketStorage.interestRate;
 
             uint256 deltaT = block.timestamp - marketCache.lastInterestAccumulatorUpdate;
@@ -72,12 +78,11 @@ contract Cache is Storage, Errors {
             uint256 newFeesBalance = marketCache.feesBalance.toUint();
             uint256 newTotalShares = marketCache.totalShares.toUint();
 
-            uint256 feeAssets = (newTotalBorrows - marketCache.totalBorrows.toUint()) * interestFee
-                / (CONFIG_SCALE << INTERNAL_DEBT_PRECISION);
+            uint256 feeAssets = interestFee.mulDiv(newTotalBorrows - marketCache.totalBorrows.toUint(), 1 << INTERNAL_DEBT_PRECISION);
 
             if (feeAssets != 0) {
-                uint256 poolAssets = marketCache.poolSize.toUint() + (newTotalBorrows >> INTERNAL_DEBT_PRECISION);
-                newTotalShares = poolAssets * newTotalShares / (poolAssets - feeAssets);
+                uint256 newTotalAssets = marketCache.cash.toUint() + (newTotalBorrows >> INTERNAL_DEBT_PRECISION);
+                newTotalShares = newTotalAssets * newTotalShares / (newTotalAssets - feeAssets);
                 newFeesBalance += newTotalShares - marketCache.totalShares.toUint();
             }
 
@@ -98,6 +103,6 @@ contract Cache is Storage, Errors {
 
     function totalAssetsInternal(MarketCache memory marketCache) internal pure returns (uint256) {
         // total assets can exceed Assets max amount (MAX_SANE_AMOUNT)
-        return marketCache.poolSize.toUint() + marketCache.totalBorrows.toAssetsUp().toUint();
+        return marketCache.cash.toUint() + marketCache.totalBorrows.toAssetsUp().toUint();
     }
 }

@@ -32,9 +32,9 @@ abstract contract Events {
         uint256 totalShares,
         uint256 totalBorrows,
         uint256 feesBalance,
-        uint256 poolSize,
+        uint256 cash,
         uint256 interestAccumulator,
-        uint72 interestRate,
+        uint256 interestRate,
         uint256 timestamp
     );
     event Liquidate(

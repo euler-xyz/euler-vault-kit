@@ -2,7 +2,7 @@
 
 pragma solidity ^0.8.0;
 
-import "./Types.sol";
+import {Shares, Owed} from "./Types.sol";
 
 type PackedUserSlot is uint256;
 

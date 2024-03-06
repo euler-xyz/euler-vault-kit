@@ -19,11 +19,11 @@ abstract contract RiskManagerModule is IRiskManager, Base, LiquidityUtils {
         verifyController(account);
         address[] memory collaterals = getCollaterals(account);
 
-        return liquidityCalculate(
+        return calculateLiquidity(
             marketCache,
             account,
             collaterals,
-            liquidation
+            liquidation ? LTVType.LIQUIDATION : LTVType.BORROWING
         );
     }
 
@@ -32,12 +32,11 @@ abstract contract RiskManagerModule is IRiskManager, Base, LiquidityUtils {
         verifyController(account);
         MarketCache memory marketCache = loadMarket();
 
-        verifyController(account);
         collaterals = getCollaterals(account);
         collateralValues = new uint256[](collaterals.length);
 
         for (uint256 i; i < collaterals.length; ++i) {
-            collateralValues[i] = getCollateralValue(marketCache, account, collaterals[i], liquidation);
+            collateralValues[i] = getCollateralValue(marketCache, account, collaterals[i], liquidation ? LTVType.LIQUIDATION : LTVType.BORROWING);
         }
 
         liabilityValue = getLiabilityValue(marketCache, account);
@@ -64,7 +63,7 @@ abstract contract RiskManagerModule is IRiskManager, Base, LiquidityUtils {
         onlyEVCChecks
         returns (bytes4 magicValue)
     {
-        liquidityCheck(account, collaterals);
+        checkLiquidity(account, collaterals);
 
         magicValue = ACCOUNT_STATUS_CHECK_RETURN_VALUE;
     }
@@ -74,10 +73,11 @@ abstract contract RiskManagerModule is IRiskManager, Base, LiquidityUtils {
     function checkVaultStatus() external virtual reentrantOK onlyEVCChecks returns (bytes4 magicValue) {
         // Use the updating variant to make sure interest is accrued in storage before the interest rate update
         MarketCache memory marketCache = updateMarket();
-        uint72 newInterestRate = updateInterestRate(marketCache);
+        uint256 newInterestRate = updateInterestRate(marketCache);
 
         logMarketStatus(marketCache, newInterestRate);
 
+        // We use the snapshot to check if the borrows or supply grew, and if so then we check the borrow and supply caps.
         // If snapshot is initialized, then caps are configured.
         // If caps are set in the middle of a batch, then snapshots represent the state of the vault at that time.
         if (marketCache.snapshotInitialized) {
@@ -88,7 +88,7 @@ abstract contract RiskManagerModule is IRiskManager, Base, LiquidityUtils {
 
             if (borrows > marketCache.borrowCap && borrows > prevBorrows) revert E_BorrowCapExceeded();
 
-            uint256 prevSupply = snapshotPoolSize.toUint() + prevBorrows;
+            uint256 prevSupply = snapshotCash.toUint() + prevBorrows;
             uint256 supply = totalAssetsInternal(marketCache);
 
             if (supply > marketCache.supplyCap && supply > prevSupply) revert E_SupplyCapExceeded();
@@ -97,24 +97,25 @@ abstract contract RiskManagerModule is IRiskManager, Base, LiquidityUtils {
         magicValue = VAULT_STATUS_CHECK_RETURN_VALUE;
     }
 
-    function updateInterestRate(MarketCache memory marketCache) private returns (uint72) {
+    function updateInterestRate(MarketCache memory marketCache) private returns (uint256) {
         uint256 newInterestRate;
 
         // single SLOAD
         address irm = marketStorage.interestRateModel;
-        uint16 interestFee = marketStorage.interestFee;
+        ConfigAmount interestFee = marketStorage.interestFee;
 
         if (irm != address(0)) {
             uint256 borrows = marketCache.totalBorrows.toAssetsUp().toUint();
-            uint256 poolAssets = marketCache.poolSize.toUint() + borrows;
+            uint256 totalAssets = marketCache.cash.toUint() + borrows;
 
-            uint32 utilisation = poolAssets == 0
+            uint32 utilisation = totalAssets == 0
                 ? 0 // empty pool arbitrarily given utilisation of 0
-                : uint32(borrows * (uint256(type(uint32).max) * 1e18) / poolAssets / 1e18);
+                : uint32(borrows * (uint256(type(uint32).max) * 1e18) / totalAssets / 1e18);
 
-            try IIRM(irm).computeInterestRate(address(this), address(marketCache.asset), utilisation) returns (uint256 ir) {
-                newInterestRate = ir;
-            } catch {}
+            (bool success, bytes memory data) = irm.call(abi.encodeCall(IIRM.computeInterestRate, (address(this), address(marketCache.asset), utilisation)));
+            if (success) {
+                newInterestRate = abi.decode(data, (uint));
+            }
         }
 
         if (newInterestRate > MAX_ALLOWED_INTEREST_RATE) newInterestRate = MAX_ALLOWED_INTEREST_RATE;
@@ -124,7 +125,7 @@ abstract contract RiskManagerModule is IRiskManager, Base, LiquidityUtils {
         marketStorage.interestFee = interestFee;
         marketStorage.interestRate = uint72(newInterestRate);
 
-        return uint72(newInterestRate);
+        return newInterestRate;
     }
 }
 

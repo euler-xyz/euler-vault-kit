@@ -2,7 +2,7 @@
 
 pragma solidity ^0.8.0;
 
-import "./Types.sol";
+import {Owed, Assets, TypesLib} from "./Types.sol";
 import "../Constants.sol";
 
 library OwedLib {

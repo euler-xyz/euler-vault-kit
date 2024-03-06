@@ -51,18 +51,18 @@ contract ERC4626Test_Deposit is EVaultTestBase {
     }
 
     // TODO
-    // function testFuzz_deposit(uint amount, address receiver, uint poolSize) public {
+    // function testFuzz_deposit(uint amount, address receiver, uint cash) public {
     //     amount = bound(amount, 1, MAX_SANE_AMOUNT);
-    //     poolSize = bound(poolSize, 0, MAX_SANE_AMOUNT);
-    //     vm.assume(poolSize + amount < MAX_SANE_AMOUNT);
+    //     cash = bound(cash, 0, MAX_SANE_AMOUNT);
+    //     vm.assume(cash + amount < MAX_SANE_AMOUNT);
     //     vm.assume(receiver != address(0));
-    //     uint shares = amount / (poolSize + 1);
+    //     uint shares = amount / (cash + 1);
 
     //     vm.assume(shares > 0);
 
     //     // send tokens directly to the pool to inflate the exchange rate
     //     startHoax(user1);
-    //     assetTST.transfer(address(eTST), poolSize);
+    //     assetTST.transfer(address(eTST), cash);
     //     startHoax(user);
 
     //     vm.expectEmit();
@@ -77,8 +77,8 @@ contract ERC4626Test_Deposit is EVaultTestBase {
 
     //     // Asset was transferred
     //     assertEq(assetTST.balanceOf(user), type(uint).max - amount);
-    //     assertEq(assetTST.balanceOf(address(eTST)), amount + poolSize);
-    //     assertEq(eTST.totalAssets(), amount + poolSize);
+    //     assertEq(assetTST.balanceOf(address(eTST)), amount + cash);
+    //     assertEq(eTST.totalAssets(), amount + cash);
 
     //     // Shares were issued
     //     assertEq(eTST.balanceOf(receiver), shares);

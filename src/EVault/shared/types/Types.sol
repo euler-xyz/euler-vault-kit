@@ -2,10 +2,13 @@
 
 pragma solidity ^0.8.0;
 
+import "../../IEVault.sol";
+
 import "./MarketStorage.sol";
 import "./Shares.sol";
 import "./Assets.sol";
 import "./Owed.sol";
+import "./ConfigAmount.sol";
 import "./DisabledOps.sol";
 import "./UserStorage.sol";
 import "./AmountCap.sol";
@@ -18,6 +21,8 @@ type Assets is uint112;
 type Owed is uint144;
 
 type AmountCap is uint16;
+
+type ConfigAmount is uint16;
 
 type DisabledOps is uint32;
 
@@ -33,6 +38,9 @@ using {
 
 using OwedLib for Owed global;
 using {addOwed as +, subOwed as -, eqOwed as ==, neqOwed as !=, gtOwed as >, ltOwed as <} for Owed global;
+
+using ConfigAmountLib for ConfigAmount global;
+using {addConfigAmount as +, subConfigAmount as -, gtConfigAmount as >} for ConfigAmount global; 
 
 using AmountCapLib for AmountCap global;
 using DisabledOpsLib for DisabledOps global;
@@ -51,5 +59,10 @@ library TypesLib {
     function toOwed(uint256 amount) internal pure returns (Owed) {
         if (amount > MAX_SANE_DEBT_AMOUNT) revert Errors.E_DebtAmountTooLargeToEncode();
         return Owed.wrap(uint144(amount));
+    }
+
+    function toConfigAmount(uint16 amount) internal pure returns (ConfigAmount) {
+        if (amount > CONFIG_SCALE) revert Errors.E_InvalidConfigAmount();
+        return ConfigAmount.wrap(amount);
     }
 }

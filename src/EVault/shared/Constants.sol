@@ -8,7 +8,7 @@ import {IVault as IEVCVault} from "ethereum-vault-connector/interfaces/IVault.so
 uint256 constant MAX_PROTOCOL_FEE_SHARE = 0.5 * 1e18;
 uint256 constant INITIAL_INTEREST_ACCUMULATOR = 1e27;
 uint256 constant SECONDS_PER_YEAR = 365.2425 * 86400; // Gregorian calendar
-uint72 constant MAX_ALLOWED_INTEREST_RATE = uint72(uint256(5 * 1e27) / SECONDS_PER_YEAR); // 500% APR
+uint256 constant MAX_ALLOWED_INTEREST_RATE = uint256(5 * 1e27) / SECONDS_PER_YEAR; // 500% APR
 
 // Implementation internals
 
@@ -26,11 +26,11 @@ bytes4 constant ACCOUNT_STATUS_CHECK_RETURN_VALUE = IEVCVault.checkAccountStatus
 bytes4 constant VAULT_STATUS_CHECK_RETURN_VALUE = IEVCVault.checkVaultStatus.selector;
 
 uint256 constant VIRTUAL_DEPOSIT_AMOUNT = 1e6;
+uint256 constant CONFIG_SCALE = 60_000; // used to scale values in ConfigAmount, must fit into a uint16
 
 // Config
 
-uint256 constant CONFIG_SCALE = 60_000; // must fit into a uint16
-uint16 constant DEFAULT_INTEREST_FEE = uint16(0.23 * 60_000);
+uint16 constant DEFAULT_INTEREST_FEE = uint16(CONFIG_SCALE * 23 / 100); // 23%
 // Maximum liquidation discount that can be awarded under any conditions.
 uint256 constant MAXIMUM_LIQUIDATION_DISCOUNT = 0.2 * 1e18; // FIXME: move to liq module, make accessor (ie, public)
 

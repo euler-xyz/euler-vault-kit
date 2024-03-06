@@ -9,7 +9,12 @@ import "./types/Types.sol";
 abstract contract LiquidityUtils is BorrowUtils {
     using TypesLib for uint256;
 
-    function liquidityCalculate(MarketCache memory marketCache, address account, address[] memory collaterals, bool isLiquidation)
+    enum LTVType {
+        LIQUIDATION, BORROWING
+    }
+
+    // Calculate the value of liabilities, and the liquidation or borrowing LTV adjusted collateral value.
+    function calculateLiquidity(MarketCache memory marketCache, address account, address[] memory collaterals, LTVType ltvType)
         internal
         view
         returns (uint256 collateralValue, uint256 liabilityValue)
@@ -18,11 +23,12 @@ abstract contract LiquidityUtils is BorrowUtils {
         liabilityValue = getLiabilityValue(marketCache, account);
 
         for (uint256 i; i < collaterals.length; ++i) {
-            collateralValue += getCollateralValue(marketCache, account, collaterals[i], isLiquidation);
+            collateralValue += getCollateralValue(marketCache, account, collaterals[i], ltvType);
         }
     }
 
-    function liquidityCheck(address account, address[] memory collaterals)
+    // Check that the value of the collateral, adjusted for borrowing TVL, is equal or greater than the liability value.
+    function checkLiquidity(address account, address[] memory collaterals)
         internal
         view
     {
@@ -36,7 +42,7 @@ abstract contract LiquidityUtils is BorrowUtils {
 
         uint collateralValue;
         for (uint256 i; i < collaterals.length; ++i) {
-            collateralValue += getCollateralValue(marketCache, account, collaterals[i], false);
+            collateralValue += getCollateralValue(marketCache, account, collaterals[i], LTVType.BORROWING);
             if (collateralValue >= liabilityValue) return;
         }
 
@@ -44,7 +50,8 @@ abstract contract LiquidityUtils is BorrowUtils {
     }
 
 
-    function liquidityNoCollateralExists(address account, address[] memory collaterals)
+    // Check if the account has no collateral balance left, used for debt socialization
+    function checkNoCollateral(address account, address[] memory collaterals)
         internal
         view
         returns (bool)
@@ -52,8 +59,8 @@ abstract contract LiquidityUtils is BorrowUtils {
         for (uint256 i; i < collaterals.length; ++i) {
             address collateral = collaterals[i];
 
-            uint256 ltv = ltvLookup[collateral].getRampedLTV(); // TODO confirm ramped, not target
-            if (ltv == 0) continue;
+            ConfigAmount ltv = ltvLookup[collateral].getLiquidationLTV(); // TODO confirm ramped, not target
+            if (ltv.isZero()) continue;
 
             uint256 balance = IERC20(collateral).balanceOf(account);
             if (balance > 0) return false;
@@ -75,9 +82,12 @@ abstract contract LiquidityUtils is BorrowUtils {
         }
     }
 
-    function getCollateralValue(MarketCache memory marketCache, address account, address collateral, bool isLiquidation) internal view returns (uint value) {
-            uint256 ltv = isLiquidation ? ltvLookup[collateral].getRampedLTV() : ltvLookup[collateral].getLTV();
-            if (ltv == 0) return 0;
+    function getCollateralValue(MarketCache memory marketCache, address account, address collateral, LTVType ltvType) internal view returns (uint value) {
+            ConfigAmount ltv = ltvType == LTVType.LIQUIDATION
+                ? ltvLookup[collateral].getLiquidationLTV()
+                : ltvLookup[collateral].getLTV();
+
+            if (ltv.isZero()) return 0;
 
             uint256 balance = IERC20(collateral).balanceOf(account);
             if (balance == 0) return 0;
@@ -85,7 +95,7 @@ abstract contract LiquidityUtils is BorrowUtils {
             // bid price for collateral
             (uint256 currentCollateralValue,) = marketCache.oracle.getQuotes(balance, collateral, marketCache.unitOfAccount);
 
-            return currentCollateralValue * ltv / CONFIG_SCALE;
+            return ltv.mul(currentCollateralValue);
     }
 
     function validateOracle(MarketCache memory marketCache) private pure {

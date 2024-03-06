@@ -34,8 +34,8 @@ abstract contract BorrowingModule is IBorrowing, Base, AssetTransfers, BalanceUt
     }
 
     /// @inheritdoc IBorrowing
-    function poolSize() external view virtual nonReentrantView returns (uint256) {
-        return marketStorage.poolSize.toUint();
+    function cash() external view virtual nonReentrantView returns (uint256) {
+        return marketStorage.cash.toUint();
     }
 
     /// @inheritdoc IBorrowing
@@ -53,7 +53,7 @@ abstract contract BorrowingModule is IBorrowing, Base, AssetTransfers, BalanceUt
     }
 
     /// @inheritdoc IBorrowing
-    function interestRate() external view virtual reentrantOK returns (uint72) {
+    function interestRate() external view virtual reentrantOK returns (uint256) {
         if (isVaultStatusCheckDeferred()) revert E_VaultStatusCheckDeferred();
 
         return marketStorage.interestRate;
@@ -79,7 +79,7 @@ abstract contract BorrowingModule is IBorrowing, Base, AssetTransfers, BalanceUt
 
         address[] memory collaterals = getCollaterals(account);
         MarketCache memory marketCache = loadMarket();
-        (uint256 totalCollateralValueRiskAdjusted, uint256 liabilityValue) = liquidityCalculate(marketCache, account, collaterals, false);
+        (uint256 totalCollateralValueRiskAdjusted, uint256 liabilityValue) = calculateLiquidity(marketCache, account, collaterals, LTVType.BORROWING);
 
         // if there is no liability or it has no value, collateral will not be locked
         if (liabilityValue == 0) return 0;
@@ -92,11 +92,11 @@ abstract contract BorrowingModule is IBorrowing, Base, AssetTransfers, BalanceUt
         }
 
         // if collateral has zero LTV configured, it will not be locked
-        uint256 ltv = ltvLookup[collateral].getLTV();
-        if (ltv == 0) return 0;
+        ConfigAmount ltv = ltvLookup[collateral].getLTV();
+        if (ltv.isZero()) return 0;
 
         // calculate extra collateral value in terms of requested collateral shares (balance)
-        uint256 extraCollateralValue = (totalCollateralValueRiskAdjusted - liabilityValue) * CONFIG_SCALE / ltv;
+        uint256 extraCollateralValue = ltv.mul(totalCollateralValueRiskAdjusted - liabilityValue);
 
         uint256 extraCollateralBalance;
         {
@@ -129,10 +129,10 @@ abstract contract BorrowingModule is IBorrowing, Base, AssetTransfers, BalanceUt
 
         if (receiver == address(0)) receiver = getAccountOwner(account);
 
-        Assets assets = amount == type(uint256).max ? marketCache.poolSize : amount.toAssets();
+        Assets assets = amount == type(uint256).max ? marketCache.cash : amount.toAssets();
         if (assets.isZero()) return;
 
-        if (assets > marketCache.poolSize) revert E_InsufficientPoolSize();
+        if (assets > marketCache.cash) revert E_InsufficientCash();
 
         increaseBorrow(marketCache, account, assets);
 

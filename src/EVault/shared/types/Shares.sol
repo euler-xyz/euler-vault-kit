@@ -2,8 +2,8 @@
 
 pragma solidity ^0.8.0;
 
-import "./Types.sol";
-import "./MarketCache.sol";
+import {Shares, Assets, TypesLib} from "./Types.sol";
+import {MarketCache} from "./MarketCache.sol";
 import "./Helpers.sol";
 
 library SharesLib {

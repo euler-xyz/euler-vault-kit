@@ -11,8 +11,11 @@ import {RevertBytes} from "../shared/lib/RevertBytes.sol";
 import {MarketCache} from "../shared/types/MarketCache.sol";
 
 import "../shared/Constants.sol";
+import "../shared/types/Types.sol";
 
 abstract contract InitializeModule is IInitialize, Base, BorrowUtils {
+    using TypesLib for uint16;
+
     /// @inheritdoc IInitialize
     function initialize(address creator) external virtual reentrantOK {
         if (initialized) revert E_Initialized();
@@ -35,7 +38,7 @@ abstract contract InitializeModule is IInitialize, Base, BorrowUtils {
 
         marketStorage.lastInterestAccumulatorUpdate = uint40(block.timestamp);
         marketStorage.interestAccumulator = INITIAL_INTEREST_ACCUMULATOR;
-        marketStorage.interestFee = DEFAULT_INTEREST_FEE;
+        marketStorage.interestFee = DEFAULT_INTEREST_FEE.toConfigAmount();
         marketStorage.governorAdmin = marketStorage.pauseGuardian = creator;
 
         // Emit logs

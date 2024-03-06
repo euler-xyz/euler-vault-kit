@@ -29,31 +29,31 @@ contract AssetTransfersTest is EVaultTestBase {
         assetTST.approve(address(tc), type(uint256).max);
     }
 
-    function testFuzz_pullTokens(uint256 poolSize, uint256 amount) public {
-        poolSize = bound(poolSize, 0, MAX_SANE_AMOUNT);
+    function testFuzz_pullTokens(uint256 cash, uint256 amount) public {
+        cash = bound(cash, 0, MAX_SANE_AMOUNT);
         amount = bound(amount, 0, MAX_SANE_AMOUNT);
-        vm.assume(poolSize + amount < MAX_SANE_AMOUNT);
+        vm.assume(cash + amount < MAX_SANE_AMOUNT);
         MarketCache memory cache = initCache();
 
-        cache.poolSize = poolSize.toAssets();
-        assetTST.setBalance(address(tc), poolSize);
+        cache.cash = cash.toAssets();
+        assetTST.setBalance(address(tc), cash);
 
         Assets assets = amount.toAssets();
 
         tc.exposed_pullTokens(cache, from, assets);
-        uint256 poolSizeAfter = assetTST.balanceOf(address(tc));
-        Assets transferred = (poolSizeAfter - poolSize).toAssets();
+        uint256 cashAfter = assetTST.balanceOf(address(tc));
+        Assets transferred = (cashAfter - cash).toAssets();
 
         assertEq(transferred, assets);
-        assertEq(transferred.toUint(), assetTST.balanceOf(address(tc)) - poolSize);
+        assertEq(transferred.toUint(), assetTST.balanceOf(address(tc)) - cash);
     }
 
     function test_pullTokens_zeroIsNoop() public {
         MarketCache memory cache = initCache();
 
         tc.exposed_pullTokens(cache, from, Assets.wrap(0));
-        uint256 poolSizeAfter = assetTST.balanceOf(address(tc));
-        Assets transferred = poolSizeAfter.toAssets();
+        uint256 cashAfter = assetTST.balanceOf(address(tc));
+        Assets transferred = cashAfter.toAssets();
 
         assertEq(transferred, ZERO_ASSETS);
         assertEq(assetTST.balanceOf(address(tc)), 0);
@@ -65,8 +65,8 @@ contract AssetTransfersTest is EVaultTestBase {
         assetTST.configure("transfer/deflationary", abi.encode(0.5e18));
 
         tc.exposed_pullTokens(cache, from, Assets.wrap(1e18));
-        uint256 poolSizeAfter = assetTST.balanceOf(address(tc));
-        Assets transferred = poolSizeAfter.toAssets();
+        uint256 cashAfter = assetTST.balanceOf(address(tc));
+        Assets transferred = cashAfter.toAssets();
 
         assertEq(transferred, Assets.wrap(0.5e18));
         assertEq(assetTST.balanceOf(address(tc)), 0.5e18);
@@ -78,23 +78,23 @@ contract AssetTransfersTest is EVaultTestBase {
         assetTST.configure("transfer/inflationary", abi.encode(0.5e18));
 
         tc.exposed_pullTokens(cache, from, Assets.wrap(1e18));
-        uint256 poolSizeAfter = assetTST.balanceOf(address(tc));
-        Assets transferred = poolSizeAfter.toAssets();
+        uint256 cashAfter = assetTST.balanceOf(address(tc));
+        Assets transferred = cashAfter.toAssets();
 
         assertEq(transferred, Assets.wrap(1.5e18));
         assertEq(assetTST.balanceOf(address(tc)), 1.5e18);
     }
 
-    function test_RevertWhenPoolSizeAfterOverflows_pullTokens() public {
+    function test_RevertWhenCashAfterOverflows_pullTokens() public {
         MarketCache memory cache = initCache();
 
-        cache.poolSize = MAX_ASSETS;
+        cache.cash = MAX_ASSETS;
         assetTST.setBalance(address(tc), MAX_ASSETS.toUint());
 
         vm.expectRevert(Errors.E_AmountTooLargeToEncode.selector);
         tc.exposed_pullTokens(cache, from, Assets.wrap(1));
 
-        cache.poolSize = Assets.wrap(1);
+        cache.cash = Assets.wrap(1);
         assetTST.setBalance(address(tc), 1);
 
         vm.expectRevert(Errors.E_AmountTooLargeToEncode.selector);

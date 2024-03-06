@@ -153,7 +153,7 @@ interface IBorrowing {
     function totalBorrowsExact() external view returns (uint256);
 
     /// @notice Balance of vault assets as tracked by deposits/withdrawals and borrows/repays
-    function poolSize() external view returns (uint256);
+    function cash() external view returns (uint256);
 
     /// @notice Debt owed by a particular account, in underlying units
     function debtOf(address account) external view returns (uint256);
@@ -163,7 +163,7 @@ interface IBorrowing {
 
     /// @notice Retrieves the current interest rate for an asset
     /// @return The interest rate in yield-per-second, scaled by 10**27
-    function interestRate() external view returns (uint72);
+    function interestRate() external view returns (uint256);
 
     /// @notice Retrieves the current interest rate accumulator for an asset
     /// @return An opaque accumulator that increases as interest is accrued
@@ -309,7 +309,7 @@ interface IGovernance {
     function LTV(address collateral) external view returns (uint16);
 
     /// @notice Retrieves current ramped value of LTV, which is used to determine liquidation penalty
-    function LTVRamped(address collateral) external view returns (uint16);
+    function LTVLiquidation(address collateral) external view returns (uint16);
 
     /// @notice Retrieves LTV detailed config for a collateral
     /// @param collateral Collateral asset

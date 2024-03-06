@@ -2,7 +2,7 @@
 
 pragma solidity ^0.8.0;
 
-import "./Types.sol";
+import {DisabledOps} from "./Types.sol";
 
 library DisabledOpsLib {
     function get(DisabledOps self, uint32 bitMask) internal pure returns (bool) {

@@ -135,13 +135,13 @@ contract EVault is
 
     function totalBorrowsExact() external view override useView(MODULE_BORROWING) returns (uint256) {}
 
-    function poolSize() external view override useView(MODULE_BORROWING) returns (uint256) {}
+    function cash() external view override useView(MODULE_BORROWING) returns (uint256) {}
 
     function debtOf(address account) external view override useView(MODULE_BORROWING) returns (uint256) {}
 
     function debtOfExact(address account) external view override useView(MODULE_BORROWING) returns (uint256) {}
 
-    function interestRate() external view override useView(MODULE_BORROWING) returns (uint72) {}
+    function interestRate() external view override useView(MODULE_BORROWING) returns (uint256) {}
 
     function interestAccumulator() external view override useView(MODULE_BORROWING) returns (uint256) {}
 
@@ -218,7 +218,7 @@ contract EVault is
 
     function LTV(address collateral) external override useView(MODULE_GOVERNANCE) view returns (uint16) {}
 
-    function LTVRamped(address collateral) external override useView(MODULE_GOVERNANCE) view returns (uint16) {}
+    function LTVLiquidation(address collateral) external override useView(MODULE_GOVERNANCE) view returns (uint16) {}
 
     function LTVFull(address collateral) external override useView(MODULE_GOVERNANCE) view returns (uint40 targetTimestamp, uint16 targetLTV, uint24 rampDuration, uint16 originalLTV) {}
 

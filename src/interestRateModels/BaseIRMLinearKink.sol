@@ -17,7 +17,7 @@ contract BaseIRMLinearKink is BaseIRM {
         kink = kink_;
     }
 
-    function computeInterestRateImpl(address, address, uint32 utilisation) internal view override returns (uint72) {
+    function computeInterestRateImpl(address, address, uint32 utilisation) internal view override returns (uint256) {
         uint256 ir = baseRate;
 
         if (utilisation <= kink) {
@@ -27,6 +27,6 @@ contract BaseIRMLinearKink is BaseIRM {
             ir += slope2 * (utilisation - kink);
         }
 
-        return uint72(ir);
+        return uint256(ir);
     }
 }

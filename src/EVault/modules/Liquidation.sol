@@ -117,7 +117,7 @@ abstract contract LiquidationModule is ILiquidation, Base, BalanceUtils, Liquidi
         LiquidationCache memory liqCache,
         MarketCache memory marketCache
     ) private view returns (LiquidationCache memory) {
-        (uint256 liquidityCollateralValue, uint256 liquidityLiabilityValue) = liquidityCalculate(marketCache, liqCache.violator, liqCache.collaterals, true);
+        (uint256 liquidityCollateralValue, uint256 liquidityLiabilityValue) = calculateLiquidity(marketCache, liqCache.violator, liqCache.collaterals, LTVType.LIQUIDATION);
 
         // no violation
         if (liquidityCollateralValue >= liquidityLiabilityValue) return liqCache;
@@ -200,7 +200,7 @@ abstract contract LiquidationModule is ILiquidation, Base, BalanceUtils, Liquidi
         if (
             liqCache.debtSocialization &&
             liqCache.owed > liqCache.repay &&
-            liquidityNoCollateralExists(liqCache.violator, liqCache.collaterals)
+            checkNoCollateral(liqCache.violator, liqCache.collaterals)
         ) {
             Assets owedRemaining = liqCache.owed - liqCache.repay;
             decreaseBorrow(marketCache, liqCache.violator, owedRemaining);
