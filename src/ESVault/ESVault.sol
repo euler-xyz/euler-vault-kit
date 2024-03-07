@@ -45,6 +45,9 @@ contract ESVault is EVault {
     using TypesLib for uint256;
 
     error NOT_SUPPORTTED();
+    error NOT_SYNTH();
+
+    address SYNTH_DEPOSIT_ADDRESS = address(uint160(uint256(keccak256("SynthDepositAddress"))));
 
     constructor(
         Integrations memory integrations,
@@ -71,7 +74,7 @@ contract ESVault is EVault {
 
     // ----------------- Borrowing -----------------
 
-     /// @inheritdoc IBorrowing
+    /// @inheritdoc IBorrowing
     function borrow(uint256 amount, address receiver) external override nonReentrant {
         (MarketCache memory marketCache, address account) = initOperationForBorrow(OP_BORROW);
 
@@ -136,8 +139,77 @@ contract ESVault is EVault {
         revert NOT_SUPPORTTED();
     }
 
-    function skim(uint256 assets, address receiver) external override callThroughEVC use(MODULE_VAULT) returns (uint256) {
+    function skim(uint256 assets, address receiver) external override returns (uint256) {
         revert NOT_SUPPORTTED();
+    }
+
+    // ----------------- Governance -----------------
+    function convertFees() external override {
+        (MarketCache memory marketCache, address account) = initOperation(OP_CONVERT_FEES, ACCOUNTCHECK_NONE);
+
+        if (marketCache.accumulatedFees.isZero()) return;
+
+        // Decrease totalShares because they are effectively withdrawn from the protocol
+        marketStorage.totalShares =
+            marketCache.totalShares = marketCache.totalShares - marketCache.accumulatedFees;
+
+        (address protocolReceiver, uint256 protocolFee) = protocolConfig.feeConfig(address(this));
+        address governorReceiver = marketStorage.feeReceiver;
+
+        if (governorReceiver == address(0)) protocolFee = 1e18; // governor forfeits fees
+        else if (protocolFee > MAX_PROTOCOL_FEE_SHARE) protocolFee = MAX_PROTOCOL_FEE_SHARE;
+
+
+        Shares governorShares = marketCache.accumulatedFees.mulDiv(1e18 - protocolFee, 1e18);
+        Shares protocolShares = marketCache.accumulatedFees - governorShares;
+
+        marketStorage.accumulatedFees = marketCache.accumulatedFees = Shares.wrap(0);
+
+        Assets governorAssets = governorShares.toAssetsDown(marketCache);
+        Assets protocolAssets = protocolShares.toAssetsDown(marketCache);
+
+        // Mint synth to fee receivers
+        ISynth(address(marketCache.asset)).mint(protocolReceiver, protocolAssets.toUint());
+        ISynth(address(marketCache.asset)).mint(governorReceiver, governorAssets.toUint());
+
+        emit ConvertFees(
+            account,
+            protocolReceiver,
+            governorReceiver,
+            protocolAssets.toUint(),
+            governorAssets.toUint()
+        );
+    }
+
+    // ----------------- Synth Specific -----------------
+
+    function increaseCash(uint256 amount) external {
+        // Update pending interest
+        MarketCache memory marketCache = updateMarket();
+        Assets assets = amount.toAssets();
+        Shares shares = assets.toSharesDown(marketCache);
+        if (shares.isZero()) revert E_ZeroShares();
+
+        increaseBalance(marketCache, SYNTH_DEPOSIT_ADDRESS, address(0), shares, assets);
+        marketStorage.cash = marketCache.cash = marketCache.cash + assets;
+    }
+
+    function decreaseCash(uint256 amount) external {
+        // Update pending interest
+        MarketCache memory marketCache = updateMarket();
+        if(amount.toAssets() > marketCache.cash) {
+            Assets assets = marketCache.cash;
+            Shares shares = assets.toSharesUp(marketCache);
+
+            decreaseBalance(marketCache, SYNTH_DEPOSIT_ADDRESS, address(0), address(0), shares, assets);
+            marketStorage.cash = marketCache.cash = Assets.wrap(0);
+        } else {
+            Assets assets = amount.toAssets();
+            Shares shares = assets.toSharesUp(marketCache);
+
+            decreaseBalance(marketCache, SYNTH_DEPOSIT_ADDRESS, address(0), address(0), shares, assets);
+            marketStorage.cash = marketCache.cash = marketCache.cash - amount.toAssets();
+        }
     }
 
 }

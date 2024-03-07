@@ -241,7 +241,7 @@ contract EVault is
     function oracle() external override useView(MODULE_GOVERNANCE) view returns (address) {}
 
 
-    function convertFees() external override callThroughEVC use(MODULE_GOVERNANCE) {}
+    function convertFees() external override virtual callThroughEVC use(MODULE_GOVERNANCE) {}
 
     function setName(string calldata newName) external override use(MODULE_GOVERNANCE) {}
 
