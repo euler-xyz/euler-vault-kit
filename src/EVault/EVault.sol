@@ -72,15 +72,15 @@ contract EVault is Dispatch {
     function creator() external view override useView(MODULE_VAULT) returns (address) {}
 
 
-    function deposit(uint256 assets, address receiver) external override callThroughEVC use(MODULE_VAULT) returns (uint256) {}
+    function deposit(uint256 assets, address receiver) external override virtual callThroughEVC use(MODULE_VAULT) returns (uint256) {}
 
-    function mint(uint256 shares, address receiver) external override callThroughEVC use(MODULE_VAULT) returns (uint256) {}
+    function mint(uint256 shares, address receiver) external override virtual callThroughEVC use(MODULE_VAULT) returns (uint256) {}
 
-    function withdraw(uint256 assets, address receiver, address owner) external override callThroughEVC use(MODULE_VAULT) returns (uint256) {}
+    function withdraw(uint256 assets, address receiver, address owner) external override virtual callThroughEVC use(MODULE_VAULT) returns (uint256) {}
 
-    function redeem(uint256 shares, address receiver, address owner) external override callThroughEVC use(MODULE_VAULT) returns (uint256) {}
+    function redeem(uint256 shares, address receiver, address owner) external override virtual callThroughEVC use(MODULE_VAULT) returns (uint256) {}
 
-    function skim(uint256 assets, address receiver) external override callThroughEVC use(MODULE_VAULT) returns (uint256) {}
+    function skim(uint256 assets, address receiver) external override virtual callThroughEVC use(MODULE_VAULT) returns (uint256) {}
 
 
 
@@ -105,17 +105,17 @@ contract EVault is Dispatch {
     function dToken() external view override useView(MODULE_BORROWING) returns (address) {}
 
 
-    function borrow(uint256 assets, address receiver) external override callThroughEVC use(MODULE_BORROWING) {}
+    function borrow(uint256 assets, address receiver) external override virtual callThroughEVC use(MODULE_BORROWING) {}
 
-    function repay(uint256 assets, address receiver) external override callThroughEVC use(MODULE_BORROWING) {}
+    function repay(uint256 assets, address receiver) external override virtual callThroughEVC use(MODULE_BORROWING) {}
 
     function loop(uint256 assets, address sharesReceiver) external override callThroughEVC use(MODULE_BORROWING) returns (uint256) {}
 
-    function deloop(uint256 assets, address debtFrom) external override callThroughEVC use(MODULE_BORROWING) returns (uint256) {}
+    function deloop(uint256 assets, address debtFrom) external override virtual callThroughEVC use(MODULE_BORROWING) returns (uint256) {}
 
     function pullDebt(uint256 assets, address from) external override callThroughEVC use(MODULE_BORROWING) {}
 
-    function flashLoan(uint256 assets, bytes calldata data) external override use(MODULE_BORROWING) {}
+    function flashLoan(uint256 assets, bytes calldata data) external override virtual use(MODULE_BORROWING) {}
 
     function touch() external override callThroughEVC use(MODULE_BORROWING) {}
 
