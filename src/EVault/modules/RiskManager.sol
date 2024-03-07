@@ -9,6 +9,8 @@ import {IIRM} from "../../interestRateModels/IIRM.sol";
 
 import "../shared/types/Types.sol";
 
+import "hardhat/console.sol";
+
 abstract contract RiskManagerModule is IRiskManager, Base, LiquidityUtils {
     using TypesLib for uint256;
 
@@ -105,9 +107,7 @@ abstract contract RiskManagerModule is IRiskManager, Base, LiquidityUtils {
     function updateInterestRate(MarketCache memory marketCache) private returns (uint256) {
         uint256 newInterestRate;
 
-        // single SLOAD
         address irm = marketStorage.interestRateModel;
-        ConfigAmount interestFee = marketStorage.interestFee;
 
         if (irm != address(0)) {
             uint256 borrows = marketCache.totalBorrows.toAssetsUp().toUint();
@@ -125,9 +125,6 @@ abstract contract RiskManagerModule is IRiskManager, Base, LiquidityUtils {
 
         if (newInterestRate > MAX_ALLOWED_INTEREST_RATE) newInterestRate = MAX_ALLOWED_INTEREST_RATE;
 
-        // single SSTORE
-        marketStorage.interestRateModel = irm;
-        marketStorage.interestFee = interestFee;
         marketStorage.interestRate = uint72(newInterestRate);
 
         return newInterestRate;
