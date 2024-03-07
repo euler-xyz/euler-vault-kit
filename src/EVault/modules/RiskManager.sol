@@ -2,7 +2,7 @@
 
 pragma solidity ^0.8.0;
 
-import {IRiskManager, IEVault} from "../IEVault.sol";
+import {IRiskManager} from "../IEVault.sol";
 import {Base} from "../shared/Base.sol";
 import {LiquidityUtils} from "../shared/LiquidityUtils.sol";
 import {IIRM} from "../../interestRateModels/IIRM.sol";
@@ -39,7 +39,7 @@ abstract contract RiskManagerModule is IRiskManager, Base, LiquidityUtils {
             collateralValues[i] = getCollateralValue(marketCache, account, collaterals[i], liquidation ? LTVType.LIQUIDATION : LTVType.BORROWING);
         }
 
-        liabilityValue = getLiabilityValue(marketCache, account);
+        liabilityValue = getLiabilityValue(marketCache, account, marketStorage.users[account].getOwed());
     }
 
     /// @inheritdoc IRiskManager
@@ -63,7 +63,7 @@ abstract contract RiskManagerModule is IRiskManager, Base, LiquidityUtils {
         onlyEVCChecks
         returns (bytes4 magicValue)
     {
-        checkLiquidity(account, collaterals);
+        checkLiquidity(loadMarket(), account, collaterals);
 
         magicValue = ACCOUNT_STATUS_CHECK_RETURN_VALUE;
     }

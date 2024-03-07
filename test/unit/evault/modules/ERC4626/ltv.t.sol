@@ -27,77 +27,77 @@ contract ERC4626Test_LTV is EVaultTestBase {
     function test_rampDown() public {
         eTST.setLTV(address(eTST2), cfgScale(0.9e3), 0);
 
-        assertEq(eTST.LTV(address(eTST2)), cfgScale(0.9e3));
+        assertEq(eTST.borrowingLTV(address(eTST2)), cfgScale(0.9e3));
 
         eTST.setLTV(address(eTST2), cfgScale(0.4e3), 1000);
 
-        assertEq(eTST.LTV(address(eTST2)), cfgScale(0.4e3));
-        assertEq(eTST.LTVLiquidation(address(eTST2)), cfgScale(0.9e3));
+        assertEq(eTST.borrowingLTV(address(eTST2)), cfgScale(0.4e3));
+        assertEq(eTST.liquidationLTV(address(eTST2)), cfgScale(0.9e3));
 
         skip(200);
 
-        assertEq(eTST.LTV(address(eTST2)), cfgScale(0.4e3));
-        assertEq(eTST.LTVLiquidation(address(eTST2)), cfgScale(0.8e3));
+        assertEq(eTST.borrowingLTV(address(eTST2)), cfgScale(0.4e3));
+        assertEq(eTST.liquidationLTV(address(eTST2)), cfgScale(0.8e3));
 
         skip(300);
 
-        assertEq(eTST.LTV(address(eTST2)), cfgScale(0.4e3));
-        assertEq(eTST.LTVLiquidation(address(eTST2)), cfgScale(0.65e3));
+        assertEq(eTST.borrowingLTV(address(eTST2)), cfgScale(0.4e3));
+        assertEq(eTST.liquidationLTV(address(eTST2)), cfgScale(0.65e3));
 
         skip(500);
 
-        assertEq(eTST.LTV(address(eTST2)), cfgScale(0.4e3));
-        assertEq(eTST.LTVLiquidation(address(eTST2)), cfgScale(0.4e3));
+        assertEq(eTST.borrowingLTV(address(eTST2)), cfgScale(0.4e3));
+        assertEq(eTST.liquidationLTV(address(eTST2)), cfgScale(0.4e3));
     }
 
     function test_rampUp() public {
         eTST.setLTV(address(eTST2), cfgScale(0.8e3), 1000);
 
-        assertEq(eTST.LTV(address(eTST2)), cfgScale(0.8e3));
-        assertEq(eTST.LTVLiquidation(address(eTST2)), cfgScale(0.0e3));
+        assertEq(eTST.borrowingLTV(address(eTST2)), cfgScale(0.8e3));
+        assertEq(eTST.liquidationLTV(address(eTST2)), cfgScale(0.0e3));
 
         skip(250);
 
-        assertEq(eTST.LTV(address(eTST2)), cfgScale(0.8e3));
-        assertEq(eTST.LTVLiquidation(address(eTST2)), cfgScale(0.2e3));
+        assertEq(eTST.borrowingLTV(address(eTST2)), cfgScale(0.8e3));
+        assertEq(eTST.liquidationLTV(address(eTST2)), cfgScale(0.2e3));
 
         skip(500);
 
-        assertEq(eTST.LTV(address(eTST2)), cfgScale(0.8e3));
-        assertEq(eTST.LTVLiquidation(address(eTST2)), cfgScale(0.6e3));
+        assertEq(eTST.borrowingLTV(address(eTST2)), cfgScale(0.8e3));
+        assertEq(eTST.liquidationLTV(address(eTST2)), cfgScale(0.6e3));
 
         skip(5000);
 
-        assertEq(eTST.LTV(address(eTST2)), cfgScale(0.8e3));
-        assertEq(eTST.LTVLiquidation(address(eTST2)), cfgScale(0.8e3));
+        assertEq(eTST.borrowingLTV(address(eTST2)), cfgScale(0.8e3));
+        assertEq(eTST.liquidationLTV(address(eTST2)), cfgScale(0.8e3));
     }
 
 
     function test_rampRetarget() public {
         eTST.setLTV(address(eTST2), cfgScale(0.8e3), 1000);
 
-        assertEq(eTST.LTV(address(eTST2)), cfgScale(0.8e3));
-        assertEq(eTST.LTVLiquidation(address(eTST2)), cfgScale(0.0e3));
+        assertEq(eTST.borrowingLTV(address(eTST2)), cfgScale(0.8e3));
+        assertEq(eTST.liquidationLTV(address(eTST2)), cfgScale(0.0e3));
 
         skip(250);
 
-        assertEq(eTST.LTV(address(eTST2)), cfgScale(0.8e3));
-        assertEq(eTST.LTVLiquidation(address(eTST2)), cfgScale(0.2e3));
+        assertEq(eTST.borrowingLTV(address(eTST2)), cfgScale(0.8e3));
+        assertEq(eTST.liquidationLTV(address(eTST2)), cfgScale(0.2e3));
 
         eTST.setLTV(address(eTST2), cfgScale(0.1e3), 1000);
 
-        assertEq(eTST.LTV(address(eTST2)), cfgScale(0.1e3));
-        assertEq(eTST.LTVLiquidation(address(eTST2)), cfgScale(0.2e3));
+        assertEq(eTST.borrowingLTV(address(eTST2)), cfgScale(0.1e3));
+        assertEq(eTST.liquidationLTV(address(eTST2)), cfgScale(0.2e3));
 
         skip(500);
 
-        assertEq(eTST.LTV(address(eTST2)), cfgScale(0.1e3));
-        assertEq(eTST.LTVLiquidation(address(eTST2)), cfgScale(0.15e3));
+        assertEq(eTST.borrowingLTV(address(eTST2)), cfgScale(0.1e3));
+        assertEq(eTST.liquidationLTV(address(eTST2)), cfgScale(0.15e3));
 
         skip(600);
 
-        assertEq(eTST.LTV(address(eTST2)), cfgScale(0.1e3));
-        assertEq(eTST.LTVLiquidation(address(eTST2)), cfgScale(0.1e3));
+        assertEq(eTST.borrowingLTV(address(eTST2)), cfgScale(0.1e3));
+        assertEq(eTST.liquidationLTV(address(eTST2)), cfgScale(0.1e3));
     }
 
 
@@ -130,8 +130,8 @@ contract ERC4626Test_LTV is EVaultTestBase {
 
         eTST.setLTV(address(eTST2), cfgScale(0.0e3), 0);
 
-        assertEq(eTST.LTV(address(eTST2)), cfgScale(0.0e3));
-        assertEq(eTST.LTVLiquidation(address(eTST2)), cfgScale(0.0e3));
+        assertEq(eTST.borrowingLTV(address(eTST2)), cfgScale(0.0e3));
+        assertEq(eTST.liquidationLTV(address(eTST2)), cfgScale(0.0e3));
 
         assertEq(eTST.LTVList().length, 1);
         assertEq(eTST.LTVList()[0], address(eTST2));

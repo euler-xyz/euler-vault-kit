@@ -5,8 +5,8 @@ pragma solidity ^0.8.0;
 import {EVCClient} from "./EVCClient.sol";
 import {Cache} from "./Cache.sol";
 
-import {IProtocolConfig} from "../../IProtocolConfig.sol";
-import {IBalanceTracker} from "../../IBalanceTracker.sol";
+import {IProtocolConfig} from "../../ProtocolConfig/IProtocolConfig.sol";
+import {IBalanceTracker} from "../../interfaces/IBalanceTracker.sol";
 import "./types/Types.sol";
 
 abstract contract Base is EVCClient, Cache {

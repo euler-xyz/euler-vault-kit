@@ -151,8 +151,6 @@ contract EVault is
 
     function dToken() external view override useView(MODULE_BORROWING) returns (address) {}
 
-    function EVC() external view override useView(MODULE_BORROWING) returns (address) {}
-
 
     function borrow(uint256 assets, address receiver) external override callThroughEVC use(MODULE_BORROWING) {}
 
@@ -218,9 +216,9 @@ contract EVault is
 
     function protocolFeeReceiver() external override useView(MODULE_GOVERNANCE) view returns (address) {}
 
-    function LTV(address collateral) external override useView(MODULE_GOVERNANCE) view returns (uint16) {}
+    function borrowingLTV(address collateral) external override useView(MODULE_GOVERNANCE) view returns (uint16) {}
 
-    function LTVLiquidation(address collateral) external override useView(MODULE_GOVERNANCE) view returns (uint16) {}
+    function liquidationLTV(address collateral) external override useView(MODULE_GOVERNANCE) view returns (uint16) {}
 
     function LTVFull(address collateral) external override useView(MODULE_GOVERNANCE) view returns (uint40 targetTimestamp, uint16 targetLTV, uint24 rampDuration, uint16 originalLTV) {}
 
@@ -235,6 +233,8 @@ contract EVault is
     function feeReceiver() external override useView(MODULE_GOVERNANCE) view returns (address) {}
 
     function debtSocialization() external override useView(MODULE_GOVERNANCE) view returns (bool) {}
+
+    function EVC() external view override useView(MODULE_GOVERNANCE) returns (address) {}
 
     function unitOfAccount() external override useView(MODULE_GOVERNANCE) view returns (address) {}
 

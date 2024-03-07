@@ -9,10 +9,6 @@ import "./types/Types.sol";
 abstract contract LiquidityUtils is BorrowUtils {
     using TypesLib for uint256;
 
-    enum LTVType {
-        LIQUIDATION, BORROWING
-    }
-
     // Calculate the value of liabilities, and the liquidation or borrowing LTV adjusted collateral value.
     function calculateLiquidity(MarketCache memory marketCache, address account, address[] memory collaterals, LTVType ltvType)
         internal
@@ -20,7 +16,9 @@ abstract contract LiquidityUtils is BorrowUtils {
         returns (uint256 collateralValue, uint256 liabilityValue)
     {
         validateOracle(marketCache);
-        liabilityValue = getLiabilityValue(marketCache, account);
+
+        Owed owed = marketStorage.users[account].getOwed();
+        liabilityValue = owed.isZero() ? 0 : getLiabilityValue(marketCache, account, owed);
 
         for (uint256 i; i < collaterals.length; ++i) {
             collateralValue += getCollateralValue(marketCache, account, collaterals[i], ltvType);
@@ -28,16 +26,16 @@ abstract contract LiquidityUtils is BorrowUtils {
     }
 
     // Check that the value of the collateral, adjusted for borrowing TVL, is equal or greater than the liability value.
-    function checkLiquidity(address account, address[] memory collaterals)
+    function checkLiquidity(MarketCache memory marketCache, address account, address[] memory collaterals)
         internal
         view
     {
-        MarketCache memory marketCache = loadMarket();
         validateOracle(marketCache);
 
-        if (marketStorage.users[account].getOwed().isZero()) return;
+        Owed owed = marketStorage.users[account].getOwed();
+        if (owed.isZero()) return;
 
-        uint256 liabilityValue = getLiabilityValue(marketCache, account);
+        uint256 liabilityValue = getLiabilityValue(marketCache, account, owed);
         if (liabilityValue == 0) return;
 
         uint collateralValue;
@@ -71,21 +69,20 @@ abstract contract LiquidityUtils is BorrowUtils {
 
 
 
-    function getLiabilityValue(MarketCache memory marketCache, address account) internal view returns (uint value) {
-        uint256 owed = getCurrentOwed(marketCache, account).toAssetsUp().toUint();
+    function getLiabilityValue(MarketCache memory marketCache, address account, Owed owed) internal view returns (uint value) {
+        // update owed with interest accrued
+        uint256 owedAssets = getCurrentOwed(marketCache, account, owed).toAssetsUp().toUint();
 
         if (address(marketCache.asset) == marketCache.unitOfAccount) {
-            value = owed;
+            value = owedAssets;
         } else {
             // ask price for liability
-            (, value) = marketCache.oracle.getQuotes(owed, address(marketCache.asset), marketCache.unitOfAccount);
+            (, value) = marketCache.oracle.getQuotes(owedAssets, address(marketCache.asset), marketCache.unitOfAccount);
         }
     }
 
     function getCollateralValue(MarketCache memory marketCache, address account, address collateral, LTVType ltvType) internal view returns (uint value) {
-            ConfigAmount ltv = ltvType == LTVType.LIQUIDATION
-                ? ltvLookup[collateral].getLiquidationLTV()
-                : ltvLookup[collateral].getLTV();
+            ConfigAmount ltv = ltvLookup[collateral].getLTV(ltvType);
 
             if (ltv.isZero()) return 0;
 

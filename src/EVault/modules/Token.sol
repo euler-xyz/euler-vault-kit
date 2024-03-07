@@ -6,7 +6,6 @@ import {IToken, IERC20} from "../IEVault.sol";
 import {Base} from "../shared/Base.sol";
 import {BalanceUtils} from "../shared/BalanceUtils.sol";
 import {ProxyUtils} from "../shared/lib/ProxyUtils.sol";
-import {RevertBytes} from "../shared/lib/RevertBytes.sol";
 
 import "../shared/types/Types.sol";
 

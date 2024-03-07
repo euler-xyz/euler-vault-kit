@@ -28,8 +28,6 @@ abstract contract EVCClient is Storage, Events, Errors {
 
     function disableControllerInternal(address account) internal virtual {
         evc.disableController(account);
-
-        emit DisableController(account);
     }
 
     // Authenticate account and controller, making sure the call is made through EVC and the status checks are deferred
@@ -93,10 +91,6 @@ abstract contract EVCClient is Storage, Events, Errors {
 
     function isCollateralEnabled(address account, address market) internal view returns (bool) {
         return evc.isCollateralEnabled(account, market);
-    }
-
-    function isControllerEnabled(address account) internal view returns (bool) {
-        return evc.isControllerEnabled(account, address(this));
     }
 
     function isAccountStatusCheckDeferred(address account) internal view returns (bool) {

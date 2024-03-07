@@ -241,7 +241,7 @@ abstract contract VaultModule is IVault, Base, AssetTransfers, BalanceUtils {
 
     function maxRedeemInternal(address owner) internal view returns (Shares) {
         Shares max = marketStorage.users[owner].getBalance();
-        if (max.isZero()) return Shares.wrap(0);
+        if (max.isZero()) return max;
 
         // When checks are deferred, all of the balance can be withdrawn, even if only temporarily
         if (!isAccountStatusCheckDeferred(owner)) {
@@ -266,11 +266,19 @@ abstract contract VaultModule is IVault, Base, AssetTransfers, BalanceUtils {
         return max;
     }
 
-    function maxDepositInternal(MarketCache memory marketCache, address) private pure returns (uint256) {
-        uint256 supply = totalAssetsInternal(marketCache);
-        if(supply >= marketCache.supplyCap) return 0;
+    function maxDepositInternal(MarketCache memory marketCache, address) private view returns (uint256) {
+        uint remainingSupply;
 
-        uint256 remainingSupply = marketCache.supplyCap - supply;
+        // In transient state with vault status checks deferred, supply caps will not be immediately enforced
+        if (isVaultStatusCheckDeferred()) {
+            remainingSupply = type(uint256).max;
+        } else {
+            uint256 supply = totalAssetsInternal(marketCache);
+            if(supply >= marketCache.supplyCap) return 0;
+
+            remainingSupply = marketCache.supplyCap - supply;
+        }
+
         uint256 remainingCash = MAX_SANE_AMOUNT - marketCache.cash.toUint();
 
         return remainingCash < remainingSupply ? remainingCash : remainingSupply;

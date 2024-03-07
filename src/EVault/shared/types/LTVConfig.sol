@@ -13,17 +13,17 @@ struct LTVConfig {
     ConfigAmount originalLTV;
 }
 
+enum LTVType {
+    LIQUIDATION, BORROWING
+}
+
 library LTVConfigLib {
     function initialised(LTVConfig memory self) internal pure returns (bool) {
         return self.targetTimestamp != 0;
     }
 
-    function getLTV(LTVConfig memory self) internal pure returns (ConfigAmount) {
-        return self.targetLTV;
-    }
-
-    function getLiquidationLTV(LTVConfig memory self) internal view returns (ConfigAmount) {
-        if (block.timestamp >= self.targetTimestamp) return self.targetLTV;
+    function getLTV(LTVConfig memory self, LTVType ltvType) internal view returns (ConfigAmount) {
+        if (ltvType == LTVType.BORROWING || block.timestamp >= self.targetTimestamp) return self.targetLTV;
 
         uint256 ltv = self.originalLTV.toUint16();
 
@@ -44,7 +44,7 @@ library LTVConfigLib {
         newLTV.targetTimestamp = uint40(block.timestamp + rampDuration);
         newLTV.targetLTV = targetLTV;
         newLTV.rampDuration = rampDuration;
-        newLTV.originalLTV = self.getLiquidationLTV();
+        newLTV.originalLTV = self.getLTV(LTVType.LIQUIDATION);
     }
 
     function clear(LTVConfig storage self) internal {

@@ -74,14 +74,15 @@ abstract contract LiquidationModule is ILiquidation, Base, BalanceUtils, Liquidi
 
         // Checks
 
-        // Make sure violator has debt in this vault
-        verifyController(liqCache.violator);
+
         // Self liquidation is not allowed
         if (liqCache.violator == liqCache.liquidator) revert E_SelfLiquidation();
-        // Violator must have enabled the collateral
-        if (!isCollateralEnabled(liqCache.violator, liqCache.collateral)) revert E_CollateralDisabled();
         // Only liquidate audited collaterals to make sure yield transfer has no side effects.
         if (!ltvLookup[liqCache.collateral].initialised()) revert E_BadCollateral();
+        // Make sure violator has debt in this vault
+        verifyController(liqCache.violator);
+        // Violator must have enabled the collateral
+        if (!isCollateralEnabled(liqCache.violator, liqCache.collateral)) revert E_CollateralDisabled();
         // Violator's health check must not be deferred, meaning no prior operations on violator's account 
         // would possibly be forgiven after enforced collateral yield transfer
         if (isAccountStatusCheckDeferred(violator)) revert E_ViolatorLiquidityDeferred();
@@ -131,16 +132,13 @@ abstract contract LiquidationModule is ILiquidation, Base, BalanceUtils, Liquidi
 
         uint256 collateralBalance = IERC20(liqCache.collateral).balanceOf(liqCache.violator);
         uint256 collateralValue = marketCache.oracle.getQuote(collateralBalance, liqCache.collateral, marketCache.unitOfAccount);
-
         // no collateral balance, or worthless collateral
         if (collateralValue == 0) return liqCache;
 
-        uint256 liabilityValue;
-        if (address(marketCache.asset) == marketCache.unitOfAccount) {
-            liabilityValue = liqCache.owed.toUint();
-        } else {
-            // liquidation, in contract to liquidity calculation, uses mid-point pricing instead of bid/ask
-            liabilityValue = marketCache.oracle.getQuote(liqCache.owed.toUint(), address(marketCache.asset), marketCache.unitOfAccount);
+        uint256 liabilityValue = liqCache.owed.toUint();
+        if (address(marketCache.asset) != marketCache.unitOfAccount) {
+            // liquidation, in contrast to liquidity calculation, uses mid-point pricing instead of bid/ask
+            liabilityValue = marketCache.oracle.getQuote(liabilityValue, address(marketCache.asset), marketCache.unitOfAccount);
         }
 
         uint256 maxRepayValue = liabilityValue;

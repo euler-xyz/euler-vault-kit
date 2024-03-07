@@ -2,12 +2,12 @@
 
 pragma solidity ^0.8.0;
 
-import "../IProtocolConfig.sol";
+import "./IProtocolConfig.sol";
 import "../EVault/shared/Constants.sol";
 
 contract ProtocolConfig is IProtocolConfig {
-    uint256 constant MIN_INTEREST_FEE = 0.01 * 60_000;
-    uint256 constant MAX_INTEREST_FEE = 0.5 * 60_000;
+    uint256 constant MIN_INTEREST_FEE = CONFIG_SCALE * 1 / 100; // 1%
+    uint256 constant MAX_INTEREST_FEE = CONFIG_SCALE * 50 / 100; // 50%
     uint256 constant PROTOCOL_FEE_SHARE = 0.1 * 1e18;
 
     struct InterestFeeRange {
