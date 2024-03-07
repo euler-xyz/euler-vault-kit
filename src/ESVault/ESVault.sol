@@ -2,12 +2,15 @@
 
 pragma solidity ^0.8.0;
 
+import "../EVault/shared/types/Types.sol";
+
 import {Base} from "../EVault/shared/Base.sol";
 import {ModuleDispatch} from "../EVault/modules/ModuleDispatch.sol";
 
 import {TokenModule} from "../EVault/modules/Token.sol";
 import {VaultModule} from "../EVault/modules/Vault.sol";
-import {BorrowingModule} from "../EVault/modules/Borrowing.sol";
+import {AssetTransfers} from "../EVault/shared/AssetTransfers.sol";
+import {BorrowingSynthModule} from "./modules/BorrowingSynth.sol";
 import {LiquidationModule} from "../EVault/modules/Liquidation.sol";
 import {InitializeModule} from "../EVault/modules/Initialize.sol";
 import {BalanceForwarderModule} from "../EVault/modules/BalanceForwarder.sol";
@@ -19,7 +22,7 @@ contract EVault is
     InitializeModule,
     TokenModule,
     VaultModule,
-    BorrowingModule,
+    BorrowingSynthModule,
     LiquidationModule,
     RiskManagerModule,
     BalanceForwarderModule,
@@ -280,4 +283,15 @@ contract EVault is
     function setInterestFee(uint16 newFee) external override use(MODULE_GOVERNANCE) {}
 
     function setDebtSocialization(bool newValue) external override use(MODULE_GOVERNANCE) {}
+
+
+    // ----------------- Internal -----------------
+
+    function pullTokens(MarketCache memory marketCache, address from, Assets amount) internal override(BorrowingSynthModule, AssetTransfers) {
+        BorrowingSynthModule.pullTokens(marketCache, from, amount);
+    }
+
+    function pushTokens(MarketCache memory marketCache, address to, Assets amount) internal override(BorrowingSynthModule, AssetTransfers) {
+        BorrowingSynthModule.pushTokens(marketCache, to, amount);
+    }
 }
