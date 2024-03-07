@@ -94,15 +94,15 @@ abstract contract VaultModule is IVault, Base, AssetTransfers, BalanceUtils {
     }
 
     /// @inheritdoc IVault
-    function feesBalance() external view virtual nonReentrantView returns (uint256) {
-        return loadMarket().feesBalance.toUint();
+    function accumulatedFees() external view virtual nonReentrantView returns (uint256) {
+        return loadMarket().accumulatedFees.toUint();
     }
 
     /// @inheritdoc IVault
-    function feesBalanceAssets() external view virtual nonReentrantView returns (uint256) {
+    function accumulatedFeesAssets() external view virtual nonReentrantView returns (uint256) {
         MarketCache memory marketCache = loadMarket();
 
-        return marketCache.feesBalance.toAssetsDown(marketCache).toUint();
+        return marketCache.accumulatedFees.toAssetsDown(marketCache).toUint();
     }
 
     /// @inheritdoc IVault

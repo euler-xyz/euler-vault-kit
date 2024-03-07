@@ -112,9 +112,9 @@ contract EVault is
 
     function previewRedeem(uint256 shares) external view override useView(MODULE_VAULT) returns (uint256) {}
 
-    function feesBalance() external view override useView(MODULE_VAULT) returns (uint256) {}
+    function accumulatedFees() external view override useView(MODULE_VAULT) returns (uint256) {}
 
-    function feesBalanceAssets() external view override useView(MODULE_VAULT) returns (uint256) {}
+    function accumulatedFeesAssets() external view override useView(MODULE_VAULT) returns (uint256) {}
 
     function creator() external view override useView(MODULE_VAULT) returns (address) {}
 

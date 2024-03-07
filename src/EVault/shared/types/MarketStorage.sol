@@ -20,7 +20,7 @@ struct MarketStorage {
     Shares totalShares;
     Owed totalBorrows;
 
-    Shares feesBalance;
+    Shares accumulatedFees;
 
     uint256 interestAccumulator;
 

@@ -136,10 +136,10 @@ interface IERC4626 {
 
 interface IVault is IERC4626 {
     /// @notice Balance of the fees accumulator, in eTokens
-    function feesBalance() external view returns (uint256);
+    function accumulatedFees() external view returns (uint256);
 
     /// @notice Balance of the fees accumulator, in underlying units
-    function feesBalanceAssets() external view returns (uint256);
+    function accumulatedFeesAssets() external view returns (uint256);
 
     /// @notice Address of the original vault creator
     function creator() external view returns (address);

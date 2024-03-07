@@ -31,7 +31,7 @@ abstract contract Events {
     event MarketStatus(
         uint256 totalShares,
         uint256 totalBorrows,
-        uint256 feesBalance,
+        uint256 accumulatedFees,
         uint256 cash,
         uint256 interestAccumulator,
         uint256 interestRate,

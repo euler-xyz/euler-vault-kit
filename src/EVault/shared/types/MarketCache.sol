@@ -16,7 +16,7 @@ struct MarketCache {
     Assets cash;
     Owed totalBorrows;
     Shares totalShares;
-    Shares feesBalance;
+    Shares accumulatedFees;
     uint256 interestAccumulator;
 
     uint256 supplyCap;

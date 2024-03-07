@@ -129,11 +129,11 @@ abstract contract GovernanceModule is IGovernance, Base, BalanceUtils {
     function convertFees() external virtual nonReentrant {
         (MarketCache memory marketCache, address account) = initOperation(OP_CONVERT_FEES, ACCOUNTCHECK_NONE);
 
-        if (marketCache.feesBalance.isZero()) return;
+        if (marketCache.accumulatedFees.isZero()) return;
 
         // Decrease totalShares because increaseBalance will increase it by that total amount
         marketStorage.totalShares =
-            marketCache.totalShares = marketCache.totalShares - marketCache.feesBalance;
+            marketCache.totalShares = marketCache.totalShares - marketCache.accumulatedFees;
 
         (address protocolReceiver, uint256 protocolFee) = protocolConfig.feeConfig(address(this));
         address governorReceiver = marketStorage.feeReceiver;
@@ -142,10 +142,10 @@ abstract contract GovernanceModule is IGovernance, Base, BalanceUtils {
         else if (protocolFee > MAX_PROTOCOL_FEE_SHARE) protocolFee = MAX_PROTOCOL_FEE_SHARE;
 
 
-        Shares governorShares = marketCache.feesBalance.mulDiv(1e18 - protocolFee, 1e18);
-        Shares protocolShares = marketCache.feesBalance - governorShares;
+        Shares governorShares = marketCache.accumulatedFees.mulDiv(1e18 - protocolFee, 1e18);
+        Shares protocolShares = marketCache.accumulatedFees - governorShares;
 
-        marketStorage.feesBalance = marketCache.feesBalance = Shares.wrap(0);
+        marketStorage.accumulatedFees = marketCache.accumulatedFees = Shares.wrap(0);
 
         Assets governorAssets = governorShares.toAssetsDown(marketCache);
         Assets protocolAssets = protocolShares.toAssetsDown(marketCache);
