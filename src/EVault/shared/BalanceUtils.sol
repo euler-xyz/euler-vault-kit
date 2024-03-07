@@ -64,28 +64,26 @@ abstract contract BalanceUtils is Base {
     }
 
     function transferBalance(address from, address to, Shares amount) internal {
-        if (!amount.isZero()) {
-            (Shares origFromBalance, bool fromBalanceForwarderEnabled) =
-                marketStorage.users[from].getBalanceAndBalanceForwarder();
-            (Shares origToBalance, bool toBalanceForwarderEnabled) = marketStorage.users[to].getBalanceAndBalanceForwarder();
-            if (origFromBalance < amount) revert E_InsufficientBalance();
+        (Shares origFromBalance, bool fromBalanceForwarderEnabled) =
+            marketStorage.users[from].getBalanceAndBalanceForwarder();
+        (Shares origToBalance, bool toBalanceForwarderEnabled) = marketStorage.users[to].getBalanceAndBalanceForwarder();
+        if (origFromBalance < amount) revert E_InsufficientBalance();
 
-            Shares newFromBalance;
-            unchecked {
-                newFromBalance = origFromBalance - amount;
-            }
-            Shares newToBalance = origToBalance + amount;
-
-            if (fromBalanceForwarderEnabled) {
-                balanceTracker.balanceTrackerHook(from, newFromBalance.toUint(), isControlCollateralInProgress());
-            }
-            if (toBalanceForwarderEnabled) {
-                balanceTracker.balanceTrackerHook(to, newToBalance.toUint(), false);
-            }
-
-            marketStorage.users[from].setBalance(newFromBalance);
-            marketStorage.users[to].setBalance(newToBalance);
+        Shares newFromBalance;
+        unchecked {
+            newFromBalance = origFromBalance - amount;
         }
+        Shares newToBalance = origToBalance + amount;
+
+        if (fromBalanceForwarderEnabled) {
+            balanceTracker.balanceTrackerHook(from, newFromBalance.toUint(), isControlCollateralInProgress());
+        }
+        if (toBalanceForwarderEnabled) {
+            balanceTracker.balanceTrackerHook(to, newToBalance.toUint(), false);
+        }
+
+        marketStorage.users[from].setBalance(newFromBalance);
+        marketStorage.users[to].setBalance(newToBalance);
 
         emit Transfer(from, to, amount.toUint());
     }
