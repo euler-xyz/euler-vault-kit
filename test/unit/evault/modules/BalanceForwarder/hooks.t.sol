@@ -262,7 +262,7 @@ contract BalanceForwarderTest_Hooks is EVaultTestBase {
         vm.prank(govFeeReceiver);
         eTST.enableBalanceForwarder();
 
-        uint256 fees = eTST.feesBalance();
+        uint256 fees = eTST.accumulatedFees();
 
         assertEq(MBT.calls(feeReceiver, 0, false), 1);
         assertEq(MBT.calls(govFeeReceiver, 0, false), 1);
