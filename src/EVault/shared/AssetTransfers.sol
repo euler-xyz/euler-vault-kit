@@ -18,7 +18,7 @@ contract AssetTransfers is Storage, Errors {
     }
 
     function pushTokens(MarketCache memory marketCache, address to, Assets amount) internal {
-        marketCache.asset.safeTransfer(to, amount.toUint());
         marketStorage.cash = marketCache.cash = marketCache.cash - amount;
+        marketCache.asset.safeTransfer(to, amount.toUint());
     }
 }
