@@ -35,9 +35,9 @@ abstract contract BorrowUtils is Base {
     }
 
     function increaseBorrow(MarketCache memory marketCache, address account, Assets assets) internal {
-        Owed amount = assets.toOwed();
         (Owed owed, Owed prevOwed) = updateUserBorrow(marketCache, account);
 
+        Owed amount = assets.toOwed();
         owed = owed + amount;
 
         marketStorage.users[account].setOwed(owed);
@@ -71,19 +71,16 @@ abstract contract BorrowUtils is Base {
         (Owed fromOwed, Owed fromOwedPrev) = updateUserBorrow(marketCache, from);
         (Owed toOwed, Owed toOwedPrev) = updateUserBorrow(marketCache, to);
 
-        // If amount was rounded up, transfer exact amount owed
-        if (amount > fromOwed && (amount - fromOwed).isDust()) amount = fromOwed;
+        // If amount was rounded up, or dust is left over, transfer exact amount owed
+        if ((amount > fromOwed && (amount - fromOwed).isDust()) ||
+            (amount < fromOwed && (fromOwed - amount).isDust())) {
+            amount = fromOwed;
+        }
 
         if (amount > fromOwed) revert E_InsufficientBalance();
 
         unchecked {
             fromOwed = fromOwed - amount;
-        }
-
-        // Transfer any residual dust
-        if (fromOwed.isDust()) {
-            amount = amount + fromOwed;
-            fromOwed = Owed.wrap(0);
         }
 
         toOwed = toOwed + amount;
