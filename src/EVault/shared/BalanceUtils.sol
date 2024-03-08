@@ -3,6 +3,7 @@
 pragma solidity ^0.8.0;
 
 import {Base} from "./Base.sol";
+import {IBalanceTracker} from "../../interfaces/IBalanceTracker.sol";
 
 import "./types/Types.sol";
 
@@ -22,12 +23,12 @@ abstract contract BalanceUtils is Base {
             marketStorage.users[account].getBalanceAndBalanceForwarder();
         Shares newBalance = origBalance + amount;
 
-        if (balanceForwarderEnabled) {
-            balanceTracker.balanceTrackerHook(account, newBalance.toUint(), false);
-        }
-
         marketStorage.users[account].setBalance(newBalance);
         marketStorage.totalShares = marketCache.totalShares = marketCache.totalShares + amount;
+
+        if (balanceForwarderEnabled) {
+            tryBalanceTrackerHook(account, newBalance.toUint(), false);
+        }
 
         emit Transfer(address(0), account, amount.toUint());
         emit Deposit(sender, account, assets.toUint(), amount.toUint());
@@ -50,12 +51,12 @@ abstract contract BalanceUtils is Base {
             newBalance = origBalance - amount;
         }
 
-        if (balanceForwarderEnabled) {
-            balanceTracker.balanceTrackerHook(account, newBalance.toUint(), isControlCollateralInProgress());
-        }
-
         marketStorage.users[account].setBalance(newBalance);
         marketStorage.totalShares = marketCache.totalShares = marketCache.totalShares - amount;
+
+        if (balanceForwarderEnabled) {
+            tryBalanceTrackerHook(account, newBalance.toUint(), isControlCollateralInProgress());
+        }
 
         emit Transfer(account, address(0), amount.toUint());
         emit Withdraw(sender, receiver, account, assets.toUint(), amount.toUint());
@@ -73,15 +74,15 @@ abstract contract BalanceUtils is Base {
         }
         Shares newToBalance = origToBalance + amount;
 
-        if (fromBalanceForwarderEnabled) {
-            balanceTracker.balanceTrackerHook(from, newFromBalance.toUint(), isControlCollateralInProgress());
-        }
-        if (toBalanceForwarderEnabled) {
-            balanceTracker.balanceTrackerHook(to, newToBalance.toUint(), false);
-        }
-
         marketStorage.users[from].setBalance(newFromBalance);
         marketStorage.users[to].setBalance(newToBalance);
+
+        if (fromBalanceForwarderEnabled) {
+            tryBalanceTrackerHook(from, newFromBalance.toUint(), isControlCollateralInProgress());
+        }
+        if (toBalanceForwarderEnabled) {
+            tryBalanceTrackerHook(to, newToBalance.toUint(), false);
+        }
 
         emit Transfer(from, to, amount.toUint());
     }
@@ -105,5 +106,9 @@ abstract contract BalanceUtils is Base {
             marketStorage.users[owner].eTokenAllowance[spender] = allowance;
             emit Approval(owner, spender, allowance);
         }
+    }
+
+    function tryBalanceTrackerHook(address account, uint256 newAccountBalance, bool forfeitRecentReward) private returns (bool success) {
+        (success,) = address(balanceTracker).call(abi.encodeCall(IBalanceTracker.balanceTrackerHook, (account, newAccountBalance, forfeitRecentReward)));
     }
 }
