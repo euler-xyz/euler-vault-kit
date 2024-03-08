@@ -5,13 +5,15 @@ pragma solidity >=0.8.0;
 /// @notice Arithmetic library with operations for fixed-point numbers.
 /// @author Solmate (https://github.com/transmissions11/solmate/blob/main/src/utils/FixedPointMathLib.sol)
 /// @author Inspired by USM (https://github.com/usmfum/USM/blob/master/contracts/WadMath.sol)
+/// @author Modified by Euler to return an `overflow` bool instead of reverting
 
 library RPow {
+    /// @dev If overflow is true, an overflow occurred and the value of z is undefined
     function rpow(
         uint256 x,
         uint256 n,
         uint256 scalar
-    ) internal pure returns (uint256 z) {
+    ) internal pure returns (uint256 z, bool overflow) {
         /// @solidity memory-safe-assembly
         assembly {
             switch x
@@ -47,10 +49,11 @@ library RPow {
                     // Shift n right by 1 each iteration to halve it.
                     n := shr(1, n)
                 } {
-                    // Revert immediately if x ** 2 would overflow.
+                    // Bail if x ** 2 would overflow.
                     // Equivalent to iszero(eq(div(xx, x), x)) here.
                     if shr(128, x) {
-                        revert(0, 0)
+                        overflow := 1
+                        break
                     }
 
                     // Store x squared.
@@ -59,9 +62,10 @@ library RPow {
                     // Round to the nearest number.
                     let xxRound := add(xx, half)
 
-                    // Revert if xx + half overflowed.
+                    // Bail if xx + half overflowed.
                     if lt(xxRound, xx) {
-                        revert(0, 0)
+                        overflow := 1
+                        break
                     }
 
                     // Set x to scaled xxRound.
@@ -74,18 +78,20 @@ library RPow {
 
                         // If z * x overflowed:
                         if iszero(eq(div(zx, x), z)) {
-                            // Revert if x is non-zero.
+                            // Bail if x is non-zero.
                             if iszero(iszero(x)) {
-                                revert(0, 0)
+                                overflow := 1
+                                break
                             }
                         }
 
                         // Round to the nearest number.
                         let zxRound := add(zx, half)
 
-                        // Revert if zx + half overflowed.
+                        // Bail if zx + half overflowed.
                         if lt(zxRound, zx) {
-                            revert(0, 0)
+                            overflow := 1
+                            break
                         }
 
                         // Return properly scaled zxRound.
