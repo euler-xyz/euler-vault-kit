@@ -9,6 +9,7 @@ import "../EVault/shared/types/MarketCache.sol";
 import "../EVault/shared/Constants.sol";
 // import "../Evault/shared/types/Types.sol";
 import "../Evault/shared/Errors.sol";
+import "../ESynth/IESynth.sol";
 
 type ConfigAmount is uint16;
 
@@ -34,11 +35,6 @@ library TypesLib {
         if (amount > CONFIG_SCALE) revert Errors.E_InvalidConfigAmount();
         return ConfigAmount.wrap(amount);
     }
-}
-
-interface ISynth {
-    function mint(address account, uint256 amount) external;
-    function burn(address account, uint256 amount) external;
 }
 
 contract ESVault is EVault {
@@ -88,7 +84,7 @@ contract ESVault is EVault {
         increaseBorrow(marketCache, account, assets);
 
         marketStorage.cash = marketCache.cash = marketCache.cash - assets;
-        ISynth(address(marketCache.asset)).mint(receiver, assets.toUint());
+        IESynth(address(marketCache.asset)).mint(receiver, assets.toUint());
     }
 
     /// @inheritdoc IBorrowing
@@ -102,7 +98,7 @@ contract ESVault is EVault {
         Assets assets = (amount > owed ? owed : amount).toAssets();
         if (assets.isZero()) return;
 
-        ISynth(address(marketCache.asset)).burn(account, assets.toUint());
+        IESynth(address(marketCache.asset)).burn(account, assets.toUint());
         marketStorage.cash = marketCache.cash = marketCache.cash + assets;
 
         decreaseBorrow(marketCache, receiver, assets);
@@ -169,8 +165,8 @@ contract ESVault is EVault {
         Assets protocolAssets = protocolShares.toAssetsDown(marketCache);
 
         // Mint synth to fee receivers
-        ISynth(address(marketCache.asset)).mint(protocolReceiver, protocolAssets.toUint());
-        ISynth(address(marketCache.asset)).mint(governorReceiver, governorAssets.toUint());
+        IESynth(address(marketCache.asset)).mint(protocolReceiver, protocolAssets.toUint());
+        IESynth(address(marketCache.asset)).mint(governorReceiver, governorAssets.toUint());
 
         emit ConvertFees(
             account,
