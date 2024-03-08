@@ -2,6 +2,7 @@
 cache/
 out/
 
+
 # Ignores development broadcast logs
 !/broadcast
 /broadcast/*/31337/
@@ -10,3 +11,10 @@ out/
 # Dotenv file
 .env
 .vscode
+
+# Invariant testing files
+crytic-export/
+_corpus/
+
+# System Files
+.DS_Store
