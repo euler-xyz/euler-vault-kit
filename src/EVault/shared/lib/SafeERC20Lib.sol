@@ -10,8 +10,8 @@ interface IPermit2 {
 }
 
 library SafeERC20Lib {
-    error TransferFromFailed(bytes errorTransferFrom, bytes errorPermit2);
-    error Permit2AmountOverflow();
+    error E_TransferFromFailed(bytes errorTransferFrom, bytes errorPermit2);
+    error E_Permit2AmountOverflow();
 
     // If no code exists under the token address, the function will succeed. EVault ensures this is not the case in `initialize`.
     function trySafeTransferFrom(IERC20 token, address from, address to, uint256 value) internal returns (bool, bytes memory) {
@@ -27,12 +27,12 @@ library SafeERC20Lib {
         (bool success, bytes memory tryData) = trySafeTransferFrom(token, from, to, value);
         bytes memory fallbackData;
         if (!success && permit2 != address(0)) {
-            if (value > type(uint160).max) revert TransferFromFailed(tryData, abi.encodeWithSignature("Permit2AmountOverflow()"));
+            if (value > type(uint160).max) revert E_TransferFromFailed(tryData, abi.encodeWithSignature("E_Permit2AmountOverflow()"));
 
             (success, fallbackData) = permit2.call(abi.encodeCall(IPermit2.transferFrom, (from, to, uint160(value), address(token))));
         }
 
-        if (!success) revert TransferFromFailed(tryData, fallbackData);
+        if (!success) revert E_TransferFromFailed(tryData, fallbackData);
     }
 
     // If no code exists under the token address, the function will succeed. EVault ensures this is not the case in `initialize`.
