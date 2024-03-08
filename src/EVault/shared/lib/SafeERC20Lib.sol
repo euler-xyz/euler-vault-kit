@@ -25,14 +25,14 @@ library SafeERC20Lib {
 
     function safeTransferFrom(IERC20 token, address from, address to, uint256 value, address permit2) internal {
         (bool success, bytes memory tryData) = trySafeTransferFrom(token, from, to, value);
-        if (!success) {
+        bytes memory fallbackData;
+        if (!success && permit2 != address(0)) {
             if (value > type(uint160).max) revert TransferFromFailed(tryData, abi.encodeWithSignature("Permit2AmountOverflow()"));
 
-            bytes memory data;
-            (success, data) = permit2.call(abi.encodeCall(IPermit2.transferFrom, (from, to, uint160(value), address(token))));
-            if (success) revert TransferFromFailed(tryData, data);
+            (success, fallbackData) = permit2.call(abi.encodeCall(IPermit2.transferFrom, (from, to, uint160(value), address(token))));
         }
 
+        if (!success) revert TransferFromFailed(tryData, fallbackData);
     }
 
     // If no code exists under the token address, the function will succeed. EVault ensures this is not the case in `initialize`.
