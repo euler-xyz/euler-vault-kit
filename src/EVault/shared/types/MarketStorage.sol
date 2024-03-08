@@ -3,6 +3,7 @@
 pragma solidity ^0.8.0;
 
 import {Assets, Shares, Owed, AmountCap, ConfigAmount, DisabledOps} from "./Types.sol";
+import {LTVConfig} from "./LTVConfig.sol";
 import {UserStorage} from "./UserStorage.sol";
 
 struct MarketStorage {
@@ -39,5 +40,7 @@ struct MarketStorage {
     address feeReceiver;
 
     mapping(address account => UserStorage) users;
-    mapping(address owner => mapping(address spender => uint256 allowance)) eVaultAllowance;
+
+    mapping(address collateral => LTVConfig) ltvLookup;
+    address[] ltvList;
 }

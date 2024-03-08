@@ -41,7 +41,7 @@ abstract contract TokenModule is IToken, Base, BalanceUtils {
 
     /// @inheritdoc IERC20
     function allowance(address holder, address spender) external view virtual nonReentrantView returns (uint256) {
-        return marketStorage.eVaultAllowance[holder][spender];
+        return marketStorage.users[holder].eTokenAllowance[spender];
     }
 
     /// @inheritdoc IERC20

@@ -64,17 +64,17 @@ abstract contract GovernanceModule is IGovernance, Base, BalanceUtils {
 
     /// @inheritdoc IGovernance
     function borrowingLTV(address collateral) external view virtual reentrantOK returns (uint16) {
-        return ltvLookup[collateral].getLTV(LTVType.BORROWING).toUint16();
+        return marketStorage.ltvLookup[collateral].getLTV(LTVType.BORROWING).toUint16();
     }
 
     /// @inheritdoc IGovernance
     function liquidationLTV(address collateral) external view virtual reentrantOK returns (uint16) {
-        return ltvLookup[collateral].getLTV(LTVType.LIQUIDATION).toUint16();
+        return marketStorage.ltvLookup[collateral].getLTV(LTVType.LIQUIDATION).toUint16();
     }
 
     /// @inheritdoc IGovernance
     function LTVFull(address collateral) external view virtual reentrantOK returns (uint40, uint16, uint24, uint16) {
-        LTVConfig memory ltv = ltvLookup[collateral];
+        LTVConfig memory ltv = marketStorage.ltvLookup[collateral];
         return (
             ltv.targetTimestamp,
             ltv.targetLTV.toUint16(),
@@ -85,7 +85,7 @@ abstract contract GovernanceModule is IGovernance, Base, BalanceUtils {
 
     /// @inheritdoc IGovernance
     function LTVList() external view virtual reentrantOK returns (address[] memory) {
-        return ltvList;
+        return marketStorage.ltvList;
     }
 
     /// @inheritdoc IGovernance
@@ -206,20 +206,20 @@ abstract contract GovernanceModule is IGovernance, Base, BalanceUtils {
         // self-collateralization is not allowed
         if (collateral == address(this)) revert E_InvalidLTVAsset();
 
-        LTVConfig memory origLTV = ltvLookup[collateral];
+        LTVConfig memory origLTV = marketStorage.ltvLookup[collateral];
         LTVConfig memory newLTV = origLTV.setLTV(ltv.toConfigAmount(), rampDuration);
 
-        ltvLookup[collateral] = newLTV;
+        marketStorage.ltvLookup[collateral] = newLTV;
 
-        if (!origLTV.initialised()) ltvList.push(collateral);
+        if (!origLTV.initialised()) marketStorage.ltvList.push(collateral);
 
         emit GovSetLTV(collateral, newLTV.targetTimestamp, newLTV.targetLTV.toUint16(), newLTV.rampDuration, newLTV.originalLTV.toUint16());
     }
 
     /// @inheritdoc IGovernance
     function clearLTV(address collateral) external virtual nonReentrant governorOnly {
-        uint16 originalLTV = ltvLookup[collateral].getLTV(LTVType.LIQUIDATION).toUint16();
-        ltvLookup[collateral].clear();
+        uint16 originalLTV = marketStorage.ltvLookup[collateral].getLTV(LTVType.LIQUIDATION).toUint16();
+        marketStorage.ltvLookup[collateral].clear();
 
         emit GovSetLTV(collateral, 0, 0, 0, originalLTV);
     }

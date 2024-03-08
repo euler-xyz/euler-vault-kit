@@ -82,7 +82,7 @@ abstract contract LiquidityUtils is BorrowUtils {
     }
 
     function getCollateralValue(MarketCache memory marketCache, address account, address collateral, LTVType ltvType) internal view returns (uint value) {
-            ConfigAmount ltv = ltvLookup[collateral].getLTV(ltvType);
+            ConfigAmount ltv = marketStorage.ltvLookup[collateral].getLTV(ltvType);
 
             if (ltv.isZero()) return 0;
 
