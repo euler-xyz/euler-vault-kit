@@ -60,8 +60,9 @@ contract Cache is Storage, Errors {
         marketCache.interestAccumulator = marketStorage.interestAccumulator;
 
         // Update interest  accumulator and fees balance
+        uint256 deltaT = block.timestamp - marketCache.lastInterestAccumulatorUpdate;
 
-        if (block.timestamp != marketCache.lastInterestAccumulatorUpdate) {
+        if (deltaT > 0) {
             dirty = true;
 
             // Compute new values. Use full precision for intermediate results.
@@ -69,7 +70,6 @@ contract Cache is Storage, Errors {
             ConfigAmount interestFee = marketStorage.interestFee;
             uint256 interestRate = marketStorage.interestRate;
 
-            uint256 deltaT = block.timestamp - marketCache.lastInterestAccumulatorUpdate;
             uint256 newInterestAccumulator =
                 (RPow.rpow(interestRate + 1e27, deltaT, 1e27) * marketCache.interestAccumulator) / 1e27;
 

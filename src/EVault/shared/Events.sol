@@ -44,9 +44,6 @@ abstract contract Events {
         uint256 repayAssets,
         uint256 yieldBalance
     );
-    event DisableController(address indexed account);
-
-    event SkimAssets(address indexed admin, address indexed receiver, uint256 assets);
 
     event BalanceForwarderStatus(address indexed account, bool status);
 }

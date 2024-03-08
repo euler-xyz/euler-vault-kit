@@ -185,8 +185,6 @@ interface IBorrowing {
     /// @notice Address of the sidecar DToken
     function dToken() external view returns (address);
 
-    /// @notice Address of EthereumVaultConnector contract
-    function EVC() external view returns (address);
 
     /// @notice Transfer underlying tokens from the vault to the sender, and increase sender's debt
     /// @param assets In underlying units (use max uint for all available tokens)
@@ -312,11 +310,11 @@ interface IGovernance {
     /// @notice Retrieves the address which will receive protocol's fees
     function protocolFeeReceiver() external view returns (address);
 
-    /// @notice Retrieves regular LTV set for the collateral, which is used to determine the health of the account
-    function LTV(address collateral) external view returns (uint16);
+    /// @notice Retrieves regular LTV, set for the collateral, which is used to determine the health of the account
+    function borrowingLTV(address collateral) external view returns (uint16);
 
     /// @notice Retrieves current ramped value of LTV, which is used to determine liquidation penalty
-    function LTVLiquidation(address collateral) external view returns (uint16);
+    function liquidationLTV(address collateral) external view returns (uint16);
 
     /// @notice Retrieves LTV detailed config for a collateral
     /// @param collateral Collateral asset
@@ -346,6 +344,9 @@ interface IGovernance {
 
     /// @notice Indicates if debt socialization is activated
     function debtSocialization() external view returns (bool);
+
+    /// @notice Address of EthereumVaultConnector contract
+    function EVC() external view returns (address);
 
     /// @notice Retrieves a reference asset used for liquidity calculations
     function unitOfAccount() external view returns (address);

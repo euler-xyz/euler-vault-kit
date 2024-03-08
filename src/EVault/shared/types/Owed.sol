@@ -5,6 +5,7 @@ pragma solidity ^0.8.0;
 import {Owed, Assets, TypesLib} from "./Types.sol";
 import "../Constants.sol";
 
+/// @dev The owed type tracks borrowed assets in the assets units scaled up by shifting left INTERNAL_DEBT_PRECISION bits. Increased precision allows for accurate interest accounting.
 library OwedLib {
     function toUint(Owed self) internal pure returns (uint256) {
         return Owed.unwrap(self);

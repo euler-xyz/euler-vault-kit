@@ -92,18 +92,16 @@ abstract contract BorrowingModule is IBorrowing, Base, AssetTransfers, BalanceUt
         }
 
         // if collateral has zero LTV configured, it will not be locked
-        ConfigAmount ltv = ltvLookup[collateral].getLTV();
+        ConfigAmount ltv = ltvLookup[collateral].getLTV(LTVType.BORROWING);
         if (ltv.isZero()) return 0;
 
         // calculate extra collateral value in terms of requested collateral shares (balance), by dividing by LTV
         uint256 extraCollateralValue = ltv.mulInv(totalCollateralValueRiskAdjusted - liabilityValue);
 
-        uint256 extraCollateralBalance;
-        {
-            uint256 collateralPrice = marketCache.oracle.getQuote(1e18, collateral, marketCache.unitOfAccount);
-            if (collateralPrice == 0) return 0; // worthless / unpriced collateral is not locked
-            extraCollateralBalance = extraCollateralValue * 1e18 / collateralPrice;
-        }
+        // convert back to collateral balance
+        uint256 collateralPrice = marketCache.oracle.getQuote(1e18, collateral, marketCache.unitOfAccount);
+        if (collateralPrice == 0) return 0; // worthless / unpriced collateral is not locked
+        uint256 extraCollateralBalance = extraCollateralValue * 1e18 / collateralPrice;
 
         if (extraCollateralBalance >= collateralBalance) return 0; // other collaterals are sufficient to support the debt
 
@@ -115,10 +113,6 @@ abstract contract BorrowingModule is IBorrowing, Base, AssetTransfers, BalanceUt
         return calculateDTokenAddress();
     }
 
-    /// @inheritdoc IBorrowing
-    function EVC() external view virtual reentrantOK returns (address) {
-        return address(evc);
-    }
 
     /// @inheritdoc IBorrowing
     function borrow(uint256 amount, address receiver) external virtual nonReentrant {

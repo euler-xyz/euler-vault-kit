@@ -2,9 +2,7 @@
 
 pragma solidity ^0.8.0;
 
-import {DToken} from "../DToken.sol";
 import {Base} from "./Base.sol";
-import {ProxyUtils} from "../shared/lib/ProxyUtils.sol";
 
 import "./types/Types.sol";
 

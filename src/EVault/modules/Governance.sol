@@ -3,7 +3,7 @@
 pragma solidity ^0.8.0;
 
 import {IGovernance} from "../IEVault.sol";
-import {IPriceOracle} from "../../IPriceOracle.sol";
+import {IPriceOracle} from "../../interfaces/IPriceOracle.sol";
 import {Base} from "../shared/Base.sol";
 import {BalanceUtils} from "../shared/BalanceUtils.sol";
 import {ProxyUtils} from "../shared/lib/ProxyUtils.sol";
@@ -63,13 +63,13 @@ abstract contract GovernanceModule is IGovernance, Base, BalanceUtils {
     }
 
     /// @inheritdoc IGovernance
-    function LTV(address collateral) external view virtual reentrantOK returns (uint16) {
-        return ltvLookup[collateral].getLTV().toUint16();
+    function borrowingLTV(address collateral) external view virtual reentrantOK returns (uint16) {
+        return ltvLookup[collateral].getLTV(LTVType.BORROWING).toUint16();
     }
 
     /// @inheritdoc IGovernance
-    function LTVLiquidation(address collateral) external view virtual reentrantOK returns (uint16) {
-        return ltvLookup[collateral].getLiquidationLTV().toUint16();
+    function liquidationLTV(address collateral) external view virtual reentrantOK returns (uint16) {
+        return ltvLookup[collateral].getLTV(LTVType.LIQUIDATION).toUint16();
     }
 
     /// @inheritdoc IGovernance
@@ -114,6 +114,11 @@ abstract contract GovernanceModule is IGovernance, Base, BalanceUtils {
     }
 
     /// @inheritdoc IGovernance
+    function EVC() external view virtual reentrantOK returns (address) {
+        return address(evc);
+    }
+
+    /// @inheritdoc IGovernance
     function unitOfAccount() external view virtual reentrantOK returns (address) {
         (,, address _unitOfAccount) = ProxyUtils.metadata();
         return _unitOfAccount;
@@ -131,10 +136,6 @@ abstract contract GovernanceModule is IGovernance, Base, BalanceUtils {
 
         if (marketCache.accumulatedFees.isZero()) return;
 
-        // Decrease totalShares because increaseBalance will increase it by that total amount
-        marketStorage.totalShares =
-            marketCache.totalShares = marketCache.totalShares - marketCache.accumulatedFees;
-
         (address protocolReceiver, uint256 protocolFee) = protocolConfig.feeConfig(address(this));
         address governorReceiver = marketStorage.feeReceiver;
 
@@ -149,6 +150,10 @@ abstract contract GovernanceModule is IGovernance, Base, BalanceUtils {
 
         Assets governorAssets = governorShares.toAssetsDown(marketCache);
         Assets protocolAssets = protocolShares.toAssetsDown(marketCache);
+
+        // Decrease totalShares because increaseBalance will increase it by that total amount
+        marketStorage.totalShares =
+            marketCache.totalShares = marketCache.totalShares - marketCache.accumulatedFees;
 
         increaseBalance(
             marketCache, governorReceiver, address(0), governorShares, governorAssets
@@ -213,7 +218,7 @@ abstract contract GovernanceModule is IGovernance, Base, BalanceUtils {
 
     /// @inheritdoc IGovernance
     function clearLTV(address collateral) external virtual nonReentrant governorOnly {
-        uint16 originalLTV = ltvLookup[collateral].getLiquidationLTV().toUint16();
+        uint16 originalLTV = ltvLookup[collateral].getLTV(LTVType.LIQUIDATION).toUint16();
         ltvLookup[collateral].clear();
 
         emit GovSetLTV(collateral, 0, 0, 0, originalLTV);

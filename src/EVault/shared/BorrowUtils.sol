@@ -50,15 +50,15 @@ abstract contract BorrowUtils is Base {
         (Owed owed, Owed prevOwed) = updateUserBorrow(marketCache, account);
         Assets debtAssets = owed.toAssetsUp();
 
-        if (assets > debtAssets) revert E_RepayTooMuch();
-        Assets debtAssetsRemaining;
-        unchecked {
-            debtAssetsRemaining = debtAssets - assets;
-        }
-
         if (owed > marketCache.totalBorrows) owed = marketCache.totalBorrows;
 
-        Owed owedRemaining = debtAssetsRemaining.toOwed();
+        if (assets > debtAssets) revert E_RepayTooMuch();
+
+        Owed owedRemaining;
+        unchecked {
+            owedRemaining = (debtAssets - assets).toOwed();
+        }
+
         marketStorage.users[account].setOwed(owedRemaining);
         marketStorage.totalBorrows = marketCache.totalBorrows = marketCache.totalBorrows - owed + owedRemaining;
 
