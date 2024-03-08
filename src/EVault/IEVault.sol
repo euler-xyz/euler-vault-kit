@@ -303,6 +303,9 @@ interface IGovernance {
     /// @return Amount of interest that is redirected as a fee, as a fraction scaled by CONFIG_SCALE (60_000)
     function interestFee() external view returns (uint16);
 
+    /// @notice Retrieves the ProtocolConfig address
+    function protocolConfigAddress() external view returns (address);
+
     /// @notice Retrieves the protocol fee share
     /// @return A percentage share of fees accrued belonging to the protocol. In wad scale (1e18)
     function protocolFeeShare() external view returns (uint256);
@@ -347,6 +350,9 @@ interface IGovernance {
 
     /// @notice Address of EthereumVaultConnector contract
     function EVC() external view returns (address);
+
+    /// @notice Retrieves the Permit2 contract address
+    function permit2Address() external view returns (address);
 
     /// @notice Retrieves a reference asset used for liquidity calculations
     function unitOfAccount() external view returns (address);

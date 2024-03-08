@@ -43,6 +43,7 @@ contract EVaultTestBase is Test, AssertionsCustomTypes {
     address balanceTracker;
     MockPriceOracle oracle;
     address unitOfAccount;
+    address permit2;
     GenericFactory public factory;
 
     TestERC20 assetTST;
@@ -61,7 +62,8 @@ contract EVaultTestBase is Test, AssertionsCustomTypes {
         balanceTracker = address(new MockBalanceTracker());
         oracle = new MockPriceOracle();
         unitOfAccount = address(1);
-        Base.Integrations memory integrations = Base.Integrations(address(evc), address(protocolConfig), balanceTracker);
+        permit2 = address(2);
+        Base.Integrations memory integrations = Base.Integrations(address(evc), address(protocolConfig), balanceTracker, permit2);
 
         Dispatch.DeployedModules memory modules = Dispatch.DeployedModules({
             initialize: address(new Initialize(integrations)),

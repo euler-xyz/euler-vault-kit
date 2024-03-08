@@ -12,7 +12,7 @@ abstract contract AssetTransfers is Base {
     using SafeERC20Lib for IERC20;
 
     function pullAssets(MarketCache memory marketCache, address from, Assets amount) internal {
-        marketCache.asset.safeTransferFrom(from, address(this), amount.toUint());
+        marketCache.asset.safeTransferFrom(from, address(this), amount.toUint(), permit2);
         marketStorage.cash = marketCache.cash = marketCache.cash + amount;
     }
 
