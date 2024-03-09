@@ -4,7 +4,6 @@ pragma solidity ^0.8.0;
 
 import {IBalanceForwarder} from "../IEVault.sol";
 import {Base} from "../shared/Base.sol";
-import {IBalanceTracker} from "../../interfaces/IBalanceTracker.sol";
 
 abstract contract BalanceForwarderModule is IBalanceForwarder, Base {
     /// @inheritdoc IBalanceForwarder
