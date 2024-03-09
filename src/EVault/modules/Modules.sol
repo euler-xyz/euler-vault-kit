@@ -3,9 +3,63 @@
 pragma solidity ^0.8.0;
 
 import {Base} from "../shared/Base.sol";
+
+import {TokenModule} from "./Token.sol";
+import {VaultModule} from "./Vault.sol";
+import {BorrowingModule} from "./Borrowing.sol";
+import {LiquidationModule} from "./Liquidation.sol";
+import {InitializeModule} from "./Initialize.sol";
+import {BalanceForwarderModule} from "./BalanceForwarder.sol";
+import {GovernanceModule} from "./Governance.sol";
+import {RiskManagerModule} from "./RiskManager.sol";
+
 import "../shared/Constants.sol";
 
-abstract contract ModuleDispatch is Base {
+abstract contract Modules is
+    Base,
+    InitializeModule,
+    TokenModule,
+    VaultModule,
+    BorrowingModule,
+    LiquidationModule,
+    RiskManagerModule,
+    BalanceForwarderModule,
+    GovernanceModule
+{
+
+    address immutable MODULE_INITIALIZE;
+    address immutable MODULE_TOKEN;
+    address immutable MODULE_VAULT;
+    address immutable MODULE_BORROWING;
+    address immutable MODULE_LIQUIDATION;
+    address immutable MODULE_RISKMANAGER;
+    address immutable MODULE_BALANCE_FORWARDER;
+    address immutable MODULE_GOVERNANCE;
+
+    struct DeployedModules {
+        address initialize;
+        address token;
+        address vault;
+        address borrowing;
+        address liquidation;
+        address riskManager;
+        address balanceForwarder;
+        address governance;
+    }
+
+    constructor(Integrations memory integrations, DeployedModules memory modules)
+        Base(integrations) 
+    {
+        MODULE_INITIALIZE = modules.initialize;
+        MODULE_TOKEN = modules.token;
+        MODULE_VAULT = modules.vault;
+        MODULE_BORROWING = modules.borrowing;
+        MODULE_LIQUIDATION = modules.liquidation;
+        MODULE_RISKMANAGER = modules.riskManager;
+        MODULE_BALANCE_FORWARDER = modules.balanceForwarder;
+        MODULE_GOVERNANCE = modules.governance;
+    }
+
     // Modifier proxies the function call to a module and low-level returns the result
     modifier use(address module) {
         _;

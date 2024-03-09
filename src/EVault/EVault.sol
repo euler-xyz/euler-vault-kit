@@ -2,58 +2,11 @@
 
 pragma solidity ^0.8.0;
 
-import {Base} from "./shared/Base.sol";
-import {ModuleDispatch} from "./modules/ModuleDispatch.sol";
+import {Modules} from "./modules/Modules.sol";
 
-import {TokenModule} from "./modules/Token.sol";
-import {VaultModule} from "./modules/Vault.sol";
-import {BorrowingModule} from "./modules/Borrowing.sol";
-import {LiquidationModule} from "./modules/Liquidation.sol";
-import {InitializeModule} from "./modules/Initialize.sol";
-import {BalanceForwarderModule} from "./modules/BalanceForwarder.sol";
-import {GovernanceModule} from "./modules/Governance.sol";
-import {RiskManagerModule} from "./modules/RiskManager.sol";
+contract EVault is Modules {
+    constructor(Integrations memory integrations, DeployedModules memory modules) Modules(integrations, modules) {}
 
-contract EVault is
-    ModuleDispatch,
-    InitializeModule,
-    TokenModule,
-    VaultModule,
-    BorrowingModule,
-    LiquidationModule,
-    RiskManagerModule,
-    BalanceForwarderModule,
-    GovernanceModule
-{
-    address immutable MODULE_INITIALIZE;
-    address immutable MODULE_TOKEN;
-    address immutable MODULE_VAULT;
-    address immutable MODULE_BORROWING;
-    address immutable MODULE_LIQUIDATION;
-    address immutable MODULE_RISKMANAGER;
-    address immutable MODULE_BALANCE_FORWARDER;
-    address immutable MODULE_GOVERNANCE;
-
-    constructor(
-        Integrations memory integrations,
-        address MODULE_INITIALIZE_,
-        address MODULE_TOKEN_,
-        address MODULE_VAULT_,
-        address MODULE_BORROWING_,
-        address MODULE_LIQUIDATION_,
-        address MODULE_RISKMANAGER_,
-        address MODULE_BALANCE_FORWARDER_,
-        address MODULE_GOVERNANCE_
-    ) Base(integrations) {
-        MODULE_INITIALIZE = MODULE_INITIALIZE_;
-        MODULE_TOKEN = MODULE_TOKEN_;
-        MODULE_VAULT = MODULE_VAULT_;
-        MODULE_BORROWING = MODULE_BORROWING_;
-        MODULE_LIQUIDATION = MODULE_LIQUIDATION_;
-        MODULE_RISKMANAGER = MODULE_RISKMANAGER_;
-        MODULE_BALANCE_FORWARDER = MODULE_BALANCE_FORWARDER_;
-        MODULE_GOVERNANCE = MODULE_GOVERNANCE_;
-    }
 
     // ------------ Initialization -------------
 
