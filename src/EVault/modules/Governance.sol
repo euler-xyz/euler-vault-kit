@@ -242,7 +242,11 @@ abstract contract GovernanceModule is IGovernance, Base, BalanceUtils {
 
     /// @inheritdoc IGovernance
     function setDisabledOps(uint32 newDisabledOps) external virtual nonReentrant pauseGuardianOnly {
-        initOperation(OP_TOUCH, ACCOUNTCHECK_NONE);
+        // market is updated because:
+        // if disabling interest accrual - the pending interest should be accrued
+        // if re-enabling interest - last updated timestamp needs to be reset to skip the disabled period
+        MarketCache memory marketCache = updateMarket();
+        logMarketStatus(marketCache, marketStorage.interestRate);
 
         marketStorage.disabledOps = DisabledOps.wrap(newDisabledOps);
         emit GovSetDisabledOps(newDisabledOps);

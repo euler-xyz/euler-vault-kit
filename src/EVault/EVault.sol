@@ -214,7 +214,7 @@ contract EVault is Dispatch {
 
     function setIRM(address newModel, bytes calldata resetParams) external override use(MODULE_GOVERNANCE) {}
 
-    function setDisabledOps(uint32 newDisabledOps) external override callThroughEVC use(MODULE_GOVERNANCE) {}
+    function setDisabledOps(uint32 newDisabledOps) external override use(MODULE_GOVERNANCE) {}
 
     function setCaps(uint16 supplyCap, uint16 borrowCap) external override use(MODULE_GOVERNANCE) {}
 
