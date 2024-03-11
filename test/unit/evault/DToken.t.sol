@@ -80,13 +80,13 @@ contract DTokenTest is EVaultTestBase {
         assertEq(dToken.totalSupply(), amount);
     }
 
-    function test_OnWind(uint256 amount) public {
+    function test_OnLoop(uint256 amount) public {
         setUpCollateral();
         amount = bound(amount, 1, MAX_SANE_AMOUNT);
         vm.expectEmit();
         emit Events.Transfer(address(0), user, amount);
         vm.prank(user);
-        eTST.wind(amount, user);
+        eTST.loop(amount, user);
 
         assertEq(dToken.balanceOf(user), amount);
         assertEq(dToken.totalSupply(), amount);
@@ -110,20 +110,20 @@ contract DTokenTest is EVaultTestBase {
         assertEq(dToken.totalSupply(), amountBorrow - amountRepay);
     }
 
-    function test_OnUnwind(uint256 amountWind, uint256 amountUnwind) public {
+    function test_OnDeloop(uint256 amountLoop, uint256 amountDeloop) public {
         setUpCollateral();
-        amountWind = bound(amountWind, 1, MAX_SANE_AMOUNT);
-        amountUnwind = bound(amountUnwind, 1, amountWind);
+        amountLoop = bound(amountLoop, 1, MAX_SANE_AMOUNT);
+        amountDeloop = bound(amountDeloop, 1, amountLoop);
         vm.prank(user);
-        eTST.wind(amountWind, user);
+        eTST.loop(amountLoop, user);
 
         vm.expectEmit();
-        emit Events.Transfer(user, address(0), amountUnwind);
+        emit Events.Transfer(user, address(0), amountDeloop);
         vm.prank(user);
-        eTST.unwind(amountUnwind, user);
+        eTST.deloop(amountDeloop, user);
 
-        assertEq(dToken.balanceOf(user), amountWind - amountUnwind);
-        assertEq(dToken.totalSupply(), amountWind - amountUnwind);
+        assertEq(dToken.balanceOf(user), amountLoop - amountDeloop);
+        assertEq(dToken.totalSupply(), amountLoop - amountDeloop);
     }
 
     function test_onPullDebt(uint256 amountBorrow, uint256 amountPull) public {
