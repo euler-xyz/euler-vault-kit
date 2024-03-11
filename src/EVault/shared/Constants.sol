@@ -8,7 +8,7 @@ import {IVault as IEVCVault} from "ethereum-vault-connector/interfaces/IVault.so
 uint256 constant MAX_PROTOCOL_FEE_SHARE = 0.5 * 1e18;
 uint256 constant INITIAL_INTEREST_ACCUMULATOR = 1e27;
 uint256 constant SECONDS_PER_YEAR = 365.2425 * 86400; // Gregorian calendar
-uint256 constant MAX_ALLOWED_INTEREST_RATE = uint256(5 * 1e27) / SECONDS_PER_YEAR; // 500% APR
+uint256 constant MAX_ALLOWED_INTEREST_RATE = 291867236290754569706; // 1,000,000% APY
 
 // Implementation internals
 
