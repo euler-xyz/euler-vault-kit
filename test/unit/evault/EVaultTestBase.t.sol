@@ -36,7 +36,7 @@ import {AssertionsCustomTypes} from "../../helpers/AssertionsCustomTypes.sol";
 
 import "src/EVault/shared/Constants.sol";
 
-contract EVaultTestBase is Test, AssertionsCustomTypes, DeployPermit2 {
+contract EVaultTestBase is AssertionsCustomTypes, Test, DeployPermit2 {
     EthereumVaultConnector public evc;
     address admin;
     address feeReceiver;
@@ -90,9 +90,5 @@ contract EVaultTestBase is Test, AssertionsCustomTypes, DeployPermit2 {
 
         eTST2 = IEVault(factory.createProxy(true, abi.encodePacked(address(assetTST2), address(oracle), unitOfAccount)));
         eTST2.setIRM(address(new IRMDefault()));
-    }
-
-    function testExcludeFromCoverage() public pure {
-        return;
     }
 }
