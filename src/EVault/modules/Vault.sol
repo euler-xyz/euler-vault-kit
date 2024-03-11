@@ -40,7 +40,7 @@ abstract contract VaultModule is IVault, Base, AssetTransfers, BalanceUtils {
     }
 
     /// @inheritdoc IERC4626
-    function maxDeposit(address account) public view virtual nonReentrantView returns (uint256) {
+    function maxDeposit(address account) external view virtual nonReentrantView returns (uint256) {
         MarketCache memory marketCache = loadMarket();
         if (marketCache.disabledOps.get(OP_DEPOSIT)) return 0;
 
@@ -81,7 +81,7 @@ abstract contract VaultModule is IVault, Base, AssetTransfers, BalanceUtils {
     }
 
     /// @inheritdoc IERC4626
-    function maxRedeem(address owner) public view virtual nonReentrantView returns (uint256) {
+    function maxRedeem(address owner) external view virtual nonReentrantView returns (uint256) {
         MarketCache memory marketCache = loadMarket();
         if (marketCache.disabledOps.get(OP_REDEEM)) return 0;
 
