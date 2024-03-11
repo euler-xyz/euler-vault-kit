@@ -311,4 +311,8 @@ contract TestERC20 {
     function getAccount() internal view virtual returns (address) {
         return msg.sender;
     }
+
+    function testExcludeFromCoverage() public pure {
+        return;
+    }
 }

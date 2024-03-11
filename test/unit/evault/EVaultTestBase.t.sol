@@ -91,4 +91,8 @@ contract EVaultTestBase is Test, AssertionsCustomTypes, DeployPermit2 {
         eTST2 = IEVault(factory.createProxy(true, abi.encodePacked(address(assetTST2), address(oracle), unitOfAccount)));
         eTST2.setIRM(address(new IRMDefault()));
     }
+
+    function testExcludeFromCoverage() public pure {
+        return;
+    }
 }
