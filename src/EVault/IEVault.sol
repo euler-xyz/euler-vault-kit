@@ -345,9 +345,6 @@ interface IGovernance {
     /// @notice Retrieves address of the governance fee receiver
     function feeReceiver() external view returns (address);
 
-    /// @notice Indicates if debt socialization is activated
-    function debtSocialization() external view returns (bool);
-
     /// @notice Address of EthereumVaultConnector contract
     function EVC() external view returns (address);
 
@@ -402,9 +399,6 @@ interface IGovernance {
 
     /// @notice Set a new interest fee
     function setInterestFee(uint16 newFee) external;
-
-    /// @notice Enable or disable debt socialization during liquidations
-    function setDebtSocialization(bool newValue) external;
 }
 
 interface IEVault is IInitialize, IToken, IVault, IBorrowing, ILiquidation, IRiskManager, IBalanceForwarder, IGovernance {}

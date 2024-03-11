@@ -23,7 +23,6 @@ abstract contract GovernanceModule is IGovernance, Base, BalanceUtils {
     event GovSetDisabledOps(uint32 newDisabledOps);
     event GovSetCaps(uint16 newSupplyCap, uint16 newBorrowCap);
     event GovSetInterestFee(uint16 newFee);
-    event GovSetDebtSocialization(bool debtSocialization);
 
     modifier governorOnly() {
         if (msg.sender != marketStorage.governorAdmin) revert E_Unauthorized();
@@ -111,11 +110,6 @@ abstract contract GovernanceModule is IGovernance, Base, BalanceUtils {
     /// @inheritdoc IGovernance
     function feeReceiver() external view virtual reentrantOK returns (address) {
         return marketStorage.feeReceiver;
-    }
-
-    /// @inheritdoc IGovernance
-    function debtSocialization() external view virtual reentrantOK returns (bool) {
-        return marketStorage.debtSocialization;
     }
 
     /// @inheritdoc IGovernance
@@ -248,6 +242,8 @@ abstract contract GovernanceModule is IGovernance, Base, BalanceUtils {
 
     /// @inheritdoc IGovernance
     function setDisabledOps(uint32 newDisabledOps) external virtual nonReentrant pauseGuardianOnly {
+        initOperation(OP_TOUCH, ACCOUNTCHECK_NONE);
+
         marketStorage.disabledOps = DisabledOps.wrap(newDisabledOps);
         emit GovSetDisabledOps(newDisabledOps);
     }
@@ -279,13 +275,6 @@ abstract contract GovernanceModule is IGovernance, Base, BalanceUtils {
         marketStorage.interestFee = newInterestFeeConfig;
 
         emit GovSetInterestFee(newInterestFee);
-    }
-
-    /// @inheritdoc IGovernance
-    function setDebtSocialization(bool newValue) external virtual nonReentrant governorOnly {
-        marketStorage.debtSocialization = newValue;
-
-        emit GovSetDebtSocialization(newValue);
     }
 }
 

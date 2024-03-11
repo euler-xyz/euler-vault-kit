@@ -13,9 +13,8 @@ struct MarketStorage {
     AmountCap supplyCap;
     AmountCap borrowCap;
     DisabledOps disabledOps;
-    bool reentrancyLock;
+    bool reentrancyLocked;
     bool snapshotInitialized;
-    bool debtSocialization;
 
     // Packed slot 14 + 18 = 32
     Shares totalShares;

@@ -17,7 +17,6 @@ abstract contract LiquidationModule is ILiquidation, Base, BalanceUtils, Liquidi
         address violator;
         address collateral;
         address[] collaterals;
-        bool debtSocialization;
         Assets owed;
 
         Assets repay;
@@ -154,7 +153,6 @@ abstract contract LiquidationModule is ILiquidation, Base, BalanceUtils, Liquidi
 
         liqCache.repay = (maxRepayValue * liqCache.owed.toUint() / liabilityValue).toAssets();
         liqCache.yieldBalance = maxYieldValue * collateralBalance / collateralValue;
-        liqCache.debtSocialization = marketStorage.debtSocialization;
 
         return liqCache;
     }
@@ -193,7 +191,7 @@ abstract contract LiquidationModule is ILiquidation, Base, BalanceUtils, Liquidi
         // Handle debt socialization
 
         if (
-            liqCache.debtSocialization &&
+            !marketCache.disabledOps.get(OP_SOCIALIZE_DEBT) &&
             liqCache.owed > liqCache.repay &&
             checkNoCollateral(liqCache.violator, liqCache.collaterals)
         ) {
