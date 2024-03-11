@@ -4,6 +4,8 @@ pragma solidity ^0.8.0;
 
 import {EVaultTestBase} from "../../EVaultTestBase.t.sol";
 import {Events} from "src/EVault/shared/Events.sol";
+import {SafeERC20Lib} from "src/EVault/shared/lib/SafeERC20Lib.sol";
+import {IAllowanceTransfer} from "permit2/src/interfaces/IAllowanceTransfer.sol";
 
 import "src/EVault/shared/types/Types.sol";
 import "src/EVault/shared/Constants.sol";
@@ -76,5 +78,36 @@ contract ERC4626Test_Borrow is EVaultTestBase {
 
         eTST.disableController();
         assertEq(evc.getControllers(borrower).length, 0);
+    }
+
+    function test_repayWithPermit2() public {
+        startHoax(borrower);
+
+        evc.enableCollateral(borrower, address(eTST2));
+        evc.enableController(borrower, address(eTST));
+
+        eTST.borrow(5e18, borrower);
+        assertEq(assetTST.balanceOf(borrower), 5e18);
+
+        // deposit won't succeed without any approval
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                SafeERC20Lib.E_TransferFromFailed.selector, 
+                abi.encodeWithSignature("Error(string)", "ERC20: transfer amount exceeds allowance"), 
+                abi.encodeWithSelector(IAllowanceTransfer.AllowanceExpired.selector, 0)
+            )
+        );
+        eTST.repay(type(uint256).max, address(0));
+
+        // approve permit2 contract to spend the tokens
+        assetTST.approve(permit2, type(uint160).max);
+
+        // approve the vault to spend the tokens via permit2
+        IAllowanceTransfer(permit2).approve(address(assetTST), address(eTST), type(uint160).max, type(uint48).max);
+
+        // repay succeeds now
+        eTST.repay(type(uint256).max, address(0));
+
+        assertEq(eTST.debtOf(borrower), 0);
     }
 }
