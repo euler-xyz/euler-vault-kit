@@ -5,6 +5,7 @@ pragma solidity ^0.8.0;
 import "test/unit/evault/EVaultTestBase.t.sol";
 import {Errors} from "src/EVault/shared/Errors.sol";
 import {Events} from "src/EVault/shared/Events.sol";
+import {ConfigAmountLib} from "src/EVault/shared/types/ConfigAmount.sol";
 
 contract BalanceForwarderTest_Hooks is EVaultTestBase {
     address alice = makeAddr("alice");
@@ -284,7 +285,7 @@ contract BalanceForwarderTest_Hooks is EVaultTestBase {
     }
 
     function setUpBorrow(address user) internal {
-        eTST.setLTV(address(eTST2), uint16(CONFIG_SCALE), 0);
+        eTST.setLTV(address(eTST2), ConfigAmountLib.fromWad(1e18).toUint16(), 0);
 
         vm.startPrank(user);
         assetTST2.mint(user, 1000 ether);

@@ -3,8 +3,6 @@
 pragma solidity ^0.8.0;
 
 import {AmountCap} from "./Types.sol";
-import "../Constants.sol";
-import "../Errors.sol";
 
 // AmountCaps are 16-bit decimal floating point values:
 // * The least significant 6 bits are the exponent

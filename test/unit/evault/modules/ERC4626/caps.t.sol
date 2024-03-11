@@ -430,7 +430,7 @@ contract ERC4626Test_Caps is EVaultTestBase {
     }
 
     function setUpCollateral() internal {
-        eTST.setLTV(address(eTST2), uint16(CONFIG_SCALE), 0);
+        eTST.setLTV(address(eTST2), ConfigAmountLib.fromWad(1e18).toUint16(), 0);
 
         vm.startPrank(user);
         assetTST2.mint(user, type(uint256).max);

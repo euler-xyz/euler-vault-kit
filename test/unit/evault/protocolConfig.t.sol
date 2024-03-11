@@ -5,8 +5,11 @@ pragma solidity ^0.8.0;
 import {EVaultTestBase} from "test/unit/evault/EVaultTestBase.t.sol";
 import {Errors} from "src/EVault/shared/Errors.sol";
 import {GovernanceModule} from "src/EVault/modules/Governance.sol";
+import "src/EVault/modules/Governance.sol";
 import "src/EVault/shared/Constants.sol";
 import "src/EVault/shared/types/Types.sol";
+
+uint256 constant DEFAULT_INTEREST_FEE = 0.23 * 1e18; // TODO expose in harness from Initialize module 
 
 contract ERC4626Test_ProtocolConfig is EVaultTestBase {
     using TypesLib for uint256;
@@ -22,7 +25,7 @@ contract ERC4626Test_ProtocolConfig is EVaultTestBase {
     }
 
     function test_interestFees_normal() public {
-        assertEq(eTST.interestFee(), DEFAULT_INTEREST_FEE);
+        assertEq(eTST.interestFee(), ConfigAmountLib.fromWad(DEFAULT_INTEREST_FEE).toUint16());
 
         vm.expectRevert(Errors.E_BadFee.selector);
         eTST.setInterestFee(0.005 * 60_000);
