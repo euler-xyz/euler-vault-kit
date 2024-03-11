@@ -18,13 +18,13 @@ contract BaseIRMLinearKink is IIRM {
     }
 
     function computeInterestRate(address, uint256 cash, uint256 borrows) external view override returns (uint256) {
-        uint256 ir = baseRate;
-
         uint256 totalAssets = cash + borrows;
 
         uint32 utilisation = totalAssets == 0
            ? 0 // empty pool arbitrarily given utilisation of 0
            : uint32(borrows * type(uint32).max / totalAssets);
+
+        uint256 ir = baseRate;
 
         if (utilisation <= kink) {
             ir += utilisation * slope1;
@@ -33,6 +33,6 @@ contract BaseIRMLinearKink is IIRM {
             ir += slope2 * (utilisation - kink);
         }
 
-        return uint256(ir);
+        return ir;
     }
 }
