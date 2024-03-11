@@ -47,6 +47,9 @@ abstract contract InitializeModule is IInitialize, Base, BorrowUtils {
         emit EVaultCreated(proxyCreator, address(asset), dToken);
         logMarketStatus(loadMarket(), 0);
     }
+
+    // prevent initialization of the implementation contract
+    constructor() {initialized = true; }
 }
 
 contract Initialize is InitializeModule {
