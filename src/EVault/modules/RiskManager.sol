@@ -103,9 +103,9 @@ abstract contract RiskManagerModule is IRiskManager, Base, LiquidityUtils {
     }
 
     function updateInterestRate(MarketCache memory marketCache) private returns (uint256) {
-        uint256 newInterestRate;
-
+        // single sload
         address irm = marketStorage.interestRateModel;
+        uint256 newInterestRate = marketStorage.interestRate;
 
         if (irm != address(0)) {
             uint256 borrows = marketCache.totalBorrows.toAssetsUp().toUint();
@@ -118,12 +118,10 @@ abstract contract RiskManagerModule is IRiskManager, Base, LiquidityUtils {
             (bool success, bytes memory data) = irm.call(abi.encodeCall(IIRM.computeInterestRate, (address(this), address(marketCache.asset), utilisation)));
             if (success) {
                 newInterestRate = abi.decode(data, (uint));
+                if (newInterestRate > MAX_ALLOWED_INTEREST_RATE) newInterestRate = MAX_ALLOWED_INTEREST_RATE;
+                marketStorage.interestRate = uint72(newInterestRate);
             }
         }
-
-        if (newInterestRate > MAX_ALLOWED_INTEREST_RATE) newInterestRate = MAX_ALLOWED_INTEREST_RATE;
-
-        marketStorage.interestRate = uint72(newInterestRate);
 
         return newInterestRate;
     }
