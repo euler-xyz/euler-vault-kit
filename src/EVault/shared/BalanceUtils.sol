@@ -74,8 +74,11 @@ abstract contract BalanceUtils is Base {
         }
         Shares newToBalance = origToBalance + amount;
 
-        marketStorage.users[from].setBalance(newFromBalance);
-        marketStorage.users[to].setBalance(newToBalance);
+        // zero amount transfer should emit Transfer event and update the balance tracker
+        if (!amount.isZero()) {
+            marketStorage.users[from].setBalance(newFromBalance);
+            marketStorage.users[to].setBalance(newToBalance);
+        }
 
         if (fromBalanceForwarderEnabled) {
             tryBalanceTrackerHook(from, newFromBalance.toUint(), isControlCollateralInProgress());
