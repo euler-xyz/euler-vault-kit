@@ -9,7 +9,7 @@ import {EVault} from "src/EVault/EVault.sol";
 import {IRMClassStable} from "src/interestRateModels/IRMClassStable.sol";
 import {ProtocolConfig} from "src/ProtocolConfig/ProtocolConfig.sol";
 
-import {Modules} from "src/EVault/modules/Modules.sol";
+import {Dispatch} from "src/EVault/modules/Dispatch.sol";
 
 import {Initialize} from "src/EVault/modules/Initialize.sol";
 import {Token} from "src/EVault/modules/Token.sol";
@@ -63,7 +63,7 @@ contract EVaultTestBase is Test, AssertionsCustomTypes {
         unitOfAccount = address(1);
         Base.Integrations memory integrations = Base.Integrations(address(evc), address(protocolConfig), balanceTracker);
 
-        Modules.DeployedModules memory modules = Modules.DeployedModules({
+        Dispatch.DeployedModules memory modules = Dispatch.DeployedModules({
             initialize: address(new Initialize(integrations)),
             token: address(new Token(integrations)),
             vault: address(new Vault(integrations)),

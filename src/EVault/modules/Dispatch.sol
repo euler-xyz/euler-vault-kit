@@ -15,7 +15,7 @@ import {RiskManagerModule} from "./RiskManager.sol";
 
 import "../shared/Constants.sol";
 
-abstract contract Modules is
+abstract contract Dispatch is
     Base,
     InitializeModule,
     TokenModule,
