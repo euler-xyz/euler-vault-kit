@@ -93,11 +93,11 @@ abstract contract BorrowingModule is IBorrowing, Base, AssetTransfers, BalanceUt
         ConfigAmount ltv = marketStorage.ltvLookup[collateral].getLTV(LTVType.BORROWING);
         if (ltv.isZero()) return 0;
 
-        // calculate extra collateral value in terms of requested collateral shares (balance), by dividing by LTV
+        // calculate extra collateral value in terms of requested collateral balance, by dividing by LTV
         uint256 extraCollateralValue = ltv.mulInv(totalCollateralValueRiskAdjusted - liabilityValue);
 
-        // convert back to collateral balance
-        uint256 collateralPrice = marketCache.oracle.getQuote(1e18, collateral, marketCache.unitOfAccount);
+        // convert back to collateral balance (bid)
+        (uint256 collateralPrice,) = marketCache.oracle.getQuotes(1e18, collateral, marketCache.unitOfAccount);
         if (collateralPrice == 0) return 0; // worthless / unpriced collateral is not locked
         uint256 extraCollateralBalance = extraCollateralValue * 1e18 / collateralPrice;
 
