@@ -32,21 +32,20 @@ contract BorrowingModuleHandler is BaseHandler {
 
         address target = address(eTST);
 
-        //TODO: change for the current implementation
-        //bool isAccountHealthyBefore = isAccountHealthy(target, receiver);
+        bool isAccountHealthyBefore = isAccountHealthy(receiver);
 
         _before();
         (success, returnData) =
             actor.proxy(target, abi.encodeWithSelector(IBorrowing.borrow.selector, assets, receiver));
 
-/*         if (!isAccountHealthyBefore) {
-            // IBorrowing_invariantD
-            assert(!success);
+        if (!isAccountHealthyBefore) {
+            /// @dev BM_INVARIANT_E
+            assertFalse(success, BM_INVARIANT_E);
         } else {
             if (success) {
                 _after();
             }
-        } */
+        }
     }
 
     function repayTo(uint256 assets, uint256 i) external setup {
@@ -58,7 +57,7 @@ contract BorrowingModuleHandler is BaseHandler {
 
         address target = address(eTST);
 
-        //(uint256 liabilityValueBefore, uint256 collateralValueBefore) = eTST.getAccountLiabilityStatus(receiver);
+        (, uint256 liabilityValueBefore) = _getAccountLiquidity(receiver, false);
 
         _before();
         (success, returnData) =
@@ -67,10 +66,11 @@ contract BorrowingModuleHandler is BaseHandler {
         if (success) {
             _after();
 
-/*             (uint256 liabilityValueAfter, uint256 collateralValueAfter) = eTST.getAccountLiabilityStatus(receiver);
+            (, uint256 liabilityValueAfter) = _getAccountLiquidity(receiver, false);
 
-            // IBorrowing_invariantC
-            assertLe(liabilityValueAfter, liabilityValueBefore, "Liability value must decrease"); */
+
+            /// @dev BM_INVARIANT_D
+            assertLe(liabilityValueAfter, liabilityValueBefore, BM_INVARIANT_D);
         }
     }
 
@@ -131,15 +131,6 @@ contract BorrowingModuleHandler is BaseHandler {
     ///////////////////////////////////////////////////////////////////////////////////////////////
     //                                         OWNER ACTIONS                                     //
     ///////////////////////////////////////////////////////////////////////////////////////////////
-
-/*     function setBorrowCap(uint256 newBorrowCap) external {TODO: change for the current implementation
-        // Since the owner is the deployer of the vault, we dont need to use a a proxy
-        _before();
-        eTST.setBorrowCap(newBorrowCap);
-        _after();
-
-        assert(true);
-    } */
 
     ///////////////////////////////////////////////////////////////////////////////////////////////
     //                                           HELPERS                                         //

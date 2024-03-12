@@ -23,29 +23,29 @@ contract BaseHandler is HookAggregator {
     //                                       SHARED VARAIBLES                                     //
     ///////////////////////////////////////////////////////////////////////////////////////////////
 
-    // SIMPLE VAULT
+    // TOKEN MODULE
 
     /// @notice Sum of all balances in the vault
-    mapping(address => uint256) internal ghost_sumBalances;
+    uint256 internal ghost_sumBalances;
 
     /// @notice Sum of all balances per user in the vault
-    mapping(address => mapping(address => uint256)) internal ghost_sumBalancesPerUser;
+    mapping(address => uint256) internal ghost_sumBalancesPerUser;
 
     /// @notice Sum of all shares balances in the vault
-    mapping(address => uint256) internal ghost_sumSharesBalances;
+    uint256 internal ghost_sumSharesBalances;
 
     /// @notice Sum of all shares balances per user in the vault
-    mapping(address => mapping(address => uint256)) internal ghost_sumSharesBalancesPerUser;
+    mapping(address => uint256) internal ghost_sumSharesBalancesPerUser;
 
-    // SIMPLE BORROWABLE VAULT
+    // VAULT MODULE
 
-    /// @notice Track of the total amount borrowed per vault
-    mapping(address => uint256) internal ghost_totalBorrowed;
+    /// @notice Track of the total amount borrowed 
+    uint256 internal ghost_totalBorrowed;
 
-    /// @notice Track of the total amount borrowed per user per vault
-    mapping(address => mapping(address => uint256)) internal ghost_owedAmountPerUser;
+    /// @notice Track of the total amount borrowed per user
+    mapping(address => uint256) internal ghost_owedAmountPerUser;
 
-    /// @notice Track the enabled collaterals
+    /// @notice Track the enabled collaterals per user
     mapping(address => EnumerableSet.AddressSet) internal ghost_accountCollaterals;
 
     ///////////////////////////////////////////////////////////////////////////////////////////////

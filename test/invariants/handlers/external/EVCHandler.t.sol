@@ -49,7 +49,7 @@ contract EVCHandler is BaseHandler {
 
     // COLLATERAL
 
-    function enableCollateral(uint256 i, uint256 j) external setup {
+    function enableCollateral(uint256 i) external setup {
         bool success;
         bytes memory returnData;
 
@@ -69,7 +69,7 @@ contract EVCHandler is BaseHandler {
         }
     }
 
-    function disableCollateral(uint256 i, uint256 j) external setup {
+    function disableCollateral(uint256 i) external setup {
         bool success;
         bytes memory returnData;
 
@@ -89,14 +89,12 @@ contract EVCHandler is BaseHandler {
         }
     }
 
-    function reorderCollaterals(uint256 i, uint256 j, uint8 index1, uint8 index2) external setup {
+    function reorderCollaterals(uint256 i, uint8 index1, uint8 index2) external setup {
         bool success;
         bytes memory returnData;
 
         // Get one of the three actors randomly
         address account = _getRandomActor(i);
-
-        address vaultAddress = address(eTST);
 
         (success, returnData) = actor.proxy(
             address(evc),
@@ -110,18 +108,16 @@ contract EVCHandler is BaseHandler {
 
     // CONTROLLER
 
-    function enableController(uint256 i, uint256 j) external setup {
+    function enableController(uint256 i) external setup {
         bool success;
         bytes memory returnData;
 
         // Get one of the three actors randomly
         address account = _getRandomActor(i);
 
-        address vaultAddress = _getRandomActor(i);
-
         (success, returnData) = actor.proxy(
             address(evc),
-            abi.encodeWithSelector(EthereumVaultConnector.enableController.selector, account, vaultAddress)
+            abi.encodeWithSelector(EthereumVaultConnector.enableController.selector, account, address(eTST))
         );
 
         if (success) {

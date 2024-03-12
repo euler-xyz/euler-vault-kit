@@ -10,8 +10,8 @@ import {TestERC20} from "../../mocks/TestERC20.sol";
 import {GenericFactory} from "src/GenericFactory/GenericFactory.sol";
 import {MockPriceOracle} from "../../mocks/MockPriceOracle.sol";
 
-// Interfaces
-import {IEVault} from "src/EVault/IEVault.sol";
+// Test Contracts
+import {EVaultExtended} from "test/invariants/helpers/extended/EVaultExtended.sol";
 
 // Utils
 import {Actor} from "../utils/Actor.sol";
@@ -55,8 +55,8 @@ abstract contract BaseStorage {
     // VAULT CONTRACTS
 
     /// @notice Testing vaults
-    IEVault internal eTST;
-    IEVault internal eTST2;
+    EVaultExtended internal eTST;
+    EVaultExtended internal eTST2;
 
     address[] vaults;
 

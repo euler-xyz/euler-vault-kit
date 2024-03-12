@@ -19,7 +19,7 @@ contract VaultModuleHandler is BaseHandler {
     //                                           ACTIONS                                         //
     ///////////////////////////////////////////////////////////////////////////////////////////////
 
-    function deposit(uint256 assets, address receiver) external setup {
+/*     function deposit(uint256 assets, address receiver) external setup {
         bool success;
         bytes memory returnData;
 
@@ -38,12 +38,13 @@ contract VaultModuleHandler is BaseHandler {
 
             uint256 shares = abi.decode(returnData, (uint256));
 
-            _increaseGhostAssets(target, assets, address(receiver));
-            _increaseGhostShares(target, shares, address(receiver));
+            _increaseGhostAssets(assets, address(receiver));
+            _increaseGhostShares(shares, address(receiver));
 
-            assertLe(previewedShares, shares, "ERC4626_deposit_invariantB");
+            /// @dev ERC4626_DEPOSIT_INVARIANT_B
+            assertLe(previewedShares, shares, ERC4626_DEPOSIT_INVARIANT_B);
         }
-    }
+    } */
 
     function depositToActor(uint256 assets, uint256 i) external setup {
         bool success;
@@ -65,14 +66,15 @@ contract VaultModuleHandler is BaseHandler {
 
             uint256 shares = abi.decode(returnData, (uint256));
 
-            _increaseGhostAssets(target, assets, address(receiver));
-            _increaseGhostShares(target, shares, address(receiver));
+            _increaseGhostAssets(assets, address(receiver));
+            _increaseGhostShares(shares, address(receiver));
 
-            assertLe(previewedShares, shares, "ERC4626_deposit_invariantB: ");
+            /// @dev ERC4626_DEPOSIT_INVARIANT_B
+            assertLe(previewedShares, shares, ERC4626_DEPOSIT_INVARIANT_B);
         }
     }
 
-    function mint(uint256 shares, address receiver) external setup {
+/*     function mint(uint256 shares, address receiver) external setup {
         bool success;
         bytes memory returnData;
 
@@ -89,12 +91,13 @@ contract VaultModuleHandler is BaseHandler {
 
             uint256 assets = abi.decode(returnData, (uint256));
 
-            _increaseGhostAssets(target, assets, address(receiver));
-            _increaseGhostShares(target, shares, address(receiver));
+            _increaseGhostAssets(assets, address(receiver));
+            _increaseGhostShares(shares, address(receiver));
 
-            assertGe(previewedAssets, assets, "ERC4626_mint_invariantB");
+            /// @dev ERC4626_MINT_INVARIANT_B
+            assertGe(previewedAssets, assets, ERC4626_MINT_INVARIANT_B);
         }
-    }
+    } */
 
     function mintToActor(uint256 shares, uint256 i) external setup {
         bool success;
@@ -116,10 +119,11 @@ contract VaultModuleHandler is BaseHandler {
 
             uint256 assets = abi.decode(returnData, (uint256));
 
-            _increaseGhostAssets(target, assets, address(receiver));
-            _increaseGhostShares(target, shares, address(receiver));
+            _increaseGhostAssets(assets, address(receiver));
+            _increaseGhostShares(shares, address(receiver));
 
-            assertGe(previewedAssets, assets, "ERC4626_mint_invariantB");
+            /// @dev ERC4626_MINT_INVARIANT_B
+            assertGe(previewedAssets, assets, ERC4626_MINT_INVARIANT_B);
         }
     }
 
@@ -141,10 +145,11 @@ contract VaultModuleHandler is BaseHandler {
 
             uint256 shares = abi.decode(returnData, (uint256));
 
-            _decreaseGhostAssets(target, assets, address(actor));
-            _decreaseGhostShares(target, shares, address(actor));
+            _decreaseGhostAssets(assets, address(actor));
+            _decreaseGhostShares(shares, address(actor));
 
-            assertGe(previewedShares, shares, "ERC4626_withdraw_invariantB");
+            /// @dev ERC4626_WITHDRAW_INVARIANT_B
+            assertGe(previewedShares, shares, ERC4626_WITHDRAW_INVARIANT_B);
         }
     }
 
@@ -166,10 +171,11 @@ contract VaultModuleHandler is BaseHandler {
 
             uint256 assets = abi.decode(returnData, (uint256));
 
-            _decreaseGhostAssets(target, assets, address(actor));
-            _decreaseGhostShares(target, shares, address(actor));
+            _decreaseGhostAssets(assets, address(actor));
+            _decreaseGhostShares(shares, address(actor));
 
-            assertLe(previewedAssets, assets, "ERC4626_redeem_invariantB");
+            /// @dev ERC4626_REDEEM_INVARIANT_B
+            assertLe(previewedAssets, assets, ERC4626_REDEEM_INVARIANT_B);
         }
     }
 
@@ -184,7 +190,7 @@ contract VaultModuleHandler is BaseHandler {
 
         uint256 redeemedAssets = eTST.redeem(shares, address(this), address(this));
 
-        assertLe(redeemedAssets, _assets, "ERC4626_roundtrip_invariantA");
+        assertLe(redeemedAssets, _assets,ERC4626_ROUNDTRIP_INVARIANT_A);
     }
 
     function assert_ERC4626_roundtrip_invariantB(uint256 _assets) external {
@@ -194,7 +200,7 @@ contract VaultModuleHandler is BaseHandler {
 
         uint256 withdrawnShares = eTST.withdraw(_assets, address(this), address(this));
 
-        assertGe(withdrawnShares, shares, "ERC4626_roundtrip_invariantB");
+        assertGe(withdrawnShares, shares, ERC4626_ROUNDTRIP_INVARIANT_B);
     }
 
     function assert_ERC4626_roundtrip_invariantC(uint256 _shares) external {
@@ -207,7 +213,7 @@ contract VaultModuleHandler is BaseHandler {
         /// @dev restore original state to not break invariants
         eTST.redeem(mintedShares, address(this), address(this));
 
-        assertLe(mintedShares, _shares, "ERC4626_roundtrip_invariantC");
+        assertLe(mintedShares, _shares, ERC4626_ROUNDTRIP_INVARIANT_C);
     }
 
     function assert_ERC4626_roundtrip_invariantD(uint256 _shares) external {
@@ -221,7 +227,7 @@ contract VaultModuleHandler is BaseHandler {
         eTST.withdraw(depositedAssets, address(this), address(this));
 
         assertGe(
-            depositedAssets, redeemedAssets, "ERC4626_roundtrip_invariantD"
+            depositedAssets, redeemedAssets, ERC4626_ROUNDTRIP_INVARIANT_D
         );
     }
 
@@ -232,7 +238,7 @@ contract VaultModuleHandler is BaseHandler {
 
         uint256 withdrawnShares = eTST.withdraw(depositedAssets, address(this), address(this));
 
-        assertGe(withdrawnShares, _shares, "ERC4626_roundtrip_invariantE");
+        assertGe(withdrawnShares, _shares, ERC4626_ROUNDTRIP_INVARIANT_E);
     }
 
     function assert_ERC4626_roundtrip_invariantF(uint256 _shares) external {
@@ -243,7 +249,7 @@ contract VaultModuleHandler is BaseHandler {
         uint256 redeemedAssets = eTST.redeem(_shares, address(this), address(this));
 
         assertLe(
-            redeemedAssets, depositedAssets, "ERC4626_roundtrip_invariantF"
+            redeemedAssets, depositedAssets, ERC4626_ROUNDTRIP_INVARIANT_F
         );
     }
 
@@ -257,7 +263,7 @@ contract VaultModuleHandler is BaseHandler {
         /// @dev restore original state to not break invariants
         eTST.withdraw(depositedAssets, address(this), address(this));
 
-        assertGe(depositedAssets, _assets, "ERC4626_roundtrip_invariantG");
+        assertGe(depositedAssets, _assets, ERC4626_ROUNDTRIP_INVARIANT_G);
     }
 
     function assert_ERC4626_roundtrip_invariantH(uint256 _assets) external {
@@ -270,44 +276,35 @@ contract VaultModuleHandler is BaseHandler {
         /// @dev restore original state to not break invariants
         eTST.redeem(mintedShares, address(this), address(this));
 
-        assertLe(mintedShares, redeemedShares, "ERC4626_assets_invariantH");
+        assertLe(mintedShares, redeemedShares, ERC4626_ROUNDTRIP_INVARIANT_H);
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////////
     //                                         OWNER ACTIONS                                     //
     ///////////////////////////////////////////////////////////////////////////////////////////////
 
-/*     function setSupplyCap(uint256 newSupplyCap) external {TODO: change this for the current implementation
-        // Since the owner is the deployer of the vault, we dont need to use a a proxy
-        _before();
-        eTST.setSupplyCap(newSupplyCap);
-        _after();
-
-        assert(true);
-    } */
-
     ///////////////////////////////////////////////////////////////////////////////////////////////
     //                                           HELPERS                                         //
     ///////////////////////////////////////////////////////////////////////////////////////////////
 
     //  GHOSTS UPDATES
-    function _increaseGhostAssets(address vaultAddress, uint256 assets, address receiver) internal {
-        ghost_sumBalances[vaultAddress] += assets;
-        ghost_sumBalancesPerUser[vaultAddress][receiver] += assets;
+    function _increaseGhostAssets(uint256 assets, address receiver) internal {
+        ghost_sumBalances += assets;
+        ghost_sumBalancesPerUser[receiver] += assets;
     }
 
-    function _decreaseGhostAssets(address vaultAddress, uint256 assets, address owner) internal {
-        ghost_sumBalances[vaultAddress] -= assets;
-        ghost_sumBalancesPerUser[vaultAddress][owner] -= assets;
+    function _decreaseGhostAssets(uint256 assets, address owner) internal {
+        ghost_sumBalances -= assets;
+        ghost_sumBalancesPerUser[owner] -= assets;
     }
 
-    function _increaseGhostShares(address vaultAddress, uint256 shares, address receiver) internal {
-        ghost_sumSharesBalances[vaultAddress] += shares;
-        ghost_sumSharesBalancesPerUser[vaultAddress][receiver] += shares;
+    function _increaseGhostShares(uint256 shares, address receiver) internal {
+        ghost_sumSharesBalances += shares;
+        ghost_sumSharesBalancesPerUser[receiver] += shares;
     }
 
-    function _decreaseGhostShares(address vaultAddress, uint256 shares, address owner) internal {
-        ghost_sumSharesBalances[vaultAddress] -= shares;
-        ghost_sumSharesBalancesPerUser[vaultAddress][owner] -= shares;
+    function _decreaseGhostShares(uint256 shares, address owner) internal {
+        ghost_sumSharesBalances -= shares;
+        ghost_sumSharesBalancesPerUser[owner] -= shares;
     }
 }

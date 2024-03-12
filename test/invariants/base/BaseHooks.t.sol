@@ -16,7 +16,7 @@ contract BaseHooks is ProtocolAssertions, InvariantsSpec {
     ///////////////////////////////////////////////////////////////////////////////////////////////
     
     /// @notice Calculates the exchange rate for the eTST vault
-    function _calculateExchangeRate() internal returns (uint256) {
+    function _calculateExchangeRate() internal view returns (uint256) {
         return eTST.totalSupply() == 0 ? 1e18 : eTST.totalAssets() / eTST.totalSupply();
     }
 }

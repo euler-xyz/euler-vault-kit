@@ -1,16 +1,15 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.19;
 
-import {console} from "forge-std/console.sol";
+// Contracts
+import "src/EVault/shared/types/Types.sol";
+import "src/EVault/shared/types/AmountCap.sol";
 
 // Test Helpers
 import {Pretty, Strings} from "../utils/Pretty.sol";
 
 // Test Contracts
 import {BaseHooks} from "../base/BaseHooks.t.sol";
-
-// Interfaces
-import {IERC20} from "src/EVault/IEVault.sol";
 
 /// @title Vault Before After Hooks
 /// @notice Helper contract for before and after hooks
@@ -22,13 +21,16 @@ abstract contract VaultBeforeAfterHooks is BaseHooks {
     using Pretty for bool;
 
     struct VaultVars {
+        // Total Supply
+        uint256 totalSupplyBefore;
+        uint256 totalSupplyAfter;
         // Exchange Rate
         uint256 exchangeRateBefore;
         uint256 exchangeRateAfter;
         // ERC4626
         uint256 totalAssetsBefore;
         uint256 totalAssetsAfter;
-        // Caps
+        // Supply Cap
         uint256 supplyCapBefore;
         uint256 supplyCapAfter;
         // Fees
@@ -37,7 +39,6 @@ abstract contract VaultBeforeAfterHooks is BaseHooks {
         uint256 feesBalanceAssetsBefore;
         uint256 feesBalanceAssetsAfter;
     }
-    // TODO: supply caps
 
     VaultVars vaultVars;
 
@@ -47,7 +48,8 @@ abstract contract VaultBeforeAfterHooks is BaseHooks {
         // ERC4626
         vaultVars.totalAssetsBefore = eTST.totalAssets();
         // Caps
-        //vaultVars.supplyCapBefore = eTST.supplyCap();
+        (uint16 _supplyCap,) = eTST.caps();
+        vaultVars.supplyCapBefore = AmountCap.wrap(_supplyCap).toUint();
         // Fees
         vaultVars.feesBalanceBefore = eTST.feesBalance();
         vaultVars.feesBalanceAssetsBefore = eTST.feesBalanceAssets();
@@ -59,7 +61,8 @@ abstract contract VaultBeforeAfterHooks is BaseHooks {
         // ERC4626
         vaultVars.totalAssetsAfter = eTST.totalAssets();
         // Caps
-        //vaultVars.supplyCapAfter = eTST.supplyCap();
+        (uint16 _supplyCap,) = eTST.caps();
+        vaultVars.supplyCapAfter = AmountCap.wrap(_supplyCap).toUint();
         // Fees
         vaultVars.feesBalanceAfter = eTST.feesBalance();
         vaultVars.feesBalanceAssetsAfter = eTST.feesBalanceAssets();
@@ -67,28 +70,14 @@ abstract contract VaultBeforeAfterHooks is BaseHooks {
 
     /*/////////////////////////////////////////////////////////////////////////////////////////////
     //                                     POST CONDITIONS                                       //
-    ///////////////////////////////////////////////////////////////////////////////////////////////
-
-    VaultSimpleBorrowable
-        Post Condition A: (borrowCapAfter != 0) && (totalBorrowedAfter >= totalBorrowedBefore) 
-            => borrowCapAfter >= totalBorrowedAfter
-        Post Condition B: Controller cannot be disabled if there is any liability  
-    */
-
     /////////////////////////////////////////////////////////////////////////////////////////////*/
 
-    /*     function assert_VaultSimpleBorrowable_PcA() internal {
+    function assert_VM_INVARIANT_B() internal {
         assertTrue(
-            (svbVars.totalBorrowedAfter > svbVars.totalBorrowedBefore && svbVars.borrowCapAfter != 0)
-                ? (svbVars.borrowCapAfter >= svbVars.totalBorrowedAfter)
+            (vaultVars.totalSupplyAfter > vaultVars.totalSupplyBefore && vaultVars.supplyCapAfter != 0)
+                ? (vaultVars.supplyCapAfter >= vaultVars.totalSupplyAfter)
                 : true,
-            "(totalBorrowedAfter > totalBorrowedBefore)"
+            VM_INVARIANT_B
         );
     }
-
-    function assert_VaultSimpleBorrowable_PcB() internal {
-        if (svbVars.userDebtBefore > 0) {
-            assertEq(svbVars.controllerEnabledAfter, true, "Controller cannot be disabled if there is any liability");
-        }
-    } */
 }

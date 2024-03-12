@@ -40,7 +40,7 @@ contract  TokenModuleHandler is BaseHandler {
         }
     }
 
-    function transfer(address to, uint256 amount) external setup {
+/*     function transfer(address to, uint256 amount) external setup {
         bool success;
         bytes memory returnData;
 
@@ -49,10 +49,10 @@ contract  TokenModuleHandler is BaseHandler {
         (success, returnData) = actor.proxy(target, abi.encodeWithSelector(IERC20.transfer.selector, to, amount));
 
         if (success) {
-            ghost_sumSharesBalancesPerUser[target][address(actor)] -= amount;
-            ghost_sumSharesBalancesPerUser[target][to] += amount;
+            ghost_sumSharesBalancesPerUser[address(actor)] -= amount;
+            ghost_sumSharesBalancesPerUser[to] += amount;
         }
-    }
+    } */
 
     function transferTo(uint256 i, uint256 amount) external setup {
         bool success;
@@ -66,12 +66,12 @@ contract  TokenModuleHandler is BaseHandler {
         (success, returnData) = actor.proxy(target, abi.encodeWithSelector(IERC20.transfer.selector, to, amount));
 
         if (success) {
-            ghost_sumSharesBalancesPerUser[target][address(actor)] -= amount;
-            ghost_sumSharesBalancesPerUser[target][to] += amount;
+            ghost_sumSharesBalancesPerUser[address(actor)] -= amount;
+            ghost_sumSharesBalancesPerUser[to] += amount;
         }
     }
 
-    function transferFrom(uint256 i, address to, uint256 amount) external setup {
+/*     function transferFrom(uint256 i, address to, uint256 amount) external setup {
         bool success;
         bytes memory returnData;
 
@@ -84,10 +84,10 @@ contract  TokenModuleHandler is BaseHandler {
             actor.proxy(target, abi.encodeWithSelector(IERC20.transferFrom.selector, from, to, amount));
 
         if (success) {
-            ghost_sumSharesBalancesPerUser[target][from] -= amount;
-            ghost_sumSharesBalancesPerUser[target][to] += amount;
+            ghost_sumSharesBalancesPerUser[from] -= amount;
+            ghost_sumSharesBalancesPerUser[to] += amount;
         }
-    }
+    } */
 
     function transferFromTo(uint256 i, uint256 u, uint256 amount) external setup {
         bool success;
@@ -104,8 +104,8 @@ contract  TokenModuleHandler is BaseHandler {
             actor.proxy(target, abi.encodeWithSelector(IERC20.transferFrom.selector, from, to, amount));
 
         if (success) {
-            ghost_sumSharesBalancesPerUser[target][from] -= amount;
-            ghost_sumSharesBalancesPerUser[target][to] += amount;
+            ghost_sumSharesBalancesPerUser[from] -= amount;
+            ghost_sumSharesBalancesPerUser[to] += amount;
         }
     }
 

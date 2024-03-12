@@ -1,7 +1,9 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.19;
 
-import {console} from "forge-std/console.sol";
+// Contracts
+import "src/EVault/shared/types/Types.sol";
+import "src/EVault/shared/types/AmountCap.sol";
 
 // Test Helpers
 import {Pretty, Strings} from "../utils/Pretty.sol";
@@ -16,7 +18,7 @@ abstract contract BorrowingBeforeAfterHooks is BaseHooks {
     using Strings for string;
     using Pretty for uint256;
     using Pretty for int256;
-    using Pretty for bool;
+    using AmountCapLib for AmountCap;
 
     struct BorrowingVars {
         // Debt Accounting
@@ -34,7 +36,18 @@ abstract contract BorrowingBeforeAfterHooks is BaseHooks {
         // User Debt
         uint256 userDebtBefore;
         uint256 userDebtAfter;
-        //TODO: borrow caps
+        // EVC
+        bool controllerEnabledBefore;
+        bool controllerEnabledAfter;
+        // Liquidity
+        uint256 liabilityValueBefore;
+        uint256 liabilityValueAfter;
+        uint256 collateralValueBefore;
+        uint256 collateralValueAfter;
+        // Borrow Cap
+        uint256 borrowCapBefore;
+        uint256 borrowCapAfter;
+
     }
 
     BorrowingVars borrowingVars;
@@ -47,6 +60,15 @@ abstract contract BorrowingBeforeAfterHooks is BaseHooks {
         // Interest
         borrowingVars.interestRateBefore = eTST.interestRate();
         borrowingVars.interestAccumulatorBefore = eTST.interestAccumulator();
+        // User Debt
+        borrowingVars.userDebtBefore = eTST.debtOf(address(actor));
+        // EVC
+        borrowingVars.controllerEnabledBefore = evc.isControllerEnabled(address(actor), address(eTST));
+        // Liquidity
+        (borrowingVars.collateralValueBefore, borrowingVars.liabilityValueBefore) = _getAccountLiquidity(address(actor), false);
+        // Caps
+        (, uint16 _borrowCap) = eTST.caps();
+        borrowingVars.borrowCapBefore = AmountCap.wrap(_borrowCap).toUint();
     }
 
     function _borrowingHooksAfter() internal {
@@ -57,31 +79,47 @@ abstract contract BorrowingBeforeAfterHooks is BaseHooks {
         // Interest
         borrowingVars.interestRateAfter = eTST.interestRate();
         borrowingVars.interestAccumulatorAfter = eTST.interestAccumulator();
+        // User Debt
+        borrowingVars.userDebtAfter = eTST.debtOf(address(actor));
+        // EVC
+        borrowingVars.controllerEnabledAfter = evc.isControllerEnabled(address(actor), address(eTST));
+        // Liquidity
+        (borrowingVars.collateralValueAfter, borrowingVars.liabilityValueAfter) = _getAccountLiquidity(address(actor), false);
+        // Caps
+        (, uint16 _borrowCap) = eTST.caps();
+        borrowingVars.borrowCapAfter = AmountCap.wrap(_borrowCap).toUint();
     }
 
     /*/////////////////////////////////////////////////////////////////////////////////////////////
-    //                                     POST CONDITIONS                                       //
-    ///////////////////////////////////////////////////////////////////////////////////////////////
-
-    VaultRegularBorrowable
-        Post Condition A: Interest rate monotonically increases
-        Post Condition B: A healthy account cant never be left unhealthy after a transaction
-
-    */
-
+    //                                POST CONDITION INVARIANTS                                  //
     /////////////////////////////////////////////////////////////////////////////////////////////*/
 
-    /*     function assert_rvbPostConditionA() internal {
+    function assert_BM_INVARIANT_G() internal {
         assertGe(
-            rvbVars.interestAccumulatorAfter,
-            rvbVars.interestAccumulatorBefore,
-            "Interest rate must monotonically increase"
+            borrowingVars.interestAccumulatorAfter,
+            borrowingVars.interestAccumulatorBefore,
+            BM_INVARIANT_G
         );
     }
 
-    function assert_rvbPostConditionB() internal {
-        if (isAccountHealthy(rvbVars.liabilityValueBefore, rvbVars.collateralValueBefore)) {
-            assertTrue(isAccountHealthy(rvbVars.liabilityValueAfter, rvbVars.collateralValueAfter), "Account cannot be left unhealthy");
+    function assert_BM_INVARIANT_H() internal {
+        if (isAccountHealthy(borrowingVars.liabilityValueBefore, borrowingVars.collateralValueBefore)) {
+            assertTrue(isAccountHealthy(borrowingVars.liabilityValueAfter, borrowingVars.collateralValueAfter), BM_INVARIANT_H);
         }
-    } */
+    }
+
+    function assert_BM_INVARIANT_I() internal {
+        assertTrue(
+            (borrowingVars.totalBorrowsAfter > borrowingVars.totalBorrowsBefore && borrowingVars.borrowCapAfter != 0)
+                ? (borrowingVars.borrowCapAfter >= borrowingVars.totalBorrowsAfter)
+                : true,
+            BM_INVARIANT_I
+        );
+    }
+
+    function assert_BM_INVARIANT_J() internal {
+        if (borrowingVars.userDebtBefore > 0) {
+            assertEq(borrowingVars.controllerEnabledAfter, true, BM_INVARIANT_J);
+        }
+    }
 }

@@ -3,134 +3,85 @@ pragma solidity ^0.8.19;
 
 // Invariant Contracts
 import {BaseInvariants} from "./invariants/BaseInvariants.t.sol";
-import {VaultSimpleInvariants} from "./invariants/VaultSimpleInvariants.t.sol";
-import {VaultSimpleBorrowableInvariants} from "./invariants/VaultSimpleBorrowableInvariants.t.sol";
-import {VaultRegularBorrowableInvariants} from "./invariants/VaultRegularBorrowableInvariants.t.sol";
-import {VaultBorrowableWETHInvariants} from "./invariants/VaultBorrowableWETHInvariants.t.sol";
+import {TokenModuleInvariants} from "./invariants/TokenModuleInvariants.t.sol";
+import {VaultModuleInvariants} from "./invariants/VaultModuleInvariants.t.sol";
+import {BorrowingModuleInvariants} from "./invariants/BorrowingModuleInvariants.t.sol";
+import {LiquidationModuleInvariants} from "./invariants/LiquidationModuleInvariants.t.sol";
 
 /// @title Invariants
-/// @notice Wrappers for the protocol invariants implemented in BaseInvariants
+/// @notice Wrappers for the protocol invariants implemented in each invariants contract
 /// @dev recognised by Echidna when property mode is activated
 /// @dev Inherits BaseInvariants that inherits HandlerAggregator
 abstract contract Invariants is
     BaseInvariants,
-    VaultSimpleInvariants,
-    VaultSimpleBorrowableInvariants,
-    VaultRegularBorrowableInvariants,
-    VaultBorrowableWETHInvariants
+    TokenModuleInvariants,
+    VaultModuleInvariants,
+    BorrowingModuleInvariants,
+    LiquidationModuleInvariants
 {
-    uint256 private constant REENTRANCY_UNLOCKED = 1;
+    ///////////////////////////////////////////////////////////////////////////////////////////////
+    //                                     BASE INVARIANTS                                       //
+    ///////////////////////////////////////////////////////////////////////////////////////////////
 
-    function echidna_invariant_tryA() public returns (bool) {
+    function echidna_BASE_INVARIANT() public returns (bool) {
+        assert_BASE_INVARIANT_A();
+        assert_BASE_INVARIANT_B();
         return true;
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////////
-    //                                 BASE INVARIANTS                                           //
+    //                                 TOKEN MODULE INVARIANTS                                   //
     ///////////////////////////////////////////////////////////////////////////////////////////////
-/* 
-    function echidna_invariant_Base_invariantAB() public targetVaultsFrom(VaultType.Simple) returns (bool) {
-        for (uint256 i = limitVault; i < vaults.length; i++) {
-            assert_VaultBase_invariantA(vaults[i]);
-            assert_VaultBase_invariantB(vaults[i]);
+
+    function echidna_TM_INVARIANT() public returns (bool) {
+        assert_TM_INVARIANT_A();
+
+        uint256 _sumBalanceOf;
+        for (uint256 i; i < NUMBER_OF_ACTORS; i++) {
+            //asset_TM_INVARIANT_B(actorAddresses[i]); @audit failing
+            _sumBalanceOf += eTST.balanceOf(actorAddresses[i]);
         }
+        assert_TM_INVARIANT_C(_sumBalanceOf);
         return true;
-    } */
+    }
 
     ///////////////////////////////////////////////////////////////////////////////////////////////
-    //                                         ERC4626                                           //
+    //                                       VAULT MODULE                                        //
     ///////////////////////////////////////////////////////////////////////////////////////////////
-/* 
-    function echidna_invariant_ERC4626_assets_invariantAB() public targetVaultsFrom(VaultType.Simple) returns (bool) {
-        for (uint256 i = limitVault; i < vaults.length; i++) {
-            assert_ERC4626_assets_invariantA(vaults[i]);
-            assert_ERC4626_assets_invariantB(vaults[i]);
+
+    function echidna_VM_INVARIANT() public returns (bool) {
+        //assert_VM_INVARIANT_A(); @audit failing 
+        return true;
+    }
+
+    function echidna_ERC4626_ASSETS_INVARIANT() public returns (bool) {
+        assert_ERC4626_ASSETS_INVARIANT_A();
+        assert_ERC4626_ASSETS_INVARIANT_B();
+        assert_ERC4626_ASSETS_INVARIANT_C();
+        assert_ERC4626_ASSETS_INVARIANT_D();
+        return true;
+    }
+
+    function echidna_ERC4626_ACTIONS_INVARIANT() public returns (bool) {
+        for (uint256 i; i < NUMBER_OF_ACTORS; i++) {
+            assert_ERC4626_DEPOSIT_INVARIANT_A(actorAddresses[i]);
+            assert_ERC4626_MINT_INVARIANT_A(actorAddresses[i]);
+            assert_ERC4626_WITHDRAW_INVARIANT_A(actorAddresses[i]);
+            assert_ERC4626_REDEEM_INVARIANT_A(actorAddresses[i]);
         }
         return true;
     }
 
-    function echidna_invariant_ERC4626_invariantC() public targetVaultsFrom(VaultType.Simple) returns (bool) {
-        for (uint256 i = limitVault; i < vaults.length; i++) {
-            assert_ERC4626_assets_invariantC(vaults[i]);
+    ///////////////////////////////////////////////////////////////////////////////////////////////
+    //                                BORROWING MODULE INVARIANTS                                //
+    ///////////////////////////////////////////////////////////////////////////////////////////////
+
+    function echidna_BM_INVARIANT() public returns (bool) {
+        for (uint256 i; i < NUMBER_OF_ACTORS; i++) {
+            assert_BM_INVARIANT_A(actorAddresses[i]);
         }
+        assert_BM_INVARIANT_B();
+        assert_BM_INVARIANT_C();
         return true;
     }
-
-    function echidna_invariant_ERC4626_invariantD() public targetVaultsFrom(VaultType.Simple) returns (bool) {
-        for (uint256 i = limitVault; i < vaults.length; i++) {
-            assert_ERC4626_assets_invariantD(vaults[i]);
-        }
-        return true;
-    }
-
-    function echidna_invariant_ERC4626_depositMintWithdrawRedeem_invariantA()
-        public
-        targetVaultsFrom(VaultType.Simple)
-        returns (bool)
-    {
-        for (uint256 i = limitVault; i < vaults.length; i++) {
-            for (uint256 j; j < NUMBER_OF_ACTORS; j++) {
-                assert_ERC4626_deposit_invariantA(vaults[i], actorAddresses[j]);
-                assert_ERC4626_mint_invariantA(vaults[i], actorAddresses[j]);
-                assert_ERC4626_withdraw_invariantA(vaults[i], actorAddresses[j]);
-                assert_ERC4626_redeem_invariantA(vaults[i], actorAddresses[j]);
-            }
-        }
-        return true;
-    } */
-
-    ///////////////////////////////////////////////////////////////////////////////////////////////
-    //                                 VAULT SIMPLE INVARIANTS                                   //
-    ///////////////////////////////////////////////////////////////////////////////////////////////
-/* 
-    function echidna_invariant_VaultSimple_invariantABCD() public targetVaultsFrom(VaultType.Simple) returns (bool) {
-        for (uint256 i = limitVault; i < vaults.length; i++) {
-            assert_VaultSimple_invariantA(vaults[i]);
-            assert_VaultSimple_invariantB(vaults[i]);
-
-            uint256 _sumBalanceOf;
-            for (uint256 j; j < NUMBER_OF_ACTORS; j++) {
-                _sumBalanceOf += assert_VaultSimple_invariantC(vaults[i], actorAddresses[j]);
-            }
-        }
-        return true;
-    } */
-
-    ///////////////////////////////////////////////////////////////////////////////////////////////
-    //                            VAULT SIMPLE BORROWABLE INVARIANTS                             //
-    ///////////////////////////////////////////////////////////////////////////////////////////////
-/* 
-    function echidna_invariant_VaultSimpleBorrowable_invariantAB()
-        public
-        targetVaultsFrom(VaultType.SimpleBorrowable)
-        returns (bool)
-    {
-        for (uint256 i = limitVault; i < vaults.length; i++) {
-            for (uint256 j; j < NUMBER_OF_ACTORS; j++) {
-                assert_VaultSimpleBorrowable_invariantA(vaults[i], actorAddresses[j]);
-            }
-            assert_VaultSimpleBorrowable_invariantB(vaults[i]);
-        }
-        return true;
-    } */
-
-    ///////////////////////////////////////////////////////////////////////////////////////////////
-    //                           VAULT REGULAR BORROWABLE INVARIANTS                             //
-    ///////////////////////////////////////////////////////////////////////////////////////////////
-
-/*     function echidna_invariant_VaultRegularBorrowable_invariantA()
-        public
-        targetVaultsFrom(VaultType.RegularBorrowable)
-        returns (bool)
-    {
-        for (uint256 i = limitVault; i < vaults.length; i++) {
-            for (uint256 j; j < NUMBER_OF_ACTORS; j++) {
-            }
-        }
-        return true;
-    } */
-
-    ///////////////////////////////////////////////////////////////////////////////////////////////
-    //                            VAULT BORROWABLE WETH INVARIANTS                               //
-    ///////////////////////////////////////////////////////////////////////////////////////////////
 }

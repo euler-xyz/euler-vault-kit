@@ -52,6 +52,13 @@ abstract contract BaseTest is BaseStorage, PropertiesConstants, StdAsserts, StdU
     //                                          HELPERS                                          //
     ///////////////////////////////////////////////////////////////////////////////////////////////
 
+    function _getAccountLiquidity(address _actor, bool flag) internal view returns (uint256, uint256) {
+        if (evc.getControllers(_actor).length > 0) {
+            eTST.accountLiquidity(_actor, flag);
+        }
+        return (0,0);
+    }
+
     function _makeAddr(string memory name) internal pure returns (address addr) {
         uint256 privateKey = uint256(keccak256(abi.encodePacked(name)));
         addr = vm.addr(privateKey);

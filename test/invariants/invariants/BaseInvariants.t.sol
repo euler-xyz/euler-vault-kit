@@ -1,33 +1,24 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.19;
 
-import {Actor} from "../utils/Actor.sol";
+// Contracts
 import {HandlerAggregator} from "../HandlerAggregator.t.sol";
 
-// Contracts
+// Types
+import {Snapshot, Assets} from "src/EVault/shared/types/Types.sol";
 
 /// @title BaseInvariants
 /// @notice Implements Invariants for the protocol
-/// @notice Implements View functions assertions for the protocol, checked in assertion testing mode
-/// @dev Inherits HandlerAggregator for checking actions in assertion testing mode
+/// @dev Inherits HandlerAggregator to check actions in assertion testing mode
 abstract contract BaseInvariants is HandlerAggregator {
-    /*/////////////////////////////////////////////////////////////////////////////////////////////
-    //                   INVARIANTS SPEC: Handwritten / pseudo-code invariants                   //
-    ///////////////////////////////////////////////////////////////////////////////////////////////
-
-    BaseInvariants
-        Invariant A: reentrancyLock == REENTRANCY_UNLOCKED
-        Invariant B: snapshot == 0
-        TODO: at most we can only have one liability between calls
-    */
-
-    /////////////////////////////////////////////////////////////////////////////////////////////*/
-
-/*     function assert_VaultBase_invariantA(address _vault) internal {
-        assertEq(VaultSimple(_vault).getReentrancyLock(), 1, string.concat("VaultBase_invariantA: ", vaultNames[_vault]));
+    function assert_BASE_INVARIANT_A() internal {
+        assertEq(eTST.getReentrancyLock(), false, BASE_INVARIANT_A);
     }
 
-    function assert_VaultBase_invariantB(address _vault) internal {
-        assertEq(VaultSimple(_vault).getSnapshotLength(), 0, string.concat("VaultBase_invariantB: ", vaultNames[_vault]));
-    } */
+    function assert_BASE_INVARIANT_B() internal {
+        Snapshot memory _snapshot = eTST.getSnapshot();
+        assertEq(_snapshot._stamp, 1, BASE_INVARIANT_B);
+        assertEq(Assets.unwrap(_snapshot.cash), 0, BASE_INVARIANT_B);
+        assertEq(Assets.unwrap(_snapshot.borrows), 0, BASE_INVARIANT_B);
+    }
 }

@@ -23,19 +23,15 @@ contract LiquidationModuleHandler is BaseHandler {
     //                                           ACTIONS                                         //
     ///////////////////////////////////////////////////////////////////////////////////////////////
 
-    function liquidate(uint256 repayAssets, uint256 i) external setup {//TODO: adapt liquidations to the current implementation
-/*         bool success;
+    function liquidate(uint256 repayAssets, uint256 minYielBalance, uint256 i) external setup {
+        bool success;
         bytes memory returnData;
 
         address target = address(eTST);
 
-        address violator = _getActorWithDebt(target);
+        address violator = _getRandomActor(i);
 
-        require(violator != address(0), "VaultRegularBorrowableHandler: no violator");
-
-        bool violatorStatus = isAccountHealthy(target, violator);
-
-        repayAssets = clampBetween(repayAssets, 1, eTST.debtOf(violator));
+        bool violatorStatus = isAccountHealthyLiquidation(violator);
 
         {
             address collateral = _getRandomAccountCollateral(i, address(actor));
@@ -43,36 +39,22 @@ contract LiquidationModuleHandler is BaseHandler {
             _before();
             (success, returnData) = actor.proxy(
                 target,
-                abi.encodeWithSelector(ILiquidation.liquidate.selector, violator, collateral, repayAssets)
+                abi.encodeWithSelector(ILiquidation.liquidate.selector, violator, collateral, repayAssets, minYielBalance)
             );
         }
         if (success) {
             _after();
 
-            // VaultRegularBorrowable_invariantB
-            assertFalse(violatorStatus);
-        } */
+            /// @dev LM_INVARIANT_A
+            assertFalse(violatorStatus, LM_INVARIANT_A);
+        }
     }
-
-    ///////////////////////////////////////////////////////////////////////////////////////////////
-    //                                         OWNER ACTIONS                                     //
-    ///////////////////////////////////////////////////////////////////////////////////////////////
-
-/*     function setCollateralFactor(uint256 collateralFactor) public {TODO: adapt this for the current implementation
-        address target = address(eTST);
-
-        _before();
-        eTST.setCollateralFactor(target, collateralFactor);
-        _after();
-
-        assert(true);
-    } */
 
     ///////////////////////////////////////////////////////////////////////////////////////////////
     //                                           HELPERS                                         //
     ///////////////////////////////////////////////////////////////////////////////////////////////
 
-    function _getActorWithDebt(address vaultAddress) internal view returns (address) {
+    function _getActorWithDebt() internal view returns (address) {
         address _actor = address(actor);
         for (uint256 k; k < NUMBER_OF_ACTORS; k++) {
             if (_actor != actorAddresses[k] && eTST.debtOf(address(actorAddresses[k])) > 0) {

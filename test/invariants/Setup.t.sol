@@ -27,9 +27,7 @@ import {MockBalanceTracker} from "../mocks/MockBalanceTracker.sol";
 import {MockPriceOracle} from "../mocks/MockPriceOracle.sol";
 import {Actor} from "./utils/Actor.sol";
 import {BaseTest} from "./base/BaseTest.t.sol";
-
-// Interfaces
-import {IEVault} from "src/EVault/IEVault.sol";
+import {EVaultExtended} from "test/invariants/helpers/extended/EVaultExtended.sol";
 
 /// @title Setup
 /// @notice Setup contract for the invariant test Suite, inherited by Tester
@@ -77,7 +75,7 @@ contract Setup is BaseTest {
 
         // Deploy the vault implementation
         address evaultImpl = address(
-            new EVault(
+            new EVaultExtended(
                 integrations,
                 initializeModule,
                 tokenModule,
@@ -95,11 +93,11 @@ contract Setup is BaseTest {
         factory.setImplementation(evaultImpl);
 
         // Deploy the vaults
-        eTST = IEVault(factory.createProxy(true, abi.encodePacked(address(assetTST), address(oracle), unitOfAccount)));
+        eTST = EVaultExtended(factory.createProxy(true, abi.encodePacked(address(assetTST), address(oracle), unitOfAccount)));
         eTST.setIRM(address(new IRMClassStable()), "");
         vaults.push(address(eTST));
 
-        eTST2 = IEVault(factory.createProxy(true, abi.encodePacked(address(assetTST2), address(oracle), unitOfAccount)));
+        eTST2 = EVaultExtended(factory.createProxy(true, abi.encodePacked(address(assetTST2), address(oracle), unitOfAccount)));
         eTST2.setIRM(address(new IRMClassStable()), "");
         vaults.push(address(eTST2));
     }

@@ -8,3 +8,7 @@ echidna-assert:
 # Medusa
 medusa:
 	medusa fuzz
+
+# Slither
+slither:
+	slither test/invariants/Tester.t.sol

@@ -8,11 +8,12 @@
 		"corpusDirectory": "test/invariants/_corpus/medusa",
 		"coverageEnabled": true,
 		"deploymentOrder": [
-			"TesterMedusa"
+			"Tester"
 		],
 		"targetContracts": [
-			"TesterMedusa"
+			"Tester"
 		],
+		"targetContractsBalances": ["0xffffffffffffffffffffffffffffff"],
 		"constructorArgs": {},
 		"deployerAddress": "0x30000",
 		"senderAddresses": [
@@ -71,7 +72,7 @@
 	"compilation": {
 		"platform": "crytic-compile",
 		"platformConfig": {
-			"target": "test/invariants/TesterMedusa.t.sol",
+			"target": "test/invariants/Tester.t.sol",
 			"solcVersion": "",
 			"exportDirectory": "",
 			"args": [
