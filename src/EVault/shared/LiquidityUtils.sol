@@ -59,6 +59,8 @@ abstract contract LiquidityUtils is BorrowUtils {
         for (uint256 i; i < collaterals.length; ++i) {
             address collateral = collaterals[i];
 
+            if (!marketStorage.ltvLookup[collateral].initialised()) continue;
+
             uint256 balance = IERC20(collateral).balanceOf(account);
             if (balance > 0) return false;
         }
