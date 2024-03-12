@@ -115,8 +115,6 @@ abstract contract VaultModule is IVault, Base, AssetTransfers, BalanceUtils {
     function deposit(uint256 amount, address receiver) external virtual nonReentrant returns (uint256) {
         (MarketCache memory marketCache, address account) = initOperation(OP_DEPOSIT, ACCOUNTCHECK_NONE);
 
-        if (receiver == address(0)) receiver = account;
-
         Assets assets =
             amount == type(uint256).max ? marketCache.asset.balanceOf(account).toAssets() : amount.toAssets();
         if (assets.isZero()) return 0;
@@ -132,8 +130,6 @@ abstract contract VaultModule is IVault, Base, AssetTransfers, BalanceUtils {
     /// @inheritdoc IERC4626
     function mint(uint256 amount, address receiver) external virtual nonReentrant returns (uint256) {
         (MarketCache memory marketCache, address account) = initOperation(OP_MINT, ACCOUNTCHECK_NONE);
-
-        if (receiver == address(0)) receiver = account;
 
         Shares shares = amount.toShares();
         if (shares.isZero()) return 0;
@@ -154,8 +150,6 @@ abstract contract VaultModule is IVault, Base, AssetTransfers, BalanceUtils {
     {
         (MarketCache memory marketCache, address account) = initOperation(OP_WITHDRAW, owner);
 
-        if (receiver == address(0)) receiver = getAccountOwner(owner);
-
         Assets assets = amount.toAssets();
         if (assets.isZero()) return 0;
 
@@ -169,8 +163,6 @@ abstract contract VaultModule is IVault, Base, AssetTransfers, BalanceUtils {
     /// @inheritdoc IERC4626
     function redeem(uint256 amount, address receiver, address owner) external virtual nonReentrant returns (uint256) {
         (MarketCache memory marketCache, address account) = initOperation(OP_REDEEM, owner);
-
-        if (receiver == address(0)) receiver = getAccountOwner(owner);
 
         Shares shares = amount == type(uint256).max ? marketStorage.users[owner].getBalance() : amount.toShares();
         if (shares.isZero()) return 0;
@@ -186,8 +178,6 @@ abstract contract VaultModule is IVault, Base, AssetTransfers, BalanceUtils {
     /// @inheritdoc IVault
     function skim(uint256 amount, address receiver) external virtual nonReentrant returns (uint256) {
         (MarketCache memory marketCache, address account) = initOperation(OP_SKIM, ACCOUNTCHECK_NONE);
-
-        if (receiver == address(0)) receiver = account;
 
         Assets balance = marketCache.asset.balanceOf(address(this)).toAssets();
         Assets available = balance <= marketCache.cash
@@ -218,7 +208,7 @@ abstract contract VaultModule is IVault, Base, AssetTransfers, BalanceUtils {
         address sender,
         address receiver
     ) private {
-        pullTokens(marketCache, sender, assets);
+        pullAssets(marketCache, sender, assets);
 
         increaseBalance(marketCache, receiver, sender, shares, assets);
     }
@@ -236,7 +226,7 @@ abstract contract VaultModule is IVault, Base, AssetTransfers, BalanceUtils {
         decreaseAllowance(owner, sender, shares);
         decreaseBalance(marketCache, owner, sender, receiver, shares, assets);
 
-        pushTokens(marketCache, receiver, assets);
+        pushAssets(marketCache, receiver, assets);
     }
 
     function maxRedeemInternal(address owner) internal view returns (Shares) {

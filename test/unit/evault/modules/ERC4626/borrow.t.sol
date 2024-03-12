@@ -53,13 +53,13 @@ contract ERC4626Test_Borrow is EVaultTestBase {
         evc.enableCollateral(borrower, address(eTST2));
         evc.enableController(borrower, address(eTST));
 
-        eTST.borrow(5e18, address(0));
+        eTST.borrow(5e18, borrower);
         assertEq(assetTST.balanceOf(borrower), 5e18);
 
         // Should be able to borrow up to 9, so this should fail:
 
         vm.expectRevert(Errors.E_AccountLiquidity.selector);
-        eTST.borrow(4.0001e18, address(0));
+        eTST.borrow(4.0001e18, borrower);
 
         // Disable collateral should fail
 
@@ -69,7 +69,7 @@ contract ERC4626Test_Borrow is EVaultTestBase {
         // Repay
 
         assetTST.approve(address(eTST), type(uint256).max);
-        eTST.repay(type(uint256).max, address(0));
+        eTST.repay(type(uint256).max, borrower);
 
         evc.disableCollateral(borrower, address(eTST2));
         assertEq(evc.getCollaterals(borrower).length, 0);

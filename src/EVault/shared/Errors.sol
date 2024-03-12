@@ -46,4 +46,6 @@ contract Errors {
     error E_InvalidLTVAsset();
     error E_NoPriceOracle();
     error E_InvalidConfigAmount();
+    error E_BadAssetReceiver();
+    error E_BadSharesReceiver();
 }

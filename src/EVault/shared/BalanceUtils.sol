@@ -19,6 +19,8 @@ abstract contract BalanceUtils is Base {
         Shares amount,
         Assets assets
     ) internal {
+        if (account == address(0)) revert E_BadSharesReceiver();
+
         (Shares origBalance, bool balanceForwarderEnabled) =
             marketStorage.users[account].getBalanceAndBalanceForwarder();
         Shares newBalance = origBalance + amount;

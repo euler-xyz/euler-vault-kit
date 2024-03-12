@@ -116,8 +116,6 @@ abstract contract BorrowingModule is IBorrowing, Base, AssetTransfers, BalanceUt
     function borrow(uint256 amount, address receiver) external virtual nonReentrant {
         (MarketCache memory marketCache, address account) = initOperationForBorrow(OP_BORROW);
 
-        if (receiver == address(0)) receiver = getAccountOwner(account);
-
         Assets assets = amount == type(uint256).max ? marketCache.cash : amount.toAssets();
         if (assets.isZero()) return;
 
@@ -125,21 +123,19 @@ abstract contract BorrowingModule is IBorrowing, Base, AssetTransfers, BalanceUt
 
         increaseBorrow(marketCache, account, assets);
 
-        pushTokens(marketCache, receiver, assets);
+        pushAssets(marketCache, receiver, assets);
     }
 
     /// @inheritdoc IBorrowing
     function repay(uint256 amount, address receiver) external virtual nonReentrant {
         (MarketCache memory marketCache, address account) = initOperation(OP_REPAY, ACCOUNTCHECK_NONE);
 
-        if (receiver == address(0)) receiver = account;
-
         uint256 owed = getCurrentOwed(marketCache, receiver).toAssetsUp().toUint();
 
         Assets assets = (amount > owed ? owed : amount).toAssets();
         if (assets.isZero()) return;
 
-        pullTokens(marketCache, account, assets);
+        pullAssets(marketCache, account, assets);
 
         decreaseBorrow(marketCache, receiver, assets);
     }
@@ -147,8 +143,6 @@ abstract contract BorrowingModule is IBorrowing, Base, AssetTransfers, BalanceUt
     /// @inheritdoc IBorrowing
     function loop(uint256 amount, address sharesReceiver) external virtual nonReentrant returns (uint256) {
         (MarketCache memory marketCache, address account) = initOperationForBorrow(OP_LOOP);
-
-        if (sharesReceiver == address(0)) sharesReceiver = account;
 
         Assets assets = amount.toAssets();
         if (assets.isZero()) return 0;
@@ -167,8 +161,6 @@ abstract contract BorrowingModule is IBorrowing, Base, AssetTransfers, BalanceUt
     /// @inheritdoc IBorrowing
     function deloop(uint256 amount, address debtFrom) external virtual nonReentrant returns (uint256) {
         (MarketCache memory marketCache, address account) = initOperation(OP_DELOOP, ACCOUNTCHECK_CALLER);
-
-        if (debtFrom == address(0)) debtFrom = account;
 
         Assets owed = getCurrentOwed(marketCache, debtFrom).toAssetsUp();
         if (owed.isZero()) return 0;
