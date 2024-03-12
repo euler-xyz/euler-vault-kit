@@ -17,12 +17,11 @@ abstract contract LiquidityUtils is BorrowUtils {
     {
         validateOracle(marketCache);
 
-        Owed owed = marketStorage.users[account].getOwed();
-        liabilityValue = owed.isZero() ? 0 : getLiabilityValue(marketCache, account, owed);
-
         for (uint256 i; i < collaterals.length; ++i) {
             collateralValue += getCollateralValue(marketCache, account, collaterals[i], ltvType);
         }
+
+        liabilityValue = getLiabilityValue(marketCache, account, marketStorage.users[account].getOwed());
     }
 
     // Check that the value of the collateral, adjusted for borrowing TVL, is equal or greater than the liability value.
@@ -72,6 +71,8 @@ abstract contract LiquidityUtils is BorrowUtils {
     function getLiabilityValue(MarketCache memory marketCache, address account, Owed owed) internal view returns (uint value) {
         // update owed with interest accrued
         uint256 owedAssets = getCurrentOwed(marketCache, account, owed).toAssetsUp().toUint();
+
+        if (owedAssets == 0) return 0;
 
         if (address(marketCache.asset) == marketCache.unitOfAccount) {
             value = owedAssets;
