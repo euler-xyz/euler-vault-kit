@@ -96,7 +96,7 @@ abstract contract LiquidityUtils is BorrowUtils {
             return ltv.mul(currentCollateralValue);
     }
 
-    function validateOracle(MarketCache memory marketCache) private pure {
+    function validateOracle(MarketCache memory marketCache) internal pure {
         if (address(marketCache.oracle) == address(0)) revert E_NoPriceOracle();
     }
 }

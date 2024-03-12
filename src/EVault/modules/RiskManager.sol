@@ -32,6 +32,7 @@ abstract contract RiskManagerModule is IRiskManager, Base, LiquidityUtils {
         MarketCache memory marketCache = loadMarket();
 
         verifyController(account);
+        validateOracle(marketCache);
         collaterals = getCollaterals(account);
         collateralValues = new uint256[](collaterals.length);
 
