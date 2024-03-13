@@ -77,7 +77,7 @@ abstract contract Dispatch is
         if (msg.sender == address(evc)) {
             _;
         } else {
-            routeThroughEVC();
+            callThroughEVCInternal();
         }
     }
 
@@ -123,7 +123,7 @@ abstract contract Dispatch is
         }
     }
 
-    function routeThroughEVC() private {
+    function callThroughEVCInternal() private {
         address _evc = address(evc);
         assembly {
             let mainCalldataLength := sub(calldatasize(), PROXY_METADATA_LENGTH)
