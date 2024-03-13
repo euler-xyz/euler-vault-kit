@@ -63,6 +63,11 @@ abstract contract GovernanceModule is IGovernance, Base, BalanceUtils {
     }
 
     /// @inheritdoc IGovernance
+    function protocolConfigAddress() external view virtual reentrantOK returns (address) {
+        return address(protocolConfig);
+    }
+
+    /// @inheritdoc IGovernance
     function borrowingLTV(address collateral) external view virtual reentrantOK returns (uint16) {
         return marketStorage.ltvLookup[collateral].getLTV(LTVType.BORROWING).toUint16();
     }
@@ -116,6 +121,11 @@ abstract contract GovernanceModule is IGovernance, Base, BalanceUtils {
     /// @inheritdoc IGovernance
     function EVC() external view virtual reentrantOK returns (address) {
         return address(evc);
+    }
+
+    /// @inheritdoc IGovernance
+    function permit2Address() external view virtual reentrantOK returns (address) {
+        return permit2;
     }
 
     /// @inheritdoc IGovernance

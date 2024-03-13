@@ -165,6 +165,8 @@ contract EVault is Dispatch {
 
     function interestFee() external override useView(MODULE_GOVERNANCE) view returns (uint16) {}
 
+    function protocolConfigAddress() external override useView(MODULE_GOVERNANCE) view returns (address) {}
+
     function protocolFeeShare() external override useView(MODULE_GOVERNANCE) view returns (uint256) {}
 
     function protocolFeeReceiver() external override useView(MODULE_GOVERNANCE) view returns (address) {}
@@ -188,6 +190,8 @@ contract EVault is Dispatch {
     function debtSocialization() external override useView(MODULE_GOVERNANCE) view returns (bool) {}
 
     function EVC() external view override useView(MODULE_GOVERNANCE) returns (address) {}
+
+    function permit2Address() external view override useView(MODULE_GOVERNANCE) returns (address) {}
 
     function unitOfAccount() external override useView(MODULE_GOVERNANCE) view returns (address) {}
 

@@ -7,21 +7,25 @@ import {Cache} from "./Cache.sol";
 
 import {IProtocolConfig} from "../../ProtocolConfig/IProtocolConfig.sol";
 import {IBalanceTracker} from "../../interfaces/IBalanceTracker.sol";
+
 import "./types/Types.sol";
 
 abstract contract Base is EVCClient, Cache {
     IProtocolConfig immutable protocolConfig;
     IBalanceTracker immutable balanceTracker;
+    address immutable permit2;
 
     struct Integrations {
         address evc;
         address protocolConfig;
         address balanceTracker;
+        address permit2;
     }
 
     constructor(Integrations memory integrations) EVCClient(integrations.evc) {
         protocolConfig = IProtocolConfig(integrations.protocolConfig);
         balanceTracker = IBalanceTracker(integrations.balanceTracker);
+        permit2 = integrations.permit2;
     }
 
     modifier reentrantOK() {

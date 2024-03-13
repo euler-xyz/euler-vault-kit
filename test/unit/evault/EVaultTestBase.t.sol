@@ -2,6 +2,7 @@
 pragma solidity ^0.8.13;
 
 import {Test, console2, stdError} from "forge-std/Test.sol";
+import {DeployPermit2} from "permit2/test/utils/DeployPermit2.sol";
 
 import {GenericFactory} from "src/GenericFactory/GenericFactory.sol";
 
@@ -35,7 +36,7 @@ import {AssertionsCustomTypes} from "../../helpers/AssertionsCustomTypes.sol";
 
 import "src/EVault/shared/Constants.sol";
 
-contract EVaultTestBase is Test, AssertionsCustomTypes {
+contract EVaultTestBase is Test, AssertionsCustomTypes, DeployPermit2 {
     EthereumVaultConnector public evc;
     address admin;
     address feeReceiver;
@@ -43,6 +44,7 @@ contract EVaultTestBase is Test, AssertionsCustomTypes {
     address balanceTracker;
     MockPriceOracle oracle;
     address unitOfAccount;
+    address permit2;
     GenericFactory public factory;
 
     TestERC20 assetTST;
@@ -61,7 +63,8 @@ contract EVaultTestBase is Test, AssertionsCustomTypes {
         balanceTracker = address(new MockBalanceTracker());
         oracle = new MockPriceOracle();
         unitOfAccount = address(1);
-        Base.Integrations memory integrations = Base.Integrations(address(evc), address(protocolConfig), balanceTracker);
+        permit2 = deployPermit2();
+        Base.Integrations memory integrations = Base.Integrations(address(evc), address(protocolConfig), balanceTracker, permit2);
 
         Dispatch.DeployedModules memory modules = Dispatch.DeployedModules({
             initialize: address(new Initialize(integrations)),

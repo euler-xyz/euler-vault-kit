@@ -26,6 +26,7 @@ abstract contract InitializeModule is IInitialize, Base, BorrowUtils {
         // Calldata should include: signature and abi encoded creator address (4 + 32 bytes), followed by proxy metadata
         if (msg.data.length != 4 + 32 + PROXY_METADATA_LENGTH) revert E_ProxyMetadata();
         (IERC20 asset,,) = ProxyUtils.metadata();
+        // Make sure the asset is a contract. Token transfers using a library will not revert if address has no code.
         if (address(asset).code.length == 0) revert E_BadAddress();
         // Other constraints on values should be enforced by product line
 
