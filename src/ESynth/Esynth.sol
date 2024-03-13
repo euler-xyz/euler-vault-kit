@@ -12,6 +12,11 @@ import {IESynth} from "./IESynth.sol";
 import {IEVC} from "ethereum-vault-connector/interfaces/IEthereumVaultConnector.sol";
 import {EVCUtil} from "ethereum-vault-connector/utils/EVCUtil.sol";
 
+interface IVault {
+    function increaseCash(uint256 amount) external;
+    function decreaseCash(uint256 amount) external;
+}
+
 contract ESynth is EVCUtil, IESynth, ERC20Permit, Ownable, ReentrancyGuard {
     struct MinterData {
         uint128 capacity;
@@ -102,6 +107,21 @@ contract ESynth is EVCUtil, IESynth, ERC20Permit, Ownable, ReentrancyGuard {
 
         _burn(account, amount);
     }
+
+    /// @notice Increase cash available in an attached vault.
+    /// @param vault The vault to increase the cash for.
+    /// @param amount The amount of cash to increase.
+    function increaseCash(address vault, uint256 amount) external onlyOwner {
+        IVault(vault).increaseCash(amount);
+    }
+
+    /// @notice Decrease cash available in an attached vault.
+    /// @param vault The vault to decrease the cash for.
+    /// @param amount The amount of cash to decrease.
+    function decreaseCash(address vault, uint256 amount) external onlyOwner {
+        IVault(vault).decreaseCash(amount);
+    }
+    
 
     /// @notice Transfers a certain amount of tokens to a recipient.
     /// @param to The recipient of the transfer.
