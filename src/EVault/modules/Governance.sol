@@ -239,7 +239,13 @@ abstract contract GovernanceModule is IGovernance, Base, BalanceUtils, LTVUtils 
 
     /// @inheritdoc IGovernance
     function setIRM(address newModel) external virtual nonReentrant governorOnly {
+        MarketCache memory marketCache = updateMarket();
+
         marketStorage.interestRateModel = newModel;
+
+        uint newInterestRate = updateInterestRate(marketCache);
+
+        logMarketStatus(marketCache, newInterestRate);
 
         emit GovSetIRM(newModel);
     }

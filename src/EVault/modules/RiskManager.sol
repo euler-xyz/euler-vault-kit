@@ -5,7 +5,6 @@ pragma solidity ^0.8.0;
 import {IRiskManager} from "../IEVault.sol";
 import {Base} from "../shared/Base.sol";
 import {LiquidityUtils} from "../shared/LiquidityUtils.sol";
-import {IIRM} from "../../interestRateModels/IIRM.sol";
 
 import "../shared/types/Types.sol";
 
@@ -101,28 +100,6 @@ abstract contract RiskManagerModule is IRiskManager, Base, LiquidityUtils {
         }
 
         magicValue = IEVCVault.checkVaultStatus.selector;
-    }
-
-    function updateInterestRate(MarketCache memory marketCache) private returns (uint256) {
-        // single sload
-        address irm = marketStorage.interestRateModel;
-        uint256 newInterestRate = marketStorage.interestRate;
-
-        if (irm != address(0)) {
-            (bool success, bytes memory data) = irm.call(abi.encodeCall(IIRM.computeInterestRate, (
-                                                                            address(this),
-                                                                            marketCache.cash.toUint(),
-                                                                            marketCache.totalBorrows.toAssetsUp().toUint()
-                                                                       )));
-
-            if (success && data.length >= 32) {
-                newInterestRate = abi.decode(data, (uint));
-                if (newInterestRate > MAX_ALLOWED_INTEREST_RATE) newInterestRate = MAX_ALLOWED_INTEREST_RATE;
-                marketStorage.interestRate = uint72(newInterestRate);
-            }
-        }
-
-        return newInterestRate;
     }
 }
 
