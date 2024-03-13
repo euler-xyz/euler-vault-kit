@@ -3,14 +3,11 @@
 pragma solidity ^0.8.0;
 
 import {ConfigAmount} from "./Types.sol";
-import "../Constants.sol"; 
+import {Errors} from "../Errors.sol";
+import "../Constants.sol";
 
-// ConfigAmounts are floating point values encoded in 16 bits with a CONFIG_SCALE precision (60 000).
+// ConfigAmounts are floating point values encoded in 16 bits with a CONFIG_SCALE precision (10 000).
 // The type is used to store protocol configuration values.
-
-uint256 constant CONFIGAMOUNT_1_PERCENT = CONFIG_SCALE * 1 / 100;
-uint256 constant CONFIGAMOUNT_50_PERCENT = CONFIG_SCALE * 50 / 100;
-
 
 library ConfigAmountLib {
     // note assuming arithmetic checks are already performed
@@ -34,12 +31,16 @@ library ConfigAmountLib {
         }
     }
 
+    function isZero(ConfigAmount self) internal pure returns (bool) {
+        return self.toUint16() == 0;
+    }
+
     function toUint16(ConfigAmount self) internal pure returns (uint16) {
         return ConfigAmount.unwrap(self);
     }
 
-    function isZero(ConfigAmount self) internal pure returns (bool) {
-        return self.toUint16() == 0;
+    function validate(uint256 amount) internal pure {
+        if (amount > CONFIG_SCALE) revert Errors.E_InvalidConfigAmount();
     }
 }
 
@@ -60,5 +61,11 @@ function subConfigAmount(ConfigAmount a, ConfigAmount b) pure returns (ConfigAmo
 function gtConfigAmount(ConfigAmount a, ConfigAmount b) pure returns (bool) {
     unchecked {
         return a.toUint16() > b.toUint16();
+    }
+}
+
+function ltConfigAmount(ConfigAmount a, ConfigAmount b) pure returns (bool) {
+    unchecked {
+        return a.toUint16() < b.toUint16();
     }
 }

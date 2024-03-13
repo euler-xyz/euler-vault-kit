@@ -5,6 +5,7 @@ pragma solidity ^0.8.0;
 import "test/unit/evault/EVaultTestBase.t.sol";
 import {Errors} from "src/EVault/shared/Errors.sol";
 import {Events} from "src/EVault/shared/Events.sol";
+import {ConfigAmountLib} from "src/EVault/shared/types/ConfigAmount.sol";
 
 contract BalanceForwarderTest_Hooks is EVaultTestBase {
     address alice = makeAddr("alice");

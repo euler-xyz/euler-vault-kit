@@ -43,7 +43,7 @@ using OwedLib for Owed global;
 using {addOwed as +, subOwed as -, eqOwed as ==, neqOwed as !=, gtOwed as >, ltOwed as <} for Owed global;
 
 using ConfigAmountLib for ConfigAmount global;
-using {addConfigAmount as +, subConfigAmount as -, gtConfigAmount as >} for ConfigAmount global; 
+using {addConfigAmount as +, subConfigAmount as -, gtConfigAmount as >, ltConfigAmount as <} for ConfigAmount global; 
 
 using AmountCapLib for AmountCap global;
 using DisabledOpsLib for DisabledOps global;
@@ -65,7 +65,7 @@ library TypesLib {
     }
 
     function toConfigAmount(uint16 amount) internal pure returns (ConfigAmount) {
-        if (amount > CONFIG_SCALE) revert Errors.E_InvalidConfigAmount();
+        ConfigAmountLib.validate(amount);
         return ConfigAmount.wrap(amount);
     }
 }

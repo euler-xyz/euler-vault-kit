@@ -27,7 +27,7 @@ contract ERC4626Test_Borrow is EVaultTestBase {
         oracle.setPrice(address(assetTST), unitOfAccount, 1e18);
         oracle.setPrice(address(eTST2), unitOfAccount, 1e18);
 
-        eTST.setLTV(address(eTST2), uint16(9 * CONFIG_SCALE / 10), 0);
+        eTST.setLTV(address(eTST2), uint16(CONFIG_SCALE * 9 / 10), 0);
 
 
         // Depositor
@@ -97,7 +97,7 @@ contract ERC4626Test_Borrow is EVaultTestBase {
                 abi.encodeWithSelector(IAllowanceTransfer.AllowanceExpired.selector, 0)
             )
         );
-        eTST.repay(type(uint256).max, address(0));
+        eTST.repay(type(uint256).max, borrower);
 
         // approve permit2 contract to spend the tokens
         assetTST.approve(permit2, type(uint160).max);
@@ -106,7 +106,7 @@ contract ERC4626Test_Borrow is EVaultTestBase {
         IAllowanceTransfer(permit2).approve(address(assetTST), address(eTST), type(uint160).max, type(uint48).max);
 
         // repay succeeds now
-        eTST.repay(type(uint256).max, address(0));
+        eTST.repay(type(uint256).max, borrower);
 
         assertEq(eTST.debtOf(borrower), 0);
     }

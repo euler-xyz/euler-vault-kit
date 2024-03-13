@@ -14,6 +14,11 @@ import "../shared/types/Types.sol";
 abstract contract GovernanceModule is IGovernance, Base, BalanceUtils, LTVUtils {
     using TypesLib for uint16;
 
+    // Protocol guarantees
+    uint256 constant MAX_PROTOCOL_FEE_SHARE = 0.5 * 1e18; // 50%
+    uint256 constant GUARANTEED_INTEREST_FEE_MIN = CONFIG_SCALE * 1 / 100; // 1%
+    uint256 constant GUARANTEED_INTEREST_FEE_MAX = CONFIG_SCALE * 50 / 100; // 50%
+
     event GovSetName(string newName);
     event GovSetSymbol(string newSymbol);
     event GovSetGovernorAdmin(address indexed newGovernorAdmin);
@@ -268,14 +273,12 @@ abstract contract GovernanceModule is IGovernance, Base, BalanceUtils, LTVUtils 
 
     /// @inheritdoc IGovernance
     function setInterestFee(uint16 newInterestFee) external virtual nonReentrant governorOnly {
-        ConfigAmount newInterestFeeConfig = newInterestFee.toConfigAmount();
-
-        // Interest fees between 1 and 50% are always allowed, otherwise ask protocolConfig
-        if (newInterestFee < CONFIGAMOUNT_1_PERCENT || newInterestFee > CONFIGAMOUNT_50_PERCENT) {
+        // Interest fees in guaranteed range are always allowed, otherwise ask protocolConfig
+        if (newInterestFee < GUARANTEED_INTEREST_FEE_MIN || newInterestFee > GUARANTEED_INTEREST_FEE_MAX) {
             if (!protocolConfig.isValidInterestFee(address(this), newInterestFee)) revert E_BadFee();
         }
 
-        marketStorage.interestFee = newInterestFeeConfig;
+        marketStorage.interestFee = newInterestFee.toConfigAmount();
 
         emit GovSetInterestFee(newInterestFee);
     }

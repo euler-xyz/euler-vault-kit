@@ -12,6 +12,9 @@ import "../shared/types/Types.sol";
 abstract contract LiquidationModule is ILiquidation, Base, BalanceUtils, LiquidityUtils {
     using TypesLib for uint256;
 
+    // Maximum liquidation discount that can be awarded under any conditions.
+    uint256 constant MAXIMUM_LIQUIDATION_DISCOUNT = 0.2 * 1e18;
+
     struct LiquidationCache {
         address liquidator;
         address violator;

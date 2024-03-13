@@ -16,6 +16,9 @@ import "../shared/types/Types.sol";
 abstract contract InitializeModule is IInitialize, Base, BorrowUtils {
     using TypesLib for uint16;
 
+    uint256 constant INITIAL_INTEREST_ACCUMULATOR = 1e27; // 1 ray
+    uint16 constant DEFAULT_INTEREST_FEE = uint16(CONFIG_SCALE * 23 / 100); // 23%
+
     /// @inheritdoc IInitialize
     function initialize(address proxyCreator) external virtual reentrantOK {
         if (initialized) revert E_Initialized();
