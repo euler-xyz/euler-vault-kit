@@ -3,11 +3,11 @@
 pragma solidity ^0.8.0;
 
 import "./IProtocolConfig.sol";
-import {ConfigAmountLib} from "../EVault/shared/types/ConfigAmount.sol";
+import "../EVault/shared/Constants.sol";
 
 contract ProtocolConfig is IProtocolConfig {
-    uint256 constant MIN_INTEREST_FEE = 0.01 * 1e18; // 1%
-    uint256 constant MAX_INTEREST_FEE = 0.5 * 1e18; // 50%
+    uint256 constant MIN_INTEREST_FEE = CONFIG_SCALE * 1 / 100; // 1%
+    uint256 constant MAX_INTEREST_FEE = CONFIG_SCALE * 50 / 100; // 50%
     uint256 constant PROTOCOL_FEE_SHARE = 0.1 * 1e18; // 10%
 
     struct InterestFeeRange {
@@ -40,7 +40,7 @@ contract ProtocolConfig is IProtocolConfig {
             return interestFee >= range.minInterestFee && interestFee <= range.maxInterestFee;
         }
 
-        return interestFee >= ConfigAmountLib.fromWad(MIN_INTEREST_FEE).toUint16() && interestFee <= ConfigAmountLib.fromWad(MAX_INTEREST_FEE).toUint16();
+        return interestFee >= MIN_INTEREST_FEE && interestFee <= MAX_INTEREST_FEE;
     }
 
     function feeConfig(address vault) external view returns (address, uint256) {

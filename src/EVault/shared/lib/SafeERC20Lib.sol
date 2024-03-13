@@ -27,7 +27,7 @@ library SafeERC20Lib {
         (bool success, bytes memory tryData) = trySafeTransferFrom(token, from, to, value);
         bytes memory fallbackData;
         if (!success && permit2 != address(0)) {
-            if (value > type(uint160).max) revert E_TransferFromFailed(tryData, abi.encodeWithSignature("E_Permit2AmountOverflow()"));
+            if (value > type(uint160).max) revert E_TransferFromFailed(tryData, abi.encodeWithSelector(E_Permit2AmountOverflow.selector));
 
             (success, fallbackData) = permit2.call(abi.encodeCall(IPermit2.transferFrom, (from, to, uint160(value), address(token))));
         }

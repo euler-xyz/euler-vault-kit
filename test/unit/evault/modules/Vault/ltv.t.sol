@@ -103,8 +103,8 @@ contract ERC4626Test_LTV is EVaultTestBase {
 
     function test_ltvRange() public {
         vm.expectRevert(Errors.E_InvalidConfigAmount.selector);
-        eTST.setLTV(address(eTST2), ConfigAmountLib.fromWad(1e18).toUint16() + 1, 0);
-    }
+        eTST.setLTV(address(eTST2), uint16(CONFIG_SCALE + 1), 0);
+}
 
     function test_ltvList() public {
         assertEq(eTST.LTVList().length, 0);
@@ -146,6 +146,6 @@ contract ERC4626Test_LTV is EVaultTestBase {
     // From 1000 base to CONFIG_SCALE
 
     function cfgScale(uint n) private pure returns (uint16) {
-        return uint16(n * ConfigAmountLib.fromWad(1e18).toUint16() / 1000);
+        return uint16(n * CONFIG_SCALE / 1000);
     }
 }

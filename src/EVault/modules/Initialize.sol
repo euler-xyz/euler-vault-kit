@@ -17,7 +17,7 @@ abstract contract InitializeModule is IInitialize, Base, BorrowUtils {
     using TypesLib for uint16;
 
     uint256 constant INITIAL_INTEREST_ACCUMULATOR = 1e27; // 1 ray
-    uint256 constant DEFAULT_INTEREST_FEE = 0.23 * 1e18; // 23%
+    uint16 constant DEFAULT_INTEREST_FEE = uint16(CONFIG_SCALE * 23 / 100); // 23%
 
     /// @inheritdoc IInitialize
     function initialize(address proxyCreator) external virtual reentrantOK {
@@ -41,7 +41,7 @@ abstract contract InitializeModule is IInitialize, Base, BorrowUtils {
 
         marketStorage.lastInterestAccumulatorUpdate = uint48(block.timestamp);
         marketStorage.interestAccumulator = INITIAL_INTEREST_ACCUMULATOR;
-        marketStorage.interestFee = ConfigAmountLib.fromWad(DEFAULT_INTEREST_FEE);
+        marketStorage.interestFee = DEFAULT_INTEREST_FEE.toConfigAmount();
         marketStorage.creator = marketStorage.governorAdmin = marketStorage.pauseGuardian = proxyCreator;
 
         snapshot.reset();

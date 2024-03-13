@@ -15,6 +15,8 @@ uint256 constant MAX_SANE_AMOUNT = type(uint112).max;
 uint256 constant MAX_SANE_DEBT_AMOUNT = uint256(MAX_SANE_AMOUNT) << INTERNAL_DEBT_PRECISION;
 // proxy trailing calldata length in bytes. Three addresses, 20 bytes each: vault underlying asset, oracle and unit of account.
 uint256 constant PROXY_METADATA_LENGTH = 60;
+// scale of configuration parameters held in ConfigAmount type
+uint256 constant CONFIG_SCALE = 1e4;
 
 // Account status checks special values
 

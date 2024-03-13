@@ -4,13 +4,12 @@ pragma solidity ^0.8.0;
 
 import {ConfigAmount} from "./Types.sol";
 import {Errors} from "../Errors.sol";
+import "../Constants.sol";
 
-// ConfigAmounts are floating point values encoded in 16 bits with a CONFIG_SCALE precision (60 000).
+// ConfigAmounts are floating point values encoded in 16 bits with a CONFIG_SCALE precision (10 000).
 // The type is used to store protocol configuration values.
 
 library ConfigAmountLib {
-    uint256 constant CONFIG_SCALE = 60_000; // fits in uint16
-
     // note assuming arithmetic checks are already performed
     function mulDiv(ConfigAmount self, uint256 multiplier, uint256 divisor) internal pure returns (uint256) {
         unchecked {
@@ -42,12 +41,6 @@ library ConfigAmountLib {
 
     function validate(uint256 amount) internal pure {
         if (amount > CONFIG_SCALE) revert Errors.E_InvalidConfigAmount();
-    }
-
-    function fromWad(uint256 value) internal pure returns (ConfigAmount) {
-        uint256 amount = value * CONFIG_SCALE / 1e18;
-        validate(amount);
-        return ConfigAmount.wrap(uint16(amount));
     }
 }
 
