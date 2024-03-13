@@ -8,11 +8,10 @@ import {MarketCache} from "../EVault/shared/types/MarketCache.sol";
 import "../EVault/shared/Constants.sol";
 import {Shares} from "../EVault/shared/types/Shares.sol";
 import {Assets} from "../EVault/shared/types/Shares.sol";
-import {Owed, TypesLib} from "../EVault/shared/types/Types.sol";
-import {Errors} from "../Evault/shared/Errors.sol";
+import {TypesLib} from "../EVault/shared/types/Types.sol";
+import {Errors} from "../EVault/shared/Errors.sol";
 import {IESynth} from "../ESynth/IESynth.sol";
-import {ProxyUtils} from "../Evault/shared/lib/ProxyUtils.sol";
-import {IERC20} from "../EVault/IEVault.sol";
+import {ProxyUtils, IERC20} from "../EVault/shared/lib/ProxyUtils.sol";
 import {IFlashLoan} from "../EVault/modules/Borrowing.sol";
 
 contract ESVault is EVault {
