@@ -6,11 +6,12 @@ import {IGovernance} from "../IEVault.sol";
 import {IPriceOracle} from "../../interfaces/IPriceOracle.sol";
 import {Base} from "../shared/Base.sol";
 import {BalanceUtils} from "../shared/BalanceUtils.sol";
+import {LTVUtils} from "../shared/LTVUtils.sol";
 import {ProxyUtils} from "../shared/lib/ProxyUtils.sol";
 
 import "../shared/types/Types.sol";
 
-abstract contract GovernanceModule is IGovernance, Base, BalanceUtils {
+abstract contract GovernanceModule is IGovernance, Base, BalanceUtils, LTVUtils {
     using TypesLib for uint16;
 
     event GovSetName(string newName);
@@ -68,12 +69,12 @@ abstract contract GovernanceModule is IGovernance, Base, BalanceUtils {
 
     /// @inheritdoc IGovernance
     function borrowingLTV(address collateral) external view virtual reentrantOK returns (uint16) {
-        return marketStorage.ltvLookup[collateral].getLTV(LTVType.BORROWING).toUint16();
+        return getLTV(collateral, LTVType.BORROWING).toUint16();
     }
 
     /// @inheritdoc IGovernance
     function liquidationLTV(address collateral) external view virtual reentrantOK returns (uint16) {
-        return marketStorage.ltvLookup[collateral].getLTV(LTVType.LIQUIDATION).toUint16();
+        return getLTV(collateral, LTVType.LIQUIDATION).toUint16();
     }
 
     /// @inheritdoc IGovernance
@@ -218,14 +219,14 @@ abstract contract GovernanceModule is IGovernance, Base, BalanceUtils {
 
         marketStorage.ltvLookup[collateral] = newLTV;
 
-        if (!origLTV.initialised()) marketStorage.ltvList.push(collateral);
+        if (!origLTV.initialized()) marketStorage.ltvList.push(collateral);
 
         emit GovSetLTV(collateral, newLTV.targetTimestamp, newLTV.targetLTV.toUint16(), newLTV.rampDuration, newLTV.originalLTV.toUint16());
     }
 
     /// @inheritdoc IGovernance
     function clearLTV(address collateral) external virtual nonReentrant governorOnly {
-        uint16 originalLTV = marketStorage.ltvLookup[collateral].getLTV(LTVType.LIQUIDATION).toUint16();
+        uint16 originalLTV = getLTV(collateral, LTVType.LIQUIDATION).toUint16();
         marketStorage.ltvLookup[collateral].clear();
 
         emit GovSetLTV(collateral, 0, 0, 0, originalLTV);

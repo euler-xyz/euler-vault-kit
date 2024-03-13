@@ -15,6 +15,7 @@ import "./Owed.sol";
 import "./ConfigAmount.sol";
 import "./DisabledOps.sol";
 import "./AmountCap.sol";
+import "./LTVType.sol";
 
 type Shares is uint112;
 

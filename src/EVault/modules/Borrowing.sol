@@ -90,7 +90,7 @@ abstract contract BorrowingModule is IBorrowing, Base, AssetTransfers, BalanceUt
         }
 
         // if collateral has zero LTV configured, it will not be locked
-        ConfigAmount ltv = marketStorage.ltvLookup[collateral].getLTV(LTVType.BORROWING);
+        ConfigAmount ltv = getLTV(collateral, LTVType.BORROWING);
         if (ltv.isZero()) return 0;
 
         // calculate extra collateral value in terms of requested collateral balance, by dividing by LTV
