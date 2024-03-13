@@ -7,11 +7,12 @@ import {IPriceOracle} from "../../interfaces/IPriceOracle.sol";
 import {Base} from "../shared/Base.sol";
 import {BalanceUtils} from "../shared/BalanceUtils.sol";
 import {LTVUtils} from "../shared/LTVUtils.sol";
+import {BorrowUtils} from "../shared/BorrowUtils.sol";
 import {ProxyUtils} from "../shared/lib/ProxyUtils.sol";
 
 import "../shared/types/Types.sol";
 
-abstract contract GovernanceModule is IGovernance, Base, BalanceUtils, LTVUtils {
+abstract contract GovernanceModule is IGovernance, Base, BalanceUtils, BorrowUtils, LTVUtils {
     using TypesLib for uint16;
 
     // Protocol guarantees
@@ -242,6 +243,7 @@ abstract contract GovernanceModule is IGovernance, Base, BalanceUtils, LTVUtils 
         MarketCache memory marketCache = updateMarket();
 
         marketStorage.interestRateModel = newModel;
+        marketStorage.interestRate = 0;
 
         uint newInterestRate = updateInterestRate(marketCache);
 
