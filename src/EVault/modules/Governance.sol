@@ -23,7 +23,6 @@ abstract contract GovernanceModule is IGovernance, Base, BalanceUtils {
     event GovSetDisabledOps(uint32 newDisabledOps);
     event GovSetCaps(uint16 newSupplyCap, uint16 newBorrowCap);
     event GovSetInterestFee(uint16 newFee);
-    event GovSetDebtSocialization(bool debtSocialization);
 
     modifier governorOnly() {
         if (msg.sender != marketStorage.governorAdmin) revert E_Unauthorized();
@@ -111,11 +110,6 @@ abstract contract GovernanceModule is IGovernance, Base, BalanceUtils {
     /// @inheritdoc IGovernance
     function feeReceiver() external view virtual reentrantOK returns (address) {
         return marketStorage.feeReceiver;
-    }
-
-    /// @inheritdoc IGovernance
-    function debtSocialization() external view virtual reentrantOK returns (bool) {
-        return marketStorage.debtSocialization;
     }
 
     /// @inheritdoc IGovernance
@@ -248,6 +242,12 @@ abstract contract GovernanceModule is IGovernance, Base, BalanceUtils {
 
     /// @inheritdoc IGovernance
     function setDisabledOps(uint32 newDisabledOps) external virtual nonReentrant pauseGuardianOnly {
+        // market is updated because:
+        // if disabling interest accrual - the pending interest should be accrued
+        // if re-enabling interest - last updated timestamp needs to be reset to skip the disabled period
+        MarketCache memory marketCache = updateMarket();
+        logMarketStatus(marketCache, marketStorage.interestRate);
+
         marketStorage.disabledOps = DisabledOps.wrap(newDisabledOps);
         emit GovSetDisabledOps(newDisabledOps);
     }
@@ -279,13 +279,6 @@ abstract contract GovernanceModule is IGovernance, Base, BalanceUtils {
         marketStorage.interestFee = newInterestFeeConfig;
 
         emit GovSetInterestFee(newInterestFee);
-    }
-
-    /// @inheritdoc IGovernance
-    function setDebtSocialization(bool newValue) external virtual nonReentrant governorOnly {
-        marketStorage.debtSocialization = newValue;
-
-        emit GovSetDebtSocialization(newValue);
     }
 }
 

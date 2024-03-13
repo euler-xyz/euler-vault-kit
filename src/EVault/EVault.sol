@@ -187,8 +187,6 @@ contract EVault is Dispatch {
 
     function feeReceiver() external override useView(MODULE_GOVERNANCE) view returns (address) {}
 
-    function debtSocialization() external override useView(MODULE_GOVERNANCE) view returns (bool) {}
-
     function EVC() external view override useView(MODULE_GOVERNANCE) returns (address) {}
 
     function permit2Address() external view override useView(MODULE_GOVERNANCE) returns (address) {}
@@ -221,6 +219,4 @@ contract EVault is Dispatch {
     function setCaps(uint16 supplyCap, uint16 borrowCap) external override use(MODULE_GOVERNANCE) {}
 
     function setInterestFee(uint16 newFee) external override use(MODULE_GOVERNANCE) {}
-
-    function setDebtSocialization(bool newValue) external override use(MODULE_GOVERNANCE) {}
 }

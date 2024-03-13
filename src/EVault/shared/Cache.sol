@@ -59,11 +59,16 @@ contract Cache is Storage, Errors {
 
         marketCache.interestAccumulator = marketStorage.interestAccumulator;
 
-        // Update interest  accumulator and fees balance
+        // Update interest accumulator and fees balance
         uint256 deltaT = block.timestamp - marketCache.lastInterestAccumulatorUpdate;
 
         if (deltaT > 0) {
             dirty = true;
+
+            if (marketCache.disabledOps.get(OP_ACCRUE_INTEREST)) {
+                marketCache.lastInterestAccumulatorUpdate = uint40(block.timestamp);
+                return dirty;
+            }
 
             // Compute new values. Use full precision for intermediate results.
 
