@@ -4,6 +4,7 @@ pragma solidity ^0.8.0;
 
 import {Errors} from "../Errors.sol";
 import {ConfigAmount} from "./Types.sol";
+import {LTVType} from "./LTVType.sol";
 import "../Constants.sol";
 
 struct LTVConfig {
@@ -13,12 +14,8 @@ struct LTVConfig {
     ConfigAmount originalLTV;
 }
 
-enum LTVType {
-    LIQUIDATION, BORROWING
-}
-
 library LTVConfigLib {
-    function initialised(LTVConfig memory self) internal pure returns (bool) {
+    function initialized(LTVConfig memory self) internal pure returns (bool) {
         return self.targetTimestamp != 0;
     }
 

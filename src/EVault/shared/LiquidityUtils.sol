@@ -3,10 +3,11 @@
 pragma solidity ^0.8.0;
 
 import {BorrowUtils} from "./BorrowUtils.sol";
+import {LTVUtils} from "./LTVUtils.sol";
 
 import "./types/Types.sol";
 
-abstract contract LiquidityUtils is BorrowUtils {
+abstract contract LiquidityUtils is BorrowUtils, LTVUtils {
     using TypesLib for uint256;
 
     // Calculate the value of liabilities, and the liquidation or borrowing LTV adjusted collateral value.
@@ -59,7 +60,7 @@ abstract contract LiquidityUtils is BorrowUtils {
         for (uint256 i; i < collaterals.length; ++i) {
             address collateral = collaterals[i];
 
-            if (!marketStorage.ltvLookup[collateral].initialised()) continue;
+            if (!isRecognizedCollateral(collateral)) continue;
 
             uint256 balance = IERC20(collateral).balanceOf(account);
             if (balance > 0) return false;
@@ -85,8 +86,7 @@ abstract contract LiquidityUtils is BorrowUtils {
     }
 
     function getCollateralValue(MarketCache memory marketCache, address account, address collateral, LTVType ltvType) internal view returns (uint value) {
-            ConfigAmount ltv = marketStorage.ltvLookup[collateral].getLTV(ltvType);
-
+            ConfigAmount ltv = getLTV(collateral, ltvType);
             if (ltv.isZero()) return 0;
 
             uint256 balance = IERC20(collateral).balanceOf(account);

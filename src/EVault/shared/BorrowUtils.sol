@@ -15,7 +15,7 @@ abstract contract BorrowUtils is Base {
         // Don't bother loading the user's accumulator
         if (owed.isZero()) return Owed.wrap(0);
 
-        // Can't divide by 0 here: If owed is non-zero, we must've initialised the user's interestAccumulator
+        // Can't divide by 0 here: If owed is non-zero, we must've initialized the user's interestAccumulator
         return owed.mulDiv(marketCache.interestAccumulator, marketStorage.users[account].interestAccumulator);
     }
 
