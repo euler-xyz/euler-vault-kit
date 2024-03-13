@@ -15,6 +15,8 @@ contract ESynth is IESynth, ERC20Permit, Ownable {
 
     mapping(address => MinterData) public minters;
 
+    event MinterCapacitySet(address indexed minter, uint256 capacity);
+
     error E_TooLargeAmount();
     error E_CapacityReached();
     error E_NotMinter();
@@ -23,9 +25,12 @@ contract ESynth is IESynth, ERC20Permit, Ownable {
 
     }
 
-    function setCapacity(address minter, uint128 capacity) external onlyOwner {
-        minters[minter].capacity = capacity;
-        // TODO emit event
+    function setCapacity(address minter, uint256 capacity) external onlyOwner {
+        if(capacity > type(uint128).max) {
+            revert E_TooLargeAmount();
+        }
+        minters[minter].capacity = uint128(capacity);
+        emit MinterCapacitySet(minter, capacity);
     }
 
     function mint(address account, uint256 amount) external override {
