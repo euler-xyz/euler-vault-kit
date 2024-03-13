@@ -151,7 +151,6 @@ contract EVault is
 
     function dToken() external view override useView(MODULE_BORROWING) returns (address) {}
 
-
     function borrow(uint256 assets, address receiver) external override virtual callThroughEVC use(MODULE_BORROWING) {}
 
     function repay(uint256 assets, address receiver) external override virtual callThroughEVC use(MODULE_BORROWING) {}
