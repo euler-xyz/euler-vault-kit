@@ -9,6 +9,8 @@ import {EVault} from "src/EVault/EVault.sol";
 import {IRMClassStable} from "src/interestRateModels/IRMClassStable.sol";
 import {ProtocolConfig} from "src/ProtocolConfig/ProtocolConfig.sol";
 
+import {Dispatch} from "src/EVault/modules/Dispatch.sol";
+
 import {Initialize} from "src/EVault/modules/Initialize.sol";
 import {Token} from "src/EVault/modules/Token.sol";
 import {Vault} from "src/EVault/modules/Vault.sol";
@@ -61,28 +63,18 @@ contract EVaultTestBase is Test, AssertionsCustomTypes {
         unitOfAccount = address(1);
         Base.Integrations memory integrations = Base.Integrations(address(evc), address(protocolConfig), balanceTracker);
 
-        address initializeModule = address(new Initialize(integrations));
-        address tokenModule = address(new Token(integrations));
-        address vaultModule = address(new Vault(integrations));
-        address borrowingModule = address(new Borrowing(integrations));
-        address liquidationModule = address(new Liquidation(integrations));
-        address riskManagerModule = address(new RiskManager(integrations));
-        address balanceForwarderModule = address(new BalanceForwarder(integrations));
-        address governanceModule = address(new Governance(integrations));
+        Dispatch.DeployedModules memory modules = Dispatch.DeployedModules({
+            initialize: address(new Initialize(integrations)),
+            token: address(new Token(integrations)),
+            vault: address(new Vault(integrations)),
+            borrowing: address(new Borrowing(integrations)),
+            liquidation: address(new Liquidation(integrations)),
+            riskManager: address(new RiskManager(integrations)),
+            balanceForwarder: address(new BalanceForwarder(integrations)),
+            governance: address(new Governance(integrations))
+        });
 
-        address evaultImpl = address(
-            new EVault(
-                integrations,
-                initializeModule,
-                tokenModule,
-                vaultModule,
-                borrowingModule,
-                liquidationModule,
-                riskManagerModule,
-                balanceForwarderModule,
-                governanceModule
-            )
-        );
+        address evaultImpl = address(new EVault(integrations, modules));
 
         vm.prank(admin);
         factory.setImplementation(evaultImpl);
