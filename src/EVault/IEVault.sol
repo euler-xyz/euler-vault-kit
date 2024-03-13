@@ -107,28 +107,28 @@ interface IERC4626 {
     function previewRedeem(uint256 shares) external view returns (uint256);
 
     /// @notice Transfer requested amount of underlying tokens from sender to the vault pool in return for shares
-    /// @param assets In underlying units (use max uint for full underlying token balance)
-    /// @param receiver An account to receive the shares (use zero address for the authenticated account)
+    /// @param assets In underlying units (use max uint256 for full underlying token balance)
+    /// @param receiver An account to receive the shares
     /// @return Amount of shares minted
     /// @dev Deposit will round down the amount of assets that are converted to shares. To prevent losses consider using mint instead.
     function deposit(uint256 assets, address receiver) external returns (uint256);
 
     /// @notice Transfer underlying tokens from sender to the vault pool in return for requested amount of shares
     /// @param shares Amount of share to be minted
-    /// @param receiver An account to receive the shares (use zero address for the authenticated account)
+    /// @param receiver An account to receive the shares
     /// @return Amount of assets deposited
     function mint(uint256 shares, address receiver) external returns (uint256);
 
     /// @notice Transfer requested amount of underlying tokens from the vault and decrease account's shares balance
     /// @param assets In underlying units
-    /// @param receiver Account to receive the withdrawn assets (use zero address for the authenticated account)
+    /// @param receiver Account to receive the withdrawn assets
     /// @param owner Account holding the shares to burn
     /// @return Amount of shares burned
     function withdraw(uint256 assets, address receiver, address owner) external returns (uint256);
 
     /// @notice Burn requested shares and transfer corresponding underlying tokens from the vault to the receiver
-    /// @param shares Amount of shares to burn (use max to burn full owner balance)
-    /// @param receiver Account to receive the withdrawn assets (use zero address for the authenticated account)
+    /// @param shares Amount of shares to burn (use max uint256 to burn full owner balance)
+    /// @param receiver Account to receive the withdrawn assets
     /// @param owner Account holding the shares to burn.
     /// @return Amount of assets transferred
     function redeem(uint256 shares, address receiver, address owner) external returns (uint256);
@@ -145,8 +145,8 @@ interface IVault is IERC4626 {
     function creator() external view returns (address);
 
     /// @notice Creates shares for the receiver, from excess asset balances of the vault (not accounted for in `cash`)
-    /// @param assets Amount of assets to claim (use max to claim all available assets)
-    /// @param receiver An account to receive the shares (use zero address for the authenticated account)
+    /// @param assets Amount of assets to claim (use max uint256 to claim all available assets)
+    /// @param receiver An account to receive the shares
     /// @return Amount of shares minted
     /// @dev Could be used as an alternative deposit flow in certain scenarios. E.g. swap directly to the vault, call `skim` to claim deposit.
     function skim(uint256 assets, address receiver) external returns (uint256);
@@ -187,29 +187,29 @@ interface IBorrowing {
 
 
     /// @notice Transfer underlying tokens from the vault to the sender, and increase sender's debt
-    /// @param assets In underlying units (use max uint for all available tokens)
-    /// @param receiver Account receiving the borrowed tokens (use zero address for authenticated account)
+    /// @param assets In underlying units (use max uint256 for all available tokens)
+    /// @param receiver Account receiving the borrowed tokens
     function borrow(uint256 assets, address receiver) external;
 
     /// @notice Transfer underlying tokens from the sender to the vault, and decrease receiver's debt
     /// @param assets In underlying units (use max uint256 for full debt)
-    /// @param receiver Account holding the debt to be repaid (use zero address for authenticated acount).
+    /// @param receiver Account holding the debt to be repaid
     function repay(uint256 assets, address receiver) external;
 
     /// @notice Mint shares and a corresponding amount of debt ("self-borrow")
     /// @param assets In underlying units
-    /// @param sharesReceiver Account to receive the created shares (use zero address for authenticated acount).
+    /// @param sharesReceiver Account to receive the created shares
     /// @return Amount of shares created
     function loop(uint256 assets, address sharesReceiver) external returns (uint256);
 
     /// @notice Pay off liability with shares ("self-repay")
-    /// @param assets In underlying units (use max uint to repay the debt in full or up to the available underlying balance)
-    /// @param debtFrom Account to remove debt from by burning sender's shares (use zero address for authenticated acount).
+    /// @param assets In underlying units (use max uint256 to repay the debt in full or up to the available underlying balance)
+    /// @param debtFrom Account to remove debt from by burning sender's shares
     /// @return Amount of shares burned
     function deloop(uint256 assets, address debtFrom) external returns (uint256);
 
     /// @notice Take over debt from another account
-    /// @param assets Amount of debt in underlying units (use max for all the account's debt)
+    /// @param assets Amount of debt in underlying units (use max uint256 for all the account's debt)
     /// @param from Account to pull the debt from
     function pullDebt(uint256 assets, address from) external;
 
@@ -237,7 +237,7 @@ interface ILiquidation {
     /// @notice Attempts to perform a liquidation
     /// @param violator Address that may be in collateral violation
     /// @param collateral Collateral which is to be seized
-    /// @param repayAssets The amount of underlying debt to be transferred from violator to sender, in asset units (use max to repay the maximum possible amount).
+    /// @param repayAssets The amount of underlying debt to be transferred from violator to sender, in asset units (use max uint256 to repay the maximum possible amount).
     /// @param minYieldBalance The minimum acceptable amount of collateral to be transferred from violator to sender, in collateral balance units (shares for vaults)
     function liquidate(address violator, address collateral, uint256 repayAssets, uint256 minYieldBalance)
         external;
