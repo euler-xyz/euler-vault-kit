@@ -32,11 +32,13 @@ contract ERC4626Test_Skim is EVaultTestBase {
 
         assertEq(eTST.balanceOf(user), 0);
 
-        uint shares = eTST.skim(value, user);
+        eTST.skim(value, user);
 
         assertEq(eTST.balanceOf(user), value);
+        assertEq(eTST.cash(), value);
 
-        //assertEq(eTST.cash(), value);
+        eTST.withdraw(1e7, user, user);
+        assertEq(assetTST.balanceOf(address(eTST)), amount - value);
     }
 
     function test_RevertIfInsufficientAssets() public {
@@ -44,7 +46,6 @@ contract ERC4626Test_Skim is EVaultTestBase {
         vm.startPrank(user);
         assetTST.transfer(address(eTST), amount);
 
-        uint balance;
         uint value1 = 22e18;
 
         assertEq(eTST.balanceOf(user), 0);
@@ -52,24 +53,21 @@ contract ERC4626Test_Skim is EVaultTestBase {
         vm.expectRevert(Errors.E_InsufficientAssets.selector);
         eTST.skim(value1, user);
 
-        uint vaultBalance = assetTST.balanceOf(address(eTST));
-        console2.log(vaultBalance);
-
         uint value2 = 1e18;
 
         eTST.skim(value2, user);
-
-        balance = eTST.balanceOf(user);
-        console2.log(value2, balance);
-
-        assertEq(eTST.balanceOf(user), value2); //real: 1000000000000000000 (1e18)
+        assertEq(eTST.balanceOf(user), value2);
         
         eTST.skim(value2, user);
+        assertEq(eTST.balanceOf(user), value2*2);
 
-        uint balance1 = eTST.balanceOf(user);
-        console2.log(value2, balance1);
+        uint value3 = 18e18;
 
-        assertEq(eTST.balanceOf(user), value2*2); // real: 1000000000002000000000000000000
+        eTST.skim(value3, user);
+        assertEq(eTST.balanceOf(user), amount);
+
+        vm.expectRevert(Errors.E_InsufficientAssets.selector);
+        eTST.skim(1, user);
     }
 
     function test_zeroAmount() public {
@@ -100,6 +98,9 @@ contract ERC4626Test_Skim is EVaultTestBase {
 
         assertEq(result, amount);
         assertEq(eTST.balanceOf(user), amount);
+
+        eTST.skim(value, user);
+        assertEq(eTST.balanceOf(user), amount);
     }
 
     function test_maxSaneAmount() public {
@@ -119,7 +120,7 @@ contract ERC4626Test_Skim is EVaultTestBase {
         assertEq(result, value);
         assertEq(eTST.balanceOf(user), value);
 
-        vm.expectRevert(Errors.E_AmountTooLargeToEncode.selector);
+        vm.expectRevert(Errors.E_InsufficientAssets.selector);
         eTST.skim(1, user);
     }
 
@@ -131,7 +132,6 @@ contract ERC4626Test_Skim is EVaultTestBase {
         uint value = 1e18;
 
         eTST.skim(value, address(0));
-
         assertEq(eTST.balanceOf(user), value);
     }
     
