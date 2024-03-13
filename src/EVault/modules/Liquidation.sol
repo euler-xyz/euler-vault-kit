@@ -18,10 +18,11 @@ abstract contract LiquidationModule is ILiquidation, Base, BalanceUtils, Liquidi
         address collateral;
         address[] collaterals;
         bool debtSocialization;
-        Assets owed;
+        Assets owed; // Not an Owed type?
 
         Assets repay;
-        uint256 yieldBalance;
+        uint256 yieldBalance; // This is the collateral obtained by the liquidator. Maybe we can call it `reward`? Or `award`? Or `yield`?
+        // Why is `yieldBalance` not Assets type?
     }
 
     /// @inheritdoc ILiquidation
@@ -51,7 +52,7 @@ abstract contract LiquidationModule is ILiquidation, Base, BalanceUtils, Liquidi
             calculateLiquidation(marketCache, liquidator, violator, collateral, repayAssets);
 
         // liquidation is a no-op if there's no violation
-        if (!liqCache.repay.isZero()) {
+        if (!liqCache.repay.isZero()) { // This means that if `calculateMaxLiquidation` returns with zero repay because the collateral is worthless, or there is no collateral, we don't continue to the bad debt socialization code block. In other words, bad debt socialization can only happen if liquidators get to liquidate some of the debt in time.
             executeLiquidation(marketCache, liqCache, minYieldBalance);
         }
     }
@@ -76,30 +77,30 @@ abstract contract LiquidationModule is ILiquidation, Base, BalanceUtils, Liquidi
 
 
         // Self liquidation is not allowed
-        if (liqCache.violator == liqCache.liquidator) revert E_SelfLiquidation();
-        // Only liquidate audited collaterals to make sure yield transfer has no side effects.
+        if (liqCache.violator == liqCache.liquidator) revert E_SelfLiquidation(); // Wouldn't be easy to sidestep this?
+        // Only liquidate audited collaterals to make sure yield transfer has no side effects. // Is "audited" the right word?
         if (!marketStorage.ltvLookup[liqCache.collateral].initialised()) revert E_BadCollateral();
-        // Make sure violator has debt in this vault
+        // Verify this vault is the controller for the violator
         verifyController(liqCache.violator);
-        // Violator must have enabled the collateral
+        // Violator must have enabled the collateral to be transferred to the liquidator
         if (!isCollateralEnabled(liqCache.violator, liqCache.collateral)) revert E_CollateralDisabled();
         // Violator's health check must not be deferred, meaning no prior operations on violator's account 
-        // would possibly be forgiven after enforced collateral yield transfer
+        // would possibly be forgiven after the enforced collateral transfer to the liquidator
         if (isAccountStatusCheckDeferred(violator)) revert E_ViolatorLiquidityDeferred();
 
         // Calculate max yield and repay
 
         liqCache = calculateMaxLiquidation(liqCache, marketCache);
-        if (liqCache.repay.isZero()) return liqCache; // no liquidation opportunity found
+        if (liqCache.repay.isZero()) return liqCache; // no liquidation opportunity found -- Maybe check liqCache.yieldBalance.isZero() instead if you want to let liquidations progress to bad debt socialization
 
         // Adjust for desired repay
 
-        if (desiredRepay != type(uint256).max) {
-            uint256 maxRepay = liqCache.repay.toUint();
-            if (desiredRepay > maxRepay) revert E_ExcessiveRepayAmount();
+        if (desiredRepay != type(uint256).max) { // The liquidator can enter `type(uint256).max` as `repayAssets` to repay the whole debt.
+            uint256 maxRepay = liqCache.repay.toUint(); // `maxRepay` means repaying the maximum allowed by the liquidation algorithm, not necessarily the whole debt
+            if (desiredRepay > maxRepay) revert E_ExcessiveRepayAmount(); // Why don't we cap to `maxRepay` instead of reverting?
 
-            liqCache.yieldBalance = desiredRepay * liqCache.yieldBalance / maxRepay;
-            liqCache.repay = desiredRepay.toAssets();
+            liqCache.yieldBalance = desiredRepay * liqCache.yieldBalance / maxRepay; // `liqCache.yieldBalance` was calculated as the collateral transferred for repaying `maxRepay`, so if the liquidator wants to repay less, we award a proportional amount of collateral. 
+            liqCache.repay = desiredRepay.toAssets(); // BorrowUtils.transferBorrow takes Assets as a parameter.
         }
     }
 
@@ -109,14 +110,14 @@ abstract contract LiquidationModule is ILiquidation, Base, BalanceUtils, Liquidi
     ) private view returns (LiquidationCache memory) {
         liqCache.owed = getCurrentOwed(marketCache, liqCache.violator).toAssetsUp();
         // violator has no liabilities
-        if (liqCache.owed.isZero()) return liqCache;
+        if (liqCache.owed.isZero()) return liqCache; // This means liqCache.repay will still be zero, and there will be no liquidation
 
-        liqCache.collaterals = getCollaterals(liqCache.violator);
+        liqCache.collaterals = getCollaterals(liqCache.violator); // A bit weird to assign this here
 
         (uint256 liquidityCollateralValue, uint256 liquidityLiabilityValue) = calculateLiquidity(marketCache, liqCache.violator, liqCache.collaterals, LTVType.LIQUIDATION);
 
         // no violation
-        if (liquidityCollateralValue >= liquidityLiabilityValue) return liqCache;
+        if (liquidityCollateralValue >= liquidityLiabilityValue) return liqCache; // This means liqCache.repay will still be zero, and there will be no liquidation
 
         // At this point healthScore must be < 1 since collateral < liability
 
@@ -154,7 +155,7 @@ abstract contract LiquidationModule is ILiquidation, Base, BalanceUtils, Liquidi
 
         liqCache.repay = (maxRepayValue * liqCache.owed.toUint() / liabilityValue).toAssets();
         liqCache.yieldBalance = maxYieldValue * collateralBalance / collateralValue;
-        liqCache.debtSocialization = marketStorage.debtSocialization;
+        liqCache.debtSocialization = marketStorage.debtSocialization; // A bit weird to assign this here
 
         return liqCache;
     }
