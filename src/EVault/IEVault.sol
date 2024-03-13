@@ -325,7 +325,7 @@ interface IGovernance {
     /// @return targetLTV current regular LTV or target LTV that the ramped LTV will reach after ramp is over
     /// @return rampDuration ramp duration in seconds
     /// @return originalLTV previous LTV value, where the ramp starts
-    function LTVFull(address collateral) external view returns (uint40 targetTimestamp, uint16 targetLTV, uint24 rampDuration, uint16 originalLTV);
+    function LTVFull(address collateral) external view returns (uint48 targetTimestamp, uint16 targetLTV, uint32 rampDuration, uint16 originalLTV);
 
     /// @notice Retrieves a list of collaterals with configured LTVs
     /// @return List of asset collaterals
@@ -380,7 +380,7 @@ interface IGovernance {
     /// @param collateral Address of collateral to set LTV for
     /// @param ltv New LTV in CONFIG_SCALE (60 000)
     /// @param rampDuration Ramp duration in seconds
-    function setLTV(address collateral, uint16 ltv, uint24 rampDuration) external;
+    function setLTV(address collateral, uint16 ltv, uint32 rampDuration) external;
 
     /// @notice Completely clears LTV configuratrion, signalling the collateral is not considered safe to liquidate anymore
     /// @param collateral Address of collateral
