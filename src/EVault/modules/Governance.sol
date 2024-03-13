@@ -224,7 +224,7 @@ abstract contract GovernanceModule is IGovernance, Base, BalanceUtils, LTVUtils 
 
         marketStorage.ltvLookup[collateral] = newLTV;
 
-        if (!origLTV.initialized()) marketStorage.ltvList.push(collateral);
+        if (!origLTV.initialized) marketStorage.ltvList.push(collateral);
 
         emit GovSetLTV(collateral, newLTV.targetTimestamp, newLTV.targetLTV.toUint16(), newLTV.rampDuration, newLTV.originalLTV.toUint16());
     }

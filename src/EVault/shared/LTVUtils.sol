@@ -11,6 +11,6 @@ abstract contract LTVUtils is Storage {
     }
 
     function isRecognizedCollateral(address collateral) internal view virtual returns (bool) {
-        return marketStorage.ltvLookup[collateral].initialized();
+        return marketStorage.ltvLookup[collateral].isRecognizedCollateral();
     }
 }

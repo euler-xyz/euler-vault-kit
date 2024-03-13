@@ -12,10 +12,11 @@ struct LTVConfig {
     ConfigAmount targetLTV;
     uint24 rampDuration;
     ConfigAmount originalLTV;
+    bool initialized; // flag is se
 }
 
 library LTVConfigLib {
-    function initialized(LTVConfig memory self) internal pure returns (bool) {
+    function isRecognizedCollateral(LTVConfig memory self) internal pure returns (bool) {
         return self.targetTimestamp != 0;
     }
 
@@ -42,6 +43,7 @@ library LTVConfigLib {
         newLTV.targetLTV = targetLTV;
         newLTV.rampDuration = rampDuration;
         newLTV.originalLTV = self.getLTV(LTVType.LIQUIDATION);
+        newLTV.initialized = true;
     }
 
     function clear(LTVConfig storage self) internal {
