@@ -62,7 +62,40 @@ abstract contract Dispatch is
 
     // Modifier proxies the function call to a module and low-level returns the result
     modifier use(address module) {
-        _;
+        _; // when using the modifier, it is assumed the function body is empty and no code will run before delegating to module.
+        delegateToModule(module);
+    }
+
+    // Delegate call can't be used in a view function. To work around this limitation,
+    // static call `this.viewDelegate()` function, which in turn will delegate the payload to a module.
+    modifier useView(address module) {
+        _; // when using the modifier, it is assumed the function body is empty and no code will run before delegating to module.
+        delegateToModuleView(module);
+    }
+
+    modifier callThroughEVC() {
+        if (msg.sender == address(evc)) {
+            _;
+        } else {
+            routeThroughEVC();
+        }
+    }
+
+    function viewDelegate() external {
+        if (msg.sender != address(this)) revert E_Unauthorized();
+
+        assembly {
+            let size := sub(calldatasize(), 36)
+            calldatacopy(0, 36, size)
+            let result := delegatecall(gas(), calldataload(4), 0, size, 0, 0)
+            returndatacopy(0, 0, returndatasize())
+            switch result
+            case 0 { revert(0, returndatasize()) }
+            default { return(0, returndatasize()) }
+        }
+    }
+
+    function delegateToModule(address module) private {
         assembly {
             calldatacopy(0, 0, calldatasize())
             let result := delegatecall(gas(), module, 0, calldatasize(), 0, 0)
@@ -73,10 +106,7 @@ abstract contract Dispatch is
         }
     }
 
-    // Delegate call can't be used in a view function. To work around this limitation,
-    // static call `this.viewDelegate()` function, which in turn will delegate the payload to a module.
-    modifier useView(address module) {
-        _;
+    function delegateToModuleView(address module) private view {
         assembly {
             // Construct optimized custom call data for `this.viewDelegate()`
             // [selector 4B][module address 32B][calldata with stripped proxy metadata]
@@ -93,42 +123,24 @@ abstract contract Dispatch is
         }
     }
 
-    modifier callThroughEVC() {
-        if (msg.sender == address(evc)) {
-            _;
-        } else {
-            address _evc = address(evc);
-            assembly {
-                let mainCalldataLength := sub(calldatasize(), PROXY_METADATA_LENGTH)
-
-                mstore(0, 0x1f8b521500000000000000000000000000000000000000000000000000000000) // EVC.call signature
-                mstore(4, address()) // EVC.call 1st argument - address(this)
-                mstore(36, caller()) // EVC.call 2nd argument - msg.sender
-                mstore(68, callvalue()) // EVC.call 3rd argument - msg.value
-                mstore(100, 128) // EVC.call 4th argument - msg.data, offset to the start of encoding - 128 bytes
-                mstore(132, mainCalldataLength) // msg.data length without proxy metadata
-                calldatacopy(164, 0, mainCalldataLength) // original calldata
-                let result := call(gas(), _evc, callvalue(), 0, add(164, mainCalldataLength), 0, 0)
-
-                returndatacopy(0, 0, returndatasize())
-                switch result
-                case 0 { revert(0, returndatasize()) }
-                default { return(64, sub(returndatasize(), 64)) } // strip bytes encoding from call return
-            }
-        }
-    }
-
-    function viewDelegate() external {
-        if (msg.sender != address(this)) revert E_Unauthorized();
-
+    function routeThroughEVC() private {
+        address _evc = address(evc);
         assembly {
-            let size := sub(calldatasize(), 36)
-            calldatacopy(0, 36, size)
-            let result := delegatecall(gas(), calldataload(4), 0, size, 0, 0)
+            let mainCalldataLength := sub(calldatasize(), PROXY_METADATA_LENGTH)
+
+            mstore(0, 0x1f8b521500000000000000000000000000000000000000000000000000000000) // EVC.call signature
+            mstore(4, address()) // EVC.call 1st argument - address(this)
+            mstore(36, caller()) // EVC.call 2nd argument - msg.sender
+            mstore(68, callvalue()) // EVC.call 3rd argument - msg.value
+            mstore(100, 128) // EVC.call 4th argument - msg.data, offset to the start of encoding - 128 bytes
+            mstore(132, mainCalldataLength) // msg.data length without proxy metadata
+            calldatacopy(164, 0, mainCalldataLength) // original calldata
+            let result := call(gas(), _evc, callvalue(), 0, add(164, mainCalldataLength), 0, 0)
+
             returndatacopy(0, 0, returndatasize())
             switch result
             case 0 { revert(0, returndatasize()) }
-            default { return(0, returndatasize()) }
+            default { return(64, sub(returndatasize(), 64)) } // strip bytes encoding from call return
         }
     }
 }
