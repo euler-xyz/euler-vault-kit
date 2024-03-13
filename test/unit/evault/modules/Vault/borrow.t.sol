@@ -15,12 +15,14 @@ contract ERC4626Test_Borrow is EVaultTestBase {
 
     address depositor;
     address borrower;
+    address borrower2;
 
     function setUp() public override {
         super.setUp();
 
         depositor = makeAddr("depositor");
         borrower = makeAddr("borrower");
+        borrower2 = makeAddr("borrower_2");
 
         // Setup
 
@@ -109,5 +111,99 @@ contract ERC4626Test_Borrow is EVaultTestBase {
         eTST.repay(type(uint256).max, borrower);
 
         assertEq(eTST.debtOf(borrower), 0);
+    }
+
+    function test_pullDebt_when_from_equal_account() public {
+        startHoax(borrower);
+        uint256 amountToBorrow = 5e18;
+
+        evc.enableCollateral(borrower, address(eTST2));
+        evc.enableController(borrower, address(eTST));
+
+        eTST.borrow(amountToBorrow, borrower);
+        assertEq(assetTST.balanceOf(borrower), amountToBorrow);
+
+        vm.expectRevert(Errors.E_SelfTransfer.selector);
+        eTST.pullDebt(amountToBorrow, borrower);
+    }
+
+    function test_pullDebt_zero_amount() public {
+        startHoax(borrower);
+        uint256 amountToBorrow = 5e18;
+
+        evc.enableCollateral(borrower, address(eTST2));
+        evc.enableController(borrower, address(eTST));
+
+        eTST.borrow(amountToBorrow, borrower);
+        assertEq(assetTST.balanceOf(borrower), amountToBorrow);
+        vm.stopPrank();
+
+
+        startHoax(borrower2);
+
+        evc.enableCollateral(borrower2, address(eTST2));
+        evc.enableController(borrower2, address(eTST));
+
+        eTST.pullDebt(0, borrower);
+        vm.stopPrank();
+
+        assertEq(eTST.debtOf(borrower), amountToBorrow);
+        assertEq(eTST.debtOf(borrower2), 0);
+    }
+
+    function test_pullDebt_full_amount() public {
+        startHoax(borrower);
+        uint256 amountToBorrow = 5e18;
+
+        evc.enableCollateral(borrower, address(eTST2));
+        evc.enableController(borrower, address(eTST));
+
+        eTST.borrow(amountToBorrow, borrower);
+        assertEq(assetTST.balanceOf(borrower), amountToBorrow);
+
+        // transfering some minted asset to borrower2
+        assetTST2.transfer(borrower2, 10e18);
+        vm.stopPrank();
+
+
+        startHoax(borrower2);
+
+        // deposit into eTST2 to cover the liability from pullDebt
+        assetTST2.approve(address(eTST2), type(uint256).max);
+        eTST2.deposit(10e18, borrower2);
+
+        evc.enableCollateral(borrower2, address(eTST2));
+        evc.enableController(borrower2, address(eTST));
+
+        eTST.pullDebt(type(uint256).max, borrower);
+        vm.stopPrank();
+
+        assertEq(assetTST.balanceOf(borrower), amountToBorrow);
+        assertEq(assetTST.balanceOf(borrower2), 0);
+        assertEq(eTST.debtOf(borrower), 0);
+        assertEq(eTST.debtOf(borrower2), amountToBorrow);
+    }
+
+    function test_pullDebt_amount_gt_debt() public {
+        startHoax(borrower);
+        uint256 amountToBorrow = 5e18;
+
+        evc.enableCollateral(borrower, address(eTST2));
+        evc.enableController(borrower, address(eTST));
+
+        eTST.borrow(amountToBorrow, borrower);
+        assertEq(assetTST.balanceOf(borrower), amountToBorrow);
+        assertEq(eTST.debtOf(borrower), amountToBorrow);
+        vm.stopPrank();
+
+
+        startHoax(borrower2);
+
+        evc.enableCollateral(borrower2, address(eTST2));
+        evc.enableController(borrower2, address(eTST));
+
+        vm.expectRevert(Errors.E_InsufficientBalance.selector);
+        eTST.pullDebt(amountToBorrow+1, borrower);
+        vm.stopPrank();
     }
 }

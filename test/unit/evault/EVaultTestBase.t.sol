@@ -36,7 +36,7 @@ import {AssertionsCustomTypes} from "../../helpers/AssertionsCustomTypes.sol";
 
 import "src/EVault/shared/Constants.sol";
 
-contract EVaultTestBase is Test, AssertionsCustomTypes, DeployPermit2 {
+contract EVaultTestBase is AssertionsCustomTypes, Test, DeployPermit2 {
     EthereumVaultConnector public evc;
     address admin;
     address feeReceiver;

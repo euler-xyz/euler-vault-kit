@@ -10,3 +10,4 @@ out/
 # Dotenv file
 .env
 .vscode
+lcov.info

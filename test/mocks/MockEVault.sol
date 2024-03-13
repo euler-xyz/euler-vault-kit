@@ -21,4 +21,8 @@ contract MockEVault {
         (address marketAsset) = UNPACK();
         return (arg, msg.sender, marketAsset);
     }
+
+    function testExcludeFromCoverage() public pure {
+        return;
+    }
 }
