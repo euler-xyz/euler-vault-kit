@@ -207,6 +207,7 @@ abstract contract VaultModule is IVault, Base, AssetTransfers, BalanceUtils {
         if (shares.isZero()) revert E_ZeroShares();
 
         increaseBalance(marketCache, receiver, account, shares, assets);
+        marketStorage.cash = marketCache.cash = marketCache.cash + assets;
 
         return shares.toUint();
     }
