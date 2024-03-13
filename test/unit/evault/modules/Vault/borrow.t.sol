@@ -85,6 +85,9 @@ contract ERC4626Test_Borrow is EVaultTestBase {
     function test_repayWithPermit2() public {
         startHoax(borrower);
 
+        evc.enableCollateral(borrower, address(eTST2));
+        evc.enableController(borrower, address(eTST));
+
         eTST.borrow(5e18, borrower);
         assertEq(assetTST.balanceOf(borrower), 5e18);
 
@@ -109,15 +112,15 @@ contract ERC4626Test_Borrow is EVaultTestBase {
 
         assertEq(eTST.debtOf(borrower), 0);
     }
-    
+
     function test_pullDebt_when_from_equal_account() public {
         startHoax(borrower);
         uint256 amountToBorrow = 5e18;
 
         evc.enableCollateral(borrower, address(eTST2));
         evc.enableController(borrower, address(eTST));
-        
-        eTST.borrow(amountToBorrow, address(0));
+
+        eTST.borrow(amountToBorrow, borrower);
         assertEq(assetTST.balanceOf(borrower), amountToBorrow);
 
         vm.expectRevert(Errors.E_SelfTransfer.selector);
@@ -131,7 +134,7 @@ contract ERC4626Test_Borrow is EVaultTestBase {
         evc.enableCollateral(borrower, address(eTST2));
         evc.enableController(borrower, address(eTST));
 
-        eTST.borrow(amountToBorrow, address(0));
+        eTST.borrow(amountToBorrow, borrower);
         assertEq(assetTST.balanceOf(borrower), amountToBorrow);
         vm.stopPrank();
 
@@ -155,7 +158,7 @@ contract ERC4626Test_Borrow is EVaultTestBase {
         evc.enableCollateral(borrower, address(eTST2));
         evc.enableController(borrower, address(eTST));
 
-        eTST.borrow(amountToBorrow, address(0));
+        eTST.borrow(amountToBorrow, borrower);
         assertEq(assetTST.balanceOf(borrower), amountToBorrow);
 
         // transfering some minted asset to borrower2
@@ -188,7 +191,7 @@ contract ERC4626Test_Borrow is EVaultTestBase {
         evc.enableCollateral(borrower, address(eTST2));
         evc.enableController(borrower, address(eTST));
 
-        eTST.borrow(amountToBorrow, address(0));
+        eTST.borrow(amountToBorrow, borrower);
         assertEq(assetTST.balanceOf(borrower), amountToBorrow);
         assertEq(eTST.debtOf(borrower), amountToBorrow);
         vm.stopPrank();
