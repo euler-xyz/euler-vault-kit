@@ -4,7 +4,7 @@ pragma solidity ^0.8.0;
 
 import {Base} from "./Base.sol";
 import {DToken} from "../DToken.sol";
-
+import {IIRM} from "../../interestRateModels/IIRM.sol";
 
 import "./types/Types.sol";
 
@@ -90,6 +90,28 @@ abstract contract BorrowUtils is Base {
 
         logBorrowChange(from, fromOwedPrev, fromOwed);
         logBorrowChange(to, toOwedPrev, toOwed);
+    }
+
+    function updateInterestRate(MarketCache memory marketCache) internal virtual returns (uint256) {
+        // single sload
+        address irm = marketStorage.interestRateModel;
+        uint256 newInterestRate = marketStorage.interestRate;
+
+        if (irm != address(0)) {
+            (bool success, bytes memory data) = irm.call(abi.encodeCall(IIRM.computeInterestRate, (
+                                                                            address(this),
+                                                                            marketCache.cash.toUint(),
+                                                                            marketCache.totalBorrows.toAssetsUp().toUint()
+                                                                       )));
+
+            if (success && data.length >= 32) {
+                newInterestRate = abi.decode(data, (uint));
+                if (newInterestRate > MAX_ALLOWED_INTEREST_RATE) newInterestRate = MAX_ALLOWED_INTEREST_RATE;
+                marketStorage.interestRate = uint72(newInterestRate);
+            }
+        }
+
+        return newInterestRate;
     }
 
     function calculateDTokenAddress() internal view returns (address dToken) {
