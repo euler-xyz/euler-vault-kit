@@ -79,7 +79,7 @@ abstract contract LiquidationModule is ILiquidation, Base, BalanceUtils, Liquidi
 
         // Self liquidation is not allowed
         if (liqCache.violator == liqCache.liquidator) revert E_SelfLiquidation();
-        // Only liquidate audited collaterals to make sure yield transfer has no side effects.
+        // Only liquidate trusted collaterals to make sure yield transfer has no side effects.
         if (!isRecognizedCollateral(liqCache.collateral)) revert E_BadCollateral();
         // Make sure violator has debt in this vault
         verifyController(liqCache.violator);

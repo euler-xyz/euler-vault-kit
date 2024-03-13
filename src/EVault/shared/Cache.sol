@@ -66,7 +66,7 @@ contract Cache is Storage, Errors {
             dirty = true;
 
             if (marketCache.disabledOps.get(OP_ACCRUE_INTEREST)) {
-                marketCache.lastInterestAccumulatorUpdate = uint40(block.timestamp);
+                marketCache.lastInterestAccumulatorUpdate = uint48(block.timestamp);
                 return dirty;
             }
 
@@ -106,7 +106,7 @@ contract Cache is Storage, Errors {
             if (newTotalShares <= MAX_SANE_AMOUNT && newTotalBorrows <= MAX_SANE_DEBT_AMOUNT) {
                 marketCache.totalBorrows = newTotalBorrows.toOwed();
                 marketCache.interestAccumulator = newInterestAccumulator;
-                marketCache.lastInterestAccumulatorUpdate = uint40(block.timestamp);
+                marketCache.lastInterestAccumulatorUpdate = uint48(block.timestamp);
 
                 if (newTotalShares != Shares.unwrap(marketCache.totalShares)) {
                     marketCache.accumulatedFees = newAccumulatedFees.toShares();

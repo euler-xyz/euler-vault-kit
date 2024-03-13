@@ -175,7 +175,7 @@ contract EVault is Dispatch {
 
     function liquidationLTV(address collateral) external override useView(MODULE_GOVERNANCE) view returns (uint16) {}
 
-    function LTVFull(address collateral) external override useView(MODULE_GOVERNANCE) view returns (uint40 targetTimestamp, uint16 targetLTV, uint24 rampDuration, uint16 originalLTV) {}
+    function LTVFull(address collateral) external override useView(MODULE_GOVERNANCE) view returns (uint48 targetTimestamp, uint16 targetLTV, uint32 rampDuration, uint16 originalLTV) {}
 
     function LTVList() external override useView(MODULE_GOVERNANCE) view returns (address[] memory) {}
 
@@ -208,7 +208,7 @@ contract EVault is Dispatch {
 
     function setFeeReceiver(address newFeeReceiver) external override use(MODULE_GOVERNANCE) {}
 
-    function setLTV(address collateral, uint16 ltv, uint24 rampDuration) external override use(MODULE_GOVERNANCE) {}
+    function setLTV(address collateral, uint16 ltv, uint32 rampDuration) external override use(MODULE_GOVERNANCE) {}
 
     function clearLTV(address collateral) external override use(MODULE_GOVERNANCE) {}
 

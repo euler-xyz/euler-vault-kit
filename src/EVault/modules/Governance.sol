@@ -25,7 +25,7 @@ abstract contract GovernanceModule is IGovernance, Base, BalanceUtils, BorrowUti
     event GovSetGovernorAdmin(address indexed newGovernorAdmin);
     event GovSetPauseGuardian(address newPauseGuardian);
     event GovSetFeeReceiver(address indexed newFeeReceiver);
-    event GovSetLTV(address indexed collateral, uint40 targetTimestamp, uint16 targetLTV, uint24 rampDuration, uint16 originalLTV);
+    event GovSetLTV(address indexed collateral, uint48 targetTimestamp, uint16 targetLTV, uint32 rampDuration, uint16 originalLTV);
     event GovSetIRM(address interestRateModel);
     event GovSetDisabledOps(uint32 newDisabledOps);
     event GovSetCaps(uint16 newSupplyCap, uint16 newBorrowCap);
@@ -84,7 +84,7 @@ abstract contract GovernanceModule is IGovernance, Base, BalanceUtils, BorrowUti
     }
 
     /// @inheritdoc IGovernance
-    function LTVFull(address collateral) external view virtual reentrantOK returns (uint40, uint16, uint24, uint16) {
+    function LTVFull(address collateral) external view virtual reentrantOK returns (uint48, uint16, uint32, uint16) {
         LTVConfig memory ltv = marketStorage.ltvLookup[collateral];
         return (
             ltv.targetTimestamp,
@@ -216,7 +216,7 @@ abstract contract GovernanceModule is IGovernance, Base, BalanceUtils, BorrowUti
     }
 
     /// @inheritdoc IGovernance
-    function setLTV(address collateral, uint16 ltv, uint24 rampDuration) external virtual nonReentrant governorOnly {
+    function setLTV(address collateral, uint16 ltv, uint32 rampDuration) external virtual nonReentrant governorOnly {
         // self-collateralization is not allowed
         if (collateral == address(this)) revert E_InvalidLTVAsset();
 
@@ -225,7 +225,7 @@ abstract contract GovernanceModule is IGovernance, Base, BalanceUtils, BorrowUti
 
         marketStorage.ltvLookup[collateral] = newLTV;
 
-        if (!origLTV.initialized()) marketStorage.ltvList.push(collateral);
+        if (!origLTV.initialized) marketStorage.ltvList.push(collateral);
 
         emit GovSetLTV(collateral, newLTV.targetTimestamp, newLTV.targetLTV.toUint16(), newLTV.rampDuration, newLTV.originalLTV.toUint16());
     }
