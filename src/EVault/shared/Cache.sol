@@ -75,8 +75,18 @@ contract Cache is Storage, Errors {
             ConfigAmount interestFee = marketStorage.interestFee;
             uint256 interestRate = marketStorage.interestRate;
 
-            uint256 newInterestAccumulator =
-                (RPow.rpow(interestRate + 1e27, deltaT, 1e27) * marketCache.interestAccumulator) / 1e27;
+            uint256 newInterestAccumulator = marketCache.interestAccumulator;
+
+            unchecked {
+                (uint256 multiplier, bool overflow) = RPow.rpow(interestRate + 1e27, deltaT, 1e27);
+
+                if (!overflow) {
+                    uint256 intermediate = newInterestAccumulator * multiplier;
+                    if (newInterestAccumulator == intermediate / multiplier) {
+                        newInterestAccumulator = intermediate / 1e27;
+                    }
+                }
+            }
 
             uint256 newTotalBorrows =
                 marketCache.totalBorrows.toUint() * newInterestAccumulator / marketCache.interestAccumulator;

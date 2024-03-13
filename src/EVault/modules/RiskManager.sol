@@ -109,15 +109,13 @@ abstract contract RiskManagerModule is IRiskManager, Base, LiquidityUtils {
         uint256 newInterestRate = marketStorage.interestRate;
 
         if (irm != address(0)) {
-            uint256 borrows = marketCache.totalBorrows.toAssetsUp().toUint();
-            uint256 totalAssets = marketCache.cash.toUint() + borrows;
+            (bool success, bytes memory data) = irm.call(abi.encodeCall(IIRM.computeInterestRate, (
+                                                                            address(this),
+                                                                            marketCache.cash.toUint(),
+                                                                            marketCache.totalBorrows.toAssetsUp().toUint()
+                                                                       )));
 
-            uint32 utilisation = totalAssets == 0
-                ? 0 // empty pool arbitrarily given utilisation of 0
-                : uint32(borrows * (uint256(type(uint32).max) * 1e18) / totalAssets / 1e18);
-
-            (bool success, bytes memory data) = irm.call(abi.encodeCall(IIRM.computeInterestRate, (address(this), address(marketCache.asset), utilisation)));
-            if (success) {
+            if (success && data.length >= 32) {
                 newInterestRate = abi.decode(data, (uint));
                 if (newInterestRate > MAX_ALLOWED_INTEREST_RATE) newInterestRate = MAX_ALLOWED_INTEREST_RATE;
                 marketStorage.interestRate = uint72(newInterestRate);

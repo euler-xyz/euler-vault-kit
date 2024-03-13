@@ -2,9 +2,9 @@
 
 pragma solidity ^0.8.0;
 
-import "./BaseIRM.sol";
+import "./IIRM.sol";
 
-contract BaseIRMLinearKink is BaseIRM {
+contract BaseIRMLinearKink is IIRM {
     uint256 public immutable baseRate;
     uint256 public immutable slope1;
     uint256 public immutable slope2;
@@ -17,7 +17,13 @@ contract BaseIRMLinearKink is BaseIRM {
         kink = kink_;
     }
 
-    function computeInterestRateImpl(address, address, uint32 utilisation) internal view override returns (uint256) {
+    function computeInterestRate(address, uint256 cash, uint256 borrows) external view override returns (uint256) {
+        uint256 totalAssets = cash + borrows;
+
+        uint32 utilisation = totalAssets == 0
+           ? 0 // empty pool arbitrarily given utilisation of 0
+           : uint32(borrows * type(uint32).max / totalAssets);
+
         uint256 ir = baseRate;
 
         if (utilisation <= kink) {
@@ -27,6 +33,6 @@ contract BaseIRMLinearKink is BaseIRM {
             ir += slope2 * (utilisation - kink);
         }
 
-        return uint256(ir);
+        return ir;
     }
 }

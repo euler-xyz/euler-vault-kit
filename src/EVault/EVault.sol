@@ -212,7 +212,7 @@ contract EVault is Dispatch {
 
     function clearLTV(address collateral) external override use(MODULE_GOVERNANCE) {}
 
-    function setIRM(address newModel, bytes calldata resetParams) external override use(MODULE_GOVERNANCE) {}
+    function setIRM(address newModel) external override use(MODULE_GOVERNANCE) {}
 
     function setDisabledOps(uint32 newDisabledOps) external override use(MODULE_GOVERNANCE) {}
 
