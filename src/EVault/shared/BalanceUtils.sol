@@ -65,25 +65,28 @@ abstract contract BalanceUtils is Base {
     }
 
     function transferBalance(address from, address to, Shares amount) internal {
-        (Shares origFromBalance, bool fromBalanceForwarderEnabled) =
-            marketStorage.users[from].getBalanceAndBalanceForwarder();
-        (Shares origToBalance, bool toBalanceForwarderEnabled) = marketStorage.users[to].getBalanceAndBalanceForwarder();
-        if (origFromBalance < amount) revert E_InsufficientBalance();
+        if (!amount.isZero()) {
+            (Shares origFromBalance, bool fromBalanceForwarderEnabled) =
+                marketStorage.users[from].getBalanceAndBalanceForwarder();
+            (Shares origToBalance, bool toBalanceForwarderEnabled) = marketStorage.users[to].getBalanceAndBalanceForwarder();
+            if (origFromBalance < amount) revert E_InsufficientBalance();
 
-        Shares newFromBalance;
-        unchecked {
-            newFromBalance = origFromBalance - amount;
-        }
-        Shares newToBalance = origToBalance + amount;
+            Shares newFromBalance;
+            unchecked {
+                newFromBalance = origFromBalance - amount;
+            }
+            Shares newToBalance = origToBalance + amount;
 
-        marketStorage.users[from].setBalance(newFromBalance);
-        marketStorage.users[to].setBalance(newToBalance);
+            marketStorage.users[from].setBalance(newFromBalance);
+            marketStorage.users[to].setBalance(newToBalance);
 
-        if (fromBalanceForwarderEnabled) {
-            tryBalanceTrackerHook(from, newFromBalance.toUint(), isControlCollateralInProgress());
-        }
-        if (toBalanceForwarderEnabled) {
-            tryBalanceTrackerHook(to, newToBalance.toUint(), false);
+
+            if (fromBalanceForwarderEnabled) {
+                tryBalanceTrackerHook(from, newFromBalance.toUint(), isControlCollateralInProgress());
+            }
+            if (toBalanceForwarderEnabled) {
+                tryBalanceTrackerHook(to, newToBalance.toUint(), false);
+            }
         }
 
         emit Transfer(from, to, amount.toUint());
