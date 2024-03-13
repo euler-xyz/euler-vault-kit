@@ -130,9 +130,11 @@ abstract contract BorrowingModule is IBorrowing, Base, AssetTransfers, BalanceUt
     function repay(uint256 amount, address receiver) external virtual nonReentrant {
         (MarketCache memory marketCache, address account) = initOperation(OP_REPAY, ACCOUNTCHECK_NONE);
 
-        uint256 owed = getCurrentOwed(marketCache, receiver).toAssetsUp().toUint();
+        // Because we deal in assets, and because the debt accrues every block, we need to predict how many assets will be needed, and whether we are repaying the whole debt.
+        uint256 owed = getCurrentOwed(marketCache, receiver).toAssetsUp().toUint(); // We convert from Owed to Assets, rounding up, and then out to Uint to compare with `amount`
+        if (receiver == address(0)) receiver = account;
 
-        Assets assets = (amount > owed ? owed : amount).toAssets();
+        Assets assets = (amount > owed ? owed : amount).toAssets(); // If we passed an `amount` higher than the predicted amount of the debt in asset terms, then we repay all
         if (assets.isZero()) return;
 
         pullAssets(marketCache, account, assets);

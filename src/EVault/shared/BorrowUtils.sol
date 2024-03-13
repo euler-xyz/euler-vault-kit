@@ -37,7 +37,7 @@ abstract contract BorrowUtils is Base {
     function increaseBorrow(MarketCache memory marketCache, address account, Assets assets) internal {
         (Owed owed, Owed prevOwed) = updateUserBorrow(marketCache, account);
 
-        Owed amount = assets.toOwed();
+        Owed amount = assets.toOwed(); // Same precision
         owed = owed + amount;
 
         marketStorage.users[account].setOwed(owed);
@@ -48,21 +48,26 @@ abstract contract BorrowUtils is Base {
 
     function decreaseBorrow(MarketCache memory marketCache, address account, Assets assets) internal {
         (Owed owed, Owed prevOwed) = updateUserBorrow(marketCache, account);
-        Assets debtAssets = owed.toAssetsUp();
+        Owed amount = assets.toOwed(); // No loss of precision
 
-        if (owed > marketCache.totalBorrows) owed = marketCache.totalBorrows;
-
-        if (assets > debtAssets) revert E_RepayTooMuch();
-
-        Owed owedRemaining;
-        unchecked {
-            owedRemaining = (debtAssets - assets).toOwed();
+        // When we call `decreaseBorrow`, we already know the debt including accrual, and if we want to repay the whole
+        // debt, we will pass `owed.toAssetsUp()` as `amount`, the debt converted to assets, rounded up.
+        // If amount was rounded up, repay exact amount owed
+        if (amount > owed && (amount - owed).isDust())) {
+            amount = owed;
         }
 
-        marketStorage.users[account].setOwed(owedRemaining);
-        marketStorage.totalBorrows = marketCache.totalBorrows = marketCache.totalBorrows - owed + owedRemaining;
+        if (amount > owed) revert E_RepayTooMuch();
+        
+        unchecked {
+            owed = owed - amount;
+        }
+        if (owed > marketCache.totalBorrows) owed = marketCache.totalBorrows; // Ideally, we would update `marketCache.totalBorrows` instead.
 
-        logBorrowChange(account, prevOwed, owedRemaining);
+        marketStorage.users[account].setOwed(owed);
+        marketStorage.totalBorrows = marketCache.totalBorrows = marketCache.totalBorrows - amount;
+
+        logBorrowChange(account, prevOwed, owed);
     }
 
     function transferBorrow(MarketCache memory marketCache, address from, address to, Assets assets) internal {
