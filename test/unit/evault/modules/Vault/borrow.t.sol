@@ -180,4 +180,27 @@ contract ERC4626Test_Borrow is EVaultTestBase {
         assertEq(eTST.debtOf(borrower), 0);
         assertEq(eTST.debtOf(borrower2), amountToBorrow);
     }
+
+    function test_pullDebt_amount_gt_debt() public {
+        startHoax(borrower);
+        uint256 amountToBorrow = 5e18;
+
+        evc.enableCollateral(borrower, address(eTST2));
+        evc.enableController(borrower, address(eTST));
+
+        eTST.borrow(amountToBorrow, address(0));
+        assertEq(assetTST.balanceOf(borrower), amountToBorrow);
+        assertEq(eTST.debtOf(borrower), amountToBorrow);
+        vm.stopPrank();
+
+
+        startHoax(borrower2);
+
+        evc.enableCollateral(borrower2, address(eTST2));
+        evc.enableController(borrower2, address(eTST));
+
+        vm.expectRevert(Errors.E_InsufficientBalance.selector);
+        eTST.pullDebt(amountToBorrow+1, borrower);
+        vm.stopPrank();
+    }
 }
