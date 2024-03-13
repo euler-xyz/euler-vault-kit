@@ -81,11 +81,11 @@ contract ESVault is EVault {
         decreaseBorrow(marketCache, receiver, assets);
     }
 
-    function loop(uint256 assets, address collateralReceiver) external override returns (uint256) {
+    function loop(uint256, address) external override pure returns (uint256) {
         revert NOT_SUPPORTTED();
     }
 
-    function deloop(uint256 assets, address debtFrom) external override returns (uint256) {
+    function deloop(uint256, address) external override pure returns (uint256) {
         revert NOT_SUPPORTTED();
     }
 
@@ -107,23 +107,23 @@ contract ESVault is EVault {
 
     // ----------------- Vault -----------------
 
-    function deposit(uint256 assets, address receiver) external override returns (uint256) {
+    function deposit(uint256, address) external override pure returns (uint256) {
         revert NOT_SUPPORTTED();
     }
 
-    function mint(uint256 shares, address receiver) external override returns (uint256) {
+    function mint(uint256, address) external override pure returns (uint256) {
         revert NOT_SUPPORTTED();
     }
 
-    function withdraw(uint256 assets, address receiver, address owner) external override returns (uint256) {
+    function withdraw(uint256, address, address) external override pure returns (uint256) {
         revert NOT_SUPPORTTED();
     }
 
-    function redeem(uint256 shares, address receiver, address owner) external override returns (uint256) {
+    function redeem(uint256, address, address) external override pure returns (uint256) {
         revert NOT_SUPPORTTED();
     }
 
-    function skim(uint256 assets, address receiver) external override returns (uint256) {
+    function skim(uint256, address) external override pure returns (uint256) {
         revert NOT_SUPPORTTED();
     }
 
@@ -170,6 +170,9 @@ contract ESVault is EVault {
     function increaseCash(uint256 amount) external {
         // Update pending interest
         MarketCache memory marketCache = updateMarket();
+        address account = EVCAuthenticate();
+        // Should only be callable by the synth
+        if(address(marketCache.asset) != account) revert NOT_SYNTH();
         Assets assets = amount.toAssets();
         Shares shares = assets.toSharesDown(marketCache);
         if (shares.isZero()) revert E_ZeroShares();
@@ -182,6 +185,9 @@ contract ESVault is EVault {
     function decreaseCash(uint256 amount) external {
         // Update pending interest
         MarketCache memory marketCache = updateMarket();
+        address account = EVCAuthenticate();
+        // Should only be callable by the synth
+        if(address(marketCache.asset) != account) revert NOT_SYNTH();
         if(amount.toAssets() > marketCache.cash) {
             Assets assets = marketCache.cash;
             Shares shares = assets.toSharesUp(marketCache);
