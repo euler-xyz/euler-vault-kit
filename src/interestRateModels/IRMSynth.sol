@@ -3,7 +3,7 @@
 pragma solidity ^0.8.0;
 
 import "./IIRM.sol";
-import "../IPriceOracle.sol";
+import "../interfaces/IPriceOracle.sol";
 
 contract IRMSynth is IIRM {
     uint256 public constant BPS_SCALE = 10000;
@@ -35,7 +35,7 @@ contract IRMSynth is IIRM {
         )});
     }
 
-    function computeInterestRate(address, uint256 cash, uint256 borrows) external view override returns (uint256) {
+    function computeInterestRate(address, uint256, uint256) external override returns (uint256) {
         IRMData memory irmCache = irmStorage;
 
         // If not time to update yet, return the last rate
