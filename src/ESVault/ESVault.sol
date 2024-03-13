@@ -2,40 +2,18 @@
 
 pragma solidity ^0.8.0;
 
-import "../EVault/EVault.sol";
+import {EVault} from "../EVault/EVault.sol";
 import {IBorrowing} from "../EVault/IEVault.sol";
-import "../EVault/shared/types/MarketCache.sol";
-// import {Base} from "../EVault/shared/Base.sol";
+import {MarketCache} from "../EVault/shared/types/MarketCache.sol";
 import "../EVault/shared/Constants.sol";
-// import "../Evault/shared/types/Types.sol";
-import "../Evault/shared/Errors.sol";
-import "../ESynth/IESynth.sol";
-
-type ConfigAmount is uint16;
-
-// Inlined because of import issues
-// TODO fix this
-library TypesLib {
-    function toShares(uint256 amount) internal pure returns (Shares) {
-        if (amount > MAX_SANE_AMOUNT) revert Errors.E_AmountTooLargeToEncode();
-        return Shares.wrap(uint112(amount));
-    }
-
-    function toAssets(uint256 amount) internal pure returns (Assets) {
-        if (amount > MAX_SANE_AMOUNT) revert Errors.E_AmountTooLargeToEncode();
-        return Assets.wrap(uint112(amount));
-    }
-
-    function toOwed(uint256 amount) internal pure returns (Owed) {
-        if (amount > MAX_SANE_DEBT_AMOUNT) revert Errors.E_DebtAmountTooLargeToEncode();
-        return Owed.wrap(uint144(amount));
-    }
-
-    function toConfigAmount(uint16 amount) internal pure returns (ConfigAmount) {
-        if (amount > CONFIG_SCALE) revert Errors.E_InvalidConfigAmount();
-        return ConfigAmount.wrap(amount);
-    }
-}
+import {Shares} from "../EVault/shared/types/Shares.sol";
+import {Assets} from "../EVault/shared/types/Shares.sol";
+import {Owed, TypesLib} from "../EVault/shared/types/Types.sol";
+import {Errors} from "../Evault/shared/Errors.sol";
+import {IESynth} from "../ESynth/IESynth.sol";
+import {ProxyUtils} from "../Evault/shared/lib/ProxyUtils.sol";
+import {IERC20} from "../EVault/IEVault.sol";
+import {IFlashLoan} from "../EVault/modules/Borrowing.sol";
 
 contract ESVault is EVault {
     using TypesLib for uint256;
@@ -112,9 +90,20 @@ contract ESVault is EVault {
         revert NOT_SUPPORTTED();
     }
 
-    function flashLoan(uint256 assets, bytes calldata data) external override {
-        // TODO alternative flashloan implementation which is functionaly equivalent
-        revert NOT_SUPPORTTED();
+    /// @inheritdoc IBorrowing
+    function flashLoan(uint256 assets, bytes calldata data) external override nonReentrant {
+        if (marketStorage.disabledOps.get(OP_FLASHLOAN)) {
+            revert E_OperationDisabled();
+        }
+
+        (IERC20 asset,,) = ProxyUtils.metadata();
+        address account = EVCAuthenticate();
+
+        IESynth(address(asset)).mint(account, assets);
+        IFlashLoan(account).onFlashLoan(data);
+
+        // Expect tokens to be pushed back to vault so burn them from address(this). Will revert when tokens were not returned
+        IESynth(address(asset)).burn(address(this), assets);
     }
 
     // ----------------- Vault -----------------
@@ -178,7 +167,7 @@ contract ESVault is EVault {
     }
 
     // ----------------- Synth Specific -----------------
-
+    
     function increaseCash(uint256 amount) external {
         // Update pending interest
         MarketCache memory marketCache = updateMarket();
@@ -189,6 +178,7 @@ contract ESVault is EVault {
         increaseBalance(marketCache, SYNTH_DEPOSIT_ADDRESS, address(0), shares, assets);
         marketStorage.cash = marketCache.cash = marketCache.cash + assets;
     }
+
 
     function decreaseCash(uint256 amount) external {
         // Update pending interest
