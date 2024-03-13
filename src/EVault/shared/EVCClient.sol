@@ -51,12 +51,9 @@ abstract contract EVCClient is Storage, Events, Errors {
         return msg.sender;
     }
 
-    function getAccountOwner(address account) internal view returns (address owner) {
-        if (msg.sender == address(evc)) {
-            owner = evc.getAccountOwner(account);
-        } else {
-            owner = account;
-        }
+    function isKnownSubaccount(address account) internal view returns (bool) {
+        address owner = evc.getAccountOwner(account);
+        return owner != address(0) && owner != account;
     }
 
     function EVCRequireStatusChecks(address account) internal {

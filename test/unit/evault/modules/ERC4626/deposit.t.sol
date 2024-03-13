@@ -85,19 +85,7 @@ contract ERC4626Test_Deposit is EVaultTestBase {
     //     assertEq(eTST.totalSupply(), shares);
     // }
 
-    function test_defaultReceiver() public {
-        uint256 amount = 1e18;
-
-        vm.expectEmit(address(eTST));
-        emit Events.Transfer({from: address(0), to: user, value: amount});
-        vm.expectEmit();
-        emit Events.Deposit({sender: user, owner: user, assets: amount, shares: amount});
-
-        eTST.deposit(amount, address(0));
-
-        assertEq(eTST.balanceOf(user), amount);
-        assertEq(eTST.totalSupply(), amount);
-    }
+    // TODO zero receiver
 
     function test_zeroShares() public {
         // TODO
