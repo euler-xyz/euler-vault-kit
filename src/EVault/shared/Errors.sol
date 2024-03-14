@@ -33,7 +33,6 @@ contract Errors {
     error E_BalanceForwarderUnsupported();
     error E_NotSupported();
     error E_EmptyError();
-    error E_VaultStatusCheckDeferred();
     error E_BadBorrowCap();
     error E_BadSupplyCap();
     error E_BadCollateral();

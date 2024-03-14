@@ -98,7 +98,7 @@ abstract contract BorrowUtils is Base {
         uint256 newInterestRate = marketStorage.interestRate;
 
         if (irm != address(0)) {
-            (bool success, bytes memory data) = irm.call(abi.encodeCall(IIRM.computeInterestRate, (
+            (bool success, bytes memory data) = irm.call(abi.encodeCall(IIRM.updateInterestRate, (
                                                                             address(this),
                                                                             marketCache.cash.toUint(),
                                                                             marketCache.totalBorrows.toAssetsUp().toUint()

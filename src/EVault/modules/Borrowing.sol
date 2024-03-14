@@ -9,6 +9,7 @@ import {LiquidityUtils} from "../shared/LiquidityUtils.sol";
 import {AssetTransfers} from "../shared/AssetTransfers.sol";
 import {SafeERC20Lib} from "../shared/lib/SafeERC20Lib.sol";
 import {ProxyUtils} from "../shared/lib/ProxyUtils.sol";
+import {IIRM} from "../../interestRateModels/IIRM.sol";
 
 import "../shared/types/Types.sol";
 
@@ -49,10 +50,24 @@ abstract contract BorrowingModule is IBorrowing, Base, AssetTransfers, BalanceUt
     }
 
     /// @inheritdoc IBorrowing
-    function interestRate() external view virtual reentrantOK returns (uint256) {
-        if (isVaultStatusCheckDeferred()) revert E_VaultStatusCheckDeferred();
+    function interestRate() external view virtual nonReentrantView returns (uint256) {
+        address irm = marketStorage.interestRateModel;
+        uint256 newInterestRate = marketStorage.interestRate;
 
-        return marketStorage.interestRate;
+        if (irm != address(0) && isVaultStatusCheckDeferred()) {
+            MarketCache memory marketCache = loadMarket();
+            (bool success, bytes memory data) = irm.staticcall(abi.encodeCall(IIRM.computeInterestRate, (
+                                                                                address(this),
+                                                                                marketCache.cash.toUint(),
+                                                                                marketCache.totalBorrows.toAssetsUp().toUint()
+                                                                        )));
+            if (success && data.length >= 32) {
+                newInterestRate = abi.decode(data, (uint));
+                if (newInterestRate > MAX_ALLOWED_INTEREST_RATE) newInterestRate = MAX_ALLOWED_INTEREST_RATE;
+            }
+        }
+
+        return newInterestRate;
     }
 
     /// @inheritdoc IBorrowing
