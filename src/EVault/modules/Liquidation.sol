@@ -73,21 +73,25 @@ abstract contract LiquidationModule is ILiquidation, Base, BalanceUtils, Liquidi
 
         liqCache.repay = Assets.wrap(0);
         liqCache.yieldBalance = 0;
+        liqCache.owed = getCurrentOwed(marketCache, violator).toAssetsUp();
+        liqCache.collaterals = getCollaterals(violator);
 
         // Checks
-
 
         // Self liquidation is not allowed
         if (liqCache.violator == liqCache.liquidator) revert E_SelfLiquidation();
         // Only liquidate trusted collaterals to make sure yield transfer has no side effects.
         if (!isRecognizedCollateral(liqCache.collateral)) revert E_BadCollateral();
-        // Make sure violator has debt in this vault
+        // Verify this vault is the controller for the violator
         verifyController(liqCache.violator);
-        // Violator must have enabled the collateral
+        // Violator must have enabled the collateral to be transferred to the liquidator
         if (!isCollateralEnabled(liqCache.violator, liqCache.collateral)) revert E_CollateralDisabled();
         // Violator's health check must not be deferred, meaning no prior operations on violator's account 
-        // would possibly be forgiven after enforced collateral yield transfer
+        // would possibly be forgiven after the enforced collateral transfer to the liquidator
         if (isAccountStatusCheckDeferred(violator)) revert E_ViolatorLiquidityDeferred();
+
+        // Violator has no liabilities, liquidation is a no-op
+        if (liqCache.owed.isZero()) return liqCache;
 
         // Calculate max yield and repay
 
@@ -109,12 +113,6 @@ abstract contract LiquidationModule is ILiquidation, Base, BalanceUtils, Liquidi
         LiquidationCache memory liqCache,
         MarketCache memory marketCache
     ) private view returns (LiquidationCache memory) {
-        liqCache.owed = getCurrentOwed(marketCache, liqCache.violator).toAssetsUp();
-        // violator has no liabilities
-        if (liqCache.owed.isZero()) return liqCache;
-
-        liqCache.collaterals = getCollaterals(liqCache.violator);
-
         (uint256 liquidityCollateralValue, uint256 liquidityLiabilityValue) = calculateLiquidity(marketCache, liqCache.violator, liqCache.collaterals, LTVType.LIQUIDATION);
 
         // no violation

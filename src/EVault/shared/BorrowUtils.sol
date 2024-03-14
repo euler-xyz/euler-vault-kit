@@ -46,21 +46,21 @@ abstract contract BorrowUtils is Base {
         logBorrowChange(account, prevOwed, owed);
     }
 
-    function decreaseBorrow(MarketCache memory marketCache, address account, Assets assets) internal {
-        (Owed owed, Owed prevOwed) = updateUserBorrow(marketCache, account);
-        Assets debtAssets = owed.toAssetsUp();
+    function decreaseBorrow(MarketCache memory marketCache, address account, Assets amount) internal {
+        (Owed owedExact, Owed prevOwed) = updateUserBorrow(marketCache, account);
+        Assets owed = owedExact.toAssetsUp();
 
-        if (owed > marketCache.totalBorrows) owed = marketCache.totalBorrows;
-
-        if (assets > debtAssets) revert E_RepayTooMuch();
+        if (amount > owed) revert E_RepayTooMuch();
 
         Owed owedRemaining;
         unchecked {
-            owedRemaining = (debtAssets - assets).toOwed();
+            owedRemaining = (owed - amount).toOwed();
         }
 
         marketStorage.users[account].setOwed(owedRemaining);
-        marketStorage.totalBorrows = marketCache.totalBorrows = marketCache.totalBorrows - owed + owedRemaining;
+        marketStorage.totalBorrows = marketCache.totalBorrows = marketCache.totalBorrows > owedExact 
+            ? marketCache.totalBorrows - owedExact + owedRemaining 
+            : owedRemaining;
 
         logBorrowChange(account, prevOwed, owedRemaining);
     }
