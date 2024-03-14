@@ -49,7 +49,7 @@ abstract contract VaultModule is IVault, Base, AssetTransfers, BalanceUtils {
 
     /// @inheritdoc IERC4626
     function previewDeposit(uint256 assets) external view virtual nonReentrantView returns (uint256) {
-        return convertToShares(assets);
+        return convertToShares(assets); // Doesn't take into account the `assets == type(uint256).max` case
     }
 
     /// @inheritdoc IERC4626
@@ -90,7 +90,7 @@ abstract contract VaultModule is IVault, Base, AssetTransfers, BalanceUtils {
 
     /// @inheritdoc IERC4626
     function previewRedeem(uint256 shares) external view virtual nonReentrantView returns (uint256) {
-        return convertToAssets(shares);
+        return convertToAssets(shares); // Doesn't take into account the `shares == type(uint256).max` case
     }
 
     /// @inheritdoc IVault
@@ -116,7 +116,7 @@ abstract contract VaultModule is IVault, Base, AssetTransfers, BalanceUtils {
         (MarketCache memory marketCache, address account) = initOperation(OP_DEPOSIT, ACCOUNTCHECK_NONE);
 
         Assets assets =
-            amount == type(uint256).max ? marketCache.asset.balanceOf(account).toAssets() : amount.toAssets();
+            amount == type(uint256).max ? marketCache.asset.balanceOf(account).toAssets() : amount.toAssets(); // A small digression from the standard, but acceptable imho
         if (assets.isZero()) return 0;
 
         Shares shares = assets.toSharesDown(marketCache);
@@ -135,6 +135,7 @@ abstract contract VaultModule is IVault, Base, AssetTransfers, BalanceUtils {
         if (shares.isZero()) return 0;
 
         Assets assets = shares.toAssetsUp(marketCache);
+        // We don't need to check assets.isZero() and revert because we round up
 
         finalizeDeposit(marketCache, assets, shares, account, receiver);
 
@@ -154,6 +155,7 @@ abstract contract VaultModule is IVault, Base, AssetTransfers, BalanceUtils {
         if (assets.isZero()) return 0;
 
         Shares shares = assets.toSharesUp(marketCache);
+        // We don't need to check shares.isZero() and revert because we round up
 
         finalizeWithdraw(marketCache, assets, shares, account, receiver, owner);
 
@@ -164,7 +166,7 @@ abstract contract VaultModule is IVault, Base, AssetTransfers, BalanceUtils {
     function redeem(uint256 amount, address receiver, address owner) external virtual nonReentrant returns (uint256) {
         (MarketCache memory marketCache, address account) = initOperation(OP_REDEEM, owner);
 
-        Shares shares = amount == type(uint256).max ? marketStorage.users[owner].getBalance() : amount.toShares();
+        Shares shares = amount == type(uint256).max ? marketStorage.users[owner].getBalance() : amount.toShares(); // A small digression from the standard, but acceptable imho
         if (shares.isZero()) return 0;
 
         Assets assets = shares.toAssetsDown(marketCache);
@@ -209,6 +211,9 @@ abstract contract VaultModule is IVault, Base, AssetTransfers, BalanceUtils {
         address sender,
         address receiver
     ) private {
+        // This function wouldn't know if it is being told to commit an inconsistent state to storage with regards to the assets
+        // and shares amounts, and would commit it. The Morpho Blue implementation is more robust. In it, exactly one of `assets`
+        // or `shares` must be zero, and the other is calculated within this function.
         pullAssets(marketCache, sender, assets);
 
         increaseBalance(marketCache, receiver, sender, shares, assets);
@@ -222,6 +227,9 @@ abstract contract VaultModule is IVault, Base, AssetTransfers, BalanceUtils {
         address receiver,
         address owner
     ) private {
+        // This function wouldn't know if it is being told to commit an inconsistent state to storage with regards to the assets
+        // and shares amounts, and would commit it. The Morpho Blue implementation is more robust. In it, exactly one of `assets`
+        // or `shares` must be zero, and the other is calculated within this function.
         if (marketCache.cash < assets) revert E_InsufficientCash();
 
         decreaseAllowance(owner, sender, shares);
@@ -235,7 +243,7 @@ abstract contract VaultModule is IVault, Base, AssetTransfers, BalanceUtils {
         if (max.isZero()) return max;
 
         // When checks are deferred, all of the balance can be withdrawn, even if only temporarily
-        if (!isAccountStatusCheckDeferred(owner)) {
+        if (!isAccountStatusCheckDeferred(owner)) { // If account checks are expected, the user can withdraw all of his balance
             address controller = getController(owner);
 
             if (controller != address(0)) {
@@ -244,14 +252,14 @@ abstract contract VaultModule is IVault, Base, AssetTransfers, BalanceUtils {
                 if (success) {
                     uint256 used = abi.decode(data, (uint256));
                     if (used >= max.toUint()) return Shares.wrap(0);
-                    max = max - used.toShares();
+                    max = max - used.toShares(); // If account checks are not expected, the user can withdraw what he doesn't use
                 }
             }
         }
 
         MarketCache memory marketCache = loadMarket();
 
-        Shares cash = marketCache.cash.toSharesDown(marketCache);
+        Shares cash = marketCache.cash.toSharesDown(marketCache); // What the user can withdraw is capped by what the vault is holding
         max = max > cash ? cash : max;
 
         return max;
@@ -261,18 +269,38 @@ abstract contract VaultModule is IVault, Base, AssetTransfers, BalanceUtils {
         uint remainingSupply;
 
         // In transient state with vault status checks deferred, supply caps will not be immediately enforced
-        if (isVaultStatusCheckDeferred()) {
+        if (isVaultStatusCheckDeferred()) { // `isVaultStatusCheckDeferred` is a bit misleading, it should be `isVaultStatusCheckQueued` or `isVaultStatusCheckExpected`
+            // Won't this be a bit misleading? I ask if I can deposit an amount of PEPE, got told yes but then at the end
+            // the transaction reverts because we surpassed the supply cap.
             remainingSupply = type(uint256).max;
+        } else {
+            uint256 supply = totalAssetsInternal(marketCache); // Total assets are cash + debt
+            if(supply >= marketCache.supplyCap) return 0;
+
+            remainingSupply = marketCache.supplyCap - supply; // We calculate the room left until the supply cap
+        }
+
+        uint256 remainingCash = MAX_SANE_AMOUNT - marketCache.cash.toUint(); // Supply cap < MAX_SANE_AMOUNT && totalAssetsInternal > marketCache.cash
+
+        // If vault checks are expected, remainingSupply = type(uint256).max, else remainingSupply is the room to the supply cap
+        // remainingCash is the room in the cash holdings up to the maximum manageable amount
+        // The only situation in which remainingCash < remainingSupply is if isVaultStatusCheckDeferred == true
+        // because marketCache.supplyCap - (cash + debt) < MAX_SANE_AMOUNT - cash
+        return remainingCash < remainingSupply ? remainingCash : remainingSupply;
+    }
+
+    function maxDepositInternalAlternate(MarketCache memory marketCache, address) private view returns (uint256) {
+        uint remainingSupply;
+
+        // In transient state with vault status checks deferred, supply caps will not be immediately enforced
+        if (isVaultStatusCheckDeferred()) {
+            return MAX_SANE_AMOUNT - marketCache.cash.toUint(); // Return the availability to hold cash.
         } else {
             uint256 supply = totalAssetsInternal(marketCache);
             if(supply >= marketCache.supplyCap) return 0;
 
-            remainingSupply = marketCache.supplyCap - supply;
+            return marketCache.supplyCap - supply; // Return the availability up to the supply cap.
         }
-
-        uint256 remainingCash = MAX_SANE_AMOUNT - marketCache.cash.toUint();
-
-        return remainingCash < remainingSupply ? remainingCash : remainingSupply;
     }
 }
 

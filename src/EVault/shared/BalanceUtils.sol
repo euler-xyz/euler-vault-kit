@@ -19,6 +19,9 @@ abstract contract BalanceUtils is Base {
         Shares amount,
         Assets assets
     ) internal {
+        // This function wouldn't know if the shares and assets amounts that is using are consistent with each other.
+        // Given that `assets` is only used to send a `Deposit` event, I would consider either emitting `Deposit` from
+        // the calling function.
         if (account == address(0)) revert E_BadSharesReceiver();
 
         (Shares origBalance, bool balanceForwarderEnabled) =
@@ -44,6 +47,9 @@ abstract contract BalanceUtils is Base {
         Shares amount,
         Assets assets
     ) internal {
+        // This function wouldn't know if the shares and assets amounts that is using are consistent with each other.
+        // Given that `assets` is only used to send a `Deposit` event, I would consider either emitting `Deposit` from
+        // the calling function.
         (Shares origBalance, bool balanceForwarderEnabled) =
             marketStorage.users[account].getBalanceAndBalanceForwarder();
         if (origBalance < amount) revert E_InsufficientBalance();
