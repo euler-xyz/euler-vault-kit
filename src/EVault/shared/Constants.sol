@@ -23,9 +23,12 @@ uint256 constant CONFIG_SCALE = 1e4;
 // no account status checks should be scheduled
 address constant ACCOUNTCHECK_NONE = address(0);
 // account status check should be scheduled for the authenticated account
-address constant ACCOUNTCHECK_CALLER = address(1); 
+address constant ACCOUNTCHECK_CALLER = address(1);
+
+// EVC authentication
+
 // indicate which operations should check if this contract is the controller of the authenticated account
-uint32 constant ACCOUNTCHECK_VERIFY_CONTROLLER = OP_BORROW | OP_LOOP | OP_PULL_DEBT | OP_LIQUIDATE;
+uint32 constant CONTROLLER_ONLY_OPERATIONS = OP_BORROW | OP_LOOP | OP_PULL_DEBT | OP_LIQUIDATE;
 
 // Operations
 

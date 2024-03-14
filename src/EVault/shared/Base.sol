@@ -55,7 +55,7 @@ abstract contract Base is EVCClient, Cache {
     {
         marketCache = updateMarket();
 
-        if (marketCache.disabledOps.get(operation)) {
+        if (marketCache.disabledOps.check(operation)) {
             revert E_OperationDisabled();
         }
 
@@ -67,7 +67,7 @@ abstract contract Base is EVCClient, Cache {
             snapshot.set(marketCache.cash, marketCache.totalBorrows.toAssetsUp());
         }
 
-        account = EVCAuthenticateDeferred(Operations.wrap(ACCOUNTCHECK_VERIFY_CONTROLLER).get(operation));
+        account = EVCAuthenticateDeferred(Operations.wrap(CONTROLLER_ONLY_OPERATIONS).check(operation));
 
         EVCRequireStatusChecks(checkAccount == ACCOUNTCHECK_CALLER ? account : checkAccount);
     }

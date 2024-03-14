@@ -209,7 +209,7 @@ abstract contract BorrowingModule is IBorrowing, Base, AssetTransfers, BalanceUt
 
     /// @inheritdoc IBorrowing
     function flashLoan(uint256 assets, bytes calldata data) external virtual nonReentrant {
-        if (marketStorage.disabledOps.get(OP_FLASHLOAN)) {
+        if (marketStorage.disabledOps.check(OP_FLASHLOAN)) {
             revert E_OperationDisabled();
         }
 
