@@ -92,6 +92,27 @@ abstract contract BorrowUtils is Base {
         logBorrowChange(to, toOwedPrev, toOwed);
     }
 
+    function computeInterestRate() internal view virtual returns (uint256) {
+        // single sload
+        address irm = marketStorage.interestRateModel;
+        uint256 newInterestRate = marketStorage.interestRate;
+
+        if (irm != address(0) && isVaultStatusCheckDeferred()) {
+            MarketCache memory marketCache = loadMarket();
+            (bool success, bytes memory data) = irm.staticcall(abi.encodeCall(IIRM.computeInterestRate, (
+                                                                                address(this),
+                                                                                marketCache.cash.toUint(),
+                                                                                marketCache.totalBorrows.toAssetsUp().toUint()
+                                                                        )));
+            if (success && data.length >= 32) {
+                newInterestRate = abi.decode(data, (uint));
+                if (newInterestRate > MAX_ALLOWED_INTEREST_RATE) newInterestRate = MAX_ALLOWED_INTEREST_RATE;
+            }
+        }
+
+        return newInterestRate;
+    }
+
     function updateInterestRate(MarketCache memory marketCache) internal virtual returns (uint256) {
         // single sload
         address irm = marketStorage.interestRateModel;
