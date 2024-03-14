@@ -2,7 +2,7 @@
 
 pragma solidity ^0.8.0;
 
-import {Assets, Shares, Owed, AmountCap, ConfigAmount, DisabledOps} from "./Types.sol";
+import {Assets, Shares, Owed, AmountCap, ConfigAmount, Operations} from "./Types.sol";
 import {LTVConfig} from "./LTVConfig.sol";
 import {UserStorage} from "./UserStorage.sol";
 
@@ -12,7 +12,7 @@ struct MarketStorage {
     Assets cash;
     AmountCap supplyCap;
     AmountCap borrowCap;
-    DisabledOps disabledOps;
+    Operations disabledOps;
     bool reentrancyLocked;
     bool snapshotInitialized;
 

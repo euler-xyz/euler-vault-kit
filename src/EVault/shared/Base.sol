@@ -45,39 +45,12 @@ abstract contract Base is EVCClient, Cache {
         _;
     }
 
-    // Don't call this for OP_BORROW, OP_LOOP, OP_PULL_DEBT. OP_LIQUIDATE.
     // Generate a market snapshot and store it.
     // Queue vault and maybe account checks in the EVC (caller, current, onBehalfOf or none).
+    // If needed, revert if this contract is not the controller of the authenticated account.
     // Returns the MarketCache and active account.
     function initOperation(uint32 operation, address checkAccount)
         internal
-        returns (MarketCache memory marketCache, address account)
-    {
-        (marketCache, account) = initMarketAndAccount(operation, false);
-
-        EVCRequireStatusChecks(checkAccount == ACCOUNTCHECK_CALLER ? account : checkAccount);
-    }
-
-    // Called for OP_BORROW, OP_LOOP, OP_PULL_DEBT. OP_LIQUIDATE.
-    // Generate a market snapshot and store it.
-    // Queue account checks in the EVC (current or onBehalfOf).
-    // Revert if this contract is not the account controller.
-    // Returns the MarketCache and active account.
-    function initOperationForBorrow(uint32 operation)
-        internal
-        returns (MarketCache memory marketCache, address account)
-    {
-        (marketCache, account) = initMarketAndAccount(operation, true);
-
-        EVCRequireStatusChecks(account);
-    }
-
-    // Generate an updated MarketCache.
-    // Generate a market snapshot if it doesn't yet exits, and store it.
-    // If `checkController == true` revert if this contract is not the controller for the active account.
-    // Returns the MarketCache and active account.
-    function initMarketAndAccount(uint32 operation, bool checkController)
-        private
         returns (MarketCache memory marketCache, address account)
     {
         marketCache = updateMarket();
@@ -94,7 +67,9 @@ abstract contract Base is EVCClient, Cache {
             snapshot.set(marketCache.cash, marketCache.totalBorrows.toAssetsUp());
         }
 
-        account = EVCAuthenticateDeferred(checkController);
+        account = EVCAuthenticateDeferred(Operations.wrap(ACCOUNTCHECK_VERIFY_CONTROLLER).get(operation));
+
+        EVCRequireStatusChecks(checkAccount == ACCOUNTCHECK_CALLER ? account : checkAccount);
     }
 
     function logMarketStatus(MarketCache memory a, uint256 interestRate) internal {
