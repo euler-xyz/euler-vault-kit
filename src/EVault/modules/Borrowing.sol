@@ -130,7 +130,7 @@ abstract contract BorrowingModule is IBorrowing, Base, AssetTransfers, BalanceUt
 
         uint256 owed = getCurrentOwed(marketCache, receiver).toAssetsUp().toUint();
 
-        Assets assets = (amount > owed ? owed : amount).toAssets();
+        Assets assets = (amount == type(uint256).max ? owed : amount).toAssets();
         if (assets.isZero()) return;
 
         pullAssets(marketCache, account, assets);
