@@ -112,7 +112,7 @@ abstract contract BorrowingModule is IBorrowing, Base, AssetTransfers, BalanceUt
 
     /// @inheritdoc IBorrowing
     function borrow(uint256 amount, address receiver) external virtual nonReentrant {
-        (MarketCache memory marketCache, address account) = initOperationForBorrow(OP_BORROW);
+        (MarketCache memory marketCache, address account) = initOperation(OP_BORROW, ACCOUNTCHECK_CALLER);
 
         Assets assets = amount == type(uint256).max ? marketCache.cash : amount.toAssets();
         if (assets.isZero()) return;
@@ -140,7 +140,7 @@ abstract contract BorrowingModule is IBorrowing, Base, AssetTransfers, BalanceUt
 
     /// @inheritdoc IBorrowing
     function loop(uint256 amount, address sharesReceiver) external virtual nonReentrant returns (uint256) {
-        (MarketCache memory marketCache, address account) = initOperationForBorrow(OP_LOOP);
+        (MarketCache memory marketCache, address account) = initOperation(OP_LOOP, ACCOUNTCHECK_CALLER);
 
         Assets assets = amount.toAssets();
         if (assets.isZero()) return 0;
@@ -192,7 +192,7 @@ abstract contract BorrowingModule is IBorrowing, Base, AssetTransfers, BalanceUt
 
     /// @inheritdoc IBorrowing
     function pullDebt(uint256 amount, address from) external virtual nonReentrant {
-        (MarketCache memory marketCache, address account) = initOperationForBorrow(OP_PULL_DEBT);
+        (MarketCache memory marketCache, address account) = initOperation(OP_PULL_DEBT, ACCOUNTCHECK_CALLER);
 
         if (from == account) revert E_SelfTransfer();
 
@@ -209,7 +209,7 @@ abstract contract BorrowingModule is IBorrowing, Base, AssetTransfers, BalanceUt
 
     /// @inheritdoc IBorrowing
     function flashLoan(uint256 assets, bytes calldata data) external virtual nonReentrant {
-        if (marketStorage.disabledOps.get(OP_FLASHLOAN)) {
+        if (marketStorage.disabledOps.check(OP_FLASHLOAN)) {
             revert E_OperationDisabled();
         }
 

@@ -260,7 +260,7 @@ abstract contract GovernanceModule is IGovernance, Base, BalanceUtils, BorrowUti
         MarketCache memory marketCache = updateMarket();
         logMarketStatus(marketCache, marketStorage.interestRate);
 
-        marketStorage.disabledOps = DisabledOps.wrap(newDisabledOps);
+        marketStorage.disabledOps = Operations.wrap(newDisabledOps);
         emit GovSetDisabledOps(newDisabledOps);
     }
 
