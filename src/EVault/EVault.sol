@@ -57,7 +57,7 @@ contract EVault is
 
     // ------------ Initialization -------------
 
-    function initialize(address proxyCreator) external override use(MODULE_INITIALIZE) {}
+    function initialize(address proxyCreator) public override virtual use(MODULE_INITIALIZE) {}
 
 
 

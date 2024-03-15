@@ -12,12 +12,12 @@ contract AssetTransfers is Storage, Errors {
     using TypesLib for uint256;
     using SafeERC20Lib for IERC20;
 
-    function pullTokens(MarketCache memory marketCache, address from, Assets amount) internal {
+    function pullTokens(MarketCache memory marketCache, address from, Assets amount) internal virtual {
         marketCache.asset.safeTransferFrom(from, address(this), amount.toUint());
         marketStorage.cash = marketCache.cash = marketCache.cash + amount;
     }
 
-    function pushTokens(MarketCache memory marketCache, address to, Assets amount) internal {
+    function pushTokens(MarketCache memory marketCache, address to, Assets amount) internal virtual {
         marketStorage.cash = marketCache.cash = marketCache.cash - amount;
         marketCache.asset.safeTransfer(to, amount.toUint());
     }

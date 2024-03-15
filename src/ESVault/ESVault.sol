@@ -6,19 +6,13 @@ import {EVault} from "../EVault/EVault.sol";
 import {IBorrowing} from "../EVault/IEVault.sol";
 import {MarketCache} from "../EVault/shared/types/MarketCache.sol";
 import "../EVault/shared/Constants.sol";
-import {Shares} from "../EVault/shared/types/Shares.sol";
-import {Assets} from "../EVault/shared/types/Shares.sol";
-import {TypesLib} from "../EVault/shared/types/Types.sol";
-import {Errors} from "../EVault/shared/Errors.sol";
+import {ProxyUtils} from "../EVault/shared/lib/ProxyUtils.sol";
 import {IESynth} from "../ESynth/IESynth.sol";
-import {ProxyUtils, IERC20} from "../EVault/shared/lib/ProxyUtils.sol";
 import {IFlashLoan} from "../EVault/modules/Borrowing.sol";
+import "../EVault/shared/types/Types.sol";
 
 contract ESVault is EVault {
     using TypesLib for uint256;
-
-    error NOT_SUPPORTTED();
-    error NOT_SYNTH();
 
     address SYNTH_DEPOSIT_ADDRESS = address(uint160(uint256(keccak256("SynthDepositAddress"))));
 
@@ -45,49 +39,20 @@ contract ESVault is EVault {
     ) {
     }
 
+    // ----------------- Initialize ----------------
+
+    function initialize(address proxyCreator) public override virtual reentrantOK {
+        super.initialize(proxyCreator);
+
+        // disable not supported operations
+        uint32 newDisabledOps = 
+            OP_DEPOSIT | OP_MINT | OP_WITHDRAW | OP_REDEEM | OP_SKIM | OP_LOOP | OP_DELOOP | DisabledOps.unwrap(marketStorage.disabledOps);
+        
+        marketStorage.disabledOps = DisabledOps.wrap(newDisabledOps);
+        emit GovSetDisabledOps(newDisabledOps);
+    }
+
     // ----------------- Borrowing -----------------
-
-    /// @inheritdoc IBorrowing
-    function borrow(uint256 amount, address receiver) external override nonReentrant {
-        (MarketCache memory marketCache, address account) = initOperationForBorrow(OP_BORROW);
-
-        if (receiver == address(0)) receiver = getAccountOwner(account);
-
-        Assets assets = amount == type(uint256).max ? marketCache.cash : amount.toAssets();
-        if (assets.isZero()) return;
-
-        if (assets > marketCache.cash) revert E_InsufficientCash();
-
-        increaseBorrow(marketCache, account, assets);
-
-        marketStorage.cash = marketCache.cash = marketCache.cash - assets;
-        IESynth(address(marketCache.asset)).mint(receiver, assets.toUint());
-    }
-
-    /// @inheritdoc IBorrowing
-    function repay(uint256 amount, address receiver) external override nonReentrant {
-        (MarketCache memory marketCache, address account) = initOperation(OP_REPAY, ACCOUNTCHECK_NONE);
-
-        if (receiver == address(0)) receiver = account;
-
-        uint256 owed = getCurrentOwed(marketCache, receiver).toAssetsUp().toUint();
-
-        Assets assets = (amount > owed ? owed : amount).toAssets();
-        if (assets.isZero()) return;
-
-        IESynth(address(marketCache.asset)).burn(account, assets.toUint());
-        marketStorage.cash = marketCache.cash = marketCache.cash + assets;
-
-        decreaseBorrow(marketCache, receiver, assets);
-    }
-
-    function loop(uint256, address) external override pure returns (uint256) {
-        revert NOT_SUPPORTTED();
-    }
-
-    function deloop(uint256, address) external override pure returns (uint256) {
-        revert NOT_SUPPORTTED();
-    }
 
     /// @inheritdoc IBorrowing
     function flashLoan(uint256 assets, bytes calldata data) external override nonReentrant {
@@ -105,44 +70,17 @@ contract ESVault is EVault {
         IESynth(address(asset)).burn(address(this), assets);
     }
 
-    // ----------------- Vault -----------------
-
-    function deposit(uint256, address) external override pure returns (uint256) {
-        revert NOT_SUPPORTTED();
-    }
-
-    function mint(uint256, address) external override pure returns (uint256) {
-        revert NOT_SUPPORTTED();
-    }
-
-    function withdraw(uint256, address, address) external override pure returns (uint256) {
-        revert NOT_SUPPORTTED();
-    }
-
-    function redeem(uint256, address, address) external override pure returns (uint256) {
-        revert NOT_SUPPORTTED();
-    }
-
-    function skim(uint256, address) external override pure returns (uint256) {
-        revert NOT_SUPPORTTED();
-    }
-
     // ----------------- Governance -----------------
-    function convertFees() external override {
+    function convertFees() external override nonReentrant {
         (MarketCache memory marketCache, address account) = initOperation(OP_CONVERT_FEES, ACCOUNTCHECK_NONE);
 
         if (marketCache.accumulatedFees.isZero()) return;
-
-        // Decrease totalShares because they are effectively withdrawn from the protocol
-        marketStorage.totalShares =
-            marketCache.totalShares = marketCache.totalShares - marketCache.accumulatedFees;
 
         (address protocolReceiver, uint256 protocolFee) = protocolConfig.feeConfig(address(this));
         address governorReceiver = marketStorage.feeReceiver;
 
         if (governorReceiver == address(0)) protocolFee = 1e18; // governor forfeits fees
         else if (protocolFee > MAX_PROTOCOL_FEE_SHARE) protocolFee = MAX_PROTOCOL_FEE_SHARE;
-
 
         Shares governorShares = marketCache.accumulatedFees.mulDiv(1e18 - protocolFee, 1e18);
         Shares protocolShares = marketCache.accumulatedFees - governorShares;
@@ -152,9 +90,16 @@ contract ESVault is EVault {
         Assets governorAssets = governorShares.toAssetsDown(marketCache);
         Assets protocolAssets = protocolShares.toAssetsDown(marketCache);
 
+        // Decrease totalShares because they are effectively withdrawn from the protocol
+        marketStorage.totalShares =
+            marketCache.totalShares = marketCache.totalShares - marketCache.accumulatedFees;
+
         // Mint synth to fee receivers
+        if (governorReceiver != address(0)) {
+            IESynth(address(marketCache.asset)).mint(governorReceiver, governorAssets.toUint());
+        }
+
         IESynth(address(marketCache.asset)).mint(protocolReceiver, protocolAssets.toUint());
-        IESynth(address(marketCache.asset)).mint(governorReceiver, governorAssets.toUint());
 
         emit ConvertFees(
             account,
@@ -165,42 +110,46 @@ contract ESVault is EVault {
         );
     }
 
+    // ----------------- Asset Transfers -----------------
+
+    function pullTokens(MarketCache memory marketCache, address from, Assets amount) internal virtual override {
+        IESynth(address(marketCache.asset)).burn(from, amount.toUint());
+        marketStorage.cash = marketCache.cash = marketCache.cash + amount;
+    }
+
+    function pushTokens(MarketCache memory marketCache, address to, Assets amount) internal virtual override {
+        marketStorage.cash = marketCache.cash = marketCache.cash - amount;
+        IESynth(address(marketCache.asset)).mint(to, amount.toUint());
+    }
+
     // ----------------- Synth Specific -----------------
     
-    function increaseCash(uint256 amount) external {
+    function increaseCash(uint256 amount) external nonReentrant {
         // Update pending interest
         MarketCache memory marketCache = updateMarket();
         address account = EVCAuthenticate();
         // Should only be callable by the synth
-        if(address(marketCache.asset) != account) revert NOT_SYNTH();
+        if(address(marketCache.asset) != account) revert E_Unauthorized();
+
         Assets assets = amount.toAssets();
         Shares shares = assets.toSharesDown(marketCache);
         if (shares.isZero()) revert E_ZeroShares();
 
-        increaseBalance(marketCache, SYNTH_DEPOSIT_ADDRESS, address(0), shares, assets);
+        increaseBalance(marketCache, SYNTH_DEPOSIT_ADDRESS, account, shares, assets);
         marketStorage.cash = marketCache.cash = marketCache.cash + assets;
     }
 
-
-    function decreaseCash(uint256 amount) external {
+    function decreaseCash(uint256 amount) external nonReentrant {
         // Update pending interest
         MarketCache memory marketCache = updateMarket();
         address account = EVCAuthenticate();
         // Should only be callable by the synth
-        if(address(marketCache.asset) != account) revert NOT_SYNTH();
-        if(amount.toAssets() > marketCache.cash) {
-            Assets assets = marketCache.cash;
-            Shares shares = assets.toSharesUp(marketCache);
+        if(address(marketCache.asset) != account) revert E_Unauthorized();
 
-            decreaseBalance(marketCache, SYNTH_DEPOSIT_ADDRESS, address(0), address(0), shares, assets);
-            marketStorage.cash = marketCache.cash = Assets.wrap(0);
-        } else {
-            Assets assets = amount.toAssets();
-            Shares shares = assets.toSharesUp(marketCache);
+        Assets assets = amount.toAssets() > marketCache.cash ? marketCache.cash : amount.toAssets();
+        Shares shares = assets.toSharesUp(marketCache);
 
-            decreaseBalance(marketCache, SYNTH_DEPOSIT_ADDRESS, address(0), address(0), shares, assets);
-            marketStorage.cash = marketCache.cash = marketCache.cash - amount.toAssets();
-        }
+        decreaseBalance(marketCache, SYNTH_DEPOSIT_ADDRESS, account, address(0), shares, assets);
+        marketStorage.cash = marketCache.cash = marketCache.cash - assets;
     }
-
 }
