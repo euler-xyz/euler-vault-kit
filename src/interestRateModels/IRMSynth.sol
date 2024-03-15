@@ -75,6 +75,8 @@ contract IRMSynth is IIRM {
         return irmCache.lastRate;
     }
 
+    function computeInterestRateView(address, uint256, uint256) external view override returns (uint256) {return 0;}
+
     function getIRMData() external view returns (IRMData memory) {
         return irmStorage;
     }
