@@ -13,13 +13,13 @@ contract ESVault is EVault {
 
     // ----------------- Initialize ----------------
 
-    function initialize(address proxyCreator) public override virtual reentrantOK {
-        super.initialize(proxyCreator);
+    function initializeInternal(address proxyCreator) internal override virtual reentrantOK {
+        super.initializeInternal(proxyCreator);
 
         // disable not supported operations
-        uint32 newDisabledOps = OP_MINT | OP_REDEEM | OP_SKIM | OP_LOOP | OP_DELOOP | Operations.unwrap(marketStorage.disabledOps);
+        uint32 newDisabledOps = OP_MINT | OP_REDEEM | OP_SKIM | OP_LOOP | OP_DELOOP;
         
-        marketStorage.disabledOps = Operations.wrap(newDisabledOps);
+        marketStorage.disabledOps = Operations.wrap(newDisabledOps | Operations.unwrap(marketStorage.disabledOps));
         emit GovSetDisabledOps(newDisabledOps);
     }
 
