@@ -21,7 +21,7 @@ library AmountCapLib {
             // Cannot overflow because this is less than 2**256:
             //   10**(2**6 - 1) * (2**10 - 1) = 1.023e+66
 
-            return 10**(amountCap & 63) * (amountCap >> 6) / 100;
+            return 10 ** (amountCap & 63) * (amountCap >> 6) / 100;
         }
     }
 

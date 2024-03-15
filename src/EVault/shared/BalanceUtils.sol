@@ -68,7 +68,8 @@ abstract contract BalanceUtils is Base {
         if (!amount.isZero()) {
             (Shares origFromBalance, bool fromBalanceForwarderEnabled) =
                 marketStorage.users[from].getBalanceAndBalanceForwarder();
-            (Shares origToBalance, bool toBalanceForwarderEnabled) = marketStorage.users[to].getBalanceAndBalanceForwarder();
+            (Shares origToBalance, bool toBalanceForwarderEnabled) =
+                marketStorage.users[to].getBalanceAndBalanceForwarder();
             if (origFromBalance < amount) revert E_InsufficientBalance();
 
             Shares newFromBalance;
@@ -79,7 +80,6 @@ abstract contract BalanceUtils is Base {
 
             marketStorage.users[from].setBalance(newFromBalance);
             marketStorage.users[to].setBalance(newToBalance);
-
 
             if (fromBalanceForwarderEnabled) {
                 tryBalanceTrackerHook(from, newFromBalance.toUint(), isControlCollateralInProgress());
@@ -102,8 +102,6 @@ abstract contract BalanceUtils is Base {
     }
 
     function decreaseAllowance(address owner, address spender, Shares amount) internal {
-        if (amount.isZero()) return;
-
         uint256 allowance = marketStorage.users[owner].eTokenAllowance[spender];
         if (owner != spender && allowance != type(uint256).max) {
             if (allowance < amount.toUint()) revert E_InsufficientAllowance();
@@ -115,7 +113,12 @@ abstract contract BalanceUtils is Base {
         }
     }
 
-    function tryBalanceTrackerHook(address account, uint256 newAccountBalance, bool forfeitRecentReward) private returns (bool success) {
-        (success,) = address(balanceTracker).call(abi.encodeCall(IBalanceTracker.balanceTrackerHook, (account, newAccountBalance, forfeitRecentReward)));
+    function tryBalanceTrackerHook(address account, uint256 newAccountBalance, bool forfeitRecentReward)
+        private
+        returns (bool success)
+    {
+        (success,) = address(balanceTracker).call(
+            abi.encodeCall(IBalanceTracker.balanceTrackerHook, (account, newAccountBalance, forfeitRecentReward))
+        );
     }
 }

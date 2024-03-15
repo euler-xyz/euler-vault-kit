@@ -23,7 +23,6 @@ contract ERC4626Test_LTV is EVaultTestBase {
         oracle.setPrice(address(eTST2), unitOfAccount, 1e18);
     }
 
-
     function test_rampDown() public {
         eTST.setLTV(address(eTST2), cfgScale(0.9e3), 0);
 
@@ -72,7 +71,6 @@ contract ERC4626Test_LTV is EVaultTestBase {
         assertEq(eTST.liquidationLTV(address(eTST2)), cfgScale(0.8e3));
     }
 
-
     function test_rampRetarget() public {
         eTST.setLTV(address(eTST2), cfgScale(0.8e3), 1000);
 
@@ -100,11 +98,10 @@ contract ERC4626Test_LTV is EVaultTestBase {
         assertEq(eTST.liquidationLTV(address(eTST2)), cfgScale(0.1e3));
     }
 
-
     function test_ltvRange() public {
         vm.expectRevert(Errors.E_InvalidConfigAmount.selector);
         eTST.setLTV(address(eTST2), uint16(CONFIG_SCALE + 1), 0);
-}
+    }
 
     function test_ltvList() public {
         assertEq(eTST.LTVList().length, 0);
@@ -142,10 +139,9 @@ contract ERC4626Test_LTV is EVaultTestBase {
         assertEq(eTST.LTVList()[0], address(eTST2));
     }
 
-
     // From 1000 base to CONFIG_SCALE
 
-    function cfgScale(uint n) private pure returns (uint16) {
+    function cfgScale(uint256 n) private pure returns (uint16) {
         return uint16(n * CONFIG_SCALE / 1000);
     }
 }

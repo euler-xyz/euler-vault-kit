@@ -65,19 +65,19 @@ contract ProtocolConfig is IProtocolConfig {
         feeReceiver = newReceiver;
     }
 
-    function setInterestFeeRange(address market, bool exists_, uint16 minInterestFee_, uint16 maxInterestFee_) external onlyAdmin {
-        interestFeeRanges[market] = InterestFeeRange({
-            exists: exists_,
-            minInterestFee: minInterestFee_,
-            maxInterestFee: maxInterestFee_
-        });
+    function setInterestFeeRange(address market, bool exists_, uint16 minInterestFee_, uint16 maxInterestFee_)
+        external
+        onlyAdmin
+    {
+        interestFeeRanges[market] =
+            InterestFeeRange({exists: exists_, minInterestFee: minInterestFee_, maxInterestFee: maxInterestFee_});
     }
 
-    function setFeeConfigSetting(address market, bool exists_, address feeReceiver_, uint256 protocolFeeShare_) external onlyAdmin {
-        feeConfigSettings[market] = FeeConfigSetting({
-            exists: exists_,
-            feeReceiver: feeReceiver_,
-            protocolFeeShare: protocolFeeShare_
-        });
+    function setFeeConfigSetting(address market, bool exists_, address feeReceiver_, uint256 protocolFeeShare_)
+        external
+        onlyAdmin
+    {
+        feeConfigSettings[market] =
+            FeeConfigSetting({exists: exists_, feeReceiver: feeReceiver_, protocolFeeShare: protocolFeeShare_});
     }
 }

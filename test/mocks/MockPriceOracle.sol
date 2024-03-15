@@ -21,7 +21,11 @@ contract MockPriceOracle {
         return amount * price / 1e18;
     }
 
-    function getQuotes(uint256 amount, address base, address quote) external view returns (uint256 bidOut, uint256 askOut) {
+    function getQuotes(uint256 amount, address base, address quote)
+        external
+        view
+        returns (uint256 bidOut, uint256 askOut)
+    {
         bidOut = askOut = getQuote(amount, base, quote);
     }
 
@@ -35,4 +39,3 @@ contract MockPriceOracle {
         return;
     }
 }
-

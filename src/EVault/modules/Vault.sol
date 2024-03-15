@@ -42,7 +42,7 @@ abstract contract VaultModule is IVault, Base, AssetTransfers, BalanceUtils {
     /// @inheritdoc IERC4626
     function maxDeposit(address account) external view virtual nonReentrantView returns (uint256) {
         MarketCache memory marketCache = loadMarket();
-        if (marketCache.disabledOps.check(OP_DEPOSIT)) return 0;
+        if (marketCache.disabledOps.get(OP_DEPOSIT)) return 0;
 
         return maxDepositInternal(marketCache, account);
     }
@@ -56,7 +56,7 @@ abstract contract VaultModule is IVault, Base, AssetTransfers, BalanceUtils {
     function maxMint(address account) external view virtual nonReentrantView returns (uint256) {
         MarketCache memory marketCache = loadMarket();
 
-        if (marketCache.disabledOps.check(OP_MINT)) return 0;
+        if (marketCache.disabledOps.get(OP_MINT)) return 0;
         return maxDepositInternal(marketCache, account).toAssets().toSharesDown(marketCache).toUint();
     }
 
@@ -69,7 +69,7 @@ abstract contract VaultModule is IVault, Base, AssetTransfers, BalanceUtils {
     /// @inheritdoc IERC4626
     function maxWithdraw(address owner) external view virtual nonReentrantView returns (uint256) {
         MarketCache memory marketCache = loadMarket();
-        if (marketCache.disabledOps.check(OP_WITHDRAW)) return 0;
+        if (marketCache.disabledOps.get(OP_WITHDRAW)) return 0;
 
         return maxRedeemInternal(owner).toAssetsDown(marketCache).toUint();
     }
@@ -83,7 +83,7 @@ abstract contract VaultModule is IVault, Base, AssetTransfers, BalanceUtils {
     /// @inheritdoc IERC4626
     function maxRedeem(address owner) external view virtual nonReentrantView returns (uint256) {
         MarketCache memory marketCache = loadMarket();
-        if (marketCache.disabledOps.check(OP_REDEEM)) return 0;
+        if (marketCache.disabledOps.get(OP_REDEEM)) return 0;
 
         return maxRedeemInternal(owner).toUint();
     }
@@ -109,7 +109,6 @@ abstract contract VaultModule is IVault, Base, AssetTransfers, BalanceUtils {
     function creator() external view virtual reentrantOK returns (address) {
         return marketStorage.creator;
     }
-
 
     /// @inheritdoc IERC4626
     function deposit(uint256 amount, address receiver) external virtual nonReentrant returns (uint256) {
@@ -180,9 +179,7 @@ abstract contract VaultModule is IVault, Base, AssetTransfers, BalanceUtils {
         (MarketCache memory marketCache, address account) = initOperation(OP_SKIM, ACCOUNTCHECK_NONE);
 
         Assets balance = marketCache.asset.balanceOf(address(this)).toAssets();
-        Assets available = balance <= marketCache.cash
-            ? Assets.wrap(0)
-            : balance - marketCache.cash;
+        Assets available = balance <= marketCache.cash ? Assets.wrap(0) : balance - marketCache.cash;
 
         Assets assets;
         if (amount == type(uint256).max) {
@@ -239,7 +236,8 @@ abstract contract VaultModule is IVault, Base, AssetTransfers, BalanceUtils {
             address controller = getController(owner);
 
             if (controller != address(0)) {
-                (bool success, bytes memory data) = controller.staticcall(abi.encodeCall(IBorrowing.collateralUsed, (address(this), owner)));
+                (bool success, bytes memory data) =
+                    controller.staticcall(abi.encodeCall(IBorrowing.collateralUsed, (address(this), owner)));
                 // if controller doesn't implement the function, assume it will not block withdrawal
                 if (success) {
                     uint256 used = abi.decode(data, (uint256));
@@ -258,14 +256,14 @@ abstract contract VaultModule is IVault, Base, AssetTransfers, BalanceUtils {
     }
 
     function maxDepositInternal(MarketCache memory marketCache, address) private view returns (uint256) {
-        uint remainingSupply;
+        uint256 remainingSupply;
 
         // In transient state with vault status checks deferred, supply caps will not be immediately enforced
         if (isVaultStatusCheckDeferred()) {
             remainingSupply = type(uint256).max;
         } else {
             uint256 supply = totalAssetsInternal(marketCache);
-            if(supply >= marketCache.supplyCap) return 0;
+            if (supply >= marketCache.supplyCap) return 0;
 
             remainingSupply = marketCache.supplyCap - supply;
         }

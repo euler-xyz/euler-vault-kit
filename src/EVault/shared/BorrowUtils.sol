@@ -46,21 +46,21 @@ abstract contract BorrowUtils is Base {
         logBorrowChange(account, prevOwed, owed);
     }
 
-    function decreaseBorrow(MarketCache memory marketCache, address account, Assets amount) internal {
-        (Owed owedExact, Owed prevOwed) = updateUserBorrow(marketCache, account);
-        Assets owed = owedExact.toAssetsUp();
+    function decreaseBorrow(MarketCache memory marketCache, address account, Assets assets) internal {
+        (Owed owed, Owed prevOwed) = updateUserBorrow(marketCache, account);
+        Assets debtAssets = owed.toAssetsUp();
 
-        if (amount > owed) revert E_RepayTooMuch();
+        if (owed > marketCache.totalBorrows) owed = marketCache.totalBorrows;
+
+        if (assets > debtAssets) revert E_RepayTooMuch();
 
         Owed owedRemaining;
         unchecked {
-            owedRemaining = (owed - amount).toOwed();
+            owedRemaining = (debtAssets - assets).toOwed();
         }
 
         marketStorage.users[account].setOwed(owedRemaining);
-        marketStorage.totalBorrows = marketCache.totalBorrows = marketCache.totalBorrows > owedExact 
-            ? marketCache.totalBorrows - owedExact + owedRemaining 
-            : owedRemaining;
+        marketStorage.totalBorrows = marketCache.totalBorrows = marketCache.totalBorrows - owed + owedRemaining;
 
         logBorrowChange(account, prevOwed, owedRemaining);
     }
@@ -72,8 +72,8 @@ abstract contract BorrowUtils is Base {
         (Owed toOwed, Owed toOwedPrev) = updateUserBorrow(marketCache, to);
 
         // If amount was rounded up, or dust is left over, transfer exact amount owed
-        if ((amount > fromOwed && (amount - fromOwed).isDust()) ||
-            (amount < fromOwed && (fromOwed - amount).isDust())) {
+        if ((amount > fromOwed && (amount - fromOwed).isDust()) || (amount < fromOwed && (fromOwed - amount).isDust()))
+        {
             amount = fromOwed;
         }
 
@@ -98,14 +98,15 @@ abstract contract BorrowUtils is Base {
         uint256 newInterestRate = marketStorage.interestRate;
 
         if (irm != address(0)) {
-            (bool success, bytes memory data) = irm.call(abi.encodeCall(IIRM.computeInterestRate, (
-                                                                            address(this),
-                                                                            marketCache.cash.toUint(),
-                                                                            marketCache.totalBorrows.toAssetsUp().toUint()
-                                                                       )));
+            (bool success, bytes memory data) = irm.call(
+                abi.encodeCall(
+                    IIRM.computeInterestRate,
+                    (address(this), marketCache.cash.toUint(), marketCache.totalBorrows.toAssetsUp().toUint())
+                )
+            );
 
             if (success && data.length >= 32) {
-                newInterestRate = abi.decode(data, (uint));
+                newInterestRate = abi.decode(data, (uint256));
                 if (newInterestRate > MAX_ALLOWED_INTEREST_RATE) newInterestRate = MAX_ALLOWED_INTEREST_RATE;
                 marketStorage.interestRate = uint72(newInterestRate);
             }

@@ -276,7 +276,6 @@ contract BalanceForwarderTest_Hooks is EVaultTestBase {
 
         assertEq(MBT.calls(feeReceiver, protocolFees, false), 1);
         assertEq(MBT.calls(govFeeReceiver, governorFees, false), 1);
-
     }
 
     function assertBalance(address user, uint256 balance) internal {

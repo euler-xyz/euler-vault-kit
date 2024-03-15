@@ -25,7 +25,9 @@ abstract contract GovernanceModule is IGovernance, Base, BalanceUtils, BorrowUti
     event GovSetGovernorAdmin(address indexed newGovernorAdmin);
     event GovSetPauseGuardian(address newPauseGuardian);
     event GovSetFeeReceiver(address indexed newFeeReceiver);
-    event GovSetLTV(address indexed collateral, uint48 targetTimestamp, uint16 targetLTV, uint32 rampDuration, uint16 originalLTV);
+    event GovSetLTV(
+        address indexed collateral, uint48 targetTimestamp, uint16 targetLTV, uint32 rampDuration, uint16 originalLTV
+    );
     event GovSetIRM(address interestRateModel);
     event GovSetDisabledOps(uint32 newDisabledOps);
     event GovSetCaps(uint16 newSupplyCap, uint16 newBorrowCap);
@@ -86,12 +88,7 @@ abstract contract GovernanceModule is IGovernance, Base, BalanceUtils, BorrowUti
     /// @inheritdoc IGovernance
     function LTVFull(address collateral) external view virtual reentrantOK returns (uint48, uint16, uint32, uint16) {
         LTVConfig memory ltv = marketStorage.ltvLookup[collateral];
-        return (
-            ltv.targetTimestamp,
-            ltv.targetLTV.toUint16(),
-            ltv.rampDuration,
-            ltv.originalLTV.toUint16()
-        );
+        return (ltv.targetTimestamp, ltv.targetLTV.toUint16(), ltv.rampDuration, ltv.originalLTV.toUint16());
     }
 
     /// @inheritdoc IGovernance
@@ -141,7 +138,7 @@ abstract contract GovernanceModule is IGovernance, Base, BalanceUtils, BorrowUti
         return address(_oracle);
     }
 
-     /// @inheritdoc IGovernance
+    /// @inheritdoc IGovernance
     function convertFees() external virtual nonReentrant {
         (MarketCache memory marketCache, address account) = initOperation(OP_CONVERT_FEES, ACCOUNTCHECK_NONE);
 
@@ -151,8 +148,8 @@ abstract contract GovernanceModule is IGovernance, Base, BalanceUtils, BorrowUti
         address governorReceiver = marketStorage.feeReceiver;
 
         if (governorReceiver == address(0)) protocolFee = 1e18; // governor forfeits fees
-        else if (protocolFee > MAX_PROTOCOL_FEE_SHARE) protocolFee = MAX_PROTOCOL_FEE_SHARE;
 
+        else if (protocolFee > MAX_PROTOCOL_FEE_SHARE) protocolFee = MAX_PROTOCOL_FEE_SHARE;
 
         Shares governorShares = marketCache.accumulatedFees.mulDiv(1e18 - protocolFee, 1e18);
         Shares protocolShares = marketCache.accumulatedFees - governorShares;
@@ -163,26 +160,15 @@ abstract contract GovernanceModule is IGovernance, Base, BalanceUtils, BorrowUti
         Assets protocolAssets = protocolShares.toAssetsDown(marketCache);
 
         // Decrease totalShares because increaseBalance will increase it by that total amount
-        marketStorage.totalShares =
-            marketCache.totalShares = marketCache.totalShares - marketCache.accumulatedFees;
+        marketStorage.totalShares = marketCache.totalShares = marketCache.totalShares - marketCache.accumulatedFees;
 
         if (governorReceiver != address(0)) {
-            increaseBalance(
-                marketCache, governorReceiver, address(0), governorShares, governorAssets
-            );
+            increaseBalance(marketCache, governorReceiver, address(0), governorShares, governorAssets);
         }
 
-        increaseBalance(
-            marketCache, protocolReceiver, address(0), protocolShares, protocolAssets
-        );
+        increaseBalance(marketCache, protocolReceiver, address(0), protocolShares, protocolAssets);
 
-        emit ConvertFees(
-            account,
-            protocolReceiver,
-            governorReceiver,
-            protocolAssets.toUint(),
-            governorAssets.toUint()
-        );
+        emit ConvertFees(account, protocolReceiver, governorReceiver, protocolAssets.toUint(), governorAssets.toUint());
     }
 
     /// @inheritdoc IGovernance
@@ -227,7 +213,13 @@ abstract contract GovernanceModule is IGovernance, Base, BalanceUtils, BorrowUti
 
         if (!origLTV.initialized) marketStorage.ltvList.push(collateral);
 
-        emit GovSetLTV(collateral, newLTV.targetTimestamp, newLTV.targetLTV.toUint16(), newLTV.rampDuration, newLTV.originalLTV.toUint16());
+        emit GovSetLTV(
+            collateral,
+            newLTV.targetTimestamp,
+            newLTV.targetLTV.toUint16(),
+            newLTV.rampDuration,
+            newLTV.originalLTV.toUint16()
+        );
     }
 
     /// @inheritdoc IGovernance
@@ -245,7 +237,7 @@ abstract contract GovernanceModule is IGovernance, Base, BalanceUtils, BorrowUti
         marketStorage.interestRateModel = newModel;
         marketStorage.interestRate = 0;
 
-        uint newInterestRate = updateInterestRate(marketCache);
+        uint256 newInterestRate = updateInterestRate(marketCache);
 
         logMarketStatus(marketCache, newInterestRate);
 
@@ -260,7 +252,7 @@ abstract contract GovernanceModule is IGovernance, Base, BalanceUtils, BorrowUti
         MarketCache memory marketCache = updateMarket();
         logMarketStatus(marketCache, marketStorage.interestRate);
 
-        marketStorage.disabledOps = Operations.wrap(newDisabledOps);
+        marketStorage.disabledOps = DisabledOps.wrap(newDisabledOps);
         emit GovSetDisabledOps(newDisabledOps);
     }
 

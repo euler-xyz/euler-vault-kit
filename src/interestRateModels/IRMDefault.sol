@@ -6,12 +6,7 @@ import "./BaseIRMLinearKink.sol";
 
 contract IRMDefault is BaseIRMLinearKink {
     constructor()
-        BaseIRMLinearKink(
-            // Base=0% APY,  Kink(50%)=10% APY  Max=300% APY
-            0,
-            1406417851,
-            19050045013,
-            2147483648
-        )
+        // Base=0% APY,  Kink(50%)=10% APY  Max=300% APY
+        BaseIRMLinearKink(0, 1406417851, 19050045013, 2147483648)
     {}
 }

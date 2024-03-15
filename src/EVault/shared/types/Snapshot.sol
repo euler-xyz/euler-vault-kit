@@ -12,7 +12,7 @@ struct Snapshot {
 }
 
 library SnapshotLib {
-    uint32 constant STAMP = 1 << 31;  // non zero initial value of the snapshot slot to save gas on SSTORE
+    uint32 constant STAMP = 1 << 31; // non zero initial value of the snapshot slot to save gas on SSTORE
 
     function set(Snapshot storage self, Assets cash, Assets borrows) internal {
         self.cash = cash;

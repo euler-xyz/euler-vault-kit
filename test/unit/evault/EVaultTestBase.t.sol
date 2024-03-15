@@ -33,7 +33,6 @@ import {MockPriceOracle} from "../../mocks/MockPriceOracle.sol";
 
 import {AssertionsCustomTypes} from "../../helpers/AssertionsCustomTypes.sol";
 
-
 import "src/EVault/shared/Constants.sol";
 
 contract EVaultTestBase is AssertionsCustomTypes, Test, DeployPermit2 {
@@ -64,7 +63,8 @@ contract EVaultTestBase is AssertionsCustomTypes, Test, DeployPermit2 {
         oracle = new MockPriceOracle();
         unitOfAccount = address(1);
         permit2 = deployPermit2();
-        Base.Integrations memory integrations = Base.Integrations(address(evc), address(protocolConfig), balanceTracker, permit2);
+        Base.Integrations memory integrations =
+            Base.Integrations(address(evc), address(protocolConfig), balanceTracker, permit2);
 
         Dispatch.DeployedModules memory modules = Dispatch.DeployedModules({
             initialize: address(new Initialize(integrations)),

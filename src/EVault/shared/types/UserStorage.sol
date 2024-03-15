@@ -8,11 +8,9 @@ type PackedUserSlot is uint256;
 
 struct UserStorage {
     PackedUserSlot data; // Shares and debt balance, balance forwarder opt-in flag
-
     uint256 interestAccumulator;
     mapping(address spender => uint256 allowance) eTokenAllowance;
 }
-
 
 library UserStorageLib {
     uint256 constant BALANCE_FORWARDER_MASK = 0x8000000000000000000000000000000000000000000000000000000000000000;

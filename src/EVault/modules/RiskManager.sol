@@ -12,22 +12,30 @@ abstract contract RiskManagerModule is IRiskManager, Base, LiquidityUtils {
     using TypesLib for uint256;
 
     /// @inheritdoc IRiskManager
-    function accountLiquidity(address account, bool liquidation) external view virtual nonReentrantView returns (uint256 collateralValue, uint256 liabilityValue) {
+    function accountLiquidity(address account, bool liquidation)
+        external
+        view
+        virtual
+        nonReentrantView
+        returns (uint256 collateralValue, uint256 liabilityValue)
+    {
         MarketCache memory marketCache = loadMarket();
 
         verifyController(account);
         address[] memory collaterals = getCollaterals(account);
 
-        return calculateLiquidity(
-            marketCache,
-            account,
-            collaterals,
-            liquidation ? LTVType.LIQUIDATION : LTVType.BORROWING
-        );
+        return
+            calculateLiquidity(marketCache, account, collaterals, liquidation ? LTVType.LIQUIDATION : LTVType.BORROWING);
     }
 
     /// @inheritdoc IRiskManager
-    function accountLiquidityFull(address account, bool liquidation) external view virtual nonReentrantView returns (address[] memory collaterals, uint256[] memory collateralValues, uint256 liabilityValue) {
+    function accountLiquidityFull(address account, bool liquidation)
+        external
+        view
+        virtual
+        nonReentrantView
+        returns (address[] memory collaterals, uint256[] memory collateralValues, uint256 liabilityValue)
+    {
         MarketCache memory marketCache = loadMarket();
 
         verifyController(account);
@@ -36,7 +44,9 @@ abstract contract RiskManagerModule is IRiskManager, Base, LiquidityUtils {
         collateralValues = new uint256[](collaterals.length);
 
         for (uint256 i; i < collaterals.length; ++i) {
-            collateralValues[i] = getCollateralValue(marketCache, account, collaterals[i], liquidation ? LTVType.LIQUIDATION : LTVType.BORROWING);
+            collateralValues[i] = getCollateralValue(
+                marketCache, account, collaterals[i], liquidation ? LTVType.LIQUIDATION : LTVType.BORROWING
+            );
         }
 
         liabilityValue = getLiabilityValue(marketCache, account, marketStorage.users[account].getOwed());

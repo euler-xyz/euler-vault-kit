@@ -10,7 +10,7 @@ uint256 constant MAX_ALLOWED_INTEREST_RATE = 291867236321699131285; // 1,000,000
 // asset amounts are shifted left by this number of bits for increased precision of debt tracking.
 uint256 constant INTERNAL_DEBT_PRECISION = 31;
 // max amount for Assets and Shares custom types based on a uint112.
-uint256 constant MAX_SANE_AMOUNT = type(uint112).max; 
+uint256 constant MAX_SANE_AMOUNT = type(uint112).max;
 // max debt amount fits in uint144 (112 + 31 bits). Last 31 bits are zeros to enusure max debt rounded up equals max sane amount.
 uint256 constant MAX_SANE_DEBT_AMOUNT = uint256(MAX_SANE_AMOUNT) << INTERNAL_DEBT_PRECISION;
 // proxy trailing calldata length in bytes. Three addresses, 20 bytes each: vault underlying asset, oracle and unit of account.
@@ -24,11 +24,6 @@ uint256 constant CONFIG_SCALE = 1e4;
 address constant ACCOUNTCHECK_NONE = address(0);
 // account status check should be scheduled for the authenticated account
 address constant ACCOUNTCHECK_CALLER = address(1);
-
-// EVC authentication
-
-// indicate which operations should check if this contract is the controller of the authenticated account
-uint32 constant CONTROLLER_ONLY_OPERATIONS = OP_BORROW | OP_LOOP | OP_PULL_DEBT | OP_LIQUIDATE;
 
 // Operations
 

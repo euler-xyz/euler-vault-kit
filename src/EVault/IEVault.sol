@@ -177,14 +177,10 @@ interface IBorrowing {
     function interestAccumulator() external view returns (uint256);
 
     /// @notice Retrieves amount of the collateral that is being actively used to support the debt of the account.
-    function collateralUsed(address collateral, address account)
-        external
-        view
-        returns (uint256);
+    function collateralUsed(address collateral, address account) external view returns (uint256);
 
     /// @notice Address of the sidecar DToken
     function dToken() external view returns (address);
-
 
     /// @notice Transfer underlying tokens from the vault to the sender, and increase sender's debt
     /// @param assets In underlying units (use max uint256 for all available tokens)
@@ -239,8 +235,7 @@ interface ILiquidation {
     /// @param collateral Collateral which is to be seized
     /// @param repayAssets The amount of underlying debt to be transferred from violator to sender, in asset units (use max uint256 to repay the maximum possible amount).
     /// @param minYieldBalance The minimum acceptable amount of collateral to be transferred from violator to sender, in collateral balance units (shares for vaults)
-    function liquidate(address violator, address collateral, uint256 repayAssets, uint256 minYieldBalance)
-        external;
+    function liquidate(address violator, address collateral, uint256 repayAssets, uint256 minYieldBalance) external;
 }
 
 interface IRiskManager is IEVCVault {
@@ -249,7 +244,10 @@ interface IRiskManager is IEVCVault {
     /// @param liquidation Flag to indicate if the calculation should be performed in liquidation vs account status check mode, where different LTV values might apply.
     /// @return collateralValue Total risk adjusted value of all collaterals in unit of account
     /// @return liabilityValue Value of debt in unit of account
-    function accountLiquidity(address account, bool liquidation) external view returns (uint256 collateralValue, uint256 liabilityValue);
+    function accountLiquidity(address account, bool liquidation)
+        external
+        view
+        returns (uint256 collateralValue, uint256 liabilityValue);
 
     /// @notice Retrieve account's liquidity per collateral
     /// @param account Account holding debt in this vault
@@ -257,7 +255,10 @@ interface IRiskManager is IEVCVault {
     /// @return collaterals Array of collaterals enabled
     /// @return collateralValues Array of risk adjusted collateral values corresponding to items in collaterals array. In unit of account
     /// @return liabilityValue Value of debt in unit of account
-    function accountLiquidityFull(address account, bool liquidation) external view returns (address[] memory collaterals, uint256[] memory collateralValues, uint256 liabilityValue);
+    function accountLiquidityFull(address account, bool liquidation)
+        external
+        view
+        returns (address[] memory collaterals, uint256[] memory collateralValues, uint256 liabilityValue);
 
     /// @notice Release control of the account on EVC if no outstanding debt is present
     function disableController() external;
@@ -325,7 +326,10 @@ interface IGovernance {
     /// @return targetLTV current regular LTV or target LTV that the ramped LTV will reach after ramp is over
     /// @return rampDuration ramp duration in seconds
     /// @return originalLTV previous LTV value, where the ramp starts
-    function LTVFull(address collateral) external view returns (uint48 targetTimestamp, uint16 targetLTV, uint32 rampDuration, uint16 originalLTV);
+    function LTVFull(address collateral)
+        external
+        view
+        returns (uint48 targetTimestamp, uint16 targetLTV, uint32 rampDuration, uint16 originalLTV);
 
     /// @notice Retrieves a list of collaterals with configured LTVs
     /// @return List of asset collaterals
@@ -356,7 +360,6 @@ interface IGovernance {
 
     /// @notice Retrieves the address of the oracle contract
     function oracle() external view returns (address);
-
 
     /// @notice Splits accrued fees balance according to protocol fee share and transfers shares to the governor fee receiver and protocol fee receiver
     function convertFees() external;
@@ -400,4 +403,13 @@ interface IGovernance {
     function setInterestFee(uint16 newFee) external;
 }
 
-interface IEVault is IInitialize, IToken, IVault, IBorrowing, ILiquidation, IRiskManager, IBalanceForwarder, IGovernance {}
+interface IEVault is
+    IInitialize,
+    IToken,
+    IVault,
+    IBorrowing,
+    ILiquidation,
+    IRiskManager,
+    IBalanceForwarder,
+    IGovernance
+{}
