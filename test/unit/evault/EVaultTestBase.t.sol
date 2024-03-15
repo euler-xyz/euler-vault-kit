@@ -43,6 +43,18 @@ contract EVaultTestBase is Test, AssertionsCustomTypes {
     address unitOfAccount;
     GenericFactory public factory;
 
+    // Modules in global scope to allow access from derived contracts
+    address initializeModule;
+    address tokenModule;
+    address vaultModule;
+    address borrowingModule;
+    address liquidationModule;
+    address riskManagerModule;
+    address balanceForwarderModule;
+    address governanceModule;
+
+    Base.Integrations integrations;
+
     TestERC20 assetTST;
     TestERC20 assetTST2;
 
@@ -59,16 +71,16 @@ contract EVaultTestBase is Test, AssertionsCustomTypes {
         balanceTracker = address(new MockBalanceTracker());
         oracle = new MockPriceOracle();
         unitOfAccount = address(1);
-        Base.Integrations memory integrations = Base.Integrations(address(evc), address(protocolConfig), balanceTracker);
+        integrations = Base.Integrations(address(evc), address(protocolConfig), balanceTracker);
 
-        address initializeModule = address(new Initialize(integrations));
-        address tokenModule = address(new Token(integrations));
-        address vaultModule = address(new Vault(integrations));
-        address borrowingModule = address(new Borrowing(integrations));
-        address liquidationModule = address(new Liquidation(integrations));
-        address riskManagerModule = address(new RiskManager(integrations));
-        address balanceForwarderModule = address(new BalanceForwarder(integrations));
-        address governanceModule = address(new Governance(integrations));
+        initializeModule = address(new Initialize(integrations));
+        tokenModule = address(new Token(integrations));
+        vaultModule = address(new Vault(integrations));
+        borrowingModule = address(new Borrowing(integrations));
+        liquidationModule = address(new Liquidation(integrations));
+        riskManagerModule = address(new RiskManager(integrations));
+        balanceForwarderModule = address(new BalanceForwarder(integrations));
+        governanceModule = address(new Governance(integrations));
 
         address evaultImpl = address(
             new EVault(
