@@ -28,9 +28,11 @@ abstract contract InvariantsSpec {
     //                                       VAULT MODULE                                        //
     ///////////////////////////////////////////////////////////////////////////////////////////////
 
-    string constant VM_INVARIANT_A = "VM_INVARIANT_A: underlying.balanceOf(vault) >= totalAssets";
+    string constant VM_INVARIANT_A = "VM_INVARIANT_A: underlying.balanceOf(vault) >= cash";
 
     string constant VM_INVARIANT_B = "VM_INVARIANT_B: If totalSupply increases new totalSupply must be less than or equal to supply cap";
+
+    string constant VM_INVARIANT_C = "VM_INVARIANT_C: If totalSupply == 0 <=> totalAssets == 0";
 
     ///////////////////////////////////////////////////////////////////////////////////////////////
     //                              VAULT MODULE: ERC4626 INVARIANTS                             //
@@ -96,7 +98,7 @@ abstract contract InvariantsSpec {
 
     string constant BM_INVARIANT_B = "BM_INVARIANT_B: totalBorrowed = sum of all user debt";
 
-    string constant BM_INVARIANT_C = "BM_INVARIANT_C: sum of all user debt = 0 => totalBorrowed = 0";
+    string constant BM_INVARIANT_C = "BM_INVARIANT_C: sum of all user debt == 0 <=> totalBorrowed == 0"; // TODO: Discarded
 
     string constant BM_INVARIANT_D = "BM_INVARIANT_D: User liability should always decrease after repayment";
 
@@ -104,18 +106,53 @@ abstract contract InvariantsSpec {
 
     string constant BM_INVARIANT_F = "BM_INVARIANT_F: If theres at least one borrow, the asset.balanceOf(vault) > 0"; //TODO: Discarded
 
-    string constant BM_INVARIANT_G = "BM_INVARIANT_G: Interest rate accumulator monotonically increases";
+    string constant BM_INVARIANT_G = "BM_INVARIANT_G: a user should always be able to withdraw all if there is no outstanding debt";
 
-    string constant BM_INVARIANT_H = "LM_INVARIANT_B: Account cannot be left unhealthy";
+    string constant BM_INVARIANT_H = "BM_INVARIANT_H: If totalBorrows increases new totalBorrows must be less than or equal to borrow cap";
 
-    string constant BM_INVARIANT_I = "BM_INVARIANT_I: If totalBorrows increases new totalBorrows must be less than or equal to borrow cap";
+    string constant BM_INVARIANT_I = "BM_INVARIANT_I: Controller cannot be disabled if there is any liability";
 
-    string constant BM_INVARIANT_J = "BM_INVARIANT_J: Controller cannot be disabled if there is any liability";
+    string constant BM_INVARIANT_J = "BM_INVARIANT_J: relation between debtOf and debtOfExact";
+
+    string constant BM_INVARIANT_K = "BM_INVARIANT_K: Functions that wont operate when user is unhealthy"; //TODO
+
+    string constant BM_INVARIANT_L = "BM_INVARIANT_L: Functions that can operate when user is unhealthy"; //TODO
+
+    string constant BM_INVARIANT_M = "BM_INVARIANT_M: Loop should get to the same state as depositing and borrowing in loop"; //TODO
+
+    string constant BM_INVARIANT_N = "BM_INVARIANT_N: loop(x) => deloop(x) users shouldn't gain any asset nor decrease debt ";
+
+    string constant BM_INVARIANT_O = "BM_INVARIANT_O: debt(user) != 0 => vault.balanceOf(user) != 0";
+
+    string constant BM_INVARIANT_P = "BM_INVARIANT_P: a user can always repay debt in full";
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////////
+    //                                          INTEREST                                         //
+    ///////////////////////////////////////////////////////////////////////////////////////////////
+
+    string constant I_INVARIANT_A = "I_INVARIANT_A: interestFee should be in range";
+
+    string constant I_INVARIANT_B = "I_INVARIANT_B: lastInterestAccumulatorUpdate <= block.timestamp";
+
+    string constant I_INVARIANT_C = "I_INVARIANT_C: updateMarket increases the value of totalBorrows";
+
+    string constant I_INVARIANT_D = "I_INVARIANT_D: interestRate in range";
+
+    string constant I_INVARIANT_E = "I_INVARIANT_E: Interest rate accumulator monotonically increases";
 
     ///////////////////////////////////////////////////////////////////////////////////////////////
     //                                    LIQUIDATION MODULE                                    //
     ///////////////////////////////////////////////////////////////////////////////////////////////
 
-    string constant LM_INVARIANT_A = "LM_INVARIANT_A: liquidation can only succed if violator is unhealthy";
+    string constant LM_INVARIANT_A = "LM_INVARIANT_A: Liquidation can only succed if violator is unhealthy";
+
+    string constant LM_INVARIANT_B = "LM_INVARIANT_B: debtSocialization == 0, exchangeRate <= exchangeRate' ";
+
+    string constant LM_INVARIANT_C = "LM_INVARIANT_C: Only a liquidation can leave a healthy account unhealthy";
+
+    string constant LM_INVARIANT_D = "LM_INVARIANT_D: Only liquidations can deteriorate health score of an already unhealthy account";
+
+    //TODO exchangeRate > exchangeRate' -> liquidation
 
 }

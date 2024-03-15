@@ -1,7 +1,9 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.19;
 
+// Contracts
 import {ERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+import 'src/EVault/shared/Constants.sol';
 
 // Base Contracts
 import {HandlerAggregator} from "../HandlerAggregator.t.sol";
@@ -31,13 +33,50 @@ abstract contract BorrowingModuleInvariants is HandlerAggregator {
     }
 
     function assert_BM_INVARIANT_C() internal {
-        if (_getDebtSum() == 0) {
+        uint256 _debtSum = _getDebtSum();
+        if (_debtSum == 0) {
             assertEq(
                 eTST.totalBorrows(),
                 0,
                 BM_INVARIANT_C
             );
         }
+
+        if (eTST.totalBorrows() == 0) {
+            assertEq(
+                _debtSum,
+                0,
+                BM_INVARIANT_C
+            );
+        }
+    }
+
+    function assert_BM_INVARIANT_J(address _actor) internal {
+        //If debt has no decimals
+        if (eTST.debtOfExact(_actor) % (1 << INTERNAL_DEBT_PRECISION) == 0) {
+            // Debt of actor with 31 bits of precision should be equal to debt of actor exact
+            assertEq(
+                eTST.debtOf(_actor) << INTERNAL_DEBT_PRECISION,
+                eTST.debtOfExact(_actor),
+                BM_INVARIANT_J
+            );
+        } else {
+            // If it has decimals, debtOf should be equal that debtOfExact rounded to the next integer
+            assertEq(
+                eTST.debtOf(_actor),
+                eTST.debtOfExact(_actor) >> INTERNAL_DEBT_PRECISION + 1,
+                BM_INVARIANT_J
+            );
+        }
+    }
+
+    function assert_BM_INVARIANT_O(address _actor) internal {
+        assertTrue(
+            eTST.debtOf(_actor) != 0
+                ? eTST.balanceOf(_actor) != 0
+                : true,
+            BM_INVARIANT_O
+        );
     }
 
     //////////////////////////////////////////////////////////////////////////////////////////////

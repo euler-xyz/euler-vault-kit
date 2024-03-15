@@ -10,6 +10,7 @@ import {Pretty, Strings} from "../utils/Pretty.sol";
 
 // Test Contracts
 import {BaseHooks} from "../base/BaseHooks.t.sol";
+import {ILiquidationModuleHandler} from '../handlers/interfaces/ILiquidationModuleHandler.sol';
 
 /// @title Borrowing Before After Hooks
 /// @notice Helper contract for before and after hooks
@@ -94,21 +95,15 @@ abstract contract BorrowingBeforeAfterHooks is BaseHooks {
     //                                POST CONDITION INVARIANTS                                  //
     /////////////////////////////////////////////////////////////////////////////////////////////*/
 
-    function assert_BM_INVARIANT_G() internal {
+    function assert_I_INVARIANT_E() internal {
         assertGe(
             borrowingVars.interestAccumulatorAfter,
             borrowingVars.interestAccumulatorBefore,
-            BM_INVARIANT_G
+            I_INVARIANT_E
         );
     }
 
     function assert_BM_INVARIANT_H() internal {
-        if (isAccountHealthy(borrowingVars.liabilityValueBefore, borrowingVars.collateralValueBefore)) {
-            assertTrue(isAccountHealthy(borrowingVars.liabilityValueAfter, borrowingVars.collateralValueAfter), BM_INVARIANT_H);
-        }
-    }
-
-    function assert_BM_INVARIANT_I() internal {
         assertTrue(
             (borrowingVars.totalBorrowsAfter > borrowingVars.totalBorrowsBefore && borrowingVars.borrowCapAfter != 0)
                 ? (borrowingVars.borrowCapAfter >= borrowingVars.totalBorrowsAfter)
@@ -117,9 +112,28 @@ abstract contract BorrowingBeforeAfterHooks is BaseHooks {
         );
     }
 
-    function assert_BM_INVARIANT_J() internal {
+    function assert_BM_INVARIANT_I() internal {
         if (borrowingVars.userDebtBefore > 0) {
             assertEq(borrowingVars.controllerEnabledAfter, true, BM_INVARIANT_J);
+        }
+    }
+
+    function assert_LM_INVARIANT_C() internal {
+        if (isAccountHealthy(borrowingVars.liabilityValueBefore, borrowingVars.collateralValueBefore)) {
+            if (!isAccountHealthy(borrowingVars.liabilityValueAfter, borrowingVars.collateralValueAfter)) {
+                assertEq(bytes32(msg.sig), bytes32(ILiquidationModuleHandler.liquidate.selector), LM_INVARIANT_C);
+            }
+        }
+    }
+
+    function assert_LM_INVARIANT_D() internal {
+      if (!isAccountHealthy(borrowingVars.liabilityValueBefore, borrowingVars.collateralValueBefore)) {
+            uint256 healthScoreBefore = _getHealthScore(borrowingVars.liabilityValueBefore, borrowingVars.collateralValueBefore);
+            uint256 healthScoreAfter = _getHealthScore(borrowingVars.liabilityValueAfter, borrowingVars.collateralValueAfter);
+        
+            if (healthScoreBefore > healthScoreAfter) {
+                assertEq(bytes32(msg.sig), bytes32(ILiquidationModuleHandler.liquidate.selector), LM_INVARIANT_D);
+            }
         }
     }
 }

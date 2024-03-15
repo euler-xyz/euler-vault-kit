@@ -38,4 +38,8 @@ contract EVaultExtended is EVault {
     function getSnapshot() external view returns (Snapshot memory) {
         return snapshot;
     }
+
+    function getLastInterestAccumulatorUpdate() external view returns (uint256) {
+        return marketStorage.lastInterestAccumulatorUpdate;
+    }
 }

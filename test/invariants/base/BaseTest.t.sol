@@ -32,10 +32,10 @@ abstract contract BaseTest is BaseStorage, PropertiesConstants, StdAsserts, StdU
     }
 
     /// @dev Solves medusa backward time warp issue
-    modifier monotonicTimestamp(address _vault) virtual {
-/*         if (block.timestamp < VaultSimple(_vault).getLastInterestUpdate()) {
-            vm.warp(VaultSimple(_vault).getLastInterestUpdate());
-        } */
+    modifier monotonicTimestamp() virtual {
+        if (block.timestamp < eTST.getLastInterestAccumulatorUpdate()) {
+            vm.warp(eTST.getLastInterestAccumulatorUpdate());
+        }
         _;
     }
 

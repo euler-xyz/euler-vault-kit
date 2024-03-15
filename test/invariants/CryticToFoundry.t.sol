@@ -35,11 +35,6 @@ contract CryticToFoundry is Invariants, Setup {
     //                                 BROKEN INVARIANTS REPLAY                                  //
     /////////////////////////////////////////////////////////////////////////////////////////////// 
 
-    function test_deposit_replay() public {
-        this.mint(12, 0xC021328003Eb58b26054AFF87525bb65Ba267611);
-        echidna_TM_INVARIANT();
-    }
-
     function _setUpBlockAndActor(uint256 _block, address _user) internal {
         vm.roll(_block);
         actor = actors[_user];

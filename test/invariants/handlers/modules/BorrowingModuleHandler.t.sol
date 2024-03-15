@@ -6,7 +6,7 @@ import {Actor} from "../../utils/Actor.sol";
 import {BaseHandler} from "../../base/BaseHandler.t.sol";
 
 // Interfaces
-import {IBorrowing} from "src/EVault/IEVault.sol";
+import {IBorrowing, IERC4626} from "src/EVault/IEVault.sol";
 
 /// @title BorrowingModuleHandler
 /// @notice Handler test contract for the BorrowingModule actions
@@ -127,6 +127,72 @@ contract BorrowingModuleHandler is BaseHandler {
             _after();
         }
     }
+
+    function touch() external {
+        uint256 totalBorrowsBefore = eTST.totalBorrows();
+
+        eTST.touch();
+
+        uint256 totalBorrowsAfter = eTST.totalBorrows();
+
+        /// @dev I_INVARIANT_C
+        assertGe(totalBorrowsAfter, totalBorrowsBefore, I_INVARIANT_C);
+    }
+
+    ///////////////////////////////////////////////////////////////////////////////////////////////
+    //                                     ROUNDTRIP PROPERTIES                                  //
+    ///////////////////////////////////////////////////////////////////////////////////////////////
+
+    function aasert_BM_INVARIANT_G() external setup {
+        bool success;
+        bytes memory returnData;
+
+        if (eTST.debtOf(address(actor)) == 0) {
+            uint256 balanceBefore = eTST.balanceOf(address(actor));
+            (success, returnData) = actor.proxy(address(eTST), abi.encodeWithSelector(IERC4626.withdraw.selector, balanceBefore, address(actor)));
+            
+            assertTrue(success, BM_INVARIANT_G);
+        }
+    }
+
+    function assert_BM_INVARIANT_P() external setup {
+        bool success;
+        bytes memory returnData;
+
+        uint256 totalOwed = eTST.debtOf(address(actor));
+
+        if (totalOwed == 0) {
+            return;
+        }
+
+        (success, returnData) = actor.proxy(address(eTST), abi.encodeWithSelector(IBorrowing.repay.selector, totalOwed, address(actor)));
+
+        assertTrue(success, BM_INVARIANT_P);
+        assertEq(eTST.debtOf(address(actor)), 0, BM_INVARIANT_P);
+    }
+
+    function assert_BM_INVARIANT_N(uint256 amount) external setup {
+        bool success;
+        bytes memory returnData;
+
+
+        uint256 debtBefore = eTST.debtOf(address(actor)); 
+        uint256 balanceBefore = eTST.balanceOf(address(actor));
+
+        (success, returnData) = actor.proxy(address(eTST), abi.encodeWithSelector(IBorrowing.loop.selector, amount, address(actor)));
+
+        if (success) {
+            (success, returnData) = actor.proxy(address(eTST), abi.encodeWithSelector(IBorrowing.deloop.selector, amount, address(actor)));
+        }
+
+        if (success) {
+            uint256 debtAfter = eTST.debtOf(address(actor));
+            uint256 balanceAfter = eTST.balanceOf(address(actor));
+
+            assertEq(debtBefore, debtAfter, BM_INVARIANT_N);
+            assertEq(balanceBefore, balanceAfter, BM_INVARIANT_N);
+        }
+ }
 
     ///////////////////////////////////////////////////////////////////////////////////////////////
     //                                         OWNER ACTIONS                                     //

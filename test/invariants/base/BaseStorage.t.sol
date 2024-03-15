@@ -4,6 +4,7 @@ pragma solidity ^0.8.19;
 // Contracts
 import {EthereumVaultConnector} from "ethereum-vault-connector/EthereumVaultConnector.sol";
 import {ProtocolConfig} from "src/ProtocolConfig/ProtocolConfig.sol";
+import 'src/EVault/shared/Constants.sol';
 
 // Mock Contracts
 import {TestERC20} from "../../mocks/TestERC20.sol";
@@ -31,6 +32,9 @@ abstract contract BaseStorage {
     uint256 internal constant NUMBER_OF_ACTORS = 3;
     uint256 internal constant INITIAL_ETH_BALANCE = 1e26;
     uint256 internal constant INITIAL_COLL_BALANCE = 1e21;
+
+    uint256 constant MIN_INTEREST_FEE = 0.01 * 60_000;
+    uint256 constant MAX_INTEREST_FEE = 0.5 * 60_000;
 
     uint256 internal constant diff_tolerance = 0.000000000002e18; //compared to 1e18
     uint256 internal constant MAX_PRICE_CHANGE_PERCENT = 1.05e18; //compared to 1e18

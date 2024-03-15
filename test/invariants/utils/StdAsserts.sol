@@ -187,6 +187,21 @@ abstract contract StdAsserts is PropertiesAsserts {
         }
     }
 
+    function assertEq(bytes32 a, bytes32 b) internal {
+        if (a != b) {
+            emit log("Error: a == b not satisfied [bytes32]");
+            emit log_named_bytes32("      Left", a);
+            emit log_named_bytes32("     Right", b);
+            fail();
+        }
+    }
+    function assertEq(bytes32 a, bytes32 b, string memory err) internal {
+        if (a != b) {
+            emit log_named_string ("Error", err);
+            assertEq(a, b);
+        }
+    }
+
     // Legacy helper
     function assertEqUint(uint256 a, uint256 b) internal virtual {
         assertEq(uint256(a), uint256(b));

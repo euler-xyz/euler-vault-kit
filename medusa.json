@@ -27,7 +27,7 @@
 		"transactionGasLimit": 1250000000,
 		"testing": {
 			"stopOnFailedTest": true,
-			"stopOnFailedContractMatching": true,
+			"stopOnFailedContractMatching": false,
 			"stopOnNoTests": true,
 			"testAllContracts": false,
 			"traceAll": false,

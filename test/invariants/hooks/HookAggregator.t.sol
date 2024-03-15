@@ -30,11 +30,15 @@ abstract contract HookAggregator is
     function _postConditions() internal {
         // Vault
         assert_VM_INVARIANT_B();
+        assert_LM_INVARIANT_B();
 
         // Borrowing
-        assert_BM_INVARIANT_G();
+        assert_I_INVARIANT_E();
         assert_BM_INVARIANT_H();
         assert_BM_INVARIANT_I();
-        assert_BM_INVARIANT_J();
+
+        // Liquidation
+        assert_LM_INVARIANT_C();
+        assert_LM_INVARIANT_D();
     }
 }

@@ -17,9 +17,15 @@ abstract contract VaultModuleInvariants is HandlerAggregator {
     function assert_VM_INVARIANT_A() internal {
         assertGe(
             IERC20(address(eTST.asset())).balanceOf(address(eTST)),
-            eTST.totalAssets(),
+            eTST.cash(),
             VM_INVARIANT_A
         );
+    }
+
+    function asset_VM_INVARIANT_C() internal {
+        if (eTST.totalSupply() == 0) {
+            assertEq(eTST.totalAssets(), 0, VM_INVARIANT_C);
+        }
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////////

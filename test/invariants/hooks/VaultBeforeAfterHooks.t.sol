@@ -80,4 +80,14 @@ abstract contract VaultBeforeAfterHooks is BaseHooks {
             VM_INVARIANT_B
         );
     }
+
+    function assert_LM_INVARIANT_B() internal {
+        if (eTST.debtSocialization()) {
+            assertGe(
+                vaultVars.exchangeRateAfter,
+                vaultVars.exchangeRateBefore,
+                LM_INVARIANT_B
+            );
+        }
+    }
 }

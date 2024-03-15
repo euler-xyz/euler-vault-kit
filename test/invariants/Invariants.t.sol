@@ -7,7 +7,7 @@ import {TokenModuleInvariants} from "./invariants/TokenModuleInvariants.t.sol";
 import {VaultModuleInvariants} from "./invariants/VaultModuleInvariants.t.sol";
 import {BorrowingModuleInvariants} from "./invariants/BorrowingModuleInvariants.t.sol";
 import {LiquidationModuleInvariants} from "./invariants/LiquidationModuleInvariants.t.sol";
-
+import {InterestInvariants} from "./invariants/InterestInvariants.t.sol";
 /// @title Invariants
 /// @notice Wrappers for the protocol invariants implemented in each invariants contract
 /// @dev recognised by Echidna when property mode is activated
@@ -17,7 +17,8 @@ abstract contract Invariants is
     TokenModuleInvariants,
     VaultModuleInvariants,
     BorrowingModuleInvariants,
-    LiquidationModuleInvariants
+    LiquidationModuleInvariants,
+    InterestInvariants
 {
     ///////////////////////////////////////////////////////////////////////////////////////////////
     //                                     BASE INVARIANTS                                       //
@@ -33,7 +34,7 @@ abstract contract Invariants is
     //                                 TOKEN MODULE INVARIANTS                                   //
     ///////////////////////////////////////////////////////////////////////////////////////////////
 
-    function echidna_TM_INVARIANT() public returns (bool) {
+    function echidna_TM_INVARIANT() public monotonicTimestamp returns (bool) {
         assert_TM_INVARIANT_A();
 
         uint256 _sumBalanceOf;
@@ -43,18 +44,19 @@ abstract contract Invariants is
         }
         assert_TM_INVARIANT_C(_sumBalanceOf);
         return true;
-    }
+    } 
 
     ///////////////////////////////////////////////////////////////////////////////////////////////
     //                                       VAULT MODULE                                        //
     ///////////////////////////////////////////////////////////////////////////////////////////////
 
-    function echidna_VM_INVARIANT() public returns (bool) {
-        //assert_VM_INVARIANT_A(); @audit failing 
+    function echidna_VM_INVARIANT() public monotonicTimestamp returns (bool) {
+        assert_VM_INVARIANT_A();
+        asset_VM_INVARIANT_C();
         return true;
     }
 
-    function echidna_ERC4626_ASSETS_INVARIANT() public returns (bool) {
+    function echidna_ERC4626_ASSETS_INVARIANT() public monotonicTimestamp returns (bool) {
         assert_ERC4626_ASSETS_INVARIANT_A();
         assert_ERC4626_ASSETS_INVARIANT_B();
         assert_ERC4626_ASSETS_INVARIANT_C();
@@ -62,7 +64,7 @@ abstract contract Invariants is
         return true;
     }
 
-    function echidna_ERC4626_ACTIONS_INVARIANT() public returns (bool) {
+    function echidna_ERC4626_ACTIONS_INVARIANT() public monotonicTimestamp returns (bool) {
         for (uint256 i; i < NUMBER_OF_ACTORS; i++) {
             assert_ERC4626_DEPOSIT_INVARIANT_A(actorAddresses[i]);
             assert_ERC4626_MINT_INVARIANT_A(actorAddresses[i]);
@@ -76,12 +78,24 @@ abstract contract Invariants is
     //                                BORROWING MODULE INVARIANTS                                //
     ///////////////////////////////////////////////////////////////////////////////////////////////
 
-    function echidna_BM_INVARIANT() public returns (bool) {
+    function echidna_BM_INVARIANT() public monotonicTimestamp returns (bool) {
         for (uint256 i; i < NUMBER_OF_ACTORS; i++) {
             assert_BM_INVARIANT_A(actorAddresses[i]);
+            assert_BM_INVARIANT_J(actorAddresses[i]);
+            assert_BM_INVARIANT_O(actorAddresses[i]);
         }
         assert_BM_INVARIANT_B();
-        assert_BM_INVARIANT_C();
+        return true;
+    }
+
+    ///////////////////////////////////////////////////////////////////////////////////////////////
+    //                                        INTEREST INVARIANTS                                //
+    ///////////////////////////////////////////////////////////////////////////////////////////////
+
+    function echidna_I_INVARIANT() public monotonicTimestamp returns (bool) {
+        assert_I_INVARIANT_A();
+        assert_I_INVARIANT_B();
+        assert_I_INVARIANT_D();
         return true;
     }
 }

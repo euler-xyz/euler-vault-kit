@@ -56,4 +56,4 @@ maxValue: 100000000000000000000000 # 100000 eth
 quiet: false
 
 # concurrent workers
-workers: 8
+workers: 10
