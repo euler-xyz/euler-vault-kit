@@ -31,11 +31,11 @@ contract ETHPSMTest is Test {
 
         // Deploy synth
         vm.prank(owner);
-        synth = new ESynth(IEVC(evc), "TestSynth", "TSYNTH");
+        synth = new ESynth(evc, "TestSynth", "TSYNTH");
 
         // Deploy PSM
         vm.prank(owner);
-        psm = new ETHPSM(address(synth), TO_UNDERLYING_FEE, TO_SYNTH_FEE);
+        psm = new ETHPSM(address(evc), address(synth), TO_UNDERLYING_FEE, TO_SYNTH_FEE);
 
         // Give PSM and wallets some ETH
         vm.deal(address(psm), 100e18);

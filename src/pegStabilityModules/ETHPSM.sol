@@ -14,7 +14,7 @@ contract ETHPSM is EVCUtil {
 
     error E_TranferFailed();
 
-    constructor(address _synth, uint toUnderlyingFeeBPS, uint toSynthFeeBPS) EVCUtil(IEVC(address(0))) {
+    constructor(address _evc, address _synth, uint toUnderlyingFeeBPS, uint toSynthFeeBPS) EVCUtil(IEVC(_evc)) {
         synth = IESynth(_synth);
         TO_UNDERLYING_FEE = toUnderlyingFeeBPS;
         TO_SYNTH_FEE = toSynthFeeBPS;
