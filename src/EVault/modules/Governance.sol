@@ -16,9 +16,9 @@ abstract contract GovernanceModule is IGovernance, Base, BalanceUtils, BorrowUti
     using TypesLib for uint16;
 
     // Protocol guarantees
-    uint256 constant MAX_PROTOCOL_FEE_SHARE = 0.5 * 1e18; // 50%
-    uint256 constant GUARANTEED_INTEREST_FEE_MIN = CONFIG_SCALE * 1 / 100; // 1%
-    uint256 constant GUARANTEED_INTEREST_FEE_MAX = CONFIG_SCALE * 50 / 100; // 50%
+    uint16 constant MAX_PROTOCOL_FEE_SHARE = 0.5e4;
+    uint16 constant GUARANTEED_INTEREST_FEE_MIN = 0.01e4;
+    uint16 constant GUARANTEED_INTEREST_FEE_MAX = 0.5e4;
 
     event GovSetName(string newName);
     event GovSetSymbol(string newSymbol);
@@ -147,14 +147,14 @@ abstract contract GovernanceModule is IGovernance, Base, BalanceUtils, BorrowUti
 
         if (marketCache.accumulatedFees.isZero()) return;
 
-        (address protocolReceiver, uint256 protocolFee) = protocolConfig.feeConfig(address(this));
+        (address protocolReceiver, uint16 protocolFee) = protocolConfig.feeConfig(address(this));
         address governorReceiver = marketStorage.feeReceiver;
 
-        if (governorReceiver == address(0)) protocolFee = 1e18; // governor forfeits fees
+        if (governorReceiver == address(0)) protocolFee = 1e4; // governor forfeits fees
         else if (protocolFee > MAX_PROTOCOL_FEE_SHARE) protocolFee = MAX_PROTOCOL_FEE_SHARE;
 
 
-        Shares governorShares = marketCache.accumulatedFees.mulDiv(1e18 - protocolFee, 1e18);
+        Shares governorShares = marketCache.accumulatedFees.mulDiv(1e4 - protocolFee, 1e4);
         Shares protocolShares = marketCache.accumulatedFees - governorShares;
 
         marketStorage.accumulatedFees = marketCache.accumulatedFees = Shares.wrap(0);

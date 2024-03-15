@@ -6,7 +6,7 @@ import {ConfigAmount} from "./Types.sol";
 import {Errors} from "../Errors.sol";
 import "../Constants.sol";
 
-// ConfigAmounts are floating point values encoded in 16 bits with a CONFIG_SCALE precision (10 000).
+// ConfigAmounts are floating point values encoded in 16 bits with a CONFIG_SCALE precision (1e4).
 // The type is used to store protocol configuration values.
 
 library ConfigAmountLib {
