@@ -102,6 +102,8 @@ abstract contract BalanceUtils is Base {
     }
 
     function decreaseAllowance(address owner, address spender, Shares amount) internal {
+        if (amount.isZero()) return;
+
         uint256 allowance = marketStorage.users[owner].eTokenAllowance[spender];
         if (owner != spender && allowance != type(uint256).max) {
             if (allowance < amount.toUint()) revert E_InsufficientAllowance();
