@@ -300,7 +300,7 @@ interface IGovernance {
     function pauseGuardian() external view returns (address);
 
     /// @notice Retrieves the interest fee in effect for the vault
-    /// @return Amount of interest that is redirected as a fee, as a fraction scaled by CONFIG_SCALE (1e4)
+    /// @return Amount of interest that is redirected as a fee, as a fraction scaled by 1e4
     function interestFee() external view returns (uint16);
 
     /// @notice Retrieves the ProtocolConfig address
@@ -378,7 +378,7 @@ interface IGovernance {
 
     /// @notice Set a new LTV config
     /// @param collateral Address of collateral to set LTV for
-    /// @param ltv New LTV in CONFIG_SCALE (1e4)
+    /// @param ltv New LTV in 1e4 scale
     /// @param rampDuration Ramp duration in seconds
     function setLTV(address collateral, uint16 ltv, uint32 rampDuration) external;
 
