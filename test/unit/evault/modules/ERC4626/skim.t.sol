@@ -131,8 +131,18 @@ contract ERC4626Test_Skim is EVaultTestBase {
 
         uint value = 1e18;
 
+        vm.expectRevert(Errors.E_BadSharesReceiver.selector);
         eTST.skim(value, address(0));
-        assertEq(eTST.balanceOf(user), value);
     }
-    
+
+    function test_burnAddressReceiver() public {
+        uint amount = 20e18;
+        vm.startPrank(user);
+        assetTST.transfer(address(eTST), amount);
+
+        uint value = 1e18;
+
+        eTST.skim(value, address(1));
+        assertEq(eTST.balanceOf(user), 0);
+    }
 }
