@@ -68,4 +68,64 @@ contract ERC4626Test_ProtocolConfig is EVaultTestBase {
         vm.expectRevert(Errors.E_BadFee.selector);
         eTST.setInterestFee(0.55e4);
     }
+
+    function test_override_interestFeeRanges() public {
+        vm.prank(admin);
+        protocolConfig.setInterestFeeRange(address(eTST), true, 1e3, type(uint16).max);
+
+        (uint16 vaultMinInterestFee, uint16 vaultMaxInterestFee) = protocolConfig.interestFeeRanges(address(eTST));
+
+        assertEq(vaultMinInterestFee, 1e3);
+        assertEq(vaultMaxInterestFee, type(uint16).max);
+
+        // reset vault to use generic ranges
+        vm.prank(admin);
+        protocolConfig.setInterestFeeRange(address(eTST), false, 1e3, type(uint16).max);
+
+        (uint16 genericMinInterestFee, uint16 genericMaxInterestFee) = protocolConfig.interestFeeRanges(address(0));
+        (vaultMinInterestFee, vaultMaxInterestFee) = protocolConfig.interestFeeRanges(address(eTST));
+
+        assertEq(vaultMinInterestFee, genericMinInterestFee);
+        assertEq(vaultMaxInterestFee, genericMaxInterestFee);
+    }
+
+    function test_updateProtocolConfig() public {
+        address newFeeReceiver = makeAddr("newFeeReceiver");
+
+        vm.prank(admin);
+        protocolConfig.setFeeReceiver(newFeeReceiver);
+
+        (address protocolFeeReceiver,) = protocolConfig.protocolFeeConfig(address(0));
+        assertEq(protocolFeeReceiver, newFeeReceiver);
+
+
+        vm.prank(admin);
+        protocolConfig.setProtocolFeeShare(2e17);
+
+        (, uint256 feeShare) = protocolConfig.protocolFeeConfig(address(0));
+        assertEq(feeShare, 2e17);
+    }
+
+    function test_override_feeConfig() public {
+        address newFeeReceiver = makeAddr("newFeeReceiver");
+        uint256 newFeeShare = 2e17;
+
+        vm.prank(admin);
+        protocolConfig.setFeeConfigSetting(address(eTST), true, newFeeReceiver, newFeeShare);
+
+        (address feeReceiver, uint256 feeShare) = protocolConfig.protocolFeeConfig(address(eTST));
+
+        assertEq(feeReceiver, newFeeReceiver);
+        assertEq(feeShare, newFeeShare);
+
+        // reset vault to use generic ranges
+        vm.prank(admin);
+        protocolConfig.setFeeConfigSetting(address(eTST), false, newFeeReceiver, newFeeShare);
+
+        (address genericFeeReceiver, uint256 genericFeeShare) = protocolConfig.protocolFeeConfig(address(0));
+        (feeReceiver, feeShare) = protocolConfig.protocolFeeConfig(address(eTST));
+
+        assertEq(genericFeeReceiver, feeReceiver);
+        assertEq(genericFeeShare, feeShare);
+    }
 }

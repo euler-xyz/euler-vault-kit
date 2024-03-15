@@ -22,16 +22,16 @@ contract ProtocolConfig is IProtocolConfig {
     }
 
     /// @dev admin address
-    address admin;
+    address public admin;
     /// @dev protocol fee receiver
-    address feeReceiver;
+    address internal feeReceiver;
 
     /// @dev min interest fee, applied to all vault, unless a vault has a configured fee ranges by admin
-    uint16 minInterestFee;
+    uint16 internal minInterestFee;
     /// @dev max interest fee, applied to all vault, unless a vault has a configured fee ranges by admin
-    uint16 maxInterestFee;
+    uint16 internal maxInterestFee;
     /// @dev protocol fee share, applied to all vault, unless vault has a configured protocol fee config by admin
-    uint16 protocolFeeShare;
+    uint16 internal protocolFeeShare;
 
     /// @dev mapping of vault address to it's interest fee range
     mapping(address vault => InterestFeeRange) internal _interestFeeRanges;
@@ -44,7 +44,8 @@ contract ProtocolConfig is IProtocolConfig {
     event SetFeeReceiver(address indexed oldFeeReceiver, address indexed newFeeReceiver);
     event SetInterestFeeRange(address indexed vault, bool exists, uint16 minInterestFee, uint16 maxInterestFee);
     event SetFeeConfigSetting(address indexed ault, bool exists, address indexed feeReceiver, uint256 protocolFeeShare);
-    
+    event SetProtocolFeeShare(uint256 protocolFeeShare, uint256 newProtocolFeeShare);
+
     /**
      * @dev constructor
      * @param admin_ admin's address
@@ -112,6 +113,17 @@ contract ProtocolConfig is IProtocolConfig {
         emit SetFeeReceiver(feeReceiver, newReceiver);
         
         feeReceiver = newReceiver;
+    }
+
+    /**
+     * @notice set protocol fee share
+     * @dev can only be called by admin
+     * @param newProtocolFeeShare new protocol fee share
+     */
+    function setProtocolFeeShare(uint256 newProtocolFeeShare) external onlyAdmin {
+        emit SetProtocolFeeShare(protocolFeeShare, newProtocolFeeShare);
+
+        protocolFeeShare = newProtocolFeeShare;
     }
 
     /**
