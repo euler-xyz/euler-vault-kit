@@ -10,4 +10,6 @@ out/
 # Dotenv file
 .env
 .vscode
+
+# Coverage report
 lcov.info

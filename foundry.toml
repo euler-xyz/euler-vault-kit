@@ -10,10 +10,6 @@ solc = "0.8.23"
 fs_permissions = [{ access = "read-write", path = "./"}]
 
 etherscan_api_key = ""
-remappings = [
-  "ethereum-vault-connector/=lib/ethereum-vault-connector/src",
-  "permit2/=lib/permit2"
-]
 gas_reports = ["*"]
 
 
@@ -32,10 +28,21 @@ ignore = [
     "src/EVault/shared/types/MarketCache.sol"
 ]
 
-
 [profile.default.fuzz]
 max_test_rejects = 1_000_000
 seed = "0xee1d0f7d9556539a9c0e26aed5e63556"
 runs = 1000
+
+[profile.coverage]
+via_ir = true
+no_match_contract = "Script"
+
+[profile.coverage.optimizer_details]
+constantOptimizer = true
+yul = true
+
+[profile.coverage.optimizer_details.yulDetails]
+stackAllocation = true
+optimizerSteps = ''
 
 # See more config options https://github.com/foundry-rs/foundry/blob/master/crates/config/README.md#all-options
