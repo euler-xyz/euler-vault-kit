@@ -3,16 +3,11 @@
 pragma solidity ^0.8.0;
 
 import {Ownable} from "openzeppelin/access/Ownable.sol";
-import {IESynth} from "./IESynth.sol";
 import {ERC20Collateral, ERC20, Context} from "../ERC20Collateral/ERC20Collateral.sol";
 import {IEVC, EVCUtil} from "ethereum-vault-connector/utils/EVCUtil.sol";
+import {IEVault} from "../EVault/IEVault.sol";
 
-interface IVault {
-    function increaseCash(uint256 amount) external;
-    function decreaseCash(uint256 amount) external;
-}
-
-contract ESynth is IESynth, ERC20Collateral, Ownable {
+contract ESynth is ERC20Collateral, Ownable {
     struct MinterData {
         uint128 capacity;
         uint128 minted;
@@ -38,7 +33,7 @@ contract ESynth is IESynth, ERC20Collateral, Ownable {
     /// @dev Can only be called by an address that has sufficient minting capacity.
     /// @param account The account to mint the tokens to.
     /// @param amount The amount of tokens to mint.
-    function mint(address account, uint256 amount) external override nonReentrant {
+    function mint(address account, uint256 amount) external nonReentrant {
         address sender = _msgSender();
         MinterData storage minterCache = minters[sender];
 
@@ -56,7 +51,7 @@ contract ESynth is IESynth, ERC20Collateral, Ownable {
     /// @dev Performs account status check as this would possibly put an account into an undercollateralized state.
     /// @param account The account to burn the tokens from.
     /// @param amount The amount of tokens to burn.
-    function burn(address account, uint256 amount) external override nonReentrant {
+    function burn(address account, uint256 amount) external nonReentrant {
         address sender = _msgSender();
         MinterData storage minterCache = minters[sender];
 
@@ -73,18 +68,21 @@ contract ESynth is IESynth, ERC20Collateral, Ownable {
         _burn(account, amount);
     }
 
-    /// @notice Increase cash available in an attached vault.
-    /// @param vault The vault to increase the cash for.
-    /// @param amount The amount of cash to increase.
-    function increaseCash(address vault, uint256 amount) external onlyOwner nonReentrant {
-        IVault(vault).increaseCash(amount);
+    /// @notice Deposit cash in the attached vault.
+    /// @param vault The vault to deposit the cash in.
+    /// @param amount The amount of cash to deposit.
+    function mintAndDeposit(address vault, uint256 amount) external onlyOwner {
+        _mint(address(this), amount);
+        _approve(address(this), vault, amount, true);
+        IEVault(vault).deposit(amount, address(this));
     }
 
-    /// @notice Decrease cash available in an attached vault.
-    /// @param vault The vault to decrease the cash for.
-    /// @param amount The amount of cash to decrease.
-    function decreaseCash(address vault, uint256 amount) external onlyOwner nonReentrant {
-        IVault(vault).decreaseCash(amount);
+    /// @notice Withdraw cash from the attached vault.
+    /// @param vault The vault to withdraw the cash from.
+    /// @param amount The amount of cash to withdraw.
+    function withdrawAndBurn(address vault, uint256 amount) external onlyOwner {
+        IEVault(vault).withdraw(amount, address(this), address(this));
+        _burn(address(this), amount);
     }
 
     /// @notice Retrieves the message sender in the context of the EVC.

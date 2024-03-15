@@ -72,11 +72,11 @@ contract EVault is Dispatch {
     function creator() external view override useView(MODULE_VAULT) returns (address) {}
 
 
-    function deposit(uint256 assets, address receiver) external override virtual callThroughEVC use(MODULE_VAULT) returns (uint256) {}
+    function deposit(uint256 assets, address receiver) public override virtual callThroughEVC use(MODULE_VAULT) returns (uint256) {}
 
     function mint(uint256 shares, address receiver) external override virtual callThroughEVC use(MODULE_VAULT) returns (uint256) {}
 
-    function withdraw(uint256 assets, address receiver, address owner) external override virtual callThroughEVC use(MODULE_VAULT) returns (uint256) {}
+    function withdraw(uint256 assets, address receiver, address owner) public override virtual callThroughEVC use(MODULE_VAULT) returns (uint256) {}
 
     function redeem(uint256 shares, address receiver, address owner) external override virtual callThroughEVC use(MODULE_VAULT) returns (uint256) {}
 
