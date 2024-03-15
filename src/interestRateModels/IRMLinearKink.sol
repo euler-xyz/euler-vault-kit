@@ -4,7 +4,7 @@ pragma solidity ^0.8.0;
 
 import "./IIRM.sol";
 
-contract BaseIRMLinearKink is IIRM {
+contract IRMLinearKink is IIRM {
     uint256 public immutable baseRate;
     uint256 public immutable slope1;
     uint256 public immutable slope2;
@@ -17,7 +17,17 @@ contract BaseIRMLinearKink is IIRM {
         kink = kink_;
     }
 
-    function computeInterestRate(address, uint256 cash, uint256 borrows) external view override returns (uint256) {
+    function computeInterestRate(address vault, uint256 cash, uint256 borrows) external view override returns (uint256) {
+        if (msg.sender != vault) revert E_IRMUpdateUnauthorized();
+
+        return computeInterestRateInternal(vault, cash, borrows);
+    }
+
+    function computeInterestRateView(address vault, uint256 cash, uint256 borrows) external view override returns (uint256) {
+        return computeInterestRateInternal(vault, cash, borrows);
+    }
+
+    function computeInterestRateInternal(address, uint256 cash, uint256 borrows) internal view returns (uint256) {
         uint256 totalAssets = cash + borrows;
 
         uint32 utilisation = totalAssets == 0
