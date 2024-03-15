@@ -132,13 +132,6 @@ abstract contract LiquidationModule is ILiquidation, Base, BalanceUtils, Liquidi
 
         uint256 collateralBalance = IERC20(liqCache.collateral).balanceOf(liqCache.violator);
         uint256 collateralValue = marketCache.oracle.getQuote(collateralBalance, liqCache.collateral, marketCache.unitOfAccount);
-        // No collateral balance, or worthless collateral
-        if (collateralValue == 0) {
-            // Worthless collateral can be simply claimed without needing to repay any debt.
-            // With collateral removed, debt socialization is possible.
-            liqCache.yieldBalance = collateralBalance;
-            return liqCache;
-        }
 
         uint256 liabilityValue = liqCache.owed.toUint();
         if (address(marketCache.asset) != marketCache.unitOfAccount) {
@@ -169,7 +162,7 @@ abstract contract LiquidationModule is ILiquidation, Base, BalanceUtils, Liquidi
         uint256 minYieldBalance
     ) private {
         // Check minimum yield.
-        //If the liquidator sets a zero minimum yield, they may receive debt only and no collateral.
+
         if (minYieldBalance > liqCache.yieldBalance) revert E_MinYield();
 
         // Handle repay: liquidator takes on violator's debt:
@@ -190,11 +183,13 @@ abstract contract LiquidationModule is ILiquidation, Base, BalanceUtils, Liquidi
         // 3. Any additional operations on violator's account in a batch will register the health check again, and it
         //    will be executed normally at the end of the batch.
 
-        enforceCollateralTransfer(
-            liqCache.collateral, liqCache.yieldBalance, liqCache.violator, liqCache.liquidator
-        );
+        if (liqCache.yieldBalance > 0) {
+            enforceCollateralTransfer(
+                liqCache.collateral, liqCache.yieldBalance, liqCache.violator, liqCache.liquidator
+            );
 
-        forgiveAccountStatusCheck(liqCache.violator);
+            forgiveAccountStatusCheck(liqCache.violator);
+        }
 
         // Handle debt socialization
 
