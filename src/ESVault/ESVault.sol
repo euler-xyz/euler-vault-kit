@@ -26,20 +26,22 @@ contract ESVault is EVault {
     // ----------------- Vault ----------------
 
     function deposit(uint256 amount, address receiver) public override virtual reentrantOK returns (uint256) {
-        // only the synth contract can call it
+        // only the synth contract can call this function.
         address account = EVCAuthenticate();
         (IERC20 synth,,) = ProxyUtils.metadata();
+
         if (account != address(synth)) revert E_Unauthorized();
 
         super.deposit(amount, receiver);
     }
 
     function withdraw(uint256 assets, address receiver, address owner) public override virtual reentrantOK returns (uint256) {
-        // only the synth contract, the governor fee receiver and the protocol fee receiver can call it.
-        // the governor fee receiver and the protocol fee receiver can call it to withdraw the fees
+        // only the synth contract, the governor fee receiver and the protocol fee receiver can call this function.
+        // the governor fee receiver and the protocol fee receiver must be able to call it to withdraw the fees after convertFees is called.
         address account = EVCAuthenticate();
         (IERC20 synth,,) = ProxyUtils.metadata();
         (address protocolReceiver,) = protocolConfig.feeConfig(address(this));
+
         if (account != address(synth) && account != protocolReceiver && account != marketStorage.feeReceiver) {
             revert E_Unauthorized();
         }

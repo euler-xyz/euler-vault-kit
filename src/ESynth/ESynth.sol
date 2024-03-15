@@ -8,62 +8,23 @@ import {IEVC, EVCUtil} from "ethereum-vault-connector/utils/EVCUtil.sol";
 import {IEVault} from "../EVault/IEVault.sol";
 
 contract ESynth is ERC20Collateral, Ownable {
-    struct MinterData {
-        uint128 capacity;
-        uint128 minted;
-    }
-
-    mapping(address => MinterData) public minters;
-
-    event MinterCapacitySet(address indexed minter, uint256 capacity);
-    error E_CapacityReached();
-
     constructor(IEVC evc_, string memory name_, string memory symbol_) ERC20Collateral(evc_, name_, symbol_) Ownable(msg.sender) {}
 
-    /// @notice Sets the minting capacity for a minter.
-    /// @dev Can only be called by the owner of the contract.
-    /// @param minter The address of the minter to set the capacity for.
-    /// @param capacity The capacity to set for the minter.
-    function setCapacity(address minter, uint128 capacity) external onlyOwner {
-        minters[minter].capacity = capacity;
-        emit MinterCapacitySet(minter, capacity);
-    }
-
     /// @notice Mints a certain amount of tokens to the account.
-    /// @dev Can only be called by an address that has sufficient minting capacity.
     /// @param account The account to mint the tokens to.
     /// @param amount The amount of tokens to mint.
-    function mint(address account, uint256 amount) external nonReentrant {
-        address sender = _msgSender();
-        MinterData storage minterCache = minters[sender];
-
-        if(minterCache.capacity < uint256(minterCache.minted) + amount) {
-            revert E_CapacityReached();
-        }
-
-        minterCache.minted += uint128(amount);
-        minters[sender] = minterCache;
-
+    function mint(address account, uint256 amount) external nonReentrant onlyOwner {
         _mint(account, amount);
     }
 
     /// @notice Burns a certain amount of tokens from the accounts balance. Requires the account to have an allowance for the sender.
-    /// @dev Performs account status check as this would possibly put an account into an undercollateralized state.
     /// @param account The account to burn the tokens from.
     /// @param amount The amount of tokens to burn.
-    function burn(address account, uint256 amount) external nonReentrant {
+    function burn(address account, uint256 amount) external nonReentrant onlyOwner {
         address sender = _msgSender();
-        MinterData storage minterCache = minters[sender];
-
-        if(account != sender) {
+        if(account != sender && account != address(this)) {
             _spendAllowance(account, sender, amount);
         }
-
-        // If burning more than minted
-        amount = amount > minterCache.minted ? minterCache.minted : amount;
-
-        minterCache.minted -= uint128(amount);
-        minters[sender] = minterCache;
 
         _burn(account, amount);
     }
@@ -71,8 +32,7 @@ contract ESynth is ERC20Collateral, Ownable {
     /// @notice Deposit cash in the attached vault.
     /// @param vault The vault to deposit the cash in.
     /// @param amount The amount of cash to deposit.
-    function mintAndDeposit(address vault, uint256 amount) external onlyOwner {
-        _mint(address(this), amount);
+    function deposit(address vault, uint256 amount) external onlyOwner {
         _approve(address(this), vault, amount, true);
         IEVault(vault).deposit(amount, address(this));
     }
@@ -80,9 +40,8 @@ contract ESynth is ERC20Collateral, Ownable {
     /// @notice Withdraw cash from the attached vault.
     /// @param vault The vault to withdraw the cash from.
     /// @param amount The amount of cash to withdraw.
-    function withdrawAndBurn(address vault, uint256 amount) external onlyOwner {
+    function withdraw(address vault, uint256 amount) external onlyOwner {
         IEVault(vault).withdraw(amount, address(this), address(this));
-        _burn(address(this), amount);
     }
 
     /// @notice Retrieves the message sender in the context of the EVC.
