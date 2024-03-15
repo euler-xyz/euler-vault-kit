@@ -73,7 +73,7 @@ abstract contract RiskManagerModule is IRiskManager, Base, LiquidityUtils {
     function checkVaultStatus() external virtual reentrantOK onlyEVCChecks returns (bytes4 magicValue) {
         // Use the updating variant to make sure interest is accrued in storage before the interest rate update
         MarketCache memory marketCache = updateMarket();
-        uint256 newInterestRate = updateInterestRate(marketCache);
+        uint256 newInterestRate = computeInterestRate(marketCache);
 
         logMarketStatus(marketCache, newInterestRate);
 

@@ -245,7 +245,7 @@ abstract contract GovernanceModule is IGovernance, Base, BalanceUtils, BorrowUti
         marketStorage.interestRateModel = newModel;
         marketStorage.interestRate = 0;
 
-        uint newInterestRate = updateInterestRate(marketCache);
+        uint newInterestRate = computeInterestRate(marketCache);
 
         logMarketStatus(marketCache, newInterestRate);
 

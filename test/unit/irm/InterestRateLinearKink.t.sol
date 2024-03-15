@@ -2,14 +2,14 @@
 pragma solidity ^0.8.13;
 
 import {Test} from "forge-std/Test.sol";
-import {BaseIRMLinearKink} from "../../../src/interestRateModels/BaseIRMLinearKink.sol";
+import {IRMLinearKink} from "../../../src/interestRateModels/IRMLinearKink.sol";
 import "../../helpers/Math.sol";
 
 contract InterestRateLinearKink is Test {
-    BaseIRMLinearKink irm;
+    IRMLinearKink irm;
 
     function setUp() public {
-        irm = new BaseIRMLinearKink(
+        irm = new IRMLinearKink(
             // Base=0% APY,  Kink(50%)=10% APY  Max=300% APY
             0,
             1406417851,
@@ -66,7 +66,7 @@ contract InterestRateLinearKink is Test {
             borrows = cash * utilisation / (1e18 - utilisation);
         }
 
-        return irm.computeInterestRate(address(1234), cash, borrows);
+        return irm.computeInterestRateView(address(1234), cash, borrows);
     }
 
     //apy: 500% APY = 5 * 1e17

@@ -38,19 +38,17 @@ abstract contract BorrowingModule is IBorrowing, Base, AssetTransfers, BalanceUt
 
     /// @inheritdoc IBorrowing
     function debtOf(address account) external view virtual nonReentrantView returns (uint256) {
-        MarketCache memory marketCache = loadMarket();
-        return getCurrentOwed(marketCache, account).toAssetsUp().toUint();
+        return getCurrentOwed(loadMarket(), account).toAssetsUp().toUint();
     }
 
     /// @inheritdoc IBorrowing
     function debtOfExact(address account) external view virtual nonReentrantView returns (uint256) {
-        MarketCache memory marketCache = loadMarket();
-        return getCurrentOwed(marketCache, account).toUint();
+        return getCurrentOwed(loadMarket(), account).toUint();
     }
 
     /// @inheritdoc IBorrowing
     function interestRate() external view virtual nonReentrantView returns (uint256) {
-        return computeInterestRate();
+        return computeInterestRateView(loadMarket());
     }
 
     /// @inheritdoc IBorrowing

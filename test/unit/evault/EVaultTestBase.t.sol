@@ -7,7 +7,6 @@ import {DeployPermit2} from "permit2/test/utils/DeployPermit2.sol";
 import {GenericFactory} from "src/GenericFactory/GenericFactory.sol";
 
 import {EVault} from "src/EVault/EVault.sol";
-import {IRMDefault} from "src/interestRateModels/IRMDefault.sol";
 import {ProtocolConfig} from "src/ProtocolConfig/ProtocolConfig.sol";
 
 import {Dispatch} from "src/EVault/modules/Dispatch.sol";
@@ -30,6 +29,7 @@ import {EthereumVaultConnector} from "ethereum-vault-connector/EthereumVaultConn
 import {TestERC20} from "../../mocks/TestERC20.sol";
 import {MockBalanceTracker} from "../../mocks/MockBalanceTracker.sol";
 import {MockPriceOracle} from "../../mocks/MockPriceOracle.sol";
+import {IRMTestDefault} from "../../mocks/IRMTestDefault.sol";
 
 import {AssertionsCustomTypes} from "../../helpers/AssertionsCustomTypes.sol";
 
@@ -86,9 +86,9 @@ contract EVaultTestBase is AssertionsCustomTypes, Test, DeployPermit2 {
         assetTST2 = new TestERC20("Test Token 2", "TST2", 18, false);
 
         eTST = IEVault(factory.createProxy(true, abi.encodePacked(address(assetTST), address(oracle), unitOfAccount)));
-        eTST.setIRM(address(new IRMDefault()));
+        eTST.setIRM(address(new IRMTestDefault()));
 
         eTST2 = IEVault(factory.createProxy(true, abi.encodePacked(address(assetTST2), address(oracle), unitOfAccount)));
-        eTST2.setIRM(address(new IRMDefault()));
+        eTST2.setIRM(address(new IRMTestDefault()));
     }
 }
