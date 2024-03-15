@@ -52,9 +52,6 @@ abstract contract LiquidationModule is ILiquidation, Base, BalanceUtils, Liquidi
         LiquidationCache memory liqCache =
             calculateLiquidation(marketCache, liquidator, violator, collateral, repayAssets);
 
-        // Liquidation is a no-op if no repay or yield is found.
-        if (liqCache.repay.isZero() && liqCache.yieldBalance == 0) return;  
-
         executeLiquidation(marketCache, liqCache, minYieldBalance);
     }
 
