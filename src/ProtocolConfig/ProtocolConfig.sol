@@ -6,9 +6,9 @@ import "./IProtocolConfig.sol";
 import "../EVault/shared/Constants.sol";
 
 contract ProtocolConfig is IProtocolConfig {
-    uint256 constant MIN_INTEREST_FEE = CONFIG_SCALE * 1 / 100; // 1%
-    uint256 constant MAX_INTEREST_FEE = CONFIG_SCALE * 50 / 100; // 50%
-    uint256 constant PROTOCOL_FEE_SHARE = 0.1 * 1e18; // 10%
+    uint16 constant MIN_INTEREST_FEE = 0.01e4;
+    uint16 constant MAX_INTEREST_FEE = 0.5e4;
+    uint16 constant PROTOCOL_FEE_SHARE = 0.1e4;
 
     struct InterestFeeRange {
         bool exists;
@@ -19,7 +19,7 @@ contract ProtocolConfig is IProtocolConfig {
     struct FeeConfigSetting {
         bool exists;
         address feeReceiver;
-        uint256 protocolFeeShare;
+        uint16 protocolFeeShare;
     }
 
     address admin;
@@ -33,7 +33,7 @@ contract ProtocolConfig is IProtocolConfig {
         // TODO emit
     }
 
-    function isValidInterestFee(address vault, uint256 interestFee) external view returns (bool) {
+    function isValidInterestFee(address vault, uint16 interestFee) external view returns (bool) {
         InterestFeeRange memory range = interestFeeRanges[vault];
 
         if (range.exists) {
@@ -43,7 +43,7 @@ contract ProtocolConfig is IProtocolConfig {
         return interestFee >= MIN_INTEREST_FEE && interestFee <= MAX_INTEREST_FEE;
     }
 
-    function feeConfig(address vault) external view returns (address, uint256) {
+    function feeConfig(address vault) external view returns (address, uint16) {
         FeeConfigSetting memory settings = feeConfigSettings[vault];
 
         if (settings.exists) {
@@ -73,7 +73,7 @@ contract ProtocolConfig is IProtocolConfig {
         });
     }
 
-    function setFeeConfigSetting(address market, bool exists_, address feeReceiver_, uint256 protocolFeeShare_) external onlyAdmin {
+    function setFeeConfigSetting(address market, bool exists_, address feeReceiver_, uint16 protocolFeeShare_) external onlyAdmin {
         feeConfigSettings[market] = FeeConfigSetting({
             exists: exists_,
             feeReceiver: feeReceiver_,
