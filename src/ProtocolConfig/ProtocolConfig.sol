@@ -41,8 +41,10 @@ contract ProtocolConfig is IProtocolConfig {
     /// @dev events
     event SetMinInterestFee(uint256 oldMinInterestFee, uint256 newMinInterestFee);
     event SetMaxInterestFee(uint256 oldMaxInterestFee, uint256 newMaxInterestFee);
-    event SetFeeReceiver(address oldFeeReceiver, address newFeeReceiver);
-
+    event SetFeeReceiver(address indexed oldFeeReceiver, address indexed newFeeReceiver);
+    event SetInterestFeeRange(address indexed vault, bool exists, uint16 minInterestFee, uint16 maxInterestFee);
+    event SetFeeConfigSetting(address indexed ault, bool exists, address indexed feeReceiver, uint256 protocolFeeShare);
+    
     /**
      * @dev constructor
      * @param admin_ admin's address
@@ -150,6 +152,8 @@ contract ProtocolConfig is IProtocolConfig {
             minInterestFee: minInterestFee_,
             maxInterestFee: maxInterestFee_
         });
+
+        emit SetInterestFeeRange(vault, exists_, minInterestFee_, maxInterestFee_);
     }
 
     /**
@@ -168,5 +172,7 @@ contract ProtocolConfig is IProtocolConfig {
             feeReceiver: feeReceiver_,
             protocolFeeShare: protocolFeeShare_
         });
+
+        emit SetFeeConfigSetting(vault, exists_, feeReceiver_, protocolFeeShare_);
     }
 }
