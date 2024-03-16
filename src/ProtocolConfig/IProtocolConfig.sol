@@ -25,5 +25,5 @@ interface IProtocolConfig {
      * @return uint16 min interest fee
      * @return uint16 max interest fee
      */
-    function interestFeeRanges(address vault) external view returns (uint16, uint16);
+    function interestFeeRange(address vault) external view returns (uint16, uint16);
 }

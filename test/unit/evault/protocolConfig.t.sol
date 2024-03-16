@@ -9,10 +9,13 @@ import "src/EVault/modules/Governance.sol";
 import "src/EVault/shared/Constants.sol";
 import "src/EVault/shared/types/Types.sol";
 
-uint256 constant DEFAULT_INTEREST_FEE = 0.23e4; // TODO expose in harness from Initialize module
+uint16 constant DEFAULT_INTEREST_FEE = 0.23e4; // TODO expose in harness from Initialize module
 
 contract ERC4626Test_ProtocolConfig is EVaultTestBase {
     using TypesLib for uint256;
+
+    error E_InvalidConfigValue();
+    error E_InvalidVault();
 
     address user = makeAddr("user");
 
@@ -39,7 +42,7 @@ contract ERC4626Test_ProtocolConfig is EVaultTestBase {
 
     function test_interestFees_extended() public {
         vm.prank(admin);
-        protocolConfig.setInterestFeeRange(address(eTST), true, 0.002e4, 0.6e4);
+        protocolConfig.setVaultInterestFeeRange(address(eTST), true, 0.002e4, 0.6e4);
 
         eTST.setInterestFee(0.005e4);
         assertEq(eTST.interestFee(), 0.005e4);
@@ -56,7 +59,7 @@ contract ERC4626Test_ProtocolConfig is EVaultTestBase {
 
     function test_interestFees_maliciousProtocolConfig() public {
         vm.prank(admin);
-        protocolConfig.setInterestFeeRange(address(eTST), true, 0.8e4, 0.9e4);
+        protocolConfig.setVaultInterestFeeRange(address(eTST), true, 0.8e4, 0.9e4);
 
         // Vault won't call into protocolConfig with reasonable interestFee
 
@@ -71,19 +74,19 @@ contract ERC4626Test_ProtocolConfig is EVaultTestBase {
 
     function test_override_interestFeeRanges() public {
         vm.prank(admin);
-        protocolConfig.setInterestFeeRange(address(eTST), true, 1e3, type(uint16).max);
+        protocolConfig.setVaultInterestFeeRange(address(eTST), true, 0.1e4, 1e4);
 
-        (uint16 vaultMinInterestFee, uint16 vaultMaxInterestFee) = protocolConfig.interestFeeRanges(address(eTST));
+        (uint16 vaultMinInterestFee, uint16 vaultMaxInterestFee) = protocolConfig.interestFeeRange(address(eTST));
 
-        assertEq(vaultMinInterestFee, 1e3);
-        assertEq(vaultMaxInterestFee, type(uint16).max);
+        assertEq(vaultMinInterestFee, 0.1e4);
+        assertEq(vaultMaxInterestFee, 1e4);
 
         // reset vault to use generic ranges
         vm.prank(admin);
-        protocolConfig.setInterestFeeRange(address(eTST), false, 1e3, type(uint16).max);
+        protocolConfig.setVaultInterestFeeRange(address(eTST), false, 0, 0);
 
-        (uint16 genericMinInterestFee, uint16 genericMaxInterestFee) = protocolConfig.interestFeeRanges(address(0));
-        (vaultMinInterestFee, vaultMaxInterestFee) = protocolConfig.interestFeeRanges(address(eTST));
+        (uint16 genericMinInterestFee, uint16 genericMaxInterestFee) = protocolConfig.interestFeeRange(address(0));
+        (vaultMinInterestFee, vaultMaxInterestFee) = protocolConfig.interestFeeRange(address(eTST));
 
         assertEq(vaultMinInterestFee, genericMinInterestFee);
         assertEq(vaultMaxInterestFee, genericMaxInterestFee);
@@ -100,18 +103,18 @@ contract ERC4626Test_ProtocolConfig is EVaultTestBase {
 
 
         vm.prank(admin);
-        protocolConfig.setProtocolFeeShare(2e17);
+        protocolConfig.setProtocolFeeShare(0.2e4);
 
-        (, uint256 feeShare) = protocolConfig.protocolFeeConfig(address(0));
-        assertEq(feeShare, 2e17);
+        (, uint16 feeShare) = protocolConfig.protocolFeeConfig(address(0));
+        assertEq(feeShare, 0.2e4);
     }
 
     function test_override_feeConfig() public {
         address newFeeReceiver = makeAddr("newFeeReceiver");
-        uint256 newFeeShare = 2e17;
+        uint16 newFeeShare = 0.2e4;
 
         vm.prank(admin);
-        protocolConfig.setFeeConfigSetting(address(eTST), true, newFeeReceiver, newFeeShare);
+        protocolConfig.setVaultFeeConfig(address(eTST), true, newFeeReceiver, newFeeShare);
 
         (address feeReceiver, uint256 feeShare) = protocolConfig.protocolFeeConfig(address(eTST));
 
@@ -120,12 +123,50 @@ contract ERC4626Test_ProtocolConfig is EVaultTestBase {
 
         // reset vault to use generic ranges
         vm.prank(admin);
-        protocolConfig.setFeeConfigSetting(address(eTST), false, newFeeReceiver, newFeeShare);
+        protocolConfig.setVaultFeeConfig(address(eTST), false, newFeeReceiver, newFeeShare);
 
-        (address genericFeeReceiver, uint256 genericFeeShare) = protocolConfig.protocolFeeConfig(address(0));
+        (address genericFeeReceiver, uint16 genericFeeShare) = protocolConfig.protocolFeeConfig(address(0));
         (feeReceiver, feeShare) = protocolConfig.protocolFeeConfig(address(eTST));
 
         assertEq(genericFeeReceiver, feeReceiver);
         assertEq(genericFeeShare, feeShare);
+    }
+
+    function test_invalid_configs() public {
+        vm.startPrank(admin);
+
+        // Bad config values
+
+        vm.expectRevert(E_InvalidConfigValue.selector);
+        protocolConfig.setProtocolFeeShare(1e4 + 1);
+
+        vm.expectRevert(E_InvalidConfigValue.selector);
+        protocolConfig.setInterestFeeRange(0, 1e4 + 1);
+
+        vm.expectRevert(E_InvalidConfigValue.selector);
+        protocolConfig.setInterestFeeRange(1e4 + 1, 1e4 + 2);
+
+        vm.expectRevert(E_InvalidConfigValue.selector);
+        protocolConfig.setInterestFeeRange(0.6e4, 0.4e4);
+
+        vm.expectRevert(E_InvalidConfigValue.selector);
+        protocolConfig.setVaultInterestFeeRange(address(eTST), true, 0.1e4, 1e4 + 1);
+
+        vm.expectRevert(E_InvalidConfigValue.selector);
+        protocolConfig.setVaultInterestFeeRange(address(eTST), true, 1e4 + 1, 1e4 + 2);
+
+        vm.expectRevert(E_InvalidConfigValue.selector);
+        protocolConfig.setVaultInterestFeeRange(address(eTST), true, 0.6e4, 0.4e4);
+
+        vm.expectRevert(E_InvalidConfigValue.selector);
+        protocolConfig.setVaultFeeConfig(address(eTST), true, address(0), 1e4 + 1);
+
+        // Bad vaults
+
+        vm.expectRevert(E_InvalidVault.selector);
+        protocolConfig.setVaultInterestFeeRange(address(0), true, 0.1e4, 0.2e4);
+
+        vm.expectRevert(E_InvalidVault.selector);
+        protocolConfig.setVaultFeeConfig(address(0), true, address(0), 0.1e4);
     }
 }
