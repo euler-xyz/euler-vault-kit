@@ -5,8 +5,8 @@ import {IERC20} from "forge-std/interfaces/IERC20.sol";
 import {RedstoneDefaultsLib} from "@redstone/evm-connector/core/RedstoneDefaultsLib.sol";
 import {PrimaryProdDataServiceConsumerBase} from
     "@redstone/evm-connector/data-services/PrimaryProdDataServiceConsumerBase.sol";
-import {BaseAdapter, Errors} from "src/adapter/BaseAdapter.sol";
-import {ScaleUtils, Scale} from "src/lib/ScaleUtils.sol";
+import {BaseAdapter, Errors} from "../BaseAdapter.sol";
+import {ScaleUtils, Scale} from "../../lib/ScaleUtils.sol";
 
 /// @title RedstoneCoreOracle
 /// @author Euler Labs (https://www.eulerlabs.com/)

@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 pragma solidity 0.8.23;
 
-import {IPriceOracle} from "src/interfaces/IPriceOracle.sol";
-import {Errors} from "src/lib/Errors.sol";
+import {IPriceOracle} from "../interfaces/IPriceOracle.sol";
+import {Errors} from "../lib/Errors.sol";
 
 /// @title BaseAdapter
 /// @author Euler Labs (https://www.eulerlabs.com/)

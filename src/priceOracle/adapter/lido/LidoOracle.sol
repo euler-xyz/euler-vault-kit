@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 pragma solidity 0.8.23;
 
-import {BaseAdapter, Errors} from "src/adapter/BaseAdapter.sol";
-import {IStEth} from "src/adapter/lido/IStEth.sol";
+import {BaseAdapter, Errors} from "../BaseAdapter.sol";
+import {IStEth} from "../lido/IStEth.sol";
 
 /// @title LidoOracle
 /// @author Euler Labs (https://www.eulerlabs.com/)

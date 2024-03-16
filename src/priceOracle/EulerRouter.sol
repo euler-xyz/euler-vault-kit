@@ -2,9 +2,9 @@
 pragma solidity 0.8.23;
 
 import {IERC4626} from "forge-std/interfaces/IERC4626.sol";
-import {IPriceOracle} from "src/interfaces/IPriceOracle.sol";
-import {Errors} from "src/lib/Errors.sol";
-import {Governable} from "src/lib/Governable.sol";
+import {IPriceOracle} from "./interfaces/IPriceOracle.sol";
+import {Errors} from "./lib/Errors.sol";
+import {Governable} from "./lib/Governable.sol";
 
 /// @title EulerRouter
 /// @author Euler Labs (https://www.eulerlabs.com/)

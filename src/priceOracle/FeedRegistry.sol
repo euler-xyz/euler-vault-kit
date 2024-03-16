@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 pragma solidity 0.8.23;
 
-import {Errors} from "src/lib/Errors.sol";
-import {Governable} from "src/lib/Governable.sol";
+import {Errors} from "./lib/Errors.sol";
+import {Governable} from "./lib/Governable.sol";
 
 contract FeedRegistry is Governable {
     address public immutable quote;

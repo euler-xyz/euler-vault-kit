@@ -2,7 +2,7 @@
 pragma solidity 0.8.23;
 
 import {FixedPointMathLib} from "@solady/utils/FixedPointMathLib.sol";
-import {Errors} from "src/lib/Errors.sol";
+import {Errors} from "../lib/Errors.sol";
 
 type Scale is uint256;
 
