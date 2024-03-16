@@ -18,7 +18,7 @@ contract InterestRateLinearKink is Test {
         );
     }
 
-    function test_MaxIR() public {
+    function test_MaxIR() public view {
         uint precision = 1e12;
 
         uint ir = getIr(1.0e18);
@@ -27,7 +27,7 @@ contract InterestRateLinearKink is Test {
         assertEq(ir/precision, SPY/precision);
     }
 
-    function test_KinkIR() public {
+    function test_KinkIR() public view {
         uint precision = 1e12;
 
         uint ir = getIr(0.5e18);
@@ -36,7 +36,7 @@ contract InterestRateLinearKink is Test {
         assertEq(ir/precision, SPY/precision);
     }
 
-    function test_UnderKinkIR() public {
+    function test_UnderKinkIR() public view {
         uint precision = 1e13;
 
         uint ir = getIr(0.25e18);
@@ -45,7 +45,7 @@ contract InterestRateLinearKink is Test {
         assertEq(ir/precision, SPY/precision);
     }
 
-    function test_OverKinkIR() public {
+    function test_OverKinkIR() public view {
         uint precision = 1e13;
 
         uint ir = getIr(0.75e18);

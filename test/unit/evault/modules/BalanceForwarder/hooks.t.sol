@@ -279,7 +279,7 @@ contract BalanceForwarderTest_Hooks is EVaultTestBase {
 
     }
 
-    function assertBalance(address user, uint256 balance) internal {
+    function assertBalance(address user, uint256 balance) internal view {
         assertEq(MBT.balance(user), balance);
         assertEq(eTST.balanceOf(user), balance);
     }
