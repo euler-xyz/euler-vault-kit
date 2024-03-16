@@ -13,44 +13,44 @@ abstract contract TokenModule is IToken, Base, BalanceUtils {
     using TypesLib for uint256;
 
     /// @inheritdoc IERC20
-    function name() external view virtual reentrantOK returns (string memory) {
+    function name() public view virtual reentrantOK returns (string memory) {
         return bytes(marketStorage.name).length > 0 ? marketStorage.name : "Unnamed Euler Vault";
     }
 
     /// @inheritdoc IERC20
-    function symbol() external view virtual reentrantOK returns (string memory) {
+    function symbol() public view virtual reentrantOK returns (string memory) {
         return bytes(marketStorage.symbol).length > 0 ? marketStorage.symbol : "UNKNOWN";
     }
 
     /// @inheritdoc IERC20
-    function decimals() external view virtual reentrantOK returns (uint8) {
+    function decimals() public view virtual reentrantOK returns (uint8) {
         (IERC20 asset,,) = ProxyUtils.metadata();
 
         return asset.decimals();
     }
 
     /// @inheritdoc IERC20
-    function totalSupply() external view virtual nonReentrantView returns (uint256) {
+    function totalSupply() public view virtual nonReentrantView returns (uint256) {
         return loadMarket().totalShares.toUint();
     }
 
     /// @inheritdoc IERC20
-    function balanceOf(address account) external view virtual nonReentrantView returns (uint256) {
+    function balanceOf(address account) public view virtual nonReentrantView returns (uint256) {
         return marketStorage.users[account].getBalance().toUint();
     }
 
     /// @inheritdoc IERC20
-    function allowance(address holder, address spender) external view virtual nonReentrantView returns (uint256) {
+    function allowance(address holder, address spender) public view virtual nonReentrantView returns (uint256) {
         return marketStorage.users[holder].eTokenAllowance[spender];
     }
 
     /// @inheritdoc IERC20
-    function transfer(address to, uint256 amount) external virtual reentrantOK returns (bool) {
+    function transfer(address to, uint256 amount) public virtual reentrantOK returns (bool) {
         return transferFrom(address(0), to, amount);
     }
 
     /// @inheritdoc IToken
-    function transferFromMax(address from, address to) external virtual reentrantOK returns (bool) {
+    function transferFromMax(address from, address to) public virtual reentrantOK returns (bool) {
         return transferFrom(from, to, marketStorage.users[from].getBalance().toUint());
     }
 
@@ -70,7 +70,7 @@ abstract contract TokenModule is IToken, Base, BalanceUtils {
     }
 
     /// @inheritdoc IERC20
-    function approve(address spender, uint256 amount) external virtual nonReentrant returns (bool) {
+    function approve(address spender, uint256 amount) public virtual nonReentrant returns (bool) {
         address account = EVCAuthenticate();
 
         setAllowance(account, spender, amount);
