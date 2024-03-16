@@ -129,6 +129,11 @@ abstract contract LiquidationModule is ILiquidation, Base, BalanceUtils, Liquidi
 
         uint256 collateralBalance = IERC20(liqCache.collateral).balanceOf(liqCache.violator);
         uint256 collateralValue = marketCache.oracle.getQuote(collateralBalance, liqCache.collateral, marketCache.unitOfAccount);
+        if (collateralValue == 0) {
+            // worthless collateral can be claimed with no repay
+            liqCache.yieldBalance = collateralBalance;
+            return liqCache;
+        }
 
         uint256 liabilityValue = liqCache.owed.toUint();
         if (address(marketCache.asset) != marketCache.unitOfAccount) {
