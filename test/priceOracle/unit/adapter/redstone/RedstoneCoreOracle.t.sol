@@ -3,10 +3,10 @@ pragma solidity 0.8.23;
 
 import {Test} from "forge-std/Test.sol";
 import {IERC20} from "forge-std/interfaces/IERC20.sol";
-import {RedstoneCoreOracleHarness} from "test/utils/RedstoneCoreOracleHarness.sol";
-import {boundAddr} from "test/utils/TestUtils.sol";
-import {RedstoneCoreOracle} from "src/adapter/redstone/RedstoneCoreOracle.sol";
-import {Errors} from "src/lib/Errors.sol";
+import {RedstoneCoreOracleHarness} from "../../../utils/RedstoneCoreOracleHarness.sol";
+import {boundAddr} from "../../../utils/TestUtils.sol";
+import {RedstoneCoreOracle} from "src/priceOracle/adapter/redstone/RedstoneCoreOracle.sol";
+import {Errors} from "src/priceOracle/lib/Errors.sol";
 
 contract RedstoneCoreOracleTest is Test {
     struct FuzzableConfig {

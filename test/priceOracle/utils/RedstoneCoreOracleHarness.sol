@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 pragma solidity 0.8.23;
 
-import {RedstoneCoreOracle} from "src/adapter/redstone/RedstoneCoreOracle.sol";
+import {RedstoneCoreOracle} from "src/priceOracle/adapter/redstone/RedstoneCoreOracle.sol";
 
 contract RedstoneCoreOracleHarness is RedstoneCoreOracle {
     uint256 price;

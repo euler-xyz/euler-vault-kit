@@ -2,9 +2,9 @@
 pragma solidity 0.8.23;
 
 import {Test} from "forge-std/Test.sol";
-import {IReth} from "src/adapter/rocketpool/IReth.sol";
-import {RethOracle} from "src/adapter/rocketpool/RethOracle.sol";
-import {Errors} from "src/lib/Errors.sol";
+import {IReth} from "src/priceOracle/adapter/rocketpool/IReth.sol";
+import {RethOracle} from "src/priceOracle/adapter/rocketpool/RethOracle.sol";
+import {Errors} from "src/priceOracle/lib/Errors.sol";
 
 contract RethOracleTest is Test {
     address internal WETH = makeAddr("WETH");

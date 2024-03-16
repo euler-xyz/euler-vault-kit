@@ -4,10 +4,10 @@ pragma solidity 0.8.23;
 import {Test} from "forge-std/Test.sol";
 import {IERC4626} from "forge-std/interfaces/IERC4626.sol";
 import {LibPRNG} from "@solady/utils/LibPRNG.sol";
-import {boundAddr} from "test/utils/TestUtils.sol";
-import {IPriceOracle} from "src/interfaces/IPriceOracle.sol";
-import {Errors} from "src/lib/Errors.sol";
-import {EulerRouter} from "src/EulerRouter.sol";
+import {boundAddr} from "../utils/TestUtils.sol";
+import {IPriceOracle} from "src/priceOracle/interfaces/IPriceOracle.sol";
+import {Errors} from "src/priceOracle/lib/Errors.sol";
+import {EulerRouter} from "src/priceOracle/EulerRouter.sol";
 
 contract StubERC4626 {
     address public asset;

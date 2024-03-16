@@ -3,10 +3,10 @@ pragma solidity 0.8.23;
 
 import {Test} from "forge-std/Test.sol";
 import {IERC20} from "forge-std/interfaces/IERC20.sol";
-import {boundAddr} from "test/utils/TestUtils.sol";
-import {AggregatorV3Interface} from "src/adapter/chainlink/AggregatorV3Interface.sol";
-import {ChainlinkOracle} from "src/adapter/chainlink/ChainlinkOracle.sol";
-import {Errors} from "src/lib/Errors.sol";
+import {boundAddr} from "../../../utils/TestUtils.sol";
+import {AggregatorV3Interface} from "src/priceOracle/adapter/chainlink/AggregatorV3Interface.sol";
+import {ChainlinkOracle} from "src/priceOracle/adapter/chainlink/ChainlinkOracle.sol";
+import {Errors} from "src/priceOracle/lib/Errors.sol";
 
 contract ChainlinkOracleTest is Test {
     struct FuzzableConfig {

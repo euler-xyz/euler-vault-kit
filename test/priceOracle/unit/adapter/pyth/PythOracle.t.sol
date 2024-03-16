@@ -6,9 +6,9 @@ import {Test} from "forge-std/Test.sol";
 import {IERC20} from "forge-std/interfaces/IERC20.sol";
 import {IPyth} from "@pyth/IPyth.sol";
 import {PythStructs} from "@pyth/PythStructs.sol";
-import {boundAddr} from "test/utils/TestUtils.sol";
-import {PythOracle} from "src/adapter/pyth/PythOracle.sol";
-import {Errors} from "src/lib/Errors.sol";
+import {boundAddr} from "../../../utils/TestUtils.sol";
+import {PythOracle} from "src/priceOracle/adapter/pyth/PythOracle.sol";
+import {Errors} from "src/priceOracle/lib/Errors.sol";
 
 contract PythOracleTest is Test {
     struct FuzzableConfig {

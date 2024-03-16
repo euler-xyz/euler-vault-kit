@@ -2,8 +2,8 @@
 pragma solidity 0.8.23;
 
 import {Test} from "forge-std/Test.sol";
-import {ScaleUtils, Scale} from "src/lib/ScaleUtils.sol";
-import {Errors} from "src/lib/Errors.sol";
+import {ScaleUtils, Scale} from "src/priceOracle/lib/ScaleUtils.sol";
+import {Errors} from "src/priceOracle/lib/Errors.sol";
 
 contract ScaleUtilsTest is Test {
     function test_From_RevertsWhen_PriceExponentOOB(uint8 priceExponent, uint8 feedExponent) public {

@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 pragma solidity 0.8.23;
 
-import {UNISWAP_V3_FACTORY, UNISWAP_V3_USDC_WETH_500, USDC, WETH} from "test/utils/EthereumAddresses.sol";
-import {ForkTest} from "test/utils/ForkTest.sol";
-import {UniswapV3Oracle} from "src/adapter/uniswap/UniswapV3Oracle.sol";
-import {Errors} from "src/lib/Errors.sol";
+import {UNISWAP_V3_FACTORY, UNISWAP_V3_USDC_WETH_500, USDC, WETH} from "../../../utils/EthereumAddresses.sol";
+import {ForkTest} from "../../../utils/ForkTest.sol";
+import {UniswapV3Oracle} from "src/priceOracle/adapter/uniswap/UniswapV3Oracle.sol";
+import {Errors} from "src/priceOracle/lib/Errors.sol";
 
 contract UniswapV3OracleForkTest is ForkTest {
     UniswapV3Oracle oracle;

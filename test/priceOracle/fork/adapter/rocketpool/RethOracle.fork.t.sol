@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 pragma solidity 0.8.23;
 
-import {RETH, WETH} from "test/utils/EthereumAddresses.sol";
-import {ForkTest} from "test/utils/ForkTest.sol";
-import {RethOracle} from "src/adapter/rocketpool/RethOracle.sol";
-import {Errors} from "src/lib/Errors.sol";
+import {RETH, WETH} from "../../../utils/EthereumAddresses.sol";
+import {ForkTest} from "../../../utils/ForkTest.sol";
+import {RethOracle} from "src/priceOracle/adapter/rocketpool/RethOracle.sol";
+import {Errors} from "src/priceOracle/lib/Errors.sol";
 
 contract RethOracleForkTest is ForkTest {
     RethOracle oracle;

@@ -2,9 +2,9 @@
 pragma solidity 0.8.23;
 
 import {Test} from "forge-std/Test.sol";
-import {IStEth} from "src/adapter/lido/IStEth.sol";
-import {LidoOracle} from "src/adapter/lido/LidoOracle.sol";
-import {Errors} from "src/lib/Errors.sol";
+import {IStEth} from "src/priceOracle/adapter/lido/IStEth.sol";
+import {LidoOracle} from "src/priceOracle/adapter/lido/LidoOracle.sol";
+import {Errors} from "src/priceOracle/lib/Errors.sol";
 
 contract LidoOracleTest is Test {
     address internal STETH = makeAddr("STETH");

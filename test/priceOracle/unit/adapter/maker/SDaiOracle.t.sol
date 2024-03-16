@@ -2,9 +2,9 @@
 pragma solidity 0.8.23;
 
 import {Test} from "forge-std/Test.sol";
-import {IPot} from "src/adapter/maker/IPot.sol";
-import {SDaiOracle} from "src/adapter/maker/SDaiOracle.sol";
-import {Errors} from "src/lib/Errors.sol";
+import {IPot} from "src/priceOracle/adapter/maker/IPot.sol";
+import {SDaiOracle} from "src/priceOracle/adapter/maker/SDaiOracle.sol";
+import {Errors} from "src/priceOracle/lib/Errors.sol";
 
 contract SDaiOracleTest is Test {
     address internal DAI = makeAddr("DAI");

@@ -7,9 +7,9 @@ import {IUniswapV3PoolState} from "@uniswap/v3-core/contracts/interfaces/pool/IU
 import {IUniswapV3Factory} from "@uniswap/v3-core/contracts/interfaces/IUniswapV3Factory.sol";
 import {TickMath} from "@uniswap/v3-core/contracts/libraries/TickMath.sol";
 import {OracleLibrary} from "@uniswap/v3-periphery/contracts/libraries/OracleLibrary.sol";
-import {boundAddr} from "test/utils/TestUtils.sol";
-import {UniswapV3Oracle} from "src/adapter/uniswap/UniswapV3Oracle.sol";
-import {Errors} from "src/lib/Errors.sol";
+import {boundAddr} from "../../../utils/TestUtils.sol";
+import {UniswapV3Oracle} from "src/priceOracle/adapter/uniswap/UniswapV3Oracle.sol";
+import {Errors} from "src/priceOracle/lib/Errors.sol";
 
 contract UniswapV3OracleTest is Test {
     struct FuzzableConfig {

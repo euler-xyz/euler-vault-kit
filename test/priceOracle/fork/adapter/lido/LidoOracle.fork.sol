@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 pragma solidity 0.8.23;
 
-import {STETH, WSTETH} from "test/utils/EthereumAddresses.sol";
-import {ForkTest} from "test/utils/ForkTest.sol";
-import {LidoOracle} from "src/adapter/lido/LidoOracle.sol";
-import {Errors} from "src/lib/Errors.sol";
+import {STETH, WSTETH} from "../../../utils/EthereumAddresses.sol";
+import {ForkTest} from "../../../utils/ForkTest.sol";
+import {LidoOracle} from "src/priceOracle/adapter/lido/LidoOracle.sol";
+import {Errors} from "src/priceOracle/lib/Errors.sol";
 
 contract LidoOracleForkTest is ForkTest {
     LidoOracle oracle;

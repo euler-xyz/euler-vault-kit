@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 pragma solidity 0.8.23;
 
-import {ForkTest} from "test/utils/ForkTest.sol";
+import {ForkTest} from "../../../utils/ForkTest.sol";
 import {
     CHAINLINK_BTC_ETH_FEED,
     CHAINLINK_USDC_ETH_FEED,
@@ -13,8 +13,8 @@ import {
     USDC,
     GUSD,
     DAI
-} from "test/utils/EthereumAddresses.sol";
-import {ChainlinkOracle} from "src/adapter/chainlink/ChainlinkOracle.sol";
+} from "../../../utils/EthereumAddresses.sol";
+import {ChainlinkOracle} from "src/priceOracle/adapter/chainlink/ChainlinkOracle.sol";
 
 contract ChainlinkOracleForkTest is ForkTest {
     ChainlinkOracle oracle;
