@@ -112,7 +112,7 @@ abstract contract VaultModule is IVault, Base, AssetTransfers, BalanceUtils {
 
 
     /// @inheritdoc IERC4626
-    function deposit(uint256 amount, address receiver) external virtual nonReentrant returns (uint256) {
+    function deposit(uint256 amount, address receiver) public virtual nonReentrant returns (uint256) {
         (MarketCache memory marketCache, address account) = initOperation(OP_DEPOSIT, ACCOUNTCHECK_NONE);
 
         Assets assets =
@@ -143,7 +143,7 @@ abstract contract VaultModule is IVault, Base, AssetTransfers, BalanceUtils {
 
     /// @inheritdoc IERC4626
     function withdraw(uint256 amount, address receiver, address owner)
-        external
+        public
         virtual
         nonReentrant
         returns (uint256)

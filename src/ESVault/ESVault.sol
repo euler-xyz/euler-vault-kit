@@ -3,6 +3,8 @@
 pragma solidity ^0.8.0;
 
 import {EVault} from "../EVault/EVault.sol";
+import {InitializeModule} from "../EVault/modules/Initialize.sol";
+import {VaultModule} from "../EVault/modules/Vault.sol";
 import {IERC20} from "../EVault/IEVault.sol";
 import {ProxyUtils} from "../EVault/shared/lib/ProxyUtils.sol";
 import {Operations} from "../EVault/shared/types/Types.sol";
@@ -13,8 +15,8 @@ contract ESVault is EVault {
 
     // ----------------- Initialize ----------------
 
-    function initializeInternal(address proxyCreator) internal override virtual reentrantOK {
-        super.initializeInternal(proxyCreator);
+    function initialize(address proxyCreator) public override virtual reentrantOK {
+        InitializeModule.initialize(proxyCreator);
 
         // disable not supported operations
         uint32 newDisabledOps = OP_MINT | OP_REDEEM | OP_SKIM | OP_LOOP | OP_DELOOP;
@@ -32,7 +34,7 @@ contract ESVault is EVault {
 
         if (account != address(synth)) revert E_Unauthorized();
 
-        super.deposit(amount, receiver);
+        VaultModule.deposit(amount, receiver);
     }
 
     function withdraw(uint256 assets, address receiver, address owner) public override virtual reentrantOK returns (uint256) {
@@ -46,6 +48,6 @@ contract ESVault is EVault {
             revert E_Unauthorized();
         }
 
-        super.withdraw(assets, receiver, owner);
+        VaultModule.withdraw(assets, receiver, owner);
     }
 }
