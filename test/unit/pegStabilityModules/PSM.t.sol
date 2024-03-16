@@ -5,11 +5,11 @@ pragma solidity ^0.8.0;
 import "forge-std/Test.sol";
 import "forge-std/console.sol";
 
-import {ETHPSM} from "../../../src/pegStabilityModules/ETHPSM.sol";
+import {PSM} from "../../../src/pegStabilityModules/PSM.sol";
 import {ESynth, IEVC} from "../../../src/ESynth/ESynth.sol";
 import {EthereumVaultConnector} from "ethereum-vault-connector/EthereumVaultConnector.sol";
 
-contract ETHPSMTest is Test {
+contract PSMTest is Test {
     // TODO tests where ETH transfers fail
 
     uint public TO_UNDERLYING_FEE = 30;
@@ -17,7 +17,7 @@ contract ETHPSMTest is Test {
     uint public BPS_SCALE = 10000;
 
     ESynth public synth;
-    ETHPSM public psm;
+    PSM public psm;
 
     IEVC public evc;
 
@@ -35,7 +35,7 @@ contract ETHPSMTest is Test {
 
         // Deploy PSM
         vm.prank(owner);
-        psm = new ETHPSM(address(evc), address(synth), TO_UNDERLYING_FEE, TO_SYNTH_FEE);
+        psm = new PSM(address(evc), address(synth), TO_UNDERLYING_FEE, TO_SYNTH_FEE);
 
         // Give PSM and wallets some ETH
         vm.deal(address(psm), 100e18);

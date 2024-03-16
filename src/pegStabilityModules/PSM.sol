@@ -5,7 +5,7 @@ pragma solidity ^0.8.0;
 import {IESynth} from "../ESynth/IESynth.sol";
 import {EVCUtil, IEVC} from "ethereum-vault-connector/utils/EVCUtil.sol";
 
-contract ETHPSM is EVCUtil {
+contract PSM is EVCUtil {
     uint public constant BPS_SCALE = 10000;
 
     IESynth public immutable synth;
