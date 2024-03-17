@@ -32,7 +32,7 @@ contract ESVault is EVault {
 
     // TODO fix filter failure 
     /// @inheritdoc IGovernance
-    function setDisabledOps(uint32 newDisabledOps) public override reentrantOK callThroughEVC {
+    function setDisabledOps(uint32 newDisabledOps) public override reentrantOK {
         // Enforce that ops that are not supported by the synth vault are not enabled.
         uint32 filteredOps = newDisabledOps | SYNTH_VAULT_DISABLED_OPS;
         console2.log("ESVault.setDisabledOps.filteredOps", filteredOps);
