@@ -52,7 +52,8 @@ contract ESynthTest is Test, DeployPermit2 {
         unitOfAccount = address(1);
         permit2 = deployPermit2();
 
-        Base.Integrations memory integrations = Base.Integrations(address(evc), address(protocolConfig), balanceTracker, permit2);
+        Base.Integrations memory integrations =
+            Base.Integrations(address(evc), address(protocolConfig), balanceTracker, permit2);
         address initializeModule = address(new Initialize(integrations));
         address tokenModule = address(new Token(integrations));
         address vaultModule = address(new Vault(integrations));

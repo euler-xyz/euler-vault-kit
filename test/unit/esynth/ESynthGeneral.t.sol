@@ -22,11 +22,17 @@ contract ESynthGeneralTest is ESynthTest {
         esynth.approve(address(this), burnAmount);
         vm.stopPrank();
 
+        uint256 allowanceBefore = esynth.allowance(user1, address(this));
         uint256 balanceBefore = esynth.balanceOf(user1);
         uint256 totalSupplyBefore = esynth.totalSupply();
         esynth.burn(user1, burnAmount);
 
         assertEq(esynth.balanceOf(user1), balanceBefore - burnAmount);
         assertEq(esynth.totalSupply(), totalSupplyBefore - burnAmount);
+        if (allowanceBefore != type(uint256).max) {
+            assertEq(esynth.allowance(user1, address(this)), allowanceBefore - burnAmount);
+        } else {
+            assertEq(esynth.allowance(user1, address(this)), type(uint256).max);
+        }
     }
 }
