@@ -9,8 +9,6 @@ import {BalanceUtils} from "../shared/BalanceUtils.sol";
 import {LTVUtils} from "../shared/LTVUtils.sol";
 import {BorrowUtils} from "../shared/BorrowUtils.sol";
 import {ProxyUtils} from "../shared/lib/ProxyUtils.sol";
-// TODO take out console
-import {console2} from "forge-std/Test.sol";
 
 import "../shared/types/Types.sol";
 
@@ -261,7 +259,6 @@ abstract contract GovernanceModule is IGovernance, Base, BalanceUtils, BorrowUti
         // if re-enabling interest - last updated timestamp needs to be reset to skip the disabled period
         MarketCache memory marketCache = updateMarket();
         logMarketStatus(marketCache, marketStorage.interestRate);
-        console2.log("Governance.setDisabledOps.newDisabledOps", newDisabledOps);
         marketStorage.disabledOps = Operations.wrap(newDisabledOps);
         emit GovSetDisabledOps(newDisabledOps);
     }
