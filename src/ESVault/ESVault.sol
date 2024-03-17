@@ -3,7 +3,7 @@
 pragma solidity ^0.8.0;
 
 import {EVault} from "../EVault/EVault.sol";
-import {IGovernance} from "../EVault/IEVault.sol";
+import {IGovernance, IInitialize} from "../EVault/IEVault.sol";
 import {InitializeModule} from "../EVault/modules/Initialize.sol";
 import {VaultModule} from "../EVault/modules/Vault.sol";
 import {GovernanceModule} from "../EVault/modules/Governance.sol";
@@ -24,6 +24,7 @@ contract ESVault is EVault {
 
     // ----------------- Initialize ----------------
 
+    /// @inheritdoc IInitialize
     function initialize(address proxyCreator) public override virtual reentrantOK {
         InitializeModule.initialize(proxyCreator);
 
@@ -43,12 +44,16 @@ contract ESVault is EVault {
         GovernanceModule.setDisabledOps(filteredOps);
     }
 
+    /// @notice Disabled for synthetic asset vaults
     function setInterestFee(uint16 newInterestFee) public override virtual reentrantOK {
         revert E_Disabled();
     }
 
     // ----------------- Vault ----------------
-
+    
+    /// @dev This function can only be called by the synth contract to deposit assets into the vault.
+    /// @param amount The amount of assets to deposit.
+    /// @param receiver The address to receive the assets.
     function deposit(uint256 amount, address receiver) public override virtual reentrantOK callThroughEVC returns (uint256) {
         // only the synth contract can call this function.
         address account = EVCAuthenticate();
