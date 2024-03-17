@@ -14,6 +14,9 @@ contract ESVaultTestBase is EVaultTestBase {
     ESynth assetTSTAsSynth;
     ESynth assetTST2AsSynth;
 
+    ESVault eTSTAsESVault;
+    ESVault eTST2AsESVault;
+
     function setUp() public virtual override {
         super.setUp();
 
@@ -34,11 +37,14 @@ contract ESVaultTestBase is EVaultTestBase {
 
         eTST = IEVault(factory.createProxy(true, abi.encodePacked(address(assetTST), address(oracle), unitOfAccount)));
         eTST.setIRM(address(new IRMTestDefault()));
+        eTSTAsESVault = ESVault(address(eTST));
+
         // Set the capacity for the vault on the synth
         // assetTSTAsSynth.setCapacity(address(eTST), type(uint128).max);
 
         eTST2 = IEVault(factory.createProxy(true, abi.encodePacked(address(assetTST2), address(oracle), unitOfAccount)));
         eTST2.setIRM(address(new IRMTestDefault()));
+        eTST2AsESVault = ESVault(address(eTST2));
         // Set the capacity for the vault on the synth
         // assetTST2AsSynth.setCapacity(address(eTST2), type(uint128).max);
     }

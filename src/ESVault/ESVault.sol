@@ -3,6 +3,7 @@
 pragma solidity ^0.8.0;
 
 import {EVault} from "../EVault/EVault.sol";
+import {IGovernance} from "../EVault/IEVault.sol";
 import {InitializeModule} from "../EVault/modules/Initialize.sol";
 import {VaultModule} from "../EVault/modules/Vault.sol";
 import {IERC20} from "../EVault/IEVault.sol";
@@ -14,16 +15,26 @@ import "../EVault/shared/Constants.sol";
 contract ESVault is EVault {
     constructor(Integrations memory integrations, DeployedModules memory modules) EVault(integrations, modules) {}
 
+    uint32 public constant SYNTH_VAULT_DISABLED_OPS = OP_MINT | OP_REDEEM | OP_SKIM | OP_LOOP | OP_DELOOP;
+
     // ----------------- Initialize ----------------
 
     function initialize(address proxyCreator) public override virtual reentrantOK {
         InitializeModule.initialize(proxyCreator);
 
         // disable not supported operations
-        uint32 newDisabledOps = OP_MINT | OP_REDEEM | OP_SKIM | OP_LOOP | OP_DELOOP;
-        
-        marketStorage.disabledOps = Operations.wrap(newDisabledOps | Operations.unwrap(marketStorage.disabledOps));
-        emit GovSetDisabledOps(newDisabledOps);
+        marketStorage.disabledOps = Operations.wrap(SYNTH_VAULT_DISABLED_OPS | Operations.unwrap(marketStorage.disabledOps));
+        emit GovSetDisabledOps(SYNTH_VAULT_DISABLED_OPS);
+    }
+
+    // ----------------- Governance ----------------
+
+    /// @inheritdoc IGovernance
+    function setDisabledOps(uint32 newDisabledOps) public override reentrantOK {
+        // Enforce that ops that are not supported by the synth vault are not enabled.
+        uint32 filteredOps = newDisabledOps | SYNTH_VAULT_DISABLED_OPS;
+        console2.log("ESVault.setDisabledOps.filteredOps", filteredOps);
+        super.setDisabledOps(filteredOps);
     }
 
     // ----------------- Vault ----------------
