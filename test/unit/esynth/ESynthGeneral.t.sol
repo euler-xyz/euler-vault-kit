@@ -6,19 +6,24 @@ import {stdError} from "forge-std/Test.sol";
 import {Errors} from "src/EVault/shared/Errors.sol";
 
 contract ESynthGeneralTest is ESynthTest {
-    function testFuzz_mintShouldIncreaseTotalSupplyAndBalance(uint256 amount) public {
-        amount = bound(amount, 0, type(uint256).max);
+    uint128 constant MAX_ALLOWED = type(uint128).max;
+
+    function testFuzz_mintShouldIncreaseTotalSupplyAndBalance(uint128 amount) public {
+        amount = uint128(bound(amount, 0, MAX_ALLOWED));
         uint256 balanceBefore = esynth.balanceOf(user1);
         uint256 totalSupplyBefore = esynth.totalSupply();
+        esynth.setCapacity(address(this), MAX_ALLOWED);
+
         esynth.mint(user1, amount);
         assertEq(esynth.balanceOf(user1), balanceBefore + amount);
         assertEq(esynth.totalSupply(), totalSupplyBefore + amount);
     }
 
-    function testFuzz_burnShouldDecreaseTotalSupplyAndBalance(uint256 initialAmount, uint256 burnAmount) public {
-        initialAmount = bound(initialAmount, 0, type(uint256).max);
+    function testFuzz_burnShouldDecreaseTotalSupplyAndBalance(uint128 initialAmount, uint128 burnAmount) public {
+        initialAmount = uint128(bound(initialAmount, 0, MAX_ALLOWED));
+        esynth.setCapacity(address(this), MAX_ALLOWED);
         esynth.mint(user1, initialAmount);
-        burnAmount = bound(burnAmount, 0, initialAmount);
+        burnAmount = uint128(bound(burnAmount, 0, initialAmount));
 
         vm.startPrank(user1);
         esynth.approve(address(this), burnAmount);
@@ -38,21 +43,24 @@ contract ESynthGeneralTest is ESynthTest {
         }
     }
 
-    function testFuzz_depositSimple(uint256 amount) public {
-        amount = bound(amount, 1, type(uint112).max); // amount needs to be less then MAX_SANE_AMOUNT
+    function testFuzz_depositSimple(uint128 amount) public {
+        amount = uint128(bound(amount, 1, type(uint112).max)); // amount needs to be less then MAX_SANE_AMOUNT
+        esynth.setCapacity(address(this), MAX_ALLOWED);
         esynth.mint(address(esynth), amount); // address(this) should be owner
         esynth.deposit(address(eTST), amount);
     }
 
-    function testFuzz_depositTooLarge(uint256 amount) public {
-        amount = bound(amount, uint256(type(uint112).max) + 1, type(uint256).max);
+    function testFuzz_depositTooLarge(uint128 amount) public {
+        amount = uint128(bound(amount, uint256(type(uint112).max) + 1, MAX_ALLOWED));
+        esynth.setCapacity(address(this), MAX_ALLOWED);
         esynth.mint(address(esynth), amount);
         vm.expectRevert(Errors.E_AmountTooLargeToEncode.selector);
         esynth.deposit(address(eTST), amount);
     }
 
-    function testFuzz_withdrawSimple(uint256 amount) public {
-        amount = bound(amount, 1, type(uint112).max);
+    function testFuzz_withdrawSimple(uint128 amount) public {
+        amount = uint128(bound(amount, 1, type(uint112).max));
+        esynth.setCapacity(address(this), MAX_ALLOWED);
         esynth.mint(address(esynth), amount);
         esynth.deposit(address(eTST), amount);
         esynth.withdraw(address(eTST), amount);
