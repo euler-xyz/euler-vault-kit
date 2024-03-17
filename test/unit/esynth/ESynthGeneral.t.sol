@@ -4,6 +4,9 @@ pragma solidity ^0.8.20;
 import {ESynthTest} from "./lib/ESynthTest.sol";
 import {stdError} from "forge-std/Test.sol";
 import {Errors} from "src/EVault/shared/Errors.sol";
+import {ESynth} from "src/ESynth/ESynth.sol";
+
+import "forge-std/console2.sol";
 
 contract ESynthGeneralTest is ESynthTest {
     uint128 constant MAX_ALLOWED = type(uint128).max;
@@ -41,6 +44,34 @@ contract ESynthGeneralTest is ESynthTest {
         } else {
             assertEq(esynth.allowance(user1, address(this)), type(uint256).max);
         }
+    }
+
+    function testFuzz_mintCapacityReached(uint128 capacity, uint128 amount) public {
+        capacity = uint128(bound(capacity, 0, MAX_ALLOWED));
+        amount = uint128(bound(amount, 0, MAX_ALLOWED));
+        vm.assume(capacity < amount);
+        esynth.setCapacity(address(this), capacity);
+        vm.expectRevert(ESynth.E_CapacityReached.selector);
+        esynth.mint(user1, amount);
+    }
+
+    // burn of amount more then minted shoud reset minterCache.minted to 0
+    function testFuzz_burnMoreThenMinted(uint128 amount) public {
+        amount = uint128(bound(amount, 0, MAX_ALLOWED / 2));
+        // one minter mints
+        esynth.setCapacity(address(this), amount); // we set the cap to less then
+        esynth.mint(address(esynth), amount);
+
+        // another minter mints
+        esynth.setCapacity(user1, amount); // we set the cap to less then
+        vm.startPrank(user1);
+        esynth.mint(address(esynth), amount);
+        vm.stopPrank();
+
+        esynth.burn(address(esynth), amount * 2);
+
+        (uint128 capacity, uint128 minted) = esynth.minters(address(this));
+        assertEq(minted, 0);
     }
 
     function testFuzz_depositSimple(uint128 amount) public {
