@@ -38,17 +38,4 @@ contract ESVault is EVault {
         super.deposit(amount, receiver);
     }
 
-    function withdraw(uint256 assets, address receiver, address owner) public override virtual reentrantOK returns (uint256) {
-        // only the synth contract, the governor fee receiver and the protocol fee receiver can call this function.
-        // the governor fee receiver and the protocol fee receiver must be able to call it to withdraw the fees after convertFees is called.
-        address account = EVCAuthenticate();
-        (IERC20 synth,,) = ProxyUtils.metadata();
-        (address protocolReceiver,) = protocolConfig.feeConfig(address(this));
-
-        if (account != address(synth) && account != protocolReceiver && account != marketStorage.feeReceiver) {
-            revert E_Unauthorized();
-        }
-
-        super.withdraw(assets, receiver, owner);
-    }
 }
