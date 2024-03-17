@@ -10,13 +10,17 @@ import {GovernanceModule} from "../EVault/modules/Governance.sol";
 import {IERC20} from "../EVault/IEVault.sol";
 import {ProxyUtils} from "../EVault/shared/lib/ProxyUtils.sol";
 import {Operations} from "../EVault/shared/types/Types.sol";
-import {console2} from "forge-std/Test.sol";
 import "../EVault/shared/Constants.sol";
+import "../EVault/shared/types/Types.sol";
 
 contract ESVault is EVault {
+    using TypesLib for uint16;
     constructor(Integrations memory integrations, DeployedModules memory modules) EVault(integrations, modules) {}
 
     uint32 public constant SYNTH_VAULT_DISABLED_OPS = OP_MINT | OP_REDEEM | OP_SKIM | OP_LOOP | OP_DELOOP;
+    uint32 public constant INTEREST_FEE = 1e4;
+
+    error E_Disabled();
 
     // ----------------- Initialize ----------------
 
@@ -25,18 +29,22 @@ contract ESVault is EVault {
 
         // disable not supported operations
         marketStorage.disabledOps = Operations.wrap(SYNTH_VAULT_DISABLED_OPS | Operations.unwrap(marketStorage.disabledOps));
+        // set default interst fee to 100%
+        marketStorage.interestFee = uint16(INTEREST_FEE).toConfigAmount();
         emit GovSetDisabledOps(SYNTH_VAULT_DISABLED_OPS);
     }
 
     // ----------------- Governance ----------------
 
-    // TODO fix filter failure 
     /// @inheritdoc IGovernance
     function setDisabledOps(uint32 newDisabledOps) public override reentrantOK {
         // Enforce that ops that are not supported by the synth vault are not enabled.
         uint32 filteredOps = newDisabledOps | SYNTH_VAULT_DISABLED_OPS;
-        console2.log("ESVault.setDisabledOps.filteredOps", filteredOps);
         GovernanceModule.setDisabledOps(filteredOps);
+    }
+
+    function setInterestFee(uint16 newInterestFee) public override virtual reentrantOK {
+        revert E_Disabled();
     }
 
     // ----------------- Vault ----------------
