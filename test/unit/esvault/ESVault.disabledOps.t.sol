@@ -24,7 +24,7 @@ contract ESVaultTestDisabledOps is ESVaultTestBase {
 
             console2.log("disabledOps", disabledOps);
             console2.log("SYNTH_VAULT_DISABLED_OPS", eTSTAsESVault.SYNTH_VAULT_DISABLED_OPS());
-            assertEq(disabledOps, eTSTAsESVault.SYNTH_VAULT_DISABLED_OPS());
+            assertEq(disabledOps, newDisabledOps | eTSTAsESVault.SYNTH_VAULT_DISABLED_OPS());
         }
 
 }
