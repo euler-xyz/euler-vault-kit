@@ -9,6 +9,7 @@ import {BalanceUtils} from "../shared/BalanceUtils.sol";
 import {LTVUtils} from "../shared/LTVUtils.sol";
 import {BorrowUtils} from "../shared/BorrowUtils.sol";
 import {ProxyUtils} from "../shared/lib/ProxyUtils.sol";
+// TODO take out console
 import {console2} from "forge-std/Test.sol";
 
 import "../shared/types/Types.sol";
