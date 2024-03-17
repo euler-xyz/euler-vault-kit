@@ -29,6 +29,7 @@ contract ESVault is EVault {
 
     // ----------------- Governance ----------------
 
+    // TODO fix filter failure 
     /// @inheritdoc IGovernance
     function setDisabledOps(uint32 newDisabledOps) public override reentrantOK {
         // Enforce that ops that are not supported by the synth vault are not enabled.
