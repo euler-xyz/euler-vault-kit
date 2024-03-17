@@ -4,7 +4,6 @@ pragma solidity ^0.8.0;
 
 import {ESVaultTestBase, ESynth} from "./ESVaultTestBase.t.sol";
 import {Errors} from "../../../src/Evault/shared/Errors.sol";
-import {console2} from "forge-std/Test.sol";
 
 contract ESVaultTestDeposit is ESVaultTestBase {
 
