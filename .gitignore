@@ -11,3 +11,7 @@ out/
 .env
 .vscode
 lcov.info
+
+# Coverage directory
+coverage/
+*.info

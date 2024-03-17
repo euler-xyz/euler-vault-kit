@@ -2,6 +2,8 @@
 pragma solidity ^0.8.20;
 
 import {ESynthTest} from "./lib/ESynthTest.sol";
+import {stdError} from "forge-std/Test.sol";
+import {Errors} from "src/EVault/shared/Errors.sol";
 
 contract ESynthGeneralTest is ESynthTest {
     function testFuzz_mintShouldIncreaseTotalSupplyAndBalance(uint256 amount) public {
@@ -36,9 +38,23 @@ contract ESynthGeneralTest is ESynthTest {
         }
     }
 
-    function testFuzz_ESynthDeposit(uint256 amount) public {
+    function testFuzz_depositSimple(uint256 amount) public {
         amount = bound(amount, 1, type(uint112).max); // amount needs to be less then MAX_SANE_AMOUNT
         esynth.mint(address(esynth), amount); // address(this) should be owner
         esynth.deposit(address(eTST), amount);
+    }
+
+    function testFuzz_depositTooLarge(uint256 amount) public {
+        amount = bound(amount, uint256(type(uint112).max) + 1, type(uint256).max);
+        esynth.mint(address(esynth), amount);
+        vm.expectRevert(Errors.E_AmountTooLargeToEncode.selector);
+        esynth.deposit(address(eTST), amount);
+    }
+
+    function testFuzz_withdrawSimple(uint256 amount) public {
+        amount = bound(amount, 1, type(uint112).max);
+        esynth.mint(address(esynth), amount);
+        esynth.deposit(address(eTST), amount);
+        esynth.withdraw(address(eTST), amount);
     }
 }
