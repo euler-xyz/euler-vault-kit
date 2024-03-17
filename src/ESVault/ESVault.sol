@@ -6,6 +6,7 @@ import {EVault} from "../EVault/EVault.sol";
 import {IGovernance} from "../EVault/IEVault.sol";
 import {InitializeModule} from "../EVault/modules/Initialize.sol";
 import {VaultModule} from "../EVault/modules/Vault.sol";
+import {GovernanceModule} from "../EVault/modules/Governance.sol";
 import {IERC20} from "../EVault/IEVault.sol";
 import {ProxyUtils} from "../EVault/shared/lib/ProxyUtils.sol";
 import {Operations} from "../EVault/shared/types/Types.sol";
@@ -31,23 +32,23 @@ contract ESVault is EVault {
 
     // TODO fix filter failure 
     /// @inheritdoc IGovernance
-    function setDisabledOps(uint32 newDisabledOps) public override reentrantOK {
+    function setDisabledOps(uint32 newDisabledOps) public override reentrantOK callThroughEVC {
         // Enforce that ops that are not supported by the synth vault are not enabled.
         uint32 filteredOps = newDisabledOps | SYNTH_VAULT_DISABLED_OPS;
         console2.log("ESVault.setDisabledOps.filteredOps", filteredOps);
-        super.setDisabledOps(filteredOps);
+        GovernanceModule.setDisabledOps(filteredOps);
     }
 
     // ----------------- Vault ----------------
 
-    function deposit(uint256 amount, address receiver) public override virtual reentrantOK returns (uint256) {
+    function deposit(uint256 amount, address receiver) public override virtual reentrantOK callThroughEVC returns (uint256) {
         // only the synth contract can call this function.
         address account = EVCAuthenticate();
         (IERC20 synth,,) = ProxyUtils.metadata();
 
         if (account != address(synth)) revert E_Unauthorized();
 
-        super.deposit(amount, receiver);
+        VaultModule.deposit(amount, receiver);
     }
 
 }
