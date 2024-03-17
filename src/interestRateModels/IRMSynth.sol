@@ -9,7 +9,7 @@ contract IRMSynth is IIRM {
     uint256 public constant BPS_SCALE = 10000;
     uint256 public constant TARGET_QUOTE = 1e18;
     uint256 constant SECONDS_PER_YEAR = 365.2425 * 86400; // Gregorian calendar
-    uint256 public constant MAX_RATE = 1e27 * 0.15 / SECONDS_PER_YEAR; // 15% APR
+    uint256 public constant MAX_RATE = 1e27 * 1.5 / SECONDS_PER_YEAR; // 150% APR
     uint256 public constant BASE_RATE = 1e27 * 0.005 / SECONDS_PER_YEAR; // 0.5% APR
     uint256 public constant ADJUST_AMOUNT = 0.1e18; // 10% adjust of last rate per interval
     uint256 public constant ADJUST_AMOUNT_SCALE = 1e18;
