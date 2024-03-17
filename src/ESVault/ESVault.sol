@@ -20,7 +20,7 @@ contract ESVault is EVault {
         InitializeModule.initialize(proxyCreator);
 
         // disable not supported operations
-        uint32 newDisabledOps = OP_MINT | OP_REDEEM | OP_SKIM | OP_LOOP | OP_DELOOP;
+        uint32 newDisabledOps = OP_MINT | OP_SKIM | OP_LOOP | OP_DELOOP;
         
         marketStorage.disabledOps = Operations.wrap(newDisabledOps | Operations.unwrap(marketStorage.disabledOps));
         emit GovSetDisabledOps(newDisabledOps);
