@@ -4,7 +4,6 @@ pragma solidity ^0.8.0;
 
 import {ESVaultTestBase, ESynth} from "./ESVaultTestBase.t.sol";
 import {Errors} from "../../../src/Evault/shared/Errors.sol";
-import {console2} from "forge-std/Test.sol";
 
 contract ESVaultTestDisabledOps is ESVaultTestBase {
     
@@ -22,8 +21,6 @@ contract ESVaultTestDisabledOps is ESVaultTestBase {
             eTST.setDisabledOps(newDisabledOps);
             uint32 disabledOps = eTST.disabledOps();
 
-            console2.log("disabledOps", disabledOps);
-            console2.log("SYNTH_VAULT_DISABLED_OPS", eTSTAsESVault.SYNTH_VAULT_DISABLED_OPS());
             assertEq(disabledOps, newDisabledOps | eTSTAsESVault.SYNTH_VAULT_DISABLED_OPS());
         }
 
