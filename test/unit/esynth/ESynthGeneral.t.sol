@@ -35,4 +35,10 @@ contract ESynthGeneralTest is ESynthTest {
             assertEq(esynth.allowance(user1, address(this)), type(uint256).max);
         }
     }
+
+    function testFuzz_ESynthDeposit(uint256 amount) public {
+        amount = bound(amount, 1, type(uint112).max); // amount needs to be less then MAX_SANE_AMOUNT
+        esynth.mint(address(esynth), amount); // address(this) should be owner
+        esynth.deposit(address(eTST), amount);
+    }
 }
