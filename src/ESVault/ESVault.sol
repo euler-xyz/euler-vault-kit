@@ -17,6 +17,7 @@ contract ESVault is EVault {
     constructor(Integrations memory integrations, DeployedModules memory modules) EVault(integrations, modules) {}
 
     uint32 public constant SYNTH_VAULT_DISABLED_OPS = OP_MINT | OP_REDEEM | OP_SKIM | OP_LOOP | OP_DELOOP;
+    uint16 internal constant INTEREST_FEE = 1e4;
 
     // ----------------- Initialize ----------------
 
@@ -30,7 +31,7 @@ contract ESVault is EVault {
         emit GovSetDisabledOps(newDisabledOps);
 
         // set default interst fee to 100%
-        uint16 newInterestFee = uint16(ConfigAmountLib.MAX_AMOUNT);
+        uint16 newInterestFee = INTEREST_FEE;
         marketStorage.interestFee = newInterestFee.toConfigAmount();
         emit GovSetInterestFee(newInterestFee);
     }

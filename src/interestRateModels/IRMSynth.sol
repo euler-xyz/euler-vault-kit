@@ -6,7 +6,6 @@ import "./IIRM.sol";
 import "../interfaces/IPriceOracle.sol";
 
 contract IRMSynth is IIRM {
-    uint256 public constant BPS_SCALE = 10000;
     uint256 public constant TARGET_QUOTE = 1e18;
     uint256 constant SECONDS_PER_YEAR = 365.2425 * 86400; // Gregorian calendar
     uint256 public constant MAX_RATE = 1e27 * 1.5 / SECONDS_PER_YEAR; // 150% APR
@@ -24,7 +23,7 @@ contract IRMSynth is IIRM {
         uint216 lastRate;
     }
 
-    IRMData public irmStorage;
+    IRMData internal irmStorage;
 
     constructor(address synth_, address referenceAsset_, address oracle_) {
         synth = synth_;

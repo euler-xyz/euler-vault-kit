@@ -10,26 +10,24 @@ import "../Constants.sol";
 // The type is used to store protocol configuration values.
 
 library ConfigAmountLib {
-    uint256 internal constant MAX_AMOUNT = 1e4;
-
     // note assuming arithmetic checks are already performed
     function mulDiv(ConfigAmount self, uint256 multiplier, uint256 divisor) internal pure returns (uint256) {
         unchecked {
-            return uint256(self.toUint16()) * multiplier / (MAX_AMOUNT * divisor);
+            return uint256(self.toUint16()) * multiplier / (1e4 * divisor);
         }
     }
 
     // note assuming arithmetic checks are already performed
     function mul(ConfigAmount self, uint256 multiplier) internal pure returns (uint256) {
         unchecked {
-            return uint256(self.toUint16()) * multiplier / MAX_AMOUNT;
+            return uint256(self.toUint16()) * multiplier / 1e4;
         }
     }
 
     // note assuming arithmetic checks are already performed
     function mulInv(ConfigAmount self, uint256 multiplier) internal pure returns (uint256) {
         unchecked {
-            return MAX_AMOUNT * multiplier / uint256(self.toUint16());
+            return 1e4 * multiplier / uint256(self.toUint16());
         }
     }
 
@@ -42,7 +40,7 @@ library ConfigAmountLib {
     }
 
     function validate(uint256 amount) internal pure {
-        if (amount > MAX_AMOUNT) revert Errors.E_InvalidConfigAmount();
+        if (amount > 1e4) revert Errors.E_InvalidConfigAmount();
     }
 }
 
