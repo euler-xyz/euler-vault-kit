@@ -3,7 +3,7 @@
 pragma solidity ^0.8.0;
 
 import {ESVaultTestBase, ESynth, ESVault} from "./ESVaultTestBase.t.sol";
-import {Errors} from "../../../src/Evault/shared/Errors.sol";
+import {Errors} from "../../../src/EVault/shared/Errors.sol";
 
 contract ESVaultTestInterestFee is ESVaultTestBase {
     function setUp() public override {
