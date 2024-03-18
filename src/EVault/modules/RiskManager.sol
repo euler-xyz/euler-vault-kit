@@ -12,7 +12,7 @@ abstract contract RiskManagerModule is IRiskManager, Base, LiquidityUtils {
     using TypesLib for uint256;
 
     /// @inheritdoc IRiskManager
-    function accountLiquidity(address account, bool liquidation) external view virtual nonReentrantView returns (uint256 collateralValue, uint256 liabilityValue) {
+    function accountLiquidity(address account, bool liquidation) public view virtual nonReentrantView returns (uint256 collateralValue, uint256 liabilityValue) {
         MarketCache memory marketCache = loadMarket();
 
         verifyController(account);
@@ -27,7 +27,7 @@ abstract contract RiskManagerModule is IRiskManager, Base, LiquidityUtils {
     }
 
     /// @inheritdoc IRiskManager
-    function accountLiquidityFull(address account, bool liquidation) external view virtual nonReentrantView returns (address[] memory collaterals, uint256[] memory collateralValues, uint256 liabilityValue) {
+    function accountLiquidityFull(address account, bool liquidation) public view virtual nonReentrantView returns (address[] memory collaterals, uint256[] memory collateralValues, uint256 liabilityValue) {
         MarketCache memory marketCache = loadMarket();
 
         verifyController(account);
@@ -43,7 +43,7 @@ abstract contract RiskManagerModule is IRiskManager, Base, LiquidityUtils {
     }
 
     /// @inheritdoc IRiskManager
-    function disableController() external virtual nonReentrant {
+    function disableController() public virtual nonReentrant {
         address account = EVCAuthenticate();
 
         if (!marketStorage.users[account].getOwed().isZero()) revert E_OutstandingDebt();
@@ -57,7 +57,7 @@ abstract contract RiskManagerModule is IRiskManager, Base, LiquidityUtils {
     /// vault state use callThroughEVC modifier, they are effectively blocked while the function executes. There are non-view functions without
     /// callThroughEVC modifier (`flashLoan`, `disableCollateral`), but they don't change the vault's storage.
     function checkAccountStatus(address account, address[] calldata collaterals)
-        external
+        public
         virtual
         reentrantOK
         onlyEVCChecks
@@ -70,7 +70,7 @@ abstract contract RiskManagerModule is IRiskManager, Base, LiquidityUtils {
 
     /// @inheritdoc IRiskManager
     /// @dev See comment about re-entrancy for `checkAccountStatus`
-    function checkVaultStatus() external virtual reentrantOK onlyEVCChecks returns (bytes4 magicValue) {
+    function checkVaultStatus() public virtual reentrantOK onlyEVCChecks returns (bytes4 magicValue) {
         // Use the updating variant to make sure interest is accrued in storage before the interest rate update
         MarketCache memory marketCache = updateMarket();
         uint256 newInterestRate = computeInterestRate(marketCache);

@@ -22,43 +22,43 @@ abstract contract BorrowingModule is IBorrowing, Base, AssetTransfers, BalanceUt
     using SafeERC20Lib for IERC20;
 
     /// @inheritdoc IBorrowing
-    function totalBorrows() external view virtual nonReentrantView returns (uint256) {
+    function totalBorrows() public view virtual nonReentrantView returns (uint256) {
         return loadMarket().totalBorrows.toAssetsUp().toUint();
     }
 
     /// @inheritdoc IBorrowing
-    function totalBorrowsExact() external view virtual nonReentrantView returns (uint256) {
+    function totalBorrowsExact() public view virtual nonReentrantView returns (uint256) {
         return loadMarket().totalBorrows.toUint();
     }
 
     /// @inheritdoc IBorrowing
-    function cash() external view virtual nonReentrantView returns (uint256) {
+    function cash() public view virtual nonReentrantView returns (uint256) {
         return marketStorage.cash.toUint();
     }
 
     /// @inheritdoc IBorrowing
-    function debtOf(address account) external view virtual nonReentrantView returns (uint256) {
+    function debtOf(address account) public view virtual nonReentrantView returns (uint256) {
         return getCurrentOwed(loadMarket(), account).toAssetsUp().toUint();
     }
 
     /// @inheritdoc IBorrowing
-    function debtOfExact(address account) external view virtual nonReentrantView returns (uint256) {
+    function debtOfExact(address account) public view virtual nonReentrantView returns (uint256) {
         return getCurrentOwed(loadMarket(), account).toUint();
     }
 
     /// @inheritdoc IBorrowing
-    function interestRate() external view virtual nonReentrantView returns (uint256) {
+    function interestRate() public view virtual nonReentrantView returns (uint256) {
         return computeInterestRateView(loadMarket());
     }
 
     /// @inheritdoc IBorrowing
-    function interestAccumulator() external view virtual nonReentrantView returns (uint256) {
+    function interestAccumulator() public view virtual nonReentrantView returns (uint256) {
         return loadMarket().interestAccumulator;
     }
 
     /// @inheritdoc IBorrowing
     function collateralUsed(address collateral, address account)
-        external
+        public
         view
         virtual
         nonReentrantView
@@ -101,13 +101,13 @@ abstract contract BorrowingModule is IBorrowing, Base, AssetTransfers, BalanceUt
     }
 
     /// @inheritdoc IBorrowing
-    function dToken() external view virtual reentrantOK returns (address) {
+    function dToken() public view virtual reentrantOK returns (address) {
         return calculateDTokenAddress();
     }
 
 
     /// @inheritdoc IBorrowing
-    function borrow(uint256 amount, address receiver) external virtual nonReentrant returns (uint256) {
+    function borrow(uint256 amount, address receiver) public virtual nonReentrant returns (uint256) {
         (MarketCache memory marketCache, address account) = initOperation(OP_BORROW, CHECKACCOUNT_CALLER);
 
         Assets assets = amount == type(uint256).max ? marketCache.cash : amount.toAssets();
@@ -123,7 +123,7 @@ abstract contract BorrowingModule is IBorrowing, Base, AssetTransfers, BalanceUt
     }
 
     /// @inheritdoc IBorrowing
-    function repay(uint256 amount, address receiver) external virtual nonReentrant returns (uint256) {
+    function repay(uint256 amount, address receiver) public virtual nonReentrant returns (uint256) {
         (MarketCache memory marketCache, address account) = initOperation(OP_REPAY, CHECKACCOUNT_NONE);
 
         uint256 owed = getCurrentOwed(marketCache, receiver).toAssetsUp().toUint();
@@ -139,7 +139,7 @@ abstract contract BorrowingModule is IBorrowing, Base, AssetTransfers, BalanceUt
     }
 
     /// @inheritdoc IBorrowing
-    function loop(uint256 amount, address sharesReceiver) external virtual nonReentrant returns (uint256) {
+    function loop(uint256 amount, address sharesReceiver) public virtual nonReentrant returns (uint256) {
         (MarketCache memory marketCache, address account) = initOperation(OP_LOOP, CHECKACCOUNT_CALLER);
 
         Assets assets = amount.toAssets();
@@ -157,7 +157,7 @@ abstract contract BorrowingModule is IBorrowing, Base, AssetTransfers, BalanceUt
     }
 
     /// @inheritdoc IBorrowing
-    function deloop(uint256 amount, address debtFrom) external virtual nonReentrant returns (uint256) {
+    function deloop(uint256 amount, address debtFrom) public virtual nonReentrant returns (uint256) {
         (MarketCache memory marketCache, address account) = initOperation(OP_DELOOP, CHECKACCOUNT_NONE);
 
         Assets owed = getCurrentOwed(marketCache, debtFrom).toAssetsUp();
@@ -191,7 +191,7 @@ abstract contract BorrowingModule is IBorrowing, Base, AssetTransfers, BalanceUt
     }
 
     /// @inheritdoc IBorrowing
-    function pullDebt(uint256 amount, address from) external virtual nonReentrant returns (uint256) {
+    function pullDebt(uint256 amount, address from) public virtual nonReentrant returns (uint256) {
         (MarketCache memory marketCache, address account) = initOperation(OP_PULL_DEBT, CHECKACCOUNT_CALLER);
 
         if (from == account) revert E_SelfTransfer();
@@ -205,12 +205,12 @@ abstract contract BorrowingModule is IBorrowing, Base, AssetTransfers, BalanceUt
     }
 
     /// @inheritdoc IBorrowing
-    function touch() external virtual nonReentrant {
+    function touch() public virtual nonReentrant {
         initOperation(OP_TOUCH, CHECKACCOUNT_NONE);
     }
 
     /// @inheritdoc IBorrowing
-    function flashLoan(uint256 assets, bytes calldata data) external virtual nonReentrant {
+    function flashLoan(uint256 assets, bytes calldata data) public virtual nonReentrant {
         if (marketStorage.disabledOps.check(OP_FLASHLOAN)) {
             revert E_OperationDisabled();
         }

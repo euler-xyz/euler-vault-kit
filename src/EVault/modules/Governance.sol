@@ -42,49 +42,49 @@ abstract contract GovernanceModule is IGovernance, Base, BalanceUtils, BorrowUti
     }
 
     /// @inheritdoc IGovernance
-    function governorAdmin() external view virtual reentrantOK returns (address) {
+    function governorAdmin() public view virtual reentrantOK returns (address) {
         return marketStorage.governorAdmin;
     }
 
     /// @inheritdoc IGovernance
-    function pauseGuardian() external view virtual reentrantOK returns (address) {
+    function pauseGuardian() public view virtual reentrantOK returns (address) {
         return marketStorage.pauseGuardian;
     }
 
     /// @inheritdoc IGovernance
-    function interestFee() external view virtual reentrantOK returns (uint16) {
+    function interestFee() public view virtual reentrantOK returns (uint16) {
         return marketStorage.interestFee.toUint16();
     }
 
     /// @inheritdoc IGovernance
-    function protocolFeeShare() external view virtual reentrantOK returns (uint256) {
+    function protocolFeeShare() public view virtual reentrantOK returns (uint256) {
         (, uint256 protocolShare) = protocolConfig.protocolFeeConfig(address(this));
         return protocolShare;
     }
 
     /// @inheritdoc IGovernance
-    function protocolFeeReceiver() external view virtual reentrantOK returns (address) {
+    function protocolFeeReceiver() public view virtual reentrantOK returns (address) {
         (address protocolReceiver,) = protocolConfig.protocolFeeConfig(address(this));
         return protocolReceiver;
     }
 
     /// @inheritdoc IGovernance
-    function protocolConfigAddress() external view virtual reentrantOK returns (address) {
+    function protocolConfigAddress() public view virtual reentrantOK returns (address) {
         return address(protocolConfig);
     }
 
     /// @inheritdoc IGovernance
-    function borrowingLTV(address collateral) external view virtual reentrantOK returns (uint16) {
+    function borrowingLTV(address collateral) public view virtual reentrantOK returns (uint16) {
         return getLTV(collateral, LTVType.BORROWING).toUint16();
     }
 
     /// @inheritdoc IGovernance
-    function liquidationLTV(address collateral) external view virtual reentrantOK returns (uint16) {
+    function liquidationLTV(address collateral) public view virtual reentrantOK returns (uint16) {
         return getLTV(collateral, LTVType.LIQUIDATION).toUint16();
     }
 
     /// @inheritdoc IGovernance
-    function LTVFull(address collateral) external view virtual reentrantOK returns (uint48, uint16, uint32, uint16) {
+    function LTVFull(address collateral) public view virtual reentrantOK returns (uint48, uint16, uint32, uint16) {
         LTVConfig memory ltv = marketStorage.ltvLookup[collateral];
         return (
             ltv.targetTimestamp,
@@ -95,54 +95,54 @@ abstract contract GovernanceModule is IGovernance, Base, BalanceUtils, BorrowUti
     }
 
     /// @inheritdoc IGovernance
-    function LTVList() external view virtual reentrantOK returns (address[] memory) {
+    function LTVList() public view virtual reentrantOK returns (address[] memory) {
         return marketStorage.ltvList;
     }
 
     /// @inheritdoc IGovernance
-    function interestRateModel() external view virtual reentrantOK returns (address) {
+    function interestRateModel() public view virtual reentrantOK returns (address) {
         return marketStorage.interestRateModel;
     }
 
     /// @inheritdoc IGovernance
-    function disabledOps() external view virtual reentrantOK returns (uint32) {
+    function disabledOps() public view virtual reentrantOK returns (uint32) {
         return (marketStorage.disabledOps.toUint32());
     }
 
     /// @inheritdoc IGovernance
-    function caps() external view virtual reentrantOK returns (uint16, uint16) {
+    function caps() public view virtual reentrantOK returns (uint16, uint16) {
         return (marketStorage.supplyCap.toRawUint16(), marketStorage.borrowCap.toRawUint16());
     }
 
     /// @inheritdoc IGovernance
-    function feeReceiver() external view virtual reentrantOK returns (address) {
+    function feeReceiver() public view virtual reentrantOK returns (address) {
         return marketStorage.feeReceiver;
     }
 
     /// @inheritdoc IGovernance
-    function EVC() external view virtual reentrantOK returns (address) {
+    function EVC() public view virtual reentrantOK returns (address) {
         return address(evc);
     }
 
     /// @inheritdoc IGovernance
-    function permit2Address() external view virtual reentrantOK returns (address) {
+    function permit2Address() public view virtual reentrantOK returns (address) {
         return permit2;
     }
 
     /// @inheritdoc IGovernance
-    function unitOfAccount() external view virtual reentrantOK returns (address) {
+    function unitOfAccount() public view virtual reentrantOK returns (address) {
         (,, address _unitOfAccount) = ProxyUtils.metadata();
         return _unitOfAccount;
     }
 
     /// @inheritdoc IGovernance
-    function oracle() external view virtual reentrantOK returns (address) {
+    function oracle() public view virtual reentrantOK returns (address) {
         (, IPriceOracle _oracle,) = ProxyUtils.metadata();
         return address(_oracle);
     }
 
      /// @inheritdoc IGovernance
-    function convertFees() external virtual nonReentrant {
+    function convertFees() public virtual nonReentrant {
         (MarketCache memory marketCache, address account) = initOperation(OP_CONVERT_FEES, CHECKACCOUNT_NONE);
 
         if (marketCache.accumulatedFees.isZero()) return;
@@ -186,37 +186,37 @@ abstract contract GovernanceModule is IGovernance, Base, BalanceUtils, BorrowUti
     }
 
     /// @inheritdoc IGovernance
-    function setName(string calldata newName) external virtual nonReentrant governorOnly {
+    function setName(string calldata newName) public virtual nonReentrant governorOnly {
         marketStorage.name = newName;
         emit GovSetName(newName);
     }
 
     /// @inheritdoc IGovernance
-    function setSymbol(string calldata newSymbol) external virtual nonReentrant governorOnly {
+    function setSymbol(string calldata newSymbol) public virtual nonReentrant governorOnly {
         marketStorage.symbol = newSymbol;
         emit GovSetSymbol(newSymbol);
     }
 
     /// @inheritdoc IGovernance
-    function setGovernorAdmin(address newGovernorAdmin) external virtual nonReentrant governorOnly {
+    function setGovernorAdmin(address newGovernorAdmin) public virtual nonReentrant governorOnly {
         marketStorage.governorAdmin = newGovernorAdmin;
         emit GovSetGovernorAdmin(newGovernorAdmin);
     }
 
     /// @inheritdoc IGovernance
-    function setPauseGuardian(address newPauseGuardian) external virtual nonReentrant governorOnly {
+    function setPauseGuardian(address newPauseGuardian) public virtual nonReentrant governorOnly {
         marketStorage.pauseGuardian = newPauseGuardian;
         emit GovSetPauseGuardian(newPauseGuardian);
     }
 
     /// @inheritdoc IGovernance
-    function setFeeReceiver(address newFeeReceiver) external virtual nonReentrant governorOnly {
+    function setFeeReceiver(address newFeeReceiver) public virtual nonReentrant governorOnly {
         marketStorage.feeReceiver = newFeeReceiver;
         emit GovSetFeeReceiver(newFeeReceiver);
     }
 
     /// @inheritdoc IGovernance
-    function setLTV(address collateral, uint16 ltv, uint32 rampDuration) external virtual nonReentrant governorOnly {
+    function setLTV(address collateral, uint16 ltv, uint32 rampDuration) public virtual nonReentrant governorOnly {
         // self-collateralization is not allowed
         if (collateral == address(this)) revert E_InvalidLTVAsset();
 
@@ -231,7 +231,7 @@ abstract contract GovernanceModule is IGovernance, Base, BalanceUtils, BorrowUti
     }
 
     /// @inheritdoc IGovernance
-    function clearLTV(address collateral) external virtual nonReentrant governorOnly {
+    function clearLTV(address collateral) public virtual nonReentrant governorOnly {
         uint16 originalLTV = getLTV(collateral, LTVType.LIQUIDATION).toUint16();
         marketStorage.ltvLookup[collateral].clear();
 
@@ -239,7 +239,7 @@ abstract contract GovernanceModule is IGovernance, Base, BalanceUtils, BorrowUti
     }
 
     /// @inheritdoc IGovernance
-    function setIRM(address newModel) external virtual nonReentrant governorOnly {
+    function setIRM(address newModel) public virtual nonReentrant governorOnly {
         MarketCache memory marketCache = updateMarket();
 
         marketStorage.interestRateModel = newModel;
@@ -253,7 +253,7 @@ abstract contract GovernanceModule is IGovernance, Base, BalanceUtils, BorrowUti
     }
 
     /// @inheritdoc IGovernance
-    function setDisabledOps(uint32 newDisabledOps) external virtual nonReentrant pauseGuardianOnly {
+    function setDisabledOps(uint32 newDisabledOps) public virtual nonReentrant pauseGuardianOnly {
         // market is updated because:
         // if disabling interest accrual - the pending interest should be accrued
         // if re-enabling interest - last updated timestamp needs to be reset to skip the disabled period
@@ -265,7 +265,7 @@ abstract contract GovernanceModule is IGovernance, Base, BalanceUtils, BorrowUti
     }
 
     /// @inheritdoc IGovernance
-    function setCaps(uint16 supplyCap, uint16 borrowCap) external virtual nonReentrant governorOnly {
+    function setCaps(uint16 supplyCap, uint16 borrowCap) public virtual nonReentrant governorOnly {
         AmountCap _supplyCap = AmountCap.wrap(supplyCap);
         // Max total assets is a sum of max pool size and max total debt, both Assets type
         if (supplyCap > 0 && _supplyCap.toUint() > 2 * MAX_SANE_AMOUNT) revert E_BadSupplyCap();
@@ -280,7 +280,7 @@ abstract contract GovernanceModule is IGovernance, Base, BalanceUtils, BorrowUti
     }
 
     /// @inheritdoc IGovernance
-    function setInterestFee(uint16 newInterestFee) external virtual nonReentrant governorOnly {
+    function setInterestFee(uint16 newInterestFee) public virtual nonReentrant governorOnly {
         // Interest fees in guaranteed range are always allowed, otherwise ask protocolConfig
         if (newInterestFee < GUARANTEED_INTEREST_FEE_MIN || newInterestFee > GUARANTEED_INTEREST_FEE_MAX) {
             if (!protocolConfig.isValidInterestFee(address(this), newInterestFee)) revert E_BadFee();

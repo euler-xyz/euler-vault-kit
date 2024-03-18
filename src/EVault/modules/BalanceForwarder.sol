@@ -7,17 +7,17 @@ import {Base} from "../shared/Base.sol";
 
 abstract contract BalanceForwarderModule is IBalanceForwarder, Base {
     /// @inheritdoc IBalanceForwarder
-    function balanceTrackerAddress() external view virtual reentrantOK returns (address) {
+    function balanceTrackerAddress() public view virtual reentrantOK returns (address) {
         return address(balanceTracker);
     }
 
     /// @inheritdoc IBalanceForwarder
-    function balanceForwarderEnabled(address account) external view virtual reentrantOK returns (bool) {
+    function balanceForwarderEnabled(address account) public view virtual reentrantOK returns (bool) {
         return marketStorage.users[account].getBalanceForwarderEnabled();
     }
 
     /// @inheritdoc IBalanceForwarder
-    function enableBalanceForwarder() external virtual reentrantOK {
+    function enableBalanceForwarder() public virtual reentrantOK {
         if (address(balanceTracker) == address(0)) revert E_BalanceForwarderUnsupported();
 
         address account = EVCAuthenticate();
@@ -30,7 +30,7 @@ abstract contract BalanceForwarderModule is IBalanceForwarder, Base {
     }
 
     /// @inheritdoc IBalanceForwarder
-    function disableBalanceForwarder() external virtual reentrantOK {
+    function disableBalanceForwarder() public virtual reentrantOK {
         if (address(balanceTracker) == address(0)) revert E_BalanceForwarderUnsupported();
 
         address account = EVCAuthenticate();

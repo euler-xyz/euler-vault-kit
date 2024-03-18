@@ -28,7 +28,7 @@ abstract contract LiquidationModule is ILiquidation, Base, BalanceUtils, Liquidi
 
     /// @inheritdoc ILiquidation
     function checkLiquidation(address liquidator, address violator, address collateral)
-        external
+        public
         view
         virtual
         nonReentrantView
@@ -43,7 +43,7 @@ abstract contract LiquidationModule is ILiquidation, Base, BalanceUtils, Liquidi
 
     /// @inheritdoc ILiquidation
     function liquidate(address violator, address collateral, uint256 repayAssets, uint256 minYieldBalance)
-        external
+        public
         virtual
         nonReentrant
     {
@@ -180,7 +180,7 @@ abstract contract LiquidationModule is ILiquidation, Base, BalanceUtils, Liquidi
         //    therefore there were no prior batch operations that could have registered a health check,
         //    and if the check is present now, it must have been triggered by the enforced transfer.
         // 2. Only collaterals with initialized LTV settings can be liquidated and they are assumed to be audited
-        //    to have safe transfer methods, which make no external calls. In other words, yield transfer will not 
+        //    to have safe transfer methods, which make no public calls. In other words, yield transfer will not 
         //    have any side effects, which would be wrongly forgiven.
         // 3. Any additional operations on violator's account in a batch will register the health check again, and it
         //    will be executed normally at the end of the batch.

@@ -16,13 +16,13 @@ abstract contract VaultModule is IVault, Base, AssetTransfers, BalanceUtils {
     using SafeERC20Lib for IERC20;
 
     /// @inheritdoc IERC4626
-    function asset() external view virtual reentrantOK returns (address) {
+    function asset() public view virtual reentrantOK returns (address) {
         (IERC20 _asset,,) = ProxyUtils.metadata();
         return address(_asset);
     }
 
     /// @inheritdoc IERC4626
-    function totalAssets() external view virtual nonReentrantView returns (uint256) {
+    function totalAssets() public view virtual nonReentrantView returns (uint256) {
         MarketCache memory marketCache = loadMarket();
         return totalAssetsInternal(marketCache);
     }
@@ -40,7 +40,7 @@ abstract contract VaultModule is IVault, Base, AssetTransfers, BalanceUtils {
     }
 
     /// @inheritdoc IERC4626
-    function maxDeposit(address account) external view virtual nonReentrantView returns (uint256) {
+    function maxDeposit(address account) public view virtual nonReentrantView returns (uint256) {
         MarketCache memory marketCache = loadMarket();
         if (marketCache.disabledOps.check(OP_DEPOSIT)) return 0;
 
@@ -48,12 +48,12 @@ abstract contract VaultModule is IVault, Base, AssetTransfers, BalanceUtils {
     }
 
     /// @inheritdoc IERC4626
-    function previewDeposit(uint256 assets) external view virtual nonReentrantView returns (uint256) {
+    function previewDeposit(uint256 assets) public view virtual nonReentrantView returns (uint256) {
         return convertToShares(assets);
     }
 
     /// @inheritdoc IERC4626
-    function maxMint(address account) external view virtual nonReentrantView returns (uint256) {
+    function maxMint(address account) public view virtual nonReentrantView returns (uint256) {
         MarketCache memory marketCache = loadMarket();
 
         if (marketCache.disabledOps.check(OP_MINT)) return 0;
@@ -61,13 +61,13 @@ abstract contract VaultModule is IVault, Base, AssetTransfers, BalanceUtils {
     }
 
     /// @inheritdoc IERC4626
-    function previewMint(uint256 shares) external view virtual nonReentrantView returns (uint256) {
+    function previewMint(uint256 shares) public view virtual nonReentrantView returns (uint256) {
         MarketCache memory marketCache = loadMarket();
         return shares.toShares().toAssetsUp(marketCache).toUint();
     }
 
     /// @inheritdoc IERC4626
-    function maxWithdraw(address owner) external view virtual nonReentrantView returns (uint256) {
+    function maxWithdraw(address owner) public view virtual nonReentrantView returns (uint256) {
         MarketCache memory marketCache = loadMarket();
         if (marketCache.disabledOps.check(OP_WITHDRAW)) return 0;
 
@@ -75,13 +75,13 @@ abstract contract VaultModule is IVault, Base, AssetTransfers, BalanceUtils {
     }
 
     /// @inheritdoc IERC4626
-    function previewWithdraw(uint256 assets) external view virtual nonReentrantView returns (uint256) {
+    function previewWithdraw(uint256 assets) public view virtual nonReentrantView returns (uint256) {
         MarketCache memory marketCache = loadMarket();
         return assets.toAssets().toSharesUp(marketCache).toUint();
     }
 
     /// @inheritdoc IERC4626
-    function maxRedeem(address owner) external view virtual nonReentrantView returns (uint256) {
+    function maxRedeem(address owner) public view virtual nonReentrantView returns (uint256) {
         MarketCache memory marketCache = loadMarket();
         if (marketCache.disabledOps.check(OP_REDEEM)) return 0;
 
@@ -89,30 +89,30 @@ abstract contract VaultModule is IVault, Base, AssetTransfers, BalanceUtils {
     }
 
     /// @inheritdoc IERC4626
-    function previewRedeem(uint256 shares) external view virtual nonReentrantView returns (uint256) {
+    function previewRedeem(uint256 shares) public view virtual nonReentrantView returns (uint256) {
         return convertToAssets(shares);
     }
 
     /// @inheritdoc IVault
-    function accumulatedFees() external view virtual nonReentrantView returns (uint256) {
+    function accumulatedFees() public view virtual nonReentrantView returns (uint256) {
         return loadMarket().accumulatedFees.toUint();
     }
 
     /// @inheritdoc IVault
-    function accumulatedFeesAssets() external view virtual nonReentrantView returns (uint256) {
+    function accumulatedFeesAssets() public view virtual nonReentrantView returns (uint256) {
         MarketCache memory marketCache = loadMarket();
 
         return marketCache.accumulatedFees.toAssetsDown(marketCache).toUint();
     }
 
     /// @inheritdoc IVault
-    function creator() external view virtual reentrantOK returns (address) {
+    function creator() public view virtual reentrantOK returns (address) {
         return marketStorage.creator;
     }
 
 
     /// @inheritdoc IERC4626
-    function deposit(uint256 amount, address receiver) external virtual nonReentrant returns (uint256) {
+    function deposit(uint256 amount, address receiver) public virtual nonReentrant returns (uint256) {
         (MarketCache memory marketCache, address account) = initOperation(OP_DEPOSIT, CHECKACCOUNT_NONE);
 
         Assets assets =
@@ -128,7 +128,7 @@ abstract contract VaultModule is IVault, Base, AssetTransfers, BalanceUtils {
     }
 
     /// @inheritdoc IERC4626
-    function mint(uint256 amount, address receiver) external virtual nonReentrant returns (uint256) {
+    function mint(uint256 amount, address receiver) public virtual nonReentrant returns (uint256) {
         (MarketCache memory marketCache, address account) = initOperation(OP_MINT, CHECKACCOUNT_NONE);
 
         Shares shares = amount.toShares();
@@ -143,7 +143,7 @@ abstract contract VaultModule is IVault, Base, AssetTransfers, BalanceUtils {
 
     /// @inheritdoc IERC4626
     function withdraw(uint256 amount, address receiver, address owner)
-        external
+        public
         virtual
         nonReentrant
         returns (uint256)
@@ -161,7 +161,7 @@ abstract contract VaultModule is IVault, Base, AssetTransfers, BalanceUtils {
     }
 
     /// @inheritdoc IERC4626
-    function redeem(uint256 amount, address receiver, address owner) external virtual nonReentrant returns (uint256) {
+    function redeem(uint256 amount, address receiver, address owner) public virtual nonReentrant returns (uint256) {
         (MarketCache memory marketCache, address account) = initOperation(OP_REDEEM, owner);
 
         Shares shares = amount == type(uint256).max ? marketStorage.users[owner].getBalance() : amount.toShares();
@@ -176,7 +176,7 @@ abstract contract VaultModule is IVault, Base, AssetTransfers, BalanceUtils {
     }
 
     /// @inheritdoc IVault
-    function skim(uint256 amount, address receiver) external virtual nonReentrant returns (uint256) {
+    function skim(uint256 amount, address receiver) public virtual nonReentrant returns (uint256) {
         (MarketCache memory marketCache, address account) = initOperation(OP_SKIM, CHECKACCOUNT_NONE);
 
         Assets balance = marketCache.asset.balanceOf(address(this)).toAssets();

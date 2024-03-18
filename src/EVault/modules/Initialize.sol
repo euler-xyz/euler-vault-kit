@@ -20,7 +20,7 @@ abstract contract InitializeModule is IInitialize, Base, BorrowUtils {
     uint16 constant DEFAULT_INTEREST_FEE = 0.23e4;
 
     /// @inheritdoc IInitialize
-    function initialize(address proxyCreator) external virtual reentrantOK {
+    function initialize(address proxyCreator) public virtual reentrantOK {
         if (initialized) revert E_Initialized();
         initialized = true;
 
