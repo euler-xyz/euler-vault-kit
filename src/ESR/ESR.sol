@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.13;
 
-import {Context} from "@openzeppelin/contracts/utils/Context.sol";
-import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import {ERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
-import {ERC4626} from "@openzeppelin/contracts/token/ERC20/extensions/ERC4626.sol";
+import {Context} from "openzeppelin-contracts/utils/Context.sol";
+import {IERC20} from "openzeppelin-contracts/token/ERC20/IERC20.sol";
+import {ERC20} from "openzeppelin-contracts/token/ERC20/ERC20.sol";
+import {ERC4626} from "openzeppelin-contracts/token/ERC20/extensions/ERC4626.sol";
 import {IEVC} from "ethereum-vault-connector/interfaces/IEthereumVaultConnector.sol";
 import {EVCUtil} from "ethereum-vault-connector/utils/EVCUtil.sol";
 
@@ -62,7 +62,6 @@ contract ESR is EVCUtil, ERC4626 {
         public
         virtual
         override(ERC20, IERC20)
-        callThroughEVC
         nonReentrant
         requireAccountStatusCheck(_msgSender())
         returns (bool)
@@ -79,7 +78,6 @@ contract ESR is EVCUtil, ERC4626 {
         public
         virtual
         override(ERC20, IERC20)
-        callThroughEVC
         nonReentrant
         requireAccountStatusCheck(from)
         returns (bool)
@@ -90,7 +88,6 @@ contract ESR is EVCUtil, ERC4626 {
     function withdraw(uint256 assets, address receiver, address owner)
         public
         override
-        callThroughEVC
         nonReentrant
         requireAccountStatusCheck(owner)
         returns (uint256 shares)
@@ -103,7 +100,6 @@ contract ESR is EVCUtil, ERC4626 {
     function redeem(uint256 shares, address receiver, address owner)
         public
         override
-        callThroughEVC
         nonReentrant
         requireAccountStatusCheck(owner)
         returns (uint256 assets)

@@ -12,11 +12,11 @@ contract ESVaultTestInterestFee is ESVaultTestBase {
 
     function test_interest_fee() public {
         uint256 interestFee = eTST.interestFee();
-        assertEq(interestFee, eTSTAsESVault.INTEREST_FEE());
+        assertEq(interestFee, 1e4);
     }
 
     function test_set_interest_fee() public {
-        vm.expectRevert(ESVault.E_Disabled.selector);
+        vm.expectRevert(Errors.E_OperationDisabled.selector);
         eTST.setInterestFee(uint16(1));
         
     }

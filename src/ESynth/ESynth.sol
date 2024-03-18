@@ -2,8 +2,8 @@
 
 pragma solidity ^0.8.0;
 
-import {Ownable} from "openzeppelin/access/Ownable.sol";
-import {EnumerableSet} from "openzeppelin/utils/structs/EnumerableSet.sol"; 
+import {Ownable} from "openzeppelin-contracts/access/Ownable.sol";
+import {EnumerableSet} from "openzeppelin-contracts/utils/structs/EnumerableSet.sol"; 
 import {ERC20Collateral, ERC20, Context} from "../ERC20Collateral/ERC20Collateral.sol";
 import {IEVC, EVCUtil} from "ethereum-vault-connector/utils/EVCUtil.sol";
 import {IEVault} from "../EVault/IEVault.sol";
@@ -40,14 +40,15 @@ contract ESynth is ERC20Collateral, Ownable {
     /// @notice Mints a certain amount of tokens to the account.
     /// @param account The account to mint the tokens to.
     /// @param amount The amount of tokens to mint.
-    function mint(address account, uint128 amount) external nonReentrant {
+    function mint(address account, uint256 amount) external nonReentrant {
         address sender = _msgSender();
         MinterData storage minterCache = minters[sender];
 
-        if (minterCache.capacity < minterCache.minted + amount) {
+        if (minterCache.capacity < uint256(minterCache.minted) + amount) {
             revert E_CapacityReached();
         }
-        minterCache.minted += amount;
+
+        minterCache.minted += uint128(amount);
         minters[sender] = minterCache;
 
         _mint(account, amount);
@@ -56,7 +57,7 @@ contract ESynth is ERC20Collateral, Ownable {
     /// @notice Burns a certain amount of tokens from the accounts balance. Requires the account, except the owner to have an allowance for the sender.
     /// @param account The account to burn the tokens from.
     /// @param amount The amount of tokens to burn.
-    function burn(address account, uint128 amount) external nonReentrant {
+    function burn(address account, uint256 amount) external nonReentrant {
         address sender = _msgSender();
         MinterData storage minterCache = minters[sender];
 
@@ -65,11 +66,7 @@ contract ESynth is ERC20Collateral, Ownable {
         }
 
         // If burning more than minted, reset minted to 0
-        if (amount > minterCache.minted) {
-            minterCache.minted = 0;
-        } else {
-            minterCache.minted -= amount;
-        }
+        minterCache.minted = minterCache.minted > amount ? minterCache.minted - uint128(amount) : 0;
         minters[sender] = minterCache;
 
         _burn(account, amount);
