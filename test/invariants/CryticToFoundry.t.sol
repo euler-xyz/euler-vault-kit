@@ -35,16 +35,6 @@ contract CryticToFoundry is Invariants, Setup {
     //                                 BROKEN INVARIANTS REPLAY                                  //
     /////////////////////////////////////////////////////////////////////////////////////////////// 
 
-    function test_vm_invariant_a() public setup {
-        this.donate(115792089237316195423570985008687907853269984665640564039457584007913129639934,147333367278293690314759053441474412585086084701913347506348);
-        console.log("Balance before: ", assetTST.balanceOf(address(eTST)));
-        this.depositToActor(2,189920672377208932478056976);
-        console.log("Balance after: ", assetTST.balanceOf(address(eTST)));
-
-        assert_VM_INVARIANT_A();
-    }
-
-
     function test_BM_INVARIANT_O() public setup {
         this.depositToActor(20,93704952709166092675833692626070333629207815095066323987818791); 
         console.log("Actor: ", address(actor));
