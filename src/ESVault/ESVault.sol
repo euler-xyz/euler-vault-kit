@@ -10,7 +10,6 @@ import {GovernanceModule} from "../EVault/modules/Governance.sol";
 import {IERC20} from "../EVault/IEVault.sol";
 import {ProxyUtils} from "../EVault/shared/lib/ProxyUtils.sol";
 import {Operations} from "../EVault/shared/types/Types.sol";
-import {console2} from "forge-std/Test.sol";
 import "../EVault/shared/Constants.sol";
 import "../EVault/shared/types/Types.sol";
 
