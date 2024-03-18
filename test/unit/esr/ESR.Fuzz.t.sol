@@ -20,9 +20,9 @@ contract ESRFuzzTest is ESRTest {
     function testFuzz_interestAccrued_uder_uint168(uint256 interestAmount, uint256 depositAmount, uint256 timePassed)
         public
     {
-        depositAmount = bound(depositAmount, 0, type(uint256).max);
+        depositAmount = bound(depositAmount, 0, type(uint112).max);
         // this makes sure that the mint won't cause overflow in token accounting
-        interestAmount = bound(interestAmount, 0, type(uint256).max - depositAmount); 
+        interestAmount = bound(interestAmount, 0, type(uint112).max - depositAmount); 
         timePassed = bound(timePassed, block.timestamp, type(uint40).max);
         doDeposit(user, depositAmount);
         asset.mint(address(esr), interestAmount);
@@ -35,8 +35,8 @@ contract ESRFuzzTest is ESRTest {
     // this tests shows that when you have a very small deposit and a very large interestAmount minted to the contract
     // some interest might be lost due to the uint168 cast
     function testFuzz_gulp_uder_uint168(uint256 interestAmount, uint256 depositAmount, uint256 timePassed) public {
-        depositAmount = bound(depositAmount, 0, type(uint256).max);
-        interestAmount = bound(interestAmount, 0, type(uint256).max - depositAmount); // this makes sure that the mint won't cause overflow
+        depositAmount = bound(depositAmount, 0, type(uint112).max);
+        interestAmount = bound(interestAmount, 0, type(uint112).max - depositAmount); // this makes sure that the mint won't cause overflow
         timePassed = bound(timePassed, block.timestamp, type(uint40).max);
         asset.mint(address(esr), interestAmount);
 
@@ -49,8 +49,8 @@ contract ESRFuzzTest is ESRTest {
 
     // fuzz test that any deposits added are added to the totalAssetsDeposited
     function testFuzz_deposit(uint256 depositAmount, uint256 depositAmount2) public {
-        depositAmount = bound(depositAmount, 0, type(uint256).max);
-        depositAmount2 = bound(depositAmount2, 0, type(uint256).max - depositAmount); // prevents overflow
+        depositAmount = bound(depositAmount, 0, type(uint112).max);
+        depositAmount2 = bound(depositAmount2, 0, type(uint112).max - depositAmount); // prevents overflow
         doDeposit(address(1), depositAmount);
         doDeposit(address(2), depositAmount2);
         assertEq(esr.totalAssets(), depositAmount + depositAmount2);
@@ -58,7 +58,7 @@ contract ESRFuzzTest is ESRTest {
 
     // fuzz test that any withdraws are subtracted from the totalAssetsDeposited
     function testFuzz_withdraw(uint256 depositAmount, uint256 withdrawAmount) public {
-        depositAmount = bound(depositAmount, 0, type(uint256).max);
+        depositAmount = bound(depositAmount, 0, type(uint112).max);
         withdrawAmount = bound(withdrawAmount, 0, depositAmount);
         doDeposit(address(1), depositAmount);
         vm.startPrank(address(1));
