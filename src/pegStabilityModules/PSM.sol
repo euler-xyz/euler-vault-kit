@@ -31,7 +31,7 @@ contract PSM is EVCUtil {
     function swapToUnderlyingGivenIn(uint amountIn, address receiver) external returns (uint amountOut) {
         amountOut = quoteToUnderlyingGivenIn(amountIn);
 
-        synth.burn(_msgSender(), amountIn);
+        synth.burn(_msgSender(), uint128(amountIn));
         underlying.safeTransfer(receiver, amountOut);
 
         return amountOut;
@@ -40,7 +40,7 @@ contract PSM is EVCUtil {
     function swapToUnderlyingGivenOut(uint amountOut, address receiver) external returns (uint amountIn) {
         amountIn = quoteToUnderlyingGivenOut(amountOut);
 
-        synth.burn(_msgSender(), amountIn);
+        synth.burn(_msgSender(), uint128(amountIn));
         underlying.safeTransfer(receiver, amountOut);
 
         return amountIn;
@@ -50,7 +50,7 @@ contract PSM is EVCUtil {
         amountOut = quoteToSynthGivenIn(amountIn);
 
         underlying.safeTransferFrom(_msgSender(), address(this), amountIn);
-        synth.mint(receiver, amountOut);
+        synth.mint(receiver, uint128(amountOut));
 
         return amountOut;
     }
@@ -59,7 +59,7 @@ contract PSM is EVCUtil {
         amountIn = quoteToSynthGivenOut(amountOut);
         
         underlying.safeTransferFrom(_msgSender(), address(this), amountIn);
-        synth.mint(receiver, amountOut);
+        synth.mint(receiver, uint128(amountOut));
 
         return amountIn;
     }
