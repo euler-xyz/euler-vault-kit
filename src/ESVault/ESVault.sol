@@ -34,7 +34,7 @@ contract ESVault is EVault {
 
         if (account != address(synth)) revert E_Unauthorized();
 
-        VaultModule.deposit(amount, receiver);
+        super.deposit(amount, receiver);
     }
 
     function withdraw(uint256 assets, address receiver, address owner) public override virtual reentrantOK returns (uint256) {
@@ -48,6 +48,6 @@ contract ESVault is EVault {
             revert E_Unauthorized();
         }
 
-        VaultModule.withdraw(assets, receiver, owner);
+        super.withdraw(assets, receiver, owner);
     }
 }
