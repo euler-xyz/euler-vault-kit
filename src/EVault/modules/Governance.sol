@@ -259,7 +259,6 @@ abstract contract GovernanceModule is IGovernance, Base, BalanceUtils, BorrowUti
         // if re-enabling interest - last updated timestamp needs to be reset to skip the disabled period
         MarketCache memory marketCache = updateMarket();
         logMarketStatus(marketCache, marketStorage.interestRate);
-
         marketStorage.disabledOps = Operations.wrap(newDisabledOps);
         emit GovSetDisabledOps(newDisabledOps);
     }

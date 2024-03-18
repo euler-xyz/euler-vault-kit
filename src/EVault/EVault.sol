@@ -214,9 +214,9 @@ contract EVault is Dispatch {
 
     function setIRM(address newModel) public override use(MODULE_GOVERNANCE) {}
 
-    function setDisabledOps(uint32 newDisabledOps) public override use(MODULE_GOVERNANCE) {}
+    function setDisabledOps(uint32 newDisabledOps) public override virtual use(MODULE_GOVERNANCE) {}
 
     function setCaps(uint16 supplyCap, uint16 borrowCap) public override use(MODULE_GOVERNANCE) {}
 
-    function setInterestFee(uint16 newFee) public override use(MODULE_GOVERNANCE) {}
+    function setInterestFee(uint16 newFee) public override virtual use(MODULE_GOVERNANCE) {}
 }
