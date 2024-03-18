@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.13;
 
-library Math {
+contract MathTesting {
     //FROM---abdk-libraries-solidity/ABDKMath64x64.sol-----------
     /**
      * Calculate binary logarithm of x.  Revert if x <= 0.
