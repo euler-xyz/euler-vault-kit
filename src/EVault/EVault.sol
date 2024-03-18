@@ -31,7 +31,7 @@ contract EVault is Dispatch {
 
     function transfer(address to, uint256 amount) public override virtual callThroughEVC use(MODULE_TOKEN) returns (bool) {}
 
-    function transferFrom(address from, address to, uint256 amount) public override callThroughEVC use(MODULE_TOKEN) returns (bool) {}
+    function transferFrom(address from, address to, uint256 amount) public override virtual callThroughEVC use(MODULE_TOKEN) returns (bool) {}
 
     function approve(address spender, uint256 amount) public override virtual use(MODULE_TOKEN) returns (bool) {}
 
@@ -45,11 +45,11 @@ contract EVault is Dispatch {
 
     function totalAssets() public view override virtual useView(MODULE_VAULT) returns (uint256) {}
 
-    function convertToAssets(uint256 shares) public view override useView(MODULE_VAULT) returns (uint256) {}
+    function convertToAssets(uint256 shares) public view override virtual useView(MODULE_VAULT) returns (uint256) {}
 
-    function convertToShares(uint256 assets) public view override useView(MODULE_VAULT) returns (uint256) {}
+    function convertToShares(uint256 assets) public view override virtual useView(MODULE_VAULT) returns (uint256) {}
 
-    function maxDeposit(address) public view override useView(MODULE_VAULT) returns (uint256) {}
+    function maxDeposit(address) public view override virtual useView(MODULE_VAULT) returns (uint256) {}
 
     function previewDeposit(uint256 assets) public view override virtual useView(MODULE_VAULT) returns (uint256) {}
 
@@ -61,7 +61,7 @@ contract EVault is Dispatch {
 
     function previewWithdraw(uint256 assets) public view override virtual useView(MODULE_VAULT) returns (uint256) {}
 
-    function maxRedeem(address owner) public view override useView(MODULE_VAULT) returns (uint256) {}
+    function maxRedeem(address owner) public view override virtual useView(MODULE_VAULT) returns (uint256) {}
 
     function previewRedeem(uint256 shares) public view override virtual useView(MODULE_VAULT) returns (uint256) {}
 
