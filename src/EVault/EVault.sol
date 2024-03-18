@@ -29,9 +29,9 @@ contract EVault is Dispatch {
     function allowance(address holder, address spender) public view override virtual returns (uint256) { return super.allowance(holder, spender); }
 
 
-    function transfer(address to, uint256 amount) public override virtual callThroughEVC returns (bool) { return transfer(to, amount); }
+    function transfer(address to, uint256 amount) public override virtual callThroughEVC returns (bool) { return super.transfer(to, amount); }
 
-    function transferFrom(address from, address to, uint256 amount) public override virtual callThroughEVC returns (bool) { return transferFrom(from, to, amount); }
+    function transferFrom(address from, address to, uint256 amount) public override virtual callThroughEVC returns (bool) { return super.transferFrom(from, to, amount); }
 
     function approve(address spender, uint256 amount) public override virtual returns (bool) { return super.approve(spender, amount); }
 
@@ -72,11 +72,11 @@ contract EVault is Dispatch {
     function creator() public view override virtual useView(MODULE_VAULT) returns (address) {}
 
 
-    function deposit(uint256 amount, address receiver) public override virtual callThroughEVC returns (uint256) { return super.deposit(assets, receiver); }
+    function deposit(uint256 amount, address receiver) public override virtual callThroughEVC returns (uint256) { return super.deposit(amount, receiver); }
 
     function mint(uint256 amount, address receiver) public override virtual callThroughEVC use(MODULE_VAULT) returns (uint256) {}
 
-    function withdraw(uint256 amount, address receiver, address owner) public override virtual callThroughEVC returns (uint256) { return super.withdraw(assets, receiver, owner); }
+    function withdraw(uint256 amount, address receiver, address owner) public override virtual callThroughEVC returns (uint256) { return super.withdraw(amount, receiver, owner); }
 
     function redeem(uint256 amount, address receiver, address owner) public override virtual callThroughEVC use(MODULE_VAULT) returns (uint256) {}
 
