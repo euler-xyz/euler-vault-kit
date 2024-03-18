@@ -107,31 +107,35 @@ abstract contract BorrowingModule is IBorrowing, Base, AssetTransfers, BalanceUt
 
 
     /// @inheritdoc IBorrowing
-    function borrow(uint256 amount, address receiver) external virtual nonReentrant {
+    function borrow(uint256 amount, address receiver) external virtual nonReentrant returns (uint256) {
         (MarketCache memory marketCache, address account) = initOperation(OP_BORROW, CHECKACCOUNT_CALLER);
 
         Assets assets = amount == type(uint256).max ? marketCache.cash : amount.toAssets();
-        if (assets.isZero()) return;
+        if (assets.isZero()) return 0;
 
         if (assets > marketCache.cash) revert E_InsufficientCash();
 
         increaseBorrow(marketCache, account, assets);
 
         pushAssets(marketCache, receiver, assets);
+
+        return assets.toUint();
     }
 
     /// @inheritdoc IBorrowing
-    function repay(uint256 amount, address receiver) external virtual nonReentrant {
+    function repay(uint256 amount, address receiver) external virtual nonReentrant returns (uint256) {
         (MarketCache memory marketCache, address account) = initOperation(OP_REPAY, CHECKACCOUNT_NONE);
 
         uint256 owed = getCurrentOwed(marketCache, receiver).toAssetsUp().toUint();
 
         Assets assets = (amount == type(uint256).max ? owed : amount).toAssets();
-        if (assets.isZero()) return;
+        if (assets.isZero()) return 0;
 
         pullAssets(marketCache, account, assets);
 
         decreaseBorrow(marketCache, receiver, assets);
+
+        return assets.toUint();
     }
 
     /// @inheritdoc IBorrowing
@@ -187,15 +191,17 @@ abstract contract BorrowingModule is IBorrowing, Base, AssetTransfers, BalanceUt
     }
 
     /// @inheritdoc IBorrowing
-    function pullDebt(uint256 amount, address from) external virtual nonReentrant {
+    function pullDebt(uint256 amount, address from) external virtual nonReentrant returns (uint256) {
         (MarketCache memory marketCache, address account) = initOperation(OP_PULL_DEBT, CHECKACCOUNT_CALLER);
 
         if (from == account) revert E_SelfTransfer();
 
         Assets assets = amount == type(uint256).max ? getCurrentOwed(marketCache, from).toAssetsUp() : amount.toAssets();
 
-        if (assets.isZero()) return;
+        if (assets.isZero()) return 0;
         transferBorrow(marketCache, from, account, assets);
+
+        return assets.toUint();
     }
 
     /// @inheritdoc IBorrowing

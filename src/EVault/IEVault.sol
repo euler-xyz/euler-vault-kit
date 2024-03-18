@@ -189,12 +189,14 @@ interface IBorrowing {
     /// @notice Transfer underlying tokens from the vault to the sender, and increase sender's debt
     /// @param assets In underlying units (use max uint256 for all available tokens)
     /// @param receiver Account receiving the borrowed tokens
-    function borrow(uint256 assets, address receiver) external;
+    /// @return Amount of assets borrowed
+    function borrow(uint256 assets, address receiver) external returns (uint256);
 
     /// @notice Transfer underlying tokens from the sender to the vault, and decrease receiver's debt
     /// @param assets In underlying units (use max uint256 for full debt)
     /// @param receiver Account holding the debt to be repaid
-    function repay(uint256 assets, address receiver) external;
+    /// @return Amount of assets repaid
+    function repay(uint256 assets, address receiver) external returns (uint256);
 
     /// @notice Mint shares and a corresponding amount of debt ("self-borrow")
     /// @param assets In underlying units
@@ -211,7 +213,8 @@ interface IBorrowing {
     /// @notice Take over debt from another account
     /// @param assets Amount of debt in underlying units (use max uint256 for all the account's debt)
     /// @param from Account to pull the debt from
-    function pullDebt(uint256 assets, address from) external;
+    /// @return Amount of debt pulled in asset unit.
+    function pullDebt(uint256 assets, address from) external returns (uint256);
 
     /// @notice Request a flash-loan. A onFlashLoan() callback in msg.sender will be invoked, which must repay the loan to the main Euler address prior to returning.
     /// @param assets In underlying units

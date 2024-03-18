@@ -105,15 +105,15 @@ contract EVault is Dispatch {
     function dToken() external view override useView(MODULE_BORROWING) returns (address) {}
 
 
-    function borrow(uint256 assets, address receiver) external override callThroughEVC use(MODULE_BORROWING) {}
+    function borrow(uint256 assets, address receiver) external override callThroughEVC use(MODULE_BORROWING) returns (uint256) {}
 
-    function repay(uint256 assets, address receiver) external override callThroughEVC use(MODULE_BORROWING) {}
+    function repay(uint256 assets, address receiver) external override callThroughEVC use(MODULE_BORROWING) returns (uint256) {}
 
     function loop(uint256 assets, address sharesReceiver) external override callThroughEVC use(MODULE_BORROWING) returns (uint256) {}
 
     function deloop(uint256 assets, address debtFrom) external override callThroughEVC use(MODULE_BORROWING) returns (uint256) {}
 
-    function pullDebt(uint256 assets, address from) external override callThroughEVC use(MODULE_BORROWING) {}
+    function pullDebt(uint256 assets, address from) external override callThroughEVC use(MODULE_BORROWING) returns (uint256) {}
 
     function flashLoan(uint256 assets, bytes calldata data) external override use(MODULE_BORROWING) {}
 
