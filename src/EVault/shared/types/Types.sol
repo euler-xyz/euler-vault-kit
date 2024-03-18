@@ -13,8 +13,9 @@ import "./Shares.sol";
 import "./Assets.sol";
 import "./Owed.sol";
 import "./ConfigAmount.sol";
-import "./DisabledOps.sol";
+import "./Operations.sol";
 import "./AmountCap.sol";
+import "./LTVType.sol";
 
 type Shares is uint112;
 
@@ -26,7 +27,7 @@ type AmountCap is uint16;
 
 type ConfigAmount is uint16;
 
-type DisabledOps is uint32;
+type Operations is uint32;
 
 using SharesLib for Shares global;
 using {
@@ -42,10 +43,10 @@ using OwedLib for Owed global;
 using {addOwed as +, subOwed as -, eqOwed as ==, neqOwed as !=, gtOwed as >, ltOwed as <} for Owed global;
 
 using ConfigAmountLib for ConfigAmount global;
-using {addConfigAmount as +, subConfigAmount as -, gtConfigAmount as >} for ConfigAmount global; 
+using {addConfigAmount as +, subConfigAmount as -, gtConfigAmount as >, ltConfigAmount as <} for ConfigAmount global; 
 
 using AmountCapLib for AmountCap global;
-using DisabledOpsLib for DisabledOps global;
+using OperationsLib for Operations global;
 
 library TypesLib {
     function toShares(uint256 amount) internal pure returns (Shares) {
@@ -64,7 +65,7 @@ library TypesLib {
     }
 
     function toConfigAmount(uint16 amount) internal pure returns (ConfigAmount) {
-        if (amount > CONFIG_SCALE) revert Errors.E_InvalidConfigAmount();
+        ConfigAmountLib.validate(amount);
         return ConfigAmount.wrap(amount);
     }
 }

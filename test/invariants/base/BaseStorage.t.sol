@@ -66,6 +66,9 @@ abstract contract BaseStorage {
 
     /// @notice EVC contract
     EthereumVaultConnector internal evc;
+    
+    /// @notice Permit2 contract
+    address permit2;
 
     // ASSETS
 

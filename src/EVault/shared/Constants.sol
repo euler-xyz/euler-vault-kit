@@ -1,38 +1,32 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 pragma solidity ^0.8.0;
 
-import {IVault as IEVCVault} from "ethereum-vault-connector/interfaces/IVault.sol";
-
-// Protocol parameters
-
-uint256 constant MAX_PROTOCOL_FEE_SHARE = 0.5 * 1e18;
-uint256 constant INITIAL_INTEREST_ACCUMULATOR = 1e27;
+// TODO merge with IRM updates
 uint256 constant SECONDS_PER_YEAR = 365.2425 * 86400; // Gregorian calendar
-uint256 constant MAX_ALLOWED_INTEREST_RATE = uint256(5 * 1e27) / SECONDS_PER_YEAR; // 500% APR
+uint256 constant MAX_ALLOWED_INTEREST_RATE = 291867236321699131285; // 1,000,000% APY: ln(1 + (1000000 / 100)) * 1e27 / (365.2425 * 86400)
 
 // Implementation internals
 
+// asset amounts are shifted left by this number of bits for increased precision of debt tracking.
 uint256 constant INTERNAL_DEBT_PRECISION = 31;
-uint256 constant MAX_SANE_AMOUNT = type(uint112).max;
-// Max debt amount fits in uint144 (112 + 31 bits). Last 31 bits are zeros to enusure max debt rounded up equals max sane amount.
+// max amount for Assets and Shares custom types based on a uint112.
+uint256 constant MAX_SANE_AMOUNT = type(uint112).max; 
+// max debt amount fits in uint144 (112 + 31 bits). Last 31 bits are zeros to enusure max debt rounded up equals max sane amount.
 uint256 constant MAX_SANE_DEBT_AMOUNT = uint256(MAX_SANE_AMOUNT) << INTERNAL_DEBT_PRECISION;
+// proxy trailing calldata length in bytes. Three addresses, 20 bytes each: vault underlying asset, oracle and unit of account.
+uint256 constant PROXY_METADATA_LENGTH = 60;
 
-uint256 constant PROXY_METADATA_LENGTH = 60; // 3 addresses: asset, oracle, unit of account
+// Account status checks special values
 
-address constant ACCOUNTCHECK_NONE = address(0);
-address constant ACCOUNTCHECK_CALLER = address(1);
+// no account status checks should be scheduled
+address constant CHECKACCOUNT_NONE = address(0);
+// account status check should be scheduled for the authenticated account
+address constant CHECKACCOUNT_CALLER = address(1);
 
-bytes4 constant ACCOUNT_STATUS_CHECK_RETURN_VALUE = IEVCVault.checkAccountStatus.selector;
-bytes4 constant VAULT_STATUS_CHECK_RETURN_VALUE = IEVCVault.checkVaultStatus.selector;
+// EVC authentication
 
-uint256 constant VIRTUAL_DEPOSIT_AMOUNT = 1e6;
-uint256 constant CONFIG_SCALE = 60_000; // used to scale values in ConfigAmount, must fit into a uint16
-
-// Config
-
-uint16 constant DEFAULT_INTEREST_FEE = uint16(CONFIG_SCALE * 23 / 100); // 23%
-// Maximum liquidation discount that can be awarded under any conditions.
-uint256 constant MAXIMUM_LIQUIDATION_DISCOUNT = 0.2 * 1e18; // FIXME: move to liq module, make accessor (ie, public)
+// indicate which operations should check if this contract is the controller of the authenticated account
+uint32 constant CONTROLLER_ONLY_OPERATIONS = OP_BORROW | OP_LOOP | OP_PULL_DEBT | OP_LIQUIDATE;
 
 // Operations
 
@@ -51,3 +45,6 @@ uint32 constant OP_CONVERT_FEES = 1 << 11;
 uint32 constant OP_LIQUIDATE = 1 << 12;
 uint32 constant OP_FLASHLOAN = 1 << 13;
 uint32 constant OP_TOUCH = 1 << 14;
+uint32 constant OP_ACCRUE_INTEREST = 1 << 15;
+uint32 constant OP_SOCIALIZE_DEBT = 1 << 16;
+uint32 constant OP_VALIDATE_ASSET_RECEIVER = 1 << 17;

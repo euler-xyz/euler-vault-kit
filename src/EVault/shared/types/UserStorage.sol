@@ -7,10 +7,10 @@ import {Shares, Owed} from "./Types.sol";
 type PackedUserSlot is uint256;
 
 struct UserStorage {
-    PackedUserSlot data;
+    PackedUserSlot data; // Shares and debt balance, balance forwarder opt-in flag
 
     uint256 interestAccumulator;
-    uint256 nonce;
+    mapping(address spender => uint256 allowance) eTokenAllowance;
 }
 
 
@@ -61,11 +61,6 @@ library UserStorageLib {
 
     function unpackBalanceForwarder(PackedUserSlot data) private pure returns (bool) {
         return (PackedUserSlot.unwrap(data) & BALANCE_FORWARDER_MASK) > 0;
-    }
-
-    function useNonce(UserStorage storage self) internal returns (uint256 nonce) {
-        nonce = self.nonce;
-        unchecked { self.nonce = nonce + 1; }
     }
 }
 

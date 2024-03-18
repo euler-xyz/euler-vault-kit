@@ -4,7 +4,7 @@ pragma solidity ^0.8.0;
 
 import {Base} from "./Base.sol";
 import {DToken} from "../DToken.sol";
-
+import {IIRM} from "../../interestRateModels/IIRM.sol";
 
 import "./types/Types.sol";
 
@@ -15,7 +15,7 @@ abstract contract BorrowUtils is Base {
         // Don't bother loading the user's accumulator
         if (owed.isZero()) return Owed.wrap(0);
 
-        // Can't divide by 0 here: If owed is non-zero, we must've initialised the user's interestAccumulator
+        // Can't divide by 0 here: If owed is non-zero, we must've initialized the user's interestAccumulator
         return owed.mulDiv(marketCache.interestAccumulator, marketStorage.users[account].interestAccumulator);
     }
 
@@ -35,9 +35,9 @@ abstract contract BorrowUtils is Base {
     }
 
     function increaseBorrow(MarketCache memory marketCache, address account, Assets assets) internal {
-        Owed amount = assets.toOwed();
         (Owed owed, Owed prevOwed) = updateUserBorrow(marketCache, account);
 
+        Owed amount = assets.toOwed();
         owed = owed + amount;
 
         marketStorage.users[account].setOwed(owed);
@@ -46,21 +46,21 @@ abstract contract BorrowUtils is Base {
         logBorrowChange(account, prevOwed, owed);
     }
 
-    function decreaseBorrow(MarketCache memory marketCache, address account, Assets assets) internal {
-        (Owed owed, Owed prevOwed) = updateUserBorrow(marketCache, account);
-        Assets debtAssets = owed.toAssetsUp();
+    function decreaseBorrow(MarketCache memory marketCache, address account, Assets amount) internal {
+        (Owed owedExact, Owed prevOwed) = updateUserBorrow(marketCache, account);
+        Assets owed = owedExact.toAssetsUp();
 
-        if (assets > debtAssets) revert E_RepayTooMuch();
-        Assets debtAssetsRemaining;
+        if (amount > owed) revert E_RepayTooMuch();
+
+        Owed owedRemaining;
         unchecked {
-            debtAssetsRemaining = debtAssets - assets;
+            owedRemaining = (owed - amount).toOwed();
         }
 
-        if (owed > marketCache.totalBorrows) owed = marketCache.totalBorrows;
-
-        Owed owedRemaining = debtAssetsRemaining.toOwed();
         marketStorage.users[account].setOwed(owedRemaining);
-        marketStorage.totalBorrows = marketCache.totalBorrows = marketCache.totalBorrows - owed + owedRemaining;
+        marketStorage.totalBorrows = marketCache.totalBorrows = marketCache.totalBorrows > owedExact 
+            ? marketCache.totalBorrows - owedExact + owedRemaining 
+            : owedRemaining;
 
         logBorrowChange(account, prevOwed, owedRemaining);
     }
@@ -71,19 +71,16 @@ abstract contract BorrowUtils is Base {
         (Owed fromOwed, Owed fromOwedPrev) = updateUserBorrow(marketCache, from);
         (Owed toOwed, Owed toOwedPrev) = updateUserBorrow(marketCache, to);
 
-        // If amount was rounded up, transfer exact amount owed
-        if (amount > fromOwed && (amount - fromOwed).isDust()) amount = fromOwed;
+        // If amount was rounded up, or dust is left over, transfer exact amount owed
+        if ((amount > fromOwed && (amount - fromOwed).isDust()) ||
+            (amount < fromOwed && (fromOwed - amount).isDust())) {
+            amount = fromOwed;
+        }
 
         if (amount > fromOwed) revert E_InsufficientBalance();
 
         unchecked {
             fromOwed = fromOwed - amount;
-        }
-
-        // Transfer any residual dust
-        if (fromOwed.isDust()) {
-            amount = amount + fromOwed;
-            fromOwed = Owed.wrap(0);
         }
 
         toOwed = toOwed + amount;
@@ -93,6 +90,48 @@ abstract contract BorrowUtils is Base {
 
         logBorrowChange(from, fromOwedPrev, fromOwed);
         logBorrowChange(to, toOwedPrev, toOwed);
+    }
+
+    function computeInterestRate(MarketCache memory marketCache) internal virtual returns (uint256) {
+        // single sload
+        address irm = marketStorage.interestRateModel;
+        uint256 newInterestRate = marketStorage.interestRate;
+
+        if (irm != address(0)) {
+            (bool success, bytes memory data) = irm.call(abi.encodeCall(IIRM.computeInterestRate, (
+                                                                            address(this),
+                                                                            marketCache.cash.toUint(),
+                                                                            marketCache.totalBorrows.toAssetsUp().toUint()
+                                                                       )));
+
+            if (success && data.length >= 32) {
+                newInterestRate = abi.decode(data, (uint));
+                if (newInterestRate > MAX_ALLOWED_INTEREST_RATE) newInterestRate = MAX_ALLOWED_INTEREST_RATE;
+                marketStorage.interestRate = uint72(newInterestRate);
+            }
+        }
+
+        return newInterestRate;
+    }
+
+    function computeInterestRateView(MarketCache memory marketCache) internal view virtual returns (uint256) {
+        // single sload
+        address irm = marketStorage.interestRateModel;
+        uint256 newInterestRate = marketStorage.interestRate;
+
+        if (irm != address(0) && isVaultStatusCheckDeferred()) {
+            (bool success, bytes memory data) = irm.staticcall(abi.encodeCall(IIRM.computeInterestRateView, (
+                                                                                address(this),
+                                                                                marketCache.cash.toUint(),
+                                                                                marketCache.totalBorrows.toAssetsUp().toUint()
+                                                                        )));
+            if (success && data.length >= 32) {
+                newInterestRate = abi.decode(data, (uint));
+                if (newInterestRate > MAX_ALLOWED_INTEREST_RATE) newInterestRate = MAX_ALLOWED_INTEREST_RATE;
+            }
+        }
+
+        return newInterestRate;
     }
 
     function calculateDTokenAddress() internal view returns (address dToken) {

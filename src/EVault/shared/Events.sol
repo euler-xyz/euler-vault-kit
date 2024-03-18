@@ -31,7 +31,7 @@ abstract contract Events {
     event MarketStatus(
         uint256 totalShares,
         uint256 totalBorrows,
-        uint256 feesBalance,
+        uint256 accumulatedFees,
         uint256 cash,
         uint256 interestAccumulator,
         uint256 interestRate,
@@ -44,9 +44,6 @@ abstract contract Events {
         uint256 repayAssets,
         uint256 yieldBalance
     );
-    event DisableController(address indexed account);
-
-    event SkimAssets(address indexed admin, address indexed receiver, uint256 assets);
 
     event BalanceForwarderStatus(address indexed account, bool status);
 }

@@ -34,10 +34,10 @@ abstract contract VaultBeforeAfterHooks is BaseHooks {
         uint256 supplyCapBefore;
         uint256 supplyCapAfter;
         // Fees
-        uint256 feesBalanceBefore;
-        uint256 feesBalanceAfter;
-        uint256 feesBalanceAssetsBefore;
-        uint256 feesBalanceAssetsAfter;
+        uint256 accumulatedFeesBefore;
+        uint256 accumulatedFeesAfter;
+        uint256 accumulatedFeesAssetsBefore;
+        uint256 accumulatedFeesAssetsAfter;
     }
 
     VaultVars vaultVars;
@@ -51,8 +51,8 @@ abstract contract VaultBeforeAfterHooks is BaseHooks {
         (uint16 _supplyCap,) = eTST.caps();
         vaultVars.supplyCapBefore = AmountCap.wrap(_supplyCap).toUint();
         // Fees
-        vaultVars.feesBalanceBefore = eTST.feesBalance();
-        vaultVars.feesBalanceAssetsBefore = eTST.feesBalanceAssets();
+        vaultVars.accumulatedFeesBefore = eTST.accumulatedFees();
+        vaultVars.accumulatedFeesAssetsBefore = eTST.accumulatedFeesAssets();
     }
 
     function _vaultHooksAfter() internal {
@@ -64,8 +64,8 @@ abstract contract VaultBeforeAfterHooks is BaseHooks {
         (uint16 _supplyCap,) = eTST.caps();
         vaultVars.supplyCapAfter = AmountCap.wrap(_supplyCap).toUint();
         // Fees
-        vaultVars.feesBalanceAfter = eTST.feesBalance();
-        vaultVars.feesBalanceAssetsAfter = eTST.feesBalanceAssets();
+        vaultVars.accumulatedFeesAfter = eTST.accumulatedFees();
+        vaultVars.accumulatedFeesAssetsAfter = eTST.accumulatedFeesAssets();
     }
 
     /*/////////////////////////////////////////////////////////////////////////////////////////////
@@ -82,7 +82,7 @@ abstract contract VaultBeforeAfterHooks is BaseHooks {
     }
 
     function assert_LM_INVARIANT_B() internal {
-        if (eTST.debtSocialization()) {
+        if (!eTST.isDisabledOp(OP_SOCIALIZE_DEBT)) {
             assertGe(
                 vaultVars.exchangeRateAfter,
                 vaultVars.exchangeRateBefore,

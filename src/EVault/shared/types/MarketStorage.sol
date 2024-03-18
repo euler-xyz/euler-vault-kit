@@ -2,25 +2,25 @@
 
 pragma solidity ^0.8.0;
 
-import {Assets, Shares, Owed, AmountCap, ConfigAmount, DisabledOps} from "./Types.sol";
+import {Assets, Shares, Owed, AmountCap, ConfigAmount, Operations} from "./Types.sol";
+import {LTVConfig} from "./LTVConfig.sol";
 import {UserStorage} from "./UserStorage.sol";
 
 struct MarketStorage {
-    // Packed slot 5 + 14 + 2 + 2 + 4 + 1 = 28
-    uint40 lastInterestAccumulatorUpdate;
+    // Packed slot 6 + 14 + 2 + 2 + 4 + 1 = 29
+    uint48 lastInterestAccumulatorUpdate;
     Assets cash;
     AmountCap supplyCap;
     AmountCap borrowCap;
-    DisabledOps disabledOps;
-    bool reentrancyLock;
+    Operations disabledOps;
+    bool reentrancyLocked;
     bool snapshotInitialized;
-    bool debtSocialization;
 
     // Packed slot 14 + 18 = 32
     Shares totalShares;
     Owed totalBorrows;
 
-    Shares feesBalance;
+    Shares accumulatedFees;
 
     uint256 interestAccumulator;
 
@@ -32,10 +32,14 @@ struct MarketStorage {
     string name;
     string symbol;
 
+    address creator;
+
     address governorAdmin;
     address pauseGuardian;
     address feeReceiver;
 
     mapping(address account => UserStorage) users;
-    mapping(address owner => mapping(address spender => uint256 allowance)) eVaultAllowance;
+
+    mapping(address collateral => LTVConfig) ltvLookup;
+    address[] ltvList;
 }

@@ -2,12 +2,14 @@
 pragma solidity ^0.8.13;
 
 import {Test, console2, stdError} from "forge-std/Test.sol";
+import {DeployPermit2} from "permit2/test/utils/DeployPermit2.sol";
 
 import {GenericFactory} from "src/GenericFactory/GenericFactory.sol";
 
 import {EVault} from "src/EVault/EVault.sol";
-import {IRMClassStable} from "src/interestRateModels/IRMClassStable.sol";
 import {ProtocolConfig} from "src/ProtocolConfig/ProtocolConfig.sol";
+
+import {Dispatch} from "src/EVault/modules/Dispatch.sol";
 
 import {Initialize} from "src/EVault/modules/Initialize.sol";
 import {Token} from "src/EVault/modules/Token.sol";
@@ -27,13 +29,14 @@ import {EthereumVaultConnector} from "ethereum-vault-connector/EthereumVaultConn
 import {TestERC20} from "../../mocks/TestERC20.sol";
 import {MockBalanceTracker} from "../../mocks/MockBalanceTracker.sol";
 import {MockPriceOracle} from "../../mocks/MockPriceOracle.sol";
+import {IRMTestDefault} from "../../mocks/IRMTestDefault.sol";
 
 import {AssertionsCustomTypes} from "../../helpers/AssertionsCustomTypes.sol";
 
 
 import "src/EVault/shared/Constants.sol";
 
-contract EVaultTestBase is Test, AssertionsCustomTypes {
+contract EVaultTestBase is AssertionsCustomTypes, Test, DeployPermit2 {
     EthereumVaultConnector public evc;
     address admin;
     address feeReceiver;
@@ -41,6 +44,7 @@ contract EVaultTestBase is Test, AssertionsCustomTypes {
     address balanceTracker;
     MockPriceOracle oracle;
     address unitOfAccount;
+    address permit2;
     GenericFactory public factory;
 
     TestERC20 assetTST;
@@ -59,30 +63,21 @@ contract EVaultTestBase is Test, AssertionsCustomTypes {
         balanceTracker = address(new MockBalanceTracker());
         oracle = new MockPriceOracle();
         unitOfAccount = address(1);
-        Base.Integrations memory integrations = Base.Integrations(address(evc), address(protocolConfig), balanceTracker);
+        permit2 = deployPermit2();
+        Base.Integrations memory integrations = Base.Integrations(address(evc), address(protocolConfig), balanceTracker, permit2);
 
-        address initializeModule = address(new Initialize(integrations));
-        address tokenModule = address(new Token(integrations));
-        address vaultModule = address(new Vault(integrations));
-        address borrowingModule = address(new Borrowing(integrations));
-        address liquidationModule = address(new Liquidation(integrations));
-        address riskManagerModule = address(new RiskManager(integrations));
-        address balanceForwarderModule = address(new BalanceForwarder(integrations));
-        address governanceModule = address(new Governance(integrations));
+        Dispatch.DeployedModules memory modules = Dispatch.DeployedModules({
+            initialize: address(new Initialize(integrations)),
+            token: address(new Token(integrations)),
+            vault: address(new Vault(integrations)),
+            borrowing: address(new Borrowing(integrations)),
+            liquidation: address(new Liquidation(integrations)),
+            riskManager: address(new RiskManager(integrations)),
+            balanceForwarder: address(new BalanceForwarder(integrations)),
+            governance: address(new Governance(integrations))
+        });
 
-        address evaultImpl = address(
-            new EVault(
-                integrations,
-                initializeModule,
-                tokenModule,
-                vaultModule,
-                borrowingModule,
-                liquidationModule,
-                riskManagerModule,
-                balanceForwarderModule,
-                governanceModule
-            )
-        );
+        address evaultImpl = address(new EVault(integrations, modules));
 
         vm.prank(admin);
         factory.setImplementation(evaultImpl);
@@ -91,9 +86,9 @@ contract EVaultTestBase is Test, AssertionsCustomTypes {
         assetTST2 = new TestERC20("Test Token 2", "TST2", 18, false);
 
         eTST = IEVault(factory.createProxy(true, abi.encodePacked(address(assetTST), address(oracle), unitOfAccount)));
-        eTST.setIRM(address(new IRMClassStable()), "");
+        eTST.setIRM(address(new IRMTestDefault()));
 
         eTST2 = IEVault(factory.createProxy(true, abi.encodePacked(address(assetTST2), address(oracle), unitOfAccount)));
-        eTST2.setIRM(address(new IRMClassStable()), "");
+        eTST2.setIRM(address(new IRMTestDefault()));
     }
 }

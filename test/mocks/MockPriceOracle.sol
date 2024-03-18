@@ -30,5 +30,9 @@ contract MockPriceOracle {
     function setPrice(address base, address quote, uint256 price) external {
         prices[base][quote] = price;
     }
+
+    function testExcludeFromCoverage() public pure {
+        return;
+    }
 }
 

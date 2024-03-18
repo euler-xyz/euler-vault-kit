@@ -9,6 +9,7 @@ contract Errors {
     error E_SelfTransfer();
     error E_InsufficientAllowance();
     error E_InsufficientCash();
+    error E_InsufficientAssets();
     error E_FlashLoanNotRepaid();
     error E_Reentrancy();
     error E_OperationDisabled();
@@ -32,7 +33,6 @@ contract Errors {
     error E_BalanceForwarderUnsupported();
     error E_NotSupported();
     error E_EmptyError();
-    error E_VaultStatusCheckDeferred();
     error E_BadBorrowCap();
     error E_BadSupplyCap();
     error E_BadCollateral();
@@ -45,4 +45,6 @@ contract Errors {
     error E_InvalidLTVAsset();
     error E_NoPriceOracle();
     error E_InvalidConfigAmount();
+    error E_BadAssetReceiver();
+    error E_BadSharesReceiver();
 }

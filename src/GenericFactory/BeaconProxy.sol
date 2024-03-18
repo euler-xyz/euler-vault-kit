@@ -35,7 +35,7 @@ contract BeaconProxy {
         // Record length as immutable
         metadataLength = trailingData.length;
 
-        // Pad length with uninitialised memory so the decode will succeed
+        // Pad length with uninitialized memory so the decode will succeed
         assembly {
             mstore(trailingData, 128)
         }

@@ -4,6 +4,8 @@ pragma solidity ^0.8.0;
 
 import {EVaultTestBase} from "../../EVaultTestBase.t.sol";
 import {Events} from "src/EVault/shared/Events.sol";
+import {SafeERC20Lib} from "src/EVault/shared/lib/SafeERC20Lib.sol";
+import {IAllowanceTransfer} from "permit2/src/interfaces/IAllowanceTransfer.sol";
 
 import "src/EVault/shared/types/Types.sol";
 
@@ -85,19 +87,7 @@ contract ERC4626Test_Deposit is EVaultTestBase {
     //     assertEq(eTST.totalSupply(), shares);
     // }
 
-    function test_defaultReceiver() public {
-        uint256 amount = 1e18;
-
-        vm.expectEmit(address(eTST));
-        emit Events.Transfer({from: address(0), to: user, value: amount});
-        vm.expectEmit();
-        emit Events.Deposit({sender: user, owner: user, assets: amount, shares: amount});
-
-        eTST.deposit(amount, address(0));
-
-        assertEq(eTST.balanceOf(user), amount);
-        assertEq(eTST.totalSupply(), amount);
-    }
+    // TODO zero receiver
 
     function test_zeroShares() public {
         // TODO
@@ -148,4 +138,34 @@ contract ERC4626Test_Deposit is EVaultTestBase {
         assertEq(eTST.totalAssets(), amount);
     }
 
+    function test_depositWithPermit2() public {
+        uint amount = 1e18;
+
+        // cancel the approval to the vault
+        assetTST.approve(address(eTST), 0);
+
+        // deposit won't succeed without any approval
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                SafeERC20Lib.E_TransferFromFailed.selector, 
+                abi.encodeWithSignature("Error(string)", "ERC20: transfer amount exceeds allowance"), 
+                abi.encodeWithSelector(IAllowanceTransfer.AllowanceExpired.selector, 0)
+            )
+        );
+        eTST.deposit(amount, user);
+
+        // approve permit2 contract to spend the tokens
+        assetTST.approve(permit2, type(uint160).max);
+
+        // approve the vault to spend the tokens via permit2
+        IAllowanceTransfer(permit2).approve(address(assetTST), address(eTST), type(uint160).max, type(uint48).max);
+
+        // deposit succeeds now
+        eTST.deposit(amount, user);
+
+        assertEq(assetTST.balanceOf(address(eTST)), amount);
+        assertEq(eTST.balanceOf(user), amount);
+        assertEq(eTST.totalSupply(), amount);
+        assertEq(eTST.totalAssets(), amount);
+    }
 }

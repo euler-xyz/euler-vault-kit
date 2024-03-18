@@ -19,7 +19,7 @@ contract Cache is Storage, Errors {
     function updateMarket() internal returns (MarketCache memory marketCache) {
         if (initMarketCache(marketCache)) {
             marketStorage.lastInterestAccumulatorUpdate = marketCache.lastInterestAccumulatorUpdate;
-            marketStorage.feesBalance = marketCache.feesBalance;
+            marketStorage.accumulatedFees = marketCache.accumulatedFees;
 
             marketStorage.totalShares = marketCache.totalShares;
             marketStorage.totalBorrows = marketCache.totalBorrows;
@@ -55,27 +55,42 @@ contract Cache is Storage, Errors {
         marketCache.totalShares = marketStorage.totalShares;
         marketCache.totalBorrows = marketStorage.totalBorrows;
 
-        marketCache.feesBalance = marketStorage.feesBalance;
+        marketCache.accumulatedFees = marketStorage.accumulatedFees;
 
         marketCache.interestAccumulator = marketStorage.interestAccumulator;
 
-        // Update interest  accumulator and fees balance
+        // Update interest accumulator and fees balance
+        uint256 deltaT = block.timestamp - marketCache.lastInterestAccumulatorUpdate;
 
-        if (block.timestamp != marketCache.lastInterestAccumulatorUpdate) {
+        if (deltaT > 0) {
             dirty = true;
+
+            if (marketCache.disabledOps.check(OP_ACCRUE_INTEREST)) {
+                marketCache.lastInterestAccumulatorUpdate = uint48(block.timestamp);
+                return dirty;
+            }
 
             // Compute new values. Use full precision for intermediate results.
 
             ConfigAmount interestFee = marketStorage.interestFee;
             uint256 interestRate = marketStorage.interestRate;
 
-            uint256 deltaT = block.timestamp - marketCache.lastInterestAccumulatorUpdate;
-            uint256 newInterestAccumulator =
-                (RPow.rpow(interestRate + 1e27, deltaT, 1e27) * marketCache.interestAccumulator) / 1e27;
+            uint256 newInterestAccumulator = marketCache.interestAccumulator;
+
+            unchecked {
+                (uint256 multiplier, bool overflow) = RPow.rpow(interestRate + 1e27, deltaT, 1e27);
+
+                if (!overflow) {
+                    uint256 intermediate = newInterestAccumulator * multiplier;
+                    if (newInterestAccumulator == intermediate / multiplier) {
+                        newInterestAccumulator = intermediate / 1e27;
+                    }
+                }
+            }
 
             uint256 newTotalBorrows =
                 marketCache.totalBorrows.toUint() * newInterestAccumulator / marketCache.interestAccumulator;
-            uint256 newFeesBalance = marketCache.feesBalance.toUint();
+            uint256 newAccumulatedFees = marketCache.accumulatedFees.toUint();
             uint256 newTotalShares = marketCache.totalShares.toUint();
 
             uint256 feeAssets = interestFee.mulDiv(newTotalBorrows - marketCache.totalBorrows.toUint(), 1 << INTERNAL_DEBT_PRECISION);
@@ -83,7 +98,7 @@ contract Cache is Storage, Errors {
             if (feeAssets != 0) {
                 uint256 newTotalAssets = marketCache.cash.toUint() + (newTotalBorrows >> INTERNAL_DEBT_PRECISION);
                 newTotalShares = newTotalAssets * newTotalShares / (newTotalAssets - feeAssets);
-                newFeesBalance += newTotalShares - marketCache.totalShares.toUint();
+                newAccumulatedFees += newTotalShares - marketCache.totalShares.toUint();
             }
 
             // Store new values in marketCache, only if no overflows will occur. Fees are not larger than total shares, since they are included in them.
@@ -91,10 +106,10 @@ contract Cache is Storage, Errors {
             if (newTotalShares <= MAX_SANE_AMOUNT && newTotalBorrows <= MAX_SANE_DEBT_AMOUNT) {
                 marketCache.totalBorrows = newTotalBorrows.toOwed();
                 marketCache.interestAccumulator = newInterestAccumulator;
-                marketCache.lastInterestAccumulatorUpdate = uint40(block.timestamp);
+                marketCache.lastInterestAccumulatorUpdate = uint48(block.timestamp);
 
                 if (newTotalShares != Shares.unwrap(marketCache.totalShares)) {
-                    marketCache.feesBalance = newFeesBalance.toShares();
+                    marketCache.accumulatedFees = newAccumulatedFees.toShares();
                     marketCache.totalShares = newTotalShares.toShares();
                 }
             }

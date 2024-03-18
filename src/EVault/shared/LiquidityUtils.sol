@@ -3,15 +3,12 @@
 pragma solidity ^0.8.0;
 
 import {BorrowUtils} from "./BorrowUtils.sol";
+import {LTVUtils} from "./LTVUtils.sol";
 
 import "./types/Types.sol";
 
-abstract contract LiquidityUtils is BorrowUtils {
+abstract contract LiquidityUtils is BorrowUtils, LTVUtils {
     using TypesLib for uint256;
-
-    enum LTVType {
-        LIQUIDATION, BORROWING
-    }
 
     // Calculate the value of liabilities, and the liquidation or borrowing LTV adjusted collateral value.
     function calculateLiquidity(MarketCache memory marketCache, address account, address[] memory collaterals, LTVType ltvType)
@@ -20,24 +17,25 @@ abstract contract LiquidityUtils is BorrowUtils {
         returns (uint256 collateralValue, uint256 liabilityValue)
     {
         validateOracle(marketCache);
-        liabilityValue = getLiabilityValue(marketCache, account);
 
         for (uint256 i; i < collaterals.length; ++i) {
             collateralValue += getCollateralValue(marketCache, account, collaterals[i], ltvType);
         }
+
+        liabilityValue = getLiabilityValue(marketCache, account, marketStorage.users[account].getOwed());
     }
 
     // Check that the value of the collateral, adjusted for borrowing TVL, is equal or greater than the liability value.
-    function checkLiquidity(address account, address[] memory collaterals)
+    function checkLiquidity(MarketCache memory marketCache, address account, address[] memory collaterals)
         internal
         view
     {
-        MarketCache memory marketCache = loadMarket();
         validateOracle(marketCache);
 
-        if (marketStorage.users[account].getOwed().isZero()) return;
+        Owed owed = marketStorage.users[account].getOwed();
+        if (owed.isZero()) return;
 
-        uint256 liabilityValue = getLiabilityValue(marketCache, account);
+        uint256 liabilityValue = getLiabilityValue(marketCache, account, owed);
         if (liabilityValue == 0) return;
 
         uint collateralValue;
@@ -51,6 +49,9 @@ abstract contract LiquidityUtils is BorrowUtils {
 
 
     // Check if the account has no collateral balance left, used for debt socialization
+    // If LTV is zero, the collateral can still be liquidated.
+    // If the price of collateral is zero, liquidations are not executed, so the check won't be performed.
+    // If there is no collateral balance at all, then debt socialization can happen.
     function checkNoCollateral(address account, address[] memory collaterals)
         internal
         view
@@ -59,8 +60,7 @@ abstract contract LiquidityUtils is BorrowUtils {
         for (uint256 i; i < collaterals.length; ++i) {
             address collateral = collaterals[i];
 
-            ConfigAmount ltv = ltvLookup[collateral].getLiquidationLTV(); // TODO confirm ramped, not target
-            if (ltv.isZero()) continue;
+            if (!isRecognizedCollateral(collateral)) continue;
 
             uint256 balance = IERC20(collateral).balanceOf(account);
             if (balance > 0) return false;
@@ -71,22 +71,22 @@ abstract contract LiquidityUtils is BorrowUtils {
 
 
 
-    function getLiabilityValue(MarketCache memory marketCache, address account) internal view returns (uint value) {
-        uint256 owed = getCurrentOwed(marketCache, account).toAssetsUp().toUint();
+    function getLiabilityValue(MarketCache memory marketCache, address account, Owed owed) internal view returns (uint value) {
+        // update owed with interest accrued
+        uint256 owedAssets = getCurrentOwed(marketCache, account, owed).toAssetsUp().toUint();
+
+        if (owedAssets == 0) return 0;
 
         if (address(marketCache.asset) == marketCache.unitOfAccount) {
-            value = owed;
+            value = owedAssets;
         } else {
             // ask price for liability
-            (, value) = marketCache.oracle.getQuotes(owed, address(marketCache.asset), marketCache.unitOfAccount);
+            (, value) = marketCache.oracle.getQuotes(owedAssets, address(marketCache.asset), marketCache.unitOfAccount);
         }
     }
 
     function getCollateralValue(MarketCache memory marketCache, address account, address collateral, LTVType ltvType) internal view returns (uint value) {
-            ConfigAmount ltv = ltvType == LTVType.LIQUIDATION
-                ? ltvLookup[collateral].getLiquidationLTV()
-                : ltvLookup[collateral].getLTV();
-
+            ConfigAmount ltv = getLTV(collateral, ltvType);
             if (ltv.isZero()) return 0;
 
             uint256 balance = IERC20(collateral).balanceOf(account);
@@ -98,7 +98,7 @@ abstract contract LiquidityUtils is BorrowUtils {
             return ltv.mul(currentCollateralValue);
     }
 
-    function validateOracle(MarketCache memory marketCache) private pure {
+    function validateOracle(MarketCache memory marketCache) internal pure {
         if (address(marketCache.oracle) == address(0)) revert E_NoPriceOracle();
     }
 }

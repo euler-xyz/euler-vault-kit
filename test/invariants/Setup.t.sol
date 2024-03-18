@@ -3,13 +3,15 @@ pragma solidity ^0.8.19;
 
 // Libraries
 import {EthereumVaultConnector} from "ethereum-vault-connector/EthereumVaultConnector.sol";
+import {DeployPermit2} from "test/invariants/utils/DeployPermit2.sol";
 
 // Contracts
 import {GenericFactory} from "src/GenericFactory/GenericFactory.sol";
 import {EVault} from "src/EVault/EVault.sol";
 import {ProtocolConfig} from "src/ProtocolConfig/ProtocolConfig.sol";
-import {IRMClassStable} from "src/interestRateModels/IRMClassStable.sol";
+import {IRMTestDefault} from "../mocks/IRMTestDefault.sol";
 import {Base} from "src/EVault/shared/Base.sol";
+import {Dispatch} from "src/EVault/modules/Dispatch.sol";
 
 // Modules
 import {Initialize} from "src/EVault/modules/Initialize.sol";
@@ -60,33 +62,30 @@ contract Setup is BaseTest {
         baseAssets.push(address(assetTST2));
 
         unitOfAccount = address(1);
+        permit2 = DeployPermit2.deployPermit2();
     }
 
     function _deployVaults() internal {
         // Deploy the modules
-        Base.Integrations memory integrations = Base.Integrations(address(evc), address(protocolConfig), balanceTracker);
+        Base.Integrations memory integrations = Base.Integrations(address(evc), address(protocolConfig), balanceTracker, permit2);
         
-        address initializeModule = address(new Initialize(integrations));
-        address tokenModule = address(new Token(integrations));
-        address vaultModule = address(new Vault(integrations));
-        address borrowingModule = address(new Borrowing(integrations));
-        address liquidationModule = address(new Liquidation(integrations));
-        address riskManagerModule = address(new RiskManager(integrations));
-        address balanceForwarderModule = address(new BalanceForwarder(integrations));
-        address governanceModule = address(new Governance(integrations));
+        Dispatch.DeployedModules memory modules = Dispatch.DeployedModules({
+            initialize: address(new Initialize(integrations)),
+            token: address(new Token(integrations)),
+            vault: address(new Vault(integrations)),
+            borrowing: address(new Borrowing(integrations)),
+            liquidation: address(new Liquidation(integrations)),
+            riskManager: address(new RiskManager(integrations)),
+            balanceForwarder: address(new BalanceForwarder(integrations)),
+            governance: address(new Governance(integrations))
+        });
+
 
         // Deploy the vault implementation
         address evaultImpl = address(
             new EVaultExtended(
                 integrations,
-                initializeModule,
-                tokenModule,
-                vaultModule,
-                borrowingModule,
-                liquidationModule,
-                riskManagerModule,
-                balanceForwarderModule,
-                governanceModule
+                modules
             )
         );
 
@@ -96,11 +95,11 @@ contract Setup is BaseTest {
 
         // Deploy the vaults
         eTST = EVaultExtended(factory.createProxy(true, abi.encodePacked(address(assetTST), address(oracle), unitOfAccount)));
-        eTST.setIRM(address(new IRMClassStable()), "");
+        eTST.setIRM(address(new IRMTestDefault()));
         vaults.push(address(eTST));
 
         eTST2 = EVaultExtended(factory.createProxy(true, abi.encodePacked(address(assetTST2), address(oracle), unitOfAccount)));
-        eTST2.setIRM(address(new IRMClassStable()), "");
+        eTST2.setIRM(address(new IRMTestDefault()));
         vaults.push(address(eTST2));
     }
 

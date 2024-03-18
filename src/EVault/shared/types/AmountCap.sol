@@ -3,14 +3,12 @@
 pragma solidity ^0.8.0;
 
 import {AmountCap} from "./Types.sol";
-import "../Constants.sol";
-import "../Errors.sol";
 
 // AmountCaps are 16-bit decimal floating point values:
 // * The least significant 6 bits are the exponent
 // * The most significant 10 bits are the mantissa, scaled by 100
 // * The special value of 0 means limit is not set
-//   * This is so that uninitialised storage implies no limit
+//   * This is so that uninitialized storage implies no limit
 //   * For an actual cap value of 0, use a zero mantissa and non-zero exponent
 
 library AmountCapLib {

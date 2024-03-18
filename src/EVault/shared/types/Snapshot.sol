@@ -5,19 +5,19 @@ pragma solidity ^0.8.0;
 import {Assets} from "./Types.sol";
 
 struct Snapshot {
-    // Packed slot: 1 + 14 + 14 = 29
-    uint8 _stamp;
+    // Packed slot: 14 + 14 + 4 = 32
     Assets cash;
     Assets borrows;
+    uint32 _stamp;
 }
 
 library SnapshotLib {
-    uint8 constant STAMP = 1;  // non zero initial value of the snapshot slot to save gas on SSTORE
+    uint32 constant STAMP = 1 << 31;  // non zero initial value of the snapshot slot to save gas on SSTORE
 
     function set(Snapshot storage self, Assets cash, Assets borrows) internal {
-        self._stamp = STAMP;
         self.cash = cash;
         self.borrows = borrows;
+        self._stamp = STAMP;
     }
 
     function reset(Snapshot storage self) internal {

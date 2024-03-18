@@ -1,6 +1,9 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.19;
 
+// Libraries
+import "src/EVault/shared/Constants.sol";
+
 // Test Contracts
 import {Actor} from "../../utils/Actor.sol";
 import {BaseHandler} from "../../base/BaseHandler.t.sol";
@@ -59,7 +62,10 @@ contract GovernanceModuleHandler is BaseHandler {
     }
 
     function setDebtSocialization(bool status) external {
-        eTST.setDebtSocialization(status);
+        uint32 bitmask = eTST.disabledOps();
+        if (status) bitmask = removeConfiguration(bitmask, OP_SOCIALIZE_DEBT);
+        else bitmask = addConfiguration(bitmask, OP_SOCIALIZE_DEBT);
+        eTST.setDisabledOps(bitmask);
 
         assert(true);
     }
@@ -72,5 +78,18 @@ contract GovernanceModuleHandler is BaseHandler {
 
     //TODO
     // - setIRM
-    // - setDisabledOps
+
+    ///////////////////////////////////////////////////////////////////////////////////////////////
+    //                                          HELPERS                                          //
+    ///////////////////////////////////////////////////////////////////////////////////////////////
+
+    // Function to add a configuration to the bitmask
+    function addConfiguration(uint32 bitmask, uint32 configToAdd) internal returns (uint32){
+        return bitmask |= configToAdd;
+    }
+
+    // Function to remove a configuration from the bitmask
+    function removeConfiguration(uint32 bitmask, uint32 configToRemove) internal returns (uint32){
+        return bitmask &= ~configToRemove;
+    }
 }

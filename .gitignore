@@ -18,3 +18,4 @@ _corpus/
 
 # System Files
 .DS_Store
+lcov.info

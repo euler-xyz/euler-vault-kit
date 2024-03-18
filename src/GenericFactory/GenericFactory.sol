@@ -19,7 +19,7 @@ contract GenericFactory is MetaProxyDeployer {
 
     struct ProxyConfig {
         bool upgradeable;
-        address implementation; // may be an out-of-date value, if upgradeable
+        address implementation; // may be an out-of-date value, if upgradeable (handled by getProxyConfig)
         bytes trailingData;
     }
 

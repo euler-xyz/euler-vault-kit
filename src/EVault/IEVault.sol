@@ -8,8 +8,8 @@ import {IVault as IEVCVault} from "ethereum-vault-connector/interfaces/IVault.so
 
 interface IInitialize {
     /// @notice Initialization of the newly deployed proxy contract
-    /// @param creator Account which created the proxy or should be the initial governor
-    function initialize(address creator) external;
+    /// @param proxyCreator Account which created the proxy or should be the initial governor
+    function initialize(address proxyCreator) external;
 }
 
 interface IERC20 {
@@ -71,7 +71,7 @@ interface IERC4626 {
     function convertToShares(uint256 assets) external view returns (uint256);
 
     /// @notice Fetch the maximum amount of assets a user can deposit
-    function maxDeposit(address) external view returns (uint256);
+    function maxDeposit(address account) external view returns (uint256);
 
     /// @notice Calculate an amount of shares that would be created by depositing assets
     /// @param assets Amount of assets deposited
@@ -79,7 +79,7 @@ interface IERC4626 {
     function previewDeposit(uint256 assets) external view returns (uint256);
 
     /// @notice Fetch the maximum amount of shares a user can mint
-    function maxMint(address) external view returns (uint256);
+    function maxMint(address account) external view returns (uint256);
 
     /// @notice Calculate an amount of assets that would be required to mint requested amount of shares
     /// @param shares Amount of shares to be minted
@@ -107,45 +107,49 @@ interface IERC4626 {
     function previewRedeem(uint256 shares) external view returns (uint256);
 
     /// @notice Transfer requested amount of underlying tokens from sender to the vault pool in return for shares
-    /// @param assets In underlying units (use max uint for full underlying token balance)
-    /// @param receiver An account to receive the shares (use zero address for the authenticated account)
+    /// @param amount Amount of assets to deposit (use max uint256 for full underlying token balance)
+    /// @param receiver An account to receive the shares
     /// @return Amount of shares minted
     /// @dev Deposit will round down the amount of assets that are converted to shares. To prevent losses consider using mint instead.
-    function deposit(uint256 assets, address receiver) external returns (uint256);
+    function deposit(uint256 amount, address receiver) external returns (uint256);
 
     /// @notice Transfer underlying tokens from sender to the vault pool in return for requested amount of shares
-    /// @param shares Amount of share to be minted
-    /// @param receiver An account to receive the shares (use zero address for the authenticated account)
+    /// @param amount Amount of shares to be minted
+    /// @param receiver An account to receive the shares
     /// @return Amount of assets deposited
-    function mint(uint256 shares, address receiver) external returns (uint256);
+    function mint(uint256 amount, address receiver) external returns (uint256);
 
     /// @notice Transfer requested amount of underlying tokens from the vault and decrease account's shares balance
-    /// @param assets In underlying units
-    /// @param receiver Account to receive the withdrawn assets (use zero address for the authenticated account)
+    /// @param amount Amount of assets to withdraw
+    /// @param receiver Account to receive the withdrawn assets
     /// @param owner Account holding the shares to burn
     /// @return Amount of shares burned
-    function withdraw(uint256 assets, address receiver, address owner) external returns (uint256);
+    function withdraw(uint256 amount, address receiver, address owner) external returns (uint256);
 
     /// @notice Burn requested shares and transfer corresponding underlying tokens from the vault to the receiver
-    /// @param shares Amount of shares to burn (use max to burn full owner balance)
-    /// @param receiver Account to receive the withdrawn assets (use zero address for the authenticated account)
+    /// @param amount Amount of shares to burn (use max uint256 to burn full owner balance)
+    /// @param receiver Account to receive the withdrawn assets
     /// @param owner Account holding the shares to burn.
     /// @return Amount of assets transferred
-    function redeem(uint256 shares, address receiver, address owner) external returns (uint256);
+    function redeem(uint256 amount, address receiver, address owner) external returns (uint256);
 }
 
 interface IVault is IERC4626 {
     /// @notice Balance of the fees accumulator, in eTokens
-    function feesBalance() external view returns (uint256);
+    function accumulatedFees() external view returns (uint256);
 
     /// @notice Balance of the fees accumulator, in underlying units
-    function feesBalanceAssets() external view returns (uint256);
+    function accumulatedFeesAssets() external view returns (uint256);
+
+    /// @notice Address of the original vault creator
+    function creator() external view returns (address);
 
     /// @notice Creates shares for the receiver, from excess asset balances of the vault (not accounted for in `cash`)
-    /// @param receiver An account to receive the shares (use zero address for the authenticated account)
+    /// @param amount Amount of assets to claim (use max uint256 to claim all available assets)
+    /// @param receiver An account to receive the shares
     /// @return Amount of shares minted
     /// @dev Could be used as an alternative deposit flow in certain scenarios. E.g. swap directly to the vault, call `skim` to claim deposit.
-    function skim(address receiver) external returns (uint256);
+    function skim(uint256 amount, address receiver) external returns (uint256);
 }
 
 interface IBorrowing {
@@ -181,40 +185,41 @@ interface IBorrowing {
     /// @notice Address of the sidecar DToken
     function dToken() external view returns (address);
 
-    /// @notice Address of EthereumVaultConnector contract
-    function EVC() external view returns (address);
 
     /// @notice Transfer underlying tokens from the vault to the sender, and increase sender's debt
-    /// @param assets In underlying units (use max uint for all available tokens)
-    /// @param receiver Account receiving the borrowed tokens (use zero address for authenticated account)
-    function borrow(uint256 assets, address receiver) external;
+    /// @param amount Amount of assets to borrow (use max uint256 for all available tokens)
+    /// @param receiver Account receiving the borrowed tokens
+    /// @return Amount of assets borrowed
+    function borrow(uint256 amount, address receiver) external returns (uint256);
 
     /// @notice Transfer underlying tokens from the sender to the vault, and decrease receiver's debt
-    /// @param assets In underlying units (use max uint256 for full debt)
-    /// @param receiver Account holding the debt to be repaid (use zero address for authenticated acount).
-    function repay(uint256 assets, address receiver) external;
+    /// @param amount Amount of debt to repay in assets (use max uint256 for full debt)
+    /// @param receiver Account holding the debt to be repaid
+    /// @return Amount of assets repaid
+    function repay(uint256 amount, address receiver) external returns (uint256);
 
     /// @notice Mint shares and a corresponding amount of debt ("self-borrow")
-    /// @param assets In underlying units
-    /// @param sharesReceiver Account to receive the created shares (use zero address for authenticated acount).
+    /// @param amount In asset units
+    /// @param sharesReceiver Account to receive the created shares
     /// @return Amount of shares created
-    function loop(uint256 assets, address sharesReceiver) external returns (uint256);
+    function loop(uint256 amount, address sharesReceiver) external returns (uint256);
 
     /// @notice Pay off liability with shares ("self-repay")
-    /// @param assets In underlying units (use max uint to repay the debt in full or up to the available underlying balance)
-    /// @param debtFrom Account to remove debt from by burning sender's shares (use zero address for authenticated acount).
+    /// @param amount In asset units (use max uint256 to repay the debt in full or up to the available underlying balance)
+    /// @param debtFrom Account to remove debt from by burning sender's shares
     /// @return Amount of shares burned
-    function deloop(uint256 assets, address debtFrom) external returns (uint256);
+    function deloop(uint256 amount, address debtFrom) external returns (uint256);
 
     /// @notice Take over debt from another account
-    /// @param assets Amount of debt in underlying units (use max for all the account's debt)
+    /// @param amount Amount of debt in asset units (use max uint256 for all the account's debt)
     /// @param from Account to pull the debt from
-    function pullDebt(uint256 assets, address from) external;
+    /// @return Amount of debt pulled in asset units.
+    function pullDebt(uint256 amount, address from) external returns (uint256);
 
     /// @notice Request a flash-loan. A onFlashLoan() callback in msg.sender will be invoked, which must repay the loan to the main Euler address prior to returning.
-    /// @param assets In underlying units
+    /// @param amount In asset units
     /// @param data Passed through to the onFlashLoan() callback, so contracts don't need to store transient data in storage
-    function flashLoan(uint256 assets, bytes calldata data) external;
+    function flashLoan(uint256 amount, bytes calldata data) external;
 
     /// @notice Updates interest accumulator and totalBorrows, credits reserves, re-targets interest rate, and logs market status
     function touch() external;
@@ -235,7 +240,7 @@ interface ILiquidation {
     /// @notice Attempts to perform a liquidation
     /// @param violator Address that may be in collateral violation
     /// @param collateral Collateral which is to be seized
-    /// @param repayAssets The amount of underlying debt to be transferred from violator to sender, in asset units (use max to repay the maximum possible amount).
+    /// @param repayAssets The amount of underlying debt to be transferred from violator to sender, in asset units (use max uint256 to repay the maximum possible amount).
     /// @param minYieldBalance The minimum acceptable amount of collateral to be transferred from violator to sender, in collateral balance units (shares for vaults)
     function liquidate(address violator, address collateral, uint256 repayAssets, uint256 minYieldBalance)
         external;
@@ -298,8 +303,11 @@ interface IGovernance {
     function pauseGuardian() external view returns (address);
 
     /// @notice Retrieves the interest fee in effect for the vault
-    /// @return Amount of interest that is redirected as a fee, as a fraction scaled by CONFIG_SCALE (60_000)
+    /// @return Amount of interest that is redirected as a fee, as a fraction scaled by 1e4
     function interestFee() external view returns (uint16);
+
+    /// @notice Retrieves the ProtocolConfig address
+    function protocolConfigAddress() external view returns (address);
 
     /// @notice Retrieves the protocol fee share
     /// @return A percentage share of fees accrued belonging to the protocol. In wad scale (1e18)
@@ -308,11 +316,11 @@ interface IGovernance {
     /// @notice Retrieves the address which will receive protocol's fees
     function protocolFeeReceiver() external view returns (address);
 
-    /// @notice Retrieves regular LTV set for the collateral, which is used to determine the health of the account
-    function LTV(address collateral) external view returns (uint16);
+    /// @notice Retrieves regular LTV, set for the collateral, which is used to determine the health of the account
+    function borrowingLTV(address collateral) external view returns (uint16);
 
     /// @notice Retrieves current ramped value of LTV, which is used to determine liquidation penalty
-    function LTVLiquidation(address collateral) external view returns (uint16);
+    function liquidationLTV(address collateral) external view returns (uint16);
 
     /// @notice Retrieves LTV detailed config for a collateral
     /// @param collateral Collateral asset
@@ -320,7 +328,7 @@ interface IGovernance {
     /// @return targetLTV current regular LTV or target LTV that the ramped LTV will reach after ramp is over
     /// @return rampDuration ramp duration in seconds
     /// @return originalLTV previous LTV value, where the ramp starts
-    function LTVFull(address collateral) external view returns (uint40 targetTimestamp, uint16 targetLTV, uint24 rampDuration, uint16 originalLTV);
+    function LTVFull(address collateral) external view returns (uint48 targetTimestamp, uint16 targetLTV, uint32 rampDuration, uint16 originalLTV);
 
     /// @notice Retrieves a list of collaterals with configured LTVs
     /// @return List of asset collaterals
@@ -340,8 +348,11 @@ interface IGovernance {
     /// @notice Retrieves address of the governance fee receiver
     function feeReceiver() external view returns (address);
 
-    /// @notice Indicates if debt socialization is activated
-    function debtSocialization() external view returns (bool);
+    /// @notice Address of EthereumVaultConnector contract
+    function EVC() external view returns (address);
+
+    /// @notice Retrieves the Permit2 contract address
+    function permit2Address() external view returns (address);
 
     /// @notice Retrieves a reference asset used for liquidity calculations
     function unitOfAccount() external view returns (address);
@@ -370,9 +381,9 @@ interface IGovernance {
 
     /// @notice Set a new LTV config
     /// @param collateral Address of collateral to set LTV for
-    /// @param ltv New LTV in CONFIG_SCALE (60 000)
+    /// @param ltv New LTV in 1e4 scale
     /// @param rampDuration Ramp duration in seconds
-    function setLTV(address collateral, uint16 ltv, uint24 rampDuration) external;
+    function setLTV(address collateral, uint16 ltv, uint32 rampDuration) external;
 
     /// @notice Completely clears LTV configuratrion, signalling the collateral is not considered safe to liquidate anymore
     /// @param collateral Address of collateral
@@ -380,8 +391,7 @@ interface IGovernance {
 
     /// @notice Set a new interest rate model contract
     /// @param newModel Address of the contract
-    /// @param resetParams Data to use in the `reset` function called on the IRM contract after setting it
-    function setIRM(address newModel, bytes calldata resetParams) external;
+    function setIRM(address newModel) external;
 
     /// @notice Set new bitmap indicating which operations should be disabled. Operations are defined in Constants contract
     function setDisabledOps(uint32 newDisabledOps) external;
@@ -391,9 +401,6 @@ interface IGovernance {
 
     /// @notice Set a new interest fee
     function setInterestFee(uint16 newFee) external;
-
-    /// @notice Enable or disable debt socialization during liquidations
-    function setDebtSocialization(bool newValue) external;
 }
 
 interface IEVault is IInitialize, IToken, IVault, IBorrowing, ILiquidation, IRiskManager, IBalanceForwarder, IGovernance {}

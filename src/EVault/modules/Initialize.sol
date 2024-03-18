@@ -16,8 +16,11 @@ import "../shared/types/Types.sol";
 abstract contract InitializeModule is IInitialize, Base, BorrowUtils {
     using TypesLib for uint16;
 
+    uint256 constant INITIAL_INTEREST_ACCUMULATOR = 1e27; // 1 ray
+    uint16 constant DEFAULT_INTEREST_FEE = 0.23e4;
+
     /// @inheritdoc IInitialize
-    function initialize(address creator) external virtual reentrantOK {
+    function initialize(address proxyCreator) public virtual reentrantOK {
         if (initialized) revert E_Initialized();
         initialized = true;
 
@@ -26,9 +29,9 @@ abstract contract InitializeModule is IInitialize, Base, BorrowUtils {
         // Calldata should include: signature and abi encoded creator address (4 + 32 bytes), followed by proxy metadata
         if (msg.data.length != 4 + 32 + PROXY_METADATA_LENGTH) revert E_ProxyMetadata();
         (IERC20 asset,,) = ProxyUtils.metadata();
-        if (
-            address(asset) == address(0) || address(asset) == address(evc) || address(asset).code.length == 0
-        ) revert E_BadAddress(); // TODO should this validation be removed in favor of product lines?
+        // Make sure the asset is a contract. Token transfers using a library will not revert if address has no code.
+        if (address(asset).code.length == 0) revert E_BadAddress();
+        // Other constraints on values should be enforced by product line
 
         // Create sidecar DToken
 
@@ -36,18 +39,21 @@ abstract contract InitializeModule is IInitialize, Base, BorrowUtils {
 
         // Initialize storage
 
-        marketStorage.lastInterestAccumulatorUpdate = uint40(block.timestamp);
+        marketStorage.lastInterestAccumulatorUpdate = uint48(block.timestamp);
         marketStorage.interestAccumulator = INITIAL_INTEREST_ACCUMULATOR;
         marketStorage.interestFee = DEFAULT_INTEREST_FEE.toConfigAmount();
-        marketStorage.governorAdmin = marketStorage.pauseGuardian = creator;
+        marketStorage.creator = marketStorage.governorAdmin = marketStorage.pauseGuardian = proxyCreator;
 
         snapshot.reset();
 
         // Emit logs
 
-        emit EVaultCreated(creator, address(asset), dToken);
+        emit EVaultCreated(proxyCreator, address(asset), dToken);
         logMarketStatus(loadMarket(), 0);
     }
+
+    // prevent initialization of the implementation contract
+    constructor() {initialized = true; }
 }
 
 contract Initialize is InitializeModule {
