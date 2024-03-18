@@ -57,7 +57,7 @@ contract ESynth is ERC20Collateral, Ownable {
         address sender = _msgSender();
         MinterData storage minterCache = minters[sender];
 
-        if (account != sender && account != address(this)) {
+        if (account != sender && sender != owner()) {
             _spendAllowance(account, sender, amount);
         }
 

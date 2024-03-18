@@ -6,8 +6,6 @@ import {stdError} from "forge-std/Test.sol";
 import {Errors} from "src/EVault/shared/Errors.sol";
 import {ESynth} from "src/ESynth/ESynth.sol";
 
-import "forge-std/console2.sol";
-
 contract ESynthGeneralTest is ESynthTest {
     uint128 constant MAX_ALLOWED = type(uint128).max;
 
@@ -28,13 +26,14 @@ contract ESynthGeneralTest is ESynthTest {
         esynth.mint(user1, initialAmount);
         burnAmount = uint128(bound(burnAmount, 0, initialAmount));
 
-        vm.startPrank(user1);
-        esynth.approve(address(this), burnAmount);
-        vm.stopPrank();
+        vm.prank(user1);
+        esynth.approve(user2, burnAmount);
 
-        uint256 allowanceBefore = esynth.allowance(user1, address(this));
+        uint256 allowanceBefore = esynth.allowance(user1, user2);
         uint256 balanceBefore = esynth.balanceOf(user1);
         uint256 totalSupplyBefore = esynth.totalSupply();
+
+        vm.prank(user2);
         esynth.burn(user1, burnAmount);
 
         assertEq(esynth.balanceOf(user1), balanceBefore - burnAmount);
@@ -59,20 +58,30 @@ contract ESynthGeneralTest is ESynthTest {
     function testFuzz_burnMoreThenMinted(uint128 amount) public {
         amount = uint128(bound(amount, 0, MAX_ALLOWED / 2));
         // one minter mints
-        esynth.setCapacity(address(this), amount); // we set the cap to less then
+        esynth.setCapacity(user2, amount); // we set the cap to less then
+        vm.prank(user2);
         esynth.mint(address(esynth), amount);
 
         // another minter mints
         esynth.setCapacity(user1, amount); // we set the cap to less then
-        vm.startPrank(user1);
+        vm.prank(user1);
         esynth.mint(address(esynth), amount);
-        vm.stopPrank();
 
         esynth.burn(address(esynth), amount * 2);
 
         (uint128 capacity, uint128 minted) = esynth.minters(address(this));
         assertEq(minted, 0);
     }
+    
+    function testFuzz_burnFromOwner(uint128 amount) public {
+        amount = uint128(bound(amount, 0, MAX_ALLOWED));
+        esynth.setCapacity(user1, MAX_ALLOWED);
+        vm.prank(user1);
+        esynth.mint(user1, amount);
+        esynth.burn(user1, amount);
+        assertEq(esynth.balanceOf(user1), 0);
+    }
+    
 
     function testFuzz_depositSimple(uint128 amount) public {
         amount = uint128(bound(amount, 1, type(uint112).max)); // amount needs to be less then MAX_SANE_AMOUNT

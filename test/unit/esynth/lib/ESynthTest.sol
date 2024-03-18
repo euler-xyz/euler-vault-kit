@@ -13,12 +13,14 @@ contract ESynthTest is EVaultTestBase {
     ESynth esynth;
     ESVault eTSTAsESVault;
     address user1;
+    address user2;
 
     function setUp() public virtual override {
         super.setUp();
 
         address esVaultImpl = address(new ESVault(integrations, modules));
         user1 = vm.addr(1001);
+        user2 = vm.addr(1002);
         vm.prank(admin);
         factory.setImplementation(esVaultImpl);
 
