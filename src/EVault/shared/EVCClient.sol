@@ -57,7 +57,7 @@ abstract contract EVCClient is Storage, Events, Errors {
     }
 
     function EVCRequireStatusChecks(address account) internal {
-        if (account == ACCOUNTCHECK_NONE) {
+        if (account == CHECKACCOUNT_NONE) {
             evc.requireVaultStatusCheck();
         } else {
             evc.requireAccountAndVaultStatusCheck(account);

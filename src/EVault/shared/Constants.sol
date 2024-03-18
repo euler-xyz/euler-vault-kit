@@ -19,9 +19,9 @@ uint256 constant PROXY_METADATA_LENGTH = 60;
 // Account status checks special values
 
 // no account status checks should be scheduled
-address constant ACCOUNTCHECK_NONE = address(0);
+address constant CHECKACCOUNT_NONE = address(0);
 // account status check should be scheduled for the authenticated account
-address constant ACCOUNTCHECK_CALLER = address(1);
+address constant CHECKACCOUNT_CALLER = address(1);
 
 // EVC authentication
 

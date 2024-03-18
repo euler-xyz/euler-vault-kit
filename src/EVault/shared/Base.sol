@@ -49,7 +49,7 @@ abstract contract Base is EVCClient, Cache {
     // Queue vault and maybe account checks in the EVC (caller, current, onBehalfOf or none).
     // If needed, revert if this contract is not the controller of the authenticated account.
     // Returns the MarketCache and active account.
-    function initOperation(uint32 operation, address checkAccount)
+    function initOperation(uint32 operation, address accountToCheck)
         internal
         returns (MarketCache memory marketCache, address account)
     {
@@ -69,7 +69,7 @@ abstract contract Base is EVCClient, Cache {
 
         account = EVCAuthenticateDeferred(Operations.wrap(CONTROLLER_ONLY_OPERATIONS).check(operation));
 
-        EVCRequireStatusChecks(checkAccount == ACCOUNTCHECK_CALLER ? account : checkAccount);
+        EVCRequireStatusChecks(accountToCheck == CHECKACCOUNT_CALLER ? account : accountToCheck);
     }
 
     function logMarketStatus(MarketCache memory a, uint256 interestRate) internal {

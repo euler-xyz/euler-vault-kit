@@ -8,8 +8,8 @@ import {IVault as IEVCVault} from "ethereum-vault-connector/interfaces/IVault.so
 
 interface IInitialize {
     /// @notice Initialization of the newly deployed proxy contract
-    /// @param creator Account which created the proxy or should be the initial governor
-    function initialize(address creator) external;
+    /// @param proxyCreator Account which created the proxy or should be the initial governor
+    function initialize(address proxyCreator) external;
 }
 
 interface IERC20 {
@@ -71,7 +71,7 @@ interface IERC4626 {
     function convertToShares(uint256 assets) external view returns (uint256);
 
     /// @notice Fetch the maximum amount of assets a user can deposit
-    function maxDeposit(address) external view returns (uint256);
+    function maxDeposit(address account) external view returns (uint256);
 
     /// @notice Calculate an amount of shares that would be created by depositing assets
     /// @param assets Amount of assets deposited
@@ -79,7 +79,7 @@ interface IERC4626 {
     function previewDeposit(uint256 assets) external view returns (uint256);
 
     /// @notice Fetch the maximum amount of shares a user can mint
-    function maxMint(address) external view returns (uint256);
+    function maxMint(address account) external view returns (uint256);
 
     /// @notice Calculate an amount of assets that would be required to mint requested amount of shares
     /// @param shares Amount of shares to be minted
@@ -107,31 +107,31 @@ interface IERC4626 {
     function previewRedeem(uint256 shares) external view returns (uint256);
 
     /// @notice Transfer requested amount of underlying tokens from sender to the vault pool in return for shares
-    /// @param assets In underlying units (use max uint256 for full underlying token balance)
+    /// @param amount Amount of assets to deposit (use max uint256 for full underlying token balance)
     /// @param receiver An account to receive the shares
     /// @return Amount of shares minted
     /// @dev Deposit will round down the amount of assets that are converted to shares. To prevent losses consider using mint instead.
-    function deposit(uint256 assets, address receiver) external returns (uint256);
+    function deposit(uint256 amount, address receiver) external returns (uint256);
 
     /// @notice Transfer underlying tokens from sender to the vault pool in return for requested amount of shares
-    /// @param shares Amount of share to be minted
+    /// @param amount Amount of shares to be minted
     /// @param receiver An account to receive the shares
     /// @return Amount of assets deposited
-    function mint(uint256 shares, address receiver) external returns (uint256);
+    function mint(uint256 amount, address receiver) external returns (uint256);
 
     /// @notice Transfer requested amount of underlying tokens from the vault and decrease account's shares balance
-    /// @param assets In underlying units
+    /// @param amount Amount of assets to withdraw
     /// @param receiver Account to receive the withdrawn assets
     /// @param owner Account holding the shares to burn
     /// @return Amount of shares burned
-    function withdraw(uint256 assets, address receiver, address owner) external returns (uint256);
+    function withdraw(uint256 amount, address receiver, address owner) external returns (uint256);
 
     /// @notice Burn requested shares and transfer corresponding underlying tokens from the vault to the receiver
-    /// @param shares Amount of shares to burn (use max uint256 to burn full owner balance)
+    /// @param amount Amount of shares to burn (use max uint256 to burn full owner balance)
     /// @param receiver Account to receive the withdrawn assets
     /// @param owner Account holding the shares to burn.
     /// @return Amount of assets transferred
-    function redeem(uint256 shares, address receiver, address owner) external returns (uint256);
+    function redeem(uint256 amount, address receiver, address owner) external returns (uint256);
 }
 
 interface IVault is IERC4626 {
@@ -145,11 +145,11 @@ interface IVault is IERC4626 {
     function creator() external view returns (address);
 
     /// @notice Creates shares for the receiver, from excess asset balances of the vault (not accounted for in `cash`)
-    /// @param assets Amount of assets to claim (use max uint256 to claim all available assets)
+    /// @param amount Amount of assets to claim (use max uint256 to claim all available assets)
     /// @param receiver An account to receive the shares
     /// @return Amount of shares minted
     /// @dev Could be used as an alternative deposit flow in certain scenarios. E.g. swap directly to the vault, call `skim` to claim deposit.
-    function skim(uint256 assets, address receiver) external returns (uint256);
+    function skim(uint256 amount, address receiver) external returns (uint256);
 }
 
 interface IBorrowing {
@@ -187,36 +187,39 @@ interface IBorrowing {
 
 
     /// @notice Transfer underlying tokens from the vault to the sender, and increase sender's debt
-    /// @param assets In underlying units (use max uint256 for all available tokens)
+    /// @param amount Amount of assets to borrow (use max uint256 for all available tokens)
     /// @param receiver Account receiving the borrowed tokens
-    function borrow(uint256 assets, address receiver) external;
+    /// @return Amount of assets borrowed
+    function borrow(uint256 amount, address receiver) external returns (uint256);
 
     /// @notice Transfer underlying tokens from the sender to the vault, and decrease receiver's debt
-    /// @param assets In underlying units (use max uint256 for full debt)
+    /// @param amount Amount of debt to repay in assets (use max uint256 for full debt)
     /// @param receiver Account holding the debt to be repaid
-    function repay(uint256 assets, address receiver) external;
+    /// @return Amount of assets repaid
+    function repay(uint256 amount, address receiver) external returns (uint256);
 
     /// @notice Mint shares and a corresponding amount of debt ("self-borrow")
-    /// @param assets In underlying units
+    /// @param amount In asset units
     /// @param sharesReceiver Account to receive the created shares
     /// @return Amount of shares created
-    function loop(uint256 assets, address sharesReceiver) external returns (uint256);
+    function loop(uint256 amount, address sharesReceiver) external returns (uint256);
 
     /// @notice Pay off liability with shares ("self-repay")
-    /// @param assets In underlying units (use max uint256 to repay the debt in full or up to the available underlying balance)
+    /// @param amount In asset units (use max uint256 to repay the debt in full or up to the available underlying balance)
     /// @param debtFrom Account to remove debt from by burning sender's shares
     /// @return Amount of shares burned
-    function deloop(uint256 assets, address debtFrom) external returns (uint256);
+    function deloop(uint256 amount, address debtFrom) external returns (uint256);
 
     /// @notice Take over debt from another account
-    /// @param assets Amount of debt in underlying units (use max uint256 for all the account's debt)
+    /// @param amount Amount of debt in asset units (use max uint256 for all the account's debt)
     /// @param from Account to pull the debt from
-    function pullDebt(uint256 assets, address from) external;
+    /// @return Amount of debt pulled in asset units.
+    function pullDebt(uint256 amount, address from) external returns (uint256);
 
     /// @notice Request a flash-loan. A onFlashLoan() callback in msg.sender will be invoked, which must repay the loan to the main Euler address prior to returning.
-    /// @param assets In underlying units
+    /// @param amount In asset units
     /// @param data Passed through to the onFlashLoan() callback, so contracts don't need to store transient data in storage
-    function flashLoan(uint256 assets, bytes calldata data) external;
+    function flashLoan(uint256 amount, bytes calldata data) external;
 
     /// @notice Updates interest accumulator and totalBorrows, credits reserves, re-targets interest rate, and logs market status
     function touch() external;

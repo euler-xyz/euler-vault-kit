@@ -47,15 +47,12 @@ abstract contract LiquidationModule is ILiquidation, Base, BalanceUtils, Liquidi
         virtual
         nonReentrant
     {
-        (MarketCache memory marketCache, address liquidator) = initOperation(OP_LIQUIDATE, ACCOUNTCHECK_CALLER);
+        (MarketCache memory marketCache, address liquidator) = initOperation(OP_LIQUIDATE, CHECKACCOUNT_CALLER);
 
         LiquidationCache memory liqCache =
             calculateLiquidation(marketCache, liquidator, violator, collateral, repayAssets);
 
-        // liquidation is a no-op if there's no violation
-        if (!liqCache.repay.isZero()) {
-            executeLiquidation(marketCache, liqCache, minYieldBalance);
-        }
+        executeLiquidation(marketCache, liqCache, minYieldBalance);
     }
 
     function calculateLiquidation(
@@ -96,7 +93,6 @@ abstract contract LiquidationModule is ILiquidation, Base, BalanceUtils, Liquidi
         // Calculate max yield and repay
 
         liqCache = calculateMaxLiquidation(liqCache, marketCache);
-        if (liqCache.repay.isZero()) return liqCache; // no liquidation opportunity found
 
         // Adjust for desired repay
 
@@ -104,8 +100,10 @@ abstract contract LiquidationModule is ILiquidation, Base, BalanceUtils, Liquidi
             uint256 maxRepay = liqCache.repay.toUint();
             if (desiredRepay > maxRepay) revert E_ExcessiveRepayAmount();
 
-            liqCache.yieldBalance = desiredRepay * liqCache.yieldBalance / maxRepay;
-            liqCache.repay = desiredRepay.toAssets();
+            if (maxRepay > 0) {
+                liqCache.yieldBalance = desiredRepay * liqCache.yieldBalance / maxRepay;
+                liqCache.repay = desiredRepay.toAssets();
+            }
         }
     }
 
@@ -113,16 +111,15 @@ abstract contract LiquidationModule is ILiquidation, Base, BalanceUtils, Liquidi
         LiquidationCache memory liqCache,
         MarketCache memory marketCache
     ) private view returns (LiquidationCache memory) {
-        (uint256 liquidityCollateralValue, uint256 liquidityLiabilityValue) = calculateLiquidity(marketCache, liqCache.violator, liqCache.collaterals, LTVType.LIQUIDATION);
+        // Check account health
 
+        (uint256 liquidityCollateralValue, uint256 liquidityLiabilityValue) = calculateLiquidity(marketCache, liqCache.violator, liqCache.collaterals, LTVType.LIQUIDATION);
         // no violation
         if (liquidityCollateralValue >= liquidityLiabilityValue) return liqCache;
 
-        // At this point healthScore must be < 1 since collateral < liability
-
         // Compute discount
 
-        uint256 discountFactor = liquidityCollateralValue * 1e18 / liquidityLiabilityValue; // 1 - health score
+        uint256 discountFactor = liquidityCollateralValue * 1e18 / liquidityLiabilityValue; // health score = 1 - discount
 
         if (discountFactor < 1e18 - MAXIMUM_LIQUIDATION_DISCOUNT) {
             discountFactor = 1e18 - MAXIMUM_LIQUIDATION_DISCOUNT;
@@ -132,8 +129,11 @@ abstract contract LiquidationModule is ILiquidation, Base, BalanceUtils, Liquidi
 
         uint256 collateralBalance = IERC20(liqCache.collateral).balanceOf(liqCache.violator);
         uint256 collateralValue = marketCache.oracle.getQuote(collateralBalance, liqCache.collateral, marketCache.unitOfAccount);
-        // no collateral balance, or worthless collateral
-        if (collateralValue == 0) return liqCache;
+        if (collateralValue == 0) {
+            // worthless collateral can be claimed with no repay
+            liqCache.yieldBalance = collateralBalance;
+            return liqCache;
+        }
 
         uint256 liabilityValue = liqCache.owed.toUint();
         if (address(marketCache.asset) != marketCache.unitOfAccount) {
@@ -163,6 +163,8 @@ abstract contract LiquidationModule is ILiquidation, Base, BalanceUtils, Liquidi
         LiquidationCache memory liqCache,
         uint256 minYieldBalance
     ) private {
+        // Check minimum yield.
+
         if (minYieldBalance > liqCache.yieldBalance) revert E_MinYield();
 
         // Handle repay: liquidator takes on violator's debt:
@@ -183,11 +185,13 @@ abstract contract LiquidationModule is ILiquidation, Base, BalanceUtils, Liquidi
         // 3. Any additional operations on violator's account in a batch will register the health check again, and it
         //    will be executed normally at the end of the batch.
 
-        enforceCollateralTransfer(
-            liqCache.collateral, liqCache.yieldBalance, liqCache.violator, liqCache.liquidator
-        );
+        if (liqCache.yieldBalance > 0) {
+            enforceCollateralTransfer(
+                liqCache.collateral, liqCache.yieldBalance, liqCache.violator, liqCache.liquidator
+            );
 
-        forgiveAccountStatusCheck(liqCache.violator);
+            forgiveAccountStatusCheck(liqCache.violator);
+        }
 
         // Handle debt socialization
 

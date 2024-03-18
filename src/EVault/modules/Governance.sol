@@ -58,13 +58,13 @@ abstract contract GovernanceModule is IGovernance, Base, BalanceUtils, BorrowUti
 
     /// @inheritdoc IGovernance
     function protocolFeeShare() public view virtual reentrantOK returns (uint256) {
-        (, uint256 protocolShare) = protocolConfig.feeConfig(address(this));
+        (, uint256 protocolShare) = protocolConfig.protocolFeeConfig(address(this));
         return protocolShare;
     }
 
     /// @inheritdoc IGovernance
     function protocolFeeReceiver() public view virtual reentrantOK returns (address) {
-        (address protocolReceiver,) = protocolConfig.feeConfig(address(this));
+        (address protocolReceiver,) = protocolConfig.protocolFeeConfig(address(this));
         return protocolReceiver;
     }
 
@@ -143,11 +143,11 @@ abstract contract GovernanceModule is IGovernance, Base, BalanceUtils, BorrowUti
 
      /// @inheritdoc IGovernance
     function convertFees() public virtual nonReentrant {
-        (MarketCache memory marketCache, address account) = initOperation(OP_CONVERT_FEES, ACCOUNTCHECK_NONE);
+        (MarketCache memory marketCache, address account) = initOperation(OP_CONVERT_FEES, CHECKACCOUNT_NONE);
 
         if (marketCache.accumulatedFees.isZero()) return;
 
-        (address protocolReceiver, uint16 protocolFee) = protocolConfig.feeConfig(address(this));
+        (address protocolReceiver, uint16 protocolFee) = protocolConfig.protocolFeeConfig(address(this));
         address governorReceiver = marketStorage.feeReceiver;
 
         if (governorReceiver == address(0)) protocolFee = 1e4; // governor forfeits fees
