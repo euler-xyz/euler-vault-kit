@@ -53,7 +53,7 @@ contract ESynth is ERC20Collateral, Ownable {
         _mint(account, amount);
     }
 
-    /// @notice Burns a certain amount of tokens from the accounts balance. Requires the account to have an allowance for the sender.
+    /// @notice Burns a certain amount of tokens from the accounts balance. Requires the account, except the owner to have an allowance for the sender.
     /// @param account The account to burn the tokens from.
     /// @param amount The amount of tokens to burn.
     function burn(address account, uint128 amount) external nonReentrant {
