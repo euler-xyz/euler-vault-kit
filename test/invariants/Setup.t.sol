@@ -22,7 +22,7 @@ import {Governance} from "src/EVault/modules/Governance.sol";
 import {RiskManager} from "src/EVault/modules/RiskManager.sol";
 
 // Test Contracts
-import {TestERC20} from "../mocks/TestERC20.sol";
+import {ERC20Mock as TestERC20} from "@openzeppelin/contracts/mocks/token/ERC20Mock.sol";
 import {MockBalanceTracker} from "../mocks/MockBalanceTracker.sol";
 import {MockPriceOracle} from "../mocks/MockPriceOracle.sol";
 import {Actor} from "./utils/Actor.sol";
@@ -54,10 +54,12 @@ contract Setup is BaseTest {
         oracle = new MockPriceOracle();
 
         // Deploy the mock assets
-        assetTST = new TestERC20("Test Token", "TST", 18, false);
-        assetTST2 = new TestERC20("Test Token 2", "TST2", 18, false);
+        assetTST = new TestERC20();
+        assetTST2 = new TestERC20();
         baseAssets.push(address(assetTST));
         baseAssets.push(address(assetTST2));
+
+        unitOfAccount = address(1);
     }
 
     function _deployVaults() internal {

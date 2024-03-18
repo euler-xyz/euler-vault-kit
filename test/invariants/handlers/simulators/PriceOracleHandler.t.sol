@@ -19,12 +19,13 @@ contract PriceOracleHandler is BaseHandler {// TODO: Update this contract to mat
     ///////////////////////////////////////////////////////////////////////////////////////////////
 
     /// @notice This function simulates changes in the interest rate model
-/*     function setPrice(uint256 i, uint256 price) external {
+    function setPrice(uint256 i, uint256 price) external {
         address baseAsset = _getRandomBaseAsset(i);
 
-        oracle.setPrice(baseAsset, address(referenceAsset), price);
+        oracle.setPrice(baseAsset, unitOfAccount, price);
     }
 
+/*  
     /// @notice This function simulates changes in the interest rate model
     function setResolvedAsset(uint256 i) external {
         address vaultAddress = address(eTST);

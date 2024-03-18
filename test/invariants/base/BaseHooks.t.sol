@@ -20,7 +20,7 @@ contract BaseHooks is ProtocolAssertions, InvariantsSpec {
         return eTST.totalSupply() == 0 ? 1e18 : eTST.totalAssets() / eTST.totalSupply();
     }
 
-    function _getHealthScore(uint256 liabilityValue, uint256 collateralValue) internal view returns (uint256) {
+    function _getHealthScore(uint256 liabilityValue, uint256 collateralValue) internal pure returns (uint256) {
         return liabilityValue == 0 ? 1e18 : collateralValue * 1e18 / liabilityValue;
     }
 }

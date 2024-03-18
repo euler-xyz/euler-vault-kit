@@ -35,6 +35,32 @@ contract CryticToFoundry is Invariants, Setup {
     //                                 BROKEN INVARIANTS REPLAY                                  //
     /////////////////////////////////////////////////////////////////////////////////////////////// 
 
+    function test_vm_invariant_a() public setup {
+        this.donate(115792089237316195423570985008687907853269984665640564039457584007913129639934,147333367278293690314759053441474412585086084701913347506348);
+        console.log("Balance before: ", assetTST.balanceOf(address(eTST)));
+        this.depositToActor(2,189920672377208932478056976);
+        console.log("Balance after: ", assetTST.balanceOf(address(eTST)));
+
+        assert_VM_INVARIANT_A();
+    }
+
+
+    function test_BM_INVARIANT_O() public setup {
+        this.depositToActor(20,93704952709166092675833692626070333629207815095066323987818791); 
+        console.log("Actor: ", address(actor));
+        this.enableController(3388611185579509790345271144155567529519710816754010133488659);
+        this.setPrice(82722273493907026195652355382983934173897749054150317695866107075,1);
+        console.log("Balance before: ", eTST.balanceOf(address(actor)));
+        console.log("Debt before: ", eTST.debtOf(address(actor)));
+        assetTST.burn(address(actor), assetTST.balanceOf(address(actor)));
+        //this.borrowTo(1,476485543921707036124785589083935854038465196552);
+        this.borrowTo(1,476485543921707036124785589083935854038465196552);
+        this.borrowTo(15,476485543921707036124785589083935854038465196552);
+        console.log("Balance after: ", eTST.balanceOf(address(actor)));
+        console.log("Debt after: ", eTST.debtOf(address(actor)));
+        echidna_BM_INVARIANT();
+    }
+
     function _setUpBlockAndActor(uint256 _block, address _user) internal {
         vm.roll(_block);
         actor = actors[_user];

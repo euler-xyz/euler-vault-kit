@@ -56,7 +56,7 @@ contract EVCHandler is BaseHandler {
         // Get one of the three actors randomly
         address account = _getRandomActor(i);
 
-        address vaultAddress = address(eTST);
+        address vaultAddress = address(assetTST);
 
         (success, returnData) = actor.proxy(
             address(evc),
@@ -76,7 +76,7 @@ contract EVCHandler is BaseHandler {
         // Get one of the three actors randomly
         address account = _getRandomActor(i);
 
-        address vaultAddress = address(eTST);
+        address vaultAddress = address(assetTST);
 
         (success, returnData) = actor.proxy(
             address(evc),

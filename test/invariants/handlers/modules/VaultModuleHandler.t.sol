@@ -1,6 +1,9 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.19;
 
+// Libraries
+import "forge-std/console.sol";
+
 // Test Contracts
 import {Actor} from "../../utils/Actor.sol";
 import {BaseHandler} from "../../base/BaseHandler.t.sol";
@@ -52,6 +55,8 @@ contract VaultModuleHandler is BaseHandler {
 
         // Get one of the three actors randomly
         address receiver = _getRandomActor(i);
+
+        console.log("Receiver: %s", receiver);
 
         address target = address(eTST);
 

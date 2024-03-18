@@ -7,7 +7,7 @@ import {ProtocolConfig} from "src/ProtocolConfig/ProtocolConfig.sol";
 import 'src/EVault/shared/Constants.sol';
 
 // Mock Contracts
-import {TestERC20} from "../../mocks/TestERC20.sol";
+import {ERC20Mock as TestERC20} from "@openzeppelin/contracts/mocks/token/ERC20Mock.sol";
 import {GenericFactory} from "src/GenericFactory/GenericFactory.sol";
 import {MockPriceOracle} from "../../mocks/MockPriceOracle.sol";
 

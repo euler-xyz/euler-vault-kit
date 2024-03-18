@@ -124,7 +124,7 @@ contract TestERC20 {
 
         unchecked {
             balances[from] -= amount;
-            balances[recipient] += amount - deflate + inflate;
+            balances[recipient] += amount - deflate + inflate;//@audit-issue overflow
         }
 
         emit Transfer(from, recipient, amount);

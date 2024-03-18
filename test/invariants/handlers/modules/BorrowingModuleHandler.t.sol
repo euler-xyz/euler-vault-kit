@@ -1,6 +1,9 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.19;
 
+// Libraries
+import "forge-std/console.sol";
+
 // Test Contracts
 import {Actor} from "../../utils/Actor.sol";
 import {BaseHandler} from "../../base/BaseHandler.t.sol";
@@ -37,6 +40,7 @@ contract BorrowingModuleHandler is BaseHandler {
         _before();
         (success, returnData) =
             actor.proxy(target, abi.encodeWithSelector(IBorrowing.borrow.selector, assets, receiver));
+        console.log("Success: ", success);
 
         if (!isAccountHealthyBefore) {
             /// @dev BM_INVARIANT_E
@@ -58,6 +62,8 @@ contract BorrowingModuleHandler is BaseHandler {
         address target = address(eTST);
 
         (, uint256 liabilityValueBefore) = _getAccountLiquidity(receiver, false);
+
+        require(eTST.debtOf(receiver) > 0, "BorrowingModuleHandler: No debt to repay");
 
         _before();
         (success, returnData) =

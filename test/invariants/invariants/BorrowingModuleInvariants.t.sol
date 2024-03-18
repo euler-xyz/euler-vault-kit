@@ -1,6 +1,9 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.19;
 
+// Libraries
+import "forge-std/console.sol";
+
 // Contracts
 import {ERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import 'src/EVault/shared/Constants.sol';
@@ -71,6 +74,7 @@ abstract contract BorrowingModuleInvariants is HandlerAggregator {
     }
 
     function assert_BM_INVARIANT_O(address _actor) internal {
+        console.log("Actor: ", _actor);
         assertTrue(
             eTST.debtOf(_actor) != 0
                 ? eTST.balanceOf(_actor) != 0
