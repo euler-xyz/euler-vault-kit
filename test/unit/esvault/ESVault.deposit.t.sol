@@ -9,6 +9,8 @@ contract ESVaultTestDeposit is ESVaultTestBase {
 
     function setUp() public override {
         super.setUp();
+
+        assetTSTAsSynth.setCapacity(address(this), 10000e18);
     }
 
     function test_deposit_from_non_synth() public {
