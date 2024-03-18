@@ -2,9 +2,10 @@
 
 pragma solidity ^0.8.0;
 
-import {Dispatch} from "./modules/Dispatch.sol";
+// import {Dispatch} from "./modules/Dispatch.sol";
+import "./modules/Dispatch.sol";
 
-contract EVault is Dispatch {
+contract EVaultBase is Dispatch {
     constructor(Integrations memory integrations, DeployedModules memory modules) Dispatch(integrations, modules) {}
 
 
@@ -219,4 +220,43 @@ contract EVault is Dispatch {
     function setCaps(uint16 supplyCap, uint16 borrowCap) public override virtual use(MODULE_GOVERNANCE) {}
 
     function setInterestFee(uint16 newFee) public override virtual use(MODULE_GOVERNANCE) {}
+}
+
+
+contract EVault is EVaultBase {
+    constructor(Integrations memory integrations, DeployedModules memory modules) EVaultBase(integrations, modules) {}
+
+    function balanceOf(address account) public view override virtual returns (uint256) { return TokenModule.balanceOf(account); } // + 0.154
+
+
+    // function transfer(address to, uint256 amount) public override virtual callThroughEVC returns (bool) { return TokenModule.transfer(to, amount); } // +5.688
+
+    // function transferFrom(address from, address to, uint256 amount) public override virtual callThroughEVC returns (bool) { return TokenModule.transferFrom(from, to, amount); }
+
+    // function transferFromMax(address from, address to) public override virtual callThroughEVC returns (bool) { return TokenModule.transferFromMax(from, to); }
+
+
+    function convertToAssets(uint256 shares) public view override virtual returns (uint256) { return VaultModule.convertToAssets(shares); } // + 0.476
+
+    // function convertToShares(uint256 assets) public view override virtual returns (uint256) { return VaultModule.convertToShares(assets); } // + 0.218
+
+    // function maxWithdraw(address owner) public view override virtual returns (uint256) { return super.maxWithdraw(owner); } 
+
+    function deposit(uint256 assets, address receiver) public override virtual callThroughEVC returns (uint256) { return VaultModule.deposit(assets, receiver); } // + 2.422
+
+    // function mint(uint256 shares, address receiver) public override virtual callThroughEVC returns (uint256) { return VaultModule.mint(shares, receiver); } // + 0.446
+
+    function withdraw(uint256 assets, address receiver, address owner) public override virtual callThroughEVC returns (uint256) { return VaultModule.withdraw(assets, receiver, owner); } // + 2.104
+
+    // function redeem(uint256 shares, address receiver, address owner) public override virtual callThroughEVC returns (uint256) { return VaultModule.redeem(shares, receiver, owner); } // + 0.390
+
+
+    function borrow(uint256 assets, address receiver) public override virtual callThroughEVC { BorrowingModule.borrow(assets, receiver); } // + 1.895
+
+    function repay(uint256 assets, address receiver) public override virtual callThroughEVC { BorrowingModule.repay(assets, receiver); } // + 1.015
+
+
+    function checkAccountStatus(address account, address[] calldata collaterals) public override virtual returns (bytes4) { return RiskManagerModule.checkAccountStatus(account, collaterals); } // + 1.895
+
+    function checkVaultStatus() public override virtual returns (bytes4) { return RiskManagerModule.checkVaultStatus(); } // + 1.507
 }
