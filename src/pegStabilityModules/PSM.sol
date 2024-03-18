@@ -4,8 +4,8 @@ pragma solidity ^0.8.0;
 
 import {ESynth} from "../ESynth/ESynth.sol";
 import {EVCUtil, IEVC} from "ethereum-vault-connector/utils/EVCUtil.sol";
-import {IERC20} from "openzeppelin/token/ERC20/IERC20.sol";
-import {SafeERC20} from "openzeppelin/token/ERC20/utils/SafeERC20.sol";
+import {IERC20} from "openzeppelin-contracts/token/ERC20/IERC20.sol";
+import {SafeERC20} from "openzeppelin-contracts/token/ERC20/utils/SafeERC20.sol";
 
 contract PSM is EVCUtil {
     using SafeERC20 for IERC20;
@@ -18,8 +18,6 @@ contract PSM is EVCUtil {
     uint public immutable TO_UNDERLYING_FEE;
     uint public immutable TO_SYNTH_FEE;
 
-    error E_TranferFailed();
-
     constructor(address _evc, address _synth, address _underlying, uint toUnderlyingFeeBPS, uint toSynthFeeBPS) EVCUtil(IEVC(_evc)) {
         synth = ESynth(_synth);
         underlying = IERC20(_underlying);
@@ -28,60 +26,55 @@ contract PSM is EVCUtil {
     }
 
 
-    function swapToUnderlyingGivenIn(uint amountIn, address receiver) external returns (uint amountOut) {
-        amountOut = quoteToUnderlyingGivenIn(amountIn);
+    function swapToUnderlyingGivenIn(uint amountIn, address receiver) external returns (uint) {
+        uint amountOut = quoteToUnderlyingGivenIn(amountIn);
 
-        synth.burn(_msgSender(), uint128(amountIn));
+        synth.burn(_msgSender(), amountIn);
         underlying.safeTransfer(receiver, amountOut);
 
         return amountOut;
     }
 
-    function swapToUnderlyingGivenOut(uint amountOut, address receiver) external returns (uint amountIn) {
-        amountIn = quoteToUnderlyingGivenOut(amountOut);
+    function swapToUnderlyingGivenOut(uint amountOut, address receiver) external returns (uint) {
+        uint amountIn = quoteToUnderlyingGivenOut(amountOut);
 
-        synth.burn(_msgSender(), uint128(amountIn));
+        synth.burn(_msgSender(), amountIn);
         underlying.safeTransfer(receiver, amountOut);
 
         return amountIn;
     }
 
-    function swapToSynthGivenIn(uint256 amountIn, address receiver) external returns (uint amountOut) {
-        amountOut = quoteToSynthGivenIn(amountIn);
+    function swapToSynthGivenIn(uint256 amountIn, address receiver) external returns (uint) {
+        uint amountOut = quoteToSynthGivenIn(amountIn);
 
         underlying.safeTransferFrom(_msgSender(), address(this), amountIn);
-        synth.mint(receiver, uint128(amountOut));
+        synth.mint(receiver, amountOut);
 
         return amountOut;
     }
 
-    function swapToSynthGivenOut(uint amountOut, address receiver) external returns (uint amountIn) {
-        amountIn = quoteToSynthGivenOut(amountOut);
+    function swapToSynthGivenOut(uint amountOut, address receiver) external returns (uint) {
+        uint amountIn = quoteToSynthGivenOut(amountOut);
         
         underlying.safeTransferFrom(_msgSender(), address(this), amountIn);
-        synth.mint(receiver, uint128(amountOut));
+        synth.mint(receiver, amountOut);
 
         return amountIn;
     }
 
-    function quoteToUnderlyingGivenIn(uint amountIn) public view returns (uint amountOut) {
-        amountOut = amountIn * (BPS_SCALE - TO_UNDERLYING_FEE) / BPS_SCALE;
-        return amountOut;
+    function quoteToUnderlyingGivenIn(uint amountIn) public view returns (uint) {
+        return amountIn * (BPS_SCALE - TO_UNDERLYING_FEE) / BPS_SCALE;
     }
 
-    function quoteToUnderlyingGivenOut(uint amountOut) public view returns (uint amountIn) {
-        amountIn = amountOut * BPS_SCALE / (BPS_SCALE - TO_UNDERLYING_FEE);
-        return amountIn;
+    function quoteToUnderlyingGivenOut(uint amountOut) public view returns (uint) {
+        return amountOut * BPS_SCALE / (BPS_SCALE - TO_UNDERLYING_FEE);
     }
 
-    function quoteToSynthGivenIn(uint amountIn) public view returns (uint amountOut) {
-        amountOut = amountIn * (BPS_SCALE - TO_SYNTH_FEE) / BPS_SCALE;
-        return amountOut;
+    function quoteToSynthGivenIn(uint amountIn) public view returns (uint) {
+        return amountIn * (BPS_SCALE - TO_SYNTH_FEE) / BPS_SCALE;
     }
 
-    function quoteToSynthGivenOut(uint amountOut) public view returns (uint amountIn) {
-        amountIn = amountOut * BPS_SCALE / (BPS_SCALE - TO_SYNTH_FEE);
-        return amountIn;
+    function quoteToSynthGivenOut(uint amountOut) public view returns (uint) {
+        return amountOut * BPS_SCALE / (BPS_SCALE - TO_SYNTH_FEE);
     }
-
 }

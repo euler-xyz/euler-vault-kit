@@ -2,9 +2,9 @@
 
 pragma solidity ^0.8.0;
 
-import {ERC20, Context} from "openzeppelin/token/ERC20/ERC20.sol";
-import {ERC20Permit} from "openzeppelin/token/ERC20/extensions/ERC20Permit.sol";
-import {ReentrancyGuard} from "openzeppelin/utils/ReentrancyGuard.sol";
+import {ERC20, Context} from "openzeppelin-contracts/token/ERC20/ERC20.sol";
+import {ERC20Permit} from "openzeppelin-contracts/token/ERC20/extensions/ERC20Permit.sol";
+import {ReentrancyGuard} from "openzeppelin-contracts/utils/ReentrancyGuard.sol";
 import {IEVC, EVCUtil} from "ethereum-vault-connector/utils/EVCUtil.sol";
 
 /// @title ERC20Collateral

@@ -69,7 +69,7 @@ contract ESynthGeneralTest is ESynthTest {
 
         esynth.burn(address(esynth), amount * 2);
 
-        (uint128 capacity, uint128 minted) = esynth.minters(address(this));
+        (, uint128 minted) = esynth.minters(address(this));
         assertEq(minted, 0);
     }
     

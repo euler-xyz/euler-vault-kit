@@ -10,11 +10,6 @@ solc = "0.8.23"
 fs_permissions = [{ access = "read-write", path = "./"}]
 
 etherscan_api_key = ""
-remappings = [
-  "ethereum-vault-connector/=lib/ethereum-vault-connector/src",
-  "permit2/=lib/permit2",
-  "openzeppelin/=lib/openzeppelin-contracts/contracts/"
-]
 gas_reports = ["*"]
 
 
