@@ -108,7 +108,7 @@ abstract contract BorrowingModule is IBorrowing, Base, AssetTransfers, BalanceUt
 
     /// @inheritdoc IBorrowing
     function borrow(uint256 amount, address receiver) external virtual nonReentrant {
-        (MarketCache memory marketCache, address account) = initOperation(OP_BORROW, ACCOUNTCHECK_CALLER);
+        (MarketCache memory marketCache, address account) = initOperation(OP_BORROW, CHECKACCOUNT_CALLER);
 
         Assets assets = amount == type(uint256).max ? marketCache.cash : amount.toAssets();
         if (assets.isZero()) return;
@@ -122,7 +122,7 @@ abstract contract BorrowingModule is IBorrowing, Base, AssetTransfers, BalanceUt
 
     /// @inheritdoc IBorrowing
     function repay(uint256 amount, address receiver) external virtual nonReentrant {
-        (MarketCache memory marketCache, address account) = initOperation(OP_REPAY, ACCOUNTCHECK_NONE);
+        (MarketCache memory marketCache, address account) = initOperation(OP_REPAY, CHECKACCOUNT_NONE);
 
         uint256 owed = getCurrentOwed(marketCache, receiver).toAssetsUp().toUint();
 
@@ -136,7 +136,7 @@ abstract contract BorrowingModule is IBorrowing, Base, AssetTransfers, BalanceUt
 
     /// @inheritdoc IBorrowing
     function loop(uint256 amount, address sharesReceiver) external virtual nonReentrant returns (uint256) {
-        (MarketCache memory marketCache, address account) = initOperation(OP_LOOP, ACCOUNTCHECK_CALLER);
+        (MarketCache memory marketCache, address account) = initOperation(OP_LOOP, CHECKACCOUNT_CALLER);
 
         Assets assets = amount.toAssets();
         if (assets.isZero()) return 0;
@@ -154,7 +154,7 @@ abstract contract BorrowingModule is IBorrowing, Base, AssetTransfers, BalanceUt
 
     /// @inheritdoc IBorrowing
     function deloop(uint256 amount, address debtFrom) external virtual nonReentrant returns (uint256) {
-        (MarketCache memory marketCache, address account) = initOperation(OP_DELOOP, ACCOUNTCHECK_NONE);
+        (MarketCache memory marketCache, address account) = initOperation(OP_DELOOP, CHECKACCOUNT_NONE);
 
         Assets owed = getCurrentOwed(marketCache, debtFrom).toAssetsUp();
         if (owed.isZero()) return 0;
@@ -188,7 +188,7 @@ abstract contract BorrowingModule is IBorrowing, Base, AssetTransfers, BalanceUt
 
     /// @inheritdoc IBorrowing
     function pullDebt(uint256 amount, address from) external virtual nonReentrant {
-        (MarketCache memory marketCache, address account) = initOperation(OP_PULL_DEBT, ACCOUNTCHECK_CALLER);
+        (MarketCache memory marketCache, address account) = initOperation(OP_PULL_DEBT, CHECKACCOUNT_CALLER);
 
         if (from == account) revert E_SelfTransfer();
 
@@ -200,7 +200,7 @@ abstract contract BorrowingModule is IBorrowing, Base, AssetTransfers, BalanceUt
 
     /// @inheritdoc IBorrowing
     function touch() external virtual nonReentrant {
-        initOperation(OP_TOUCH, ACCOUNTCHECK_NONE);
+        initOperation(OP_TOUCH, CHECKACCOUNT_NONE);
     }
 
     /// @inheritdoc IBorrowing

@@ -143,7 +143,7 @@ abstract contract GovernanceModule is IGovernance, Base, BalanceUtils, BorrowUti
 
      /// @inheritdoc IGovernance
     function convertFees() external virtual nonReentrant {
-        (MarketCache memory marketCache, address account) = initOperation(OP_CONVERT_FEES, ACCOUNTCHECK_NONE);
+        (MarketCache memory marketCache, address account) = initOperation(OP_CONVERT_FEES, CHECKACCOUNT_NONE);
 
         if (marketCache.accumulatedFees.isZero()) return;
 

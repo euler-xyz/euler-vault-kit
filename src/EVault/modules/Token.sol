@@ -56,7 +56,7 @@ abstract contract TokenModule is IToken, Base, BalanceUtils {
 
     /// @inheritdoc IERC20
     function transferFrom(address from, address to, uint256 amount) public virtual nonReentrant returns (bool) {
-        (, address account) = initOperation(OP_TRANSFER, from == address(0) ? ACCOUNTCHECK_CALLER : from);
+        (, address account) = initOperation(OP_TRANSFER, from == address(0) ? CHECKACCOUNT_CALLER : from);
 
         if (from == address(0)) from = account;
         if (from == to) revert E_SelfTransfer();

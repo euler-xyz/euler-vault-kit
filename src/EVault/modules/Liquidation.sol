@@ -47,7 +47,7 @@ abstract contract LiquidationModule is ILiquidation, Base, BalanceUtils, Liquidi
         virtual
         nonReentrant
     {
-        (MarketCache memory marketCache, address liquidator) = initOperation(OP_LIQUIDATE, ACCOUNTCHECK_CALLER);
+        (MarketCache memory marketCache, address liquidator) = initOperation(OP_LIQUIDATE, CHECKACCOUNT_CALLER);
 
         LiquidationCache memory liqCache =
             calculateLiquidation(marketCache, liquidator, violator, collateral, repayAssets);
