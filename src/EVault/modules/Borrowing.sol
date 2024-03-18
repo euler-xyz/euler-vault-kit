@@ -213,6 +213,8 @@ abstract contract BorrowingModule is IBorrowing, Base, AssetTransfers, BalanceUt
     }
 
     /// @inheritdoc IBorrowing
+    // Cannot be used for anything internal to euler vaults, due to the `nonReentrant` modifier
+    // Maybe a bit wild as an idea, but if users would be allowed negative balances until account checks, that would double as a flash loan.
     function flashLoan(uint256 amount, bytes calldata data) public virtual nonReentrant {
         if (marketStorage.disabledOps.check(OP_FLASHLOAN)) {
             revert E_OperationDisabled();
@@ -221,12 +223,15 @@ abstract contract BorrowingModule is IBorrowing, Base, AssetTransfers, BalanceUt
         (IERC20 asset,,) = ProxyUtils.metadata();
         address account = EVCAuthenticate();
 
-        uint256 origBalance = asset.balanceOf(address(this));
+        uint256 origBalance = asset.balanceOf(address(this)); // We only do this here and in `skim`.
 
-        asset.safeTransfer(account, amount);
+        asset.safeTransfer(account, amount); // We avoid using `pushAssets` so as to not modify the cash records, I guess. This is the only place in the codebase where we do it.
 
         IFlashLoan(account).onFlashLoan(data);
 
+        // This only works because of the `nonReentrant` modifier, otherwise users could call `repay` inside the callback to
+        // both repay the flash loan and debt with the same assets. Note that this is the only place in the codebase where we
+        // expect tokens to be pushed to the vault. Even if I like the pattern, it might be safer to use `pullAssets`.
         if (asset.balanceOf(address(this)) < origBalance) revert E_FlashLoanNotRepaid();
     }
 
