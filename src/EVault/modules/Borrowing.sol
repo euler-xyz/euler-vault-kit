@@ -87,15 +87,20 @@ abstract contract BorrowingModule is IBorrowing, Base, AssetTransfers, BalanceUt
         ConfigAmount ltv = getLTV(collateral, LTVType.BORROWING);
         if (ltv.isZero()) return 0;
 
-        // calculate extra collateral value in terms of requested collateral balance, by dividing by LTV
-        uint256 extraCollateralValue = ltv.mulInv(totalCollateralValueRiskAdjusted - liabilityValue);
+        // calculate value of unused collateral in unit of account terms. We divide by LTV because `calculateLiquidity` returns a LTV-adjusted collateral value
+        uint256 extraCollateralValue = ltv.mulInv(totalCollateralValueRiskAdjusted - liabilityValue); // (coll*ltv - debt)/ltv
 
         // convert back to collateral balance (bid)
-        (uint256 collateralPrice,) = marketCache.oracle.getQuotes(1e18, collateral, marketCache.unitOfAccount);
+        (uint256 collateralPrice,) = marketCache.oracle.getQuotes(1e18, collateral, marketCache.unitOfAccount); // Are we assuming that the unit of account has 18 decimals?
         if (collateralPrice == 0) return 0; // worthless / unpriced collateral is not locked
-        uint256 extraCollateralBalance = extraCollateralValue * 1e18 / collateralPrice;
+        uint256 extraCollateralBalance = extraCollateralValue * 1e18 / collateralPrice; // Actually, since we asked for the value of 1e18 collateral in unit of account, this will just work even if the unit of account is USD with 8 decimals.
 
-        if (extraCollateralBalance >= collateralBalance) return 0; // other collaterals are sufficient to support the debt
+        // You can also do:
+        // convert unused collateral amount to unit of account terms
+        // (uint256 extraCollateralBalance,) = marketCache.oracle.getQuotes(extraCollateralValue, marketCache.unitOfAccount, collateral);
+        // if (extraCollateralBalance == 0) return 0; // If this collateral is worthless or unpriced collateral then it is not locked
+
+        if (extraCollateralBalance >= collateralBalance) return 0; // The user held amount of this collateral is below the user held amount of unused collateral, so all of it is considered unused
 
         return collateralBalance - extraCollateralBalance;
     }
@@ -144,8 +149,8 @@ abstract contract BorrowingModule is IBorrowing, Base, AssetTransfers, BalanceUt
 
         Assets assets = amount.toAssets();
         if (assets.isZero()) return 0;
-        Shares shares = assets.toSharesUp(marketCache);
-        assets = shares.toAssetsUp(marketCache);
+        Shares shares = assets.toSharesUp(marketCache); // This is to mint eTokens, or shares on the underlying deposits. Shouldn't this round down?
+        assets = shares.toAssetsUp(marketCache); // Why do we convert back to assets?
 
         // Mint DTokens
         increaseBorrow(marketCache, account, assets);
@@ -168,14 +173,15 @@ abstract contract BorrowingModule is IBorrowing, Base, AssetTransfers, BalanceUt
 
         if (amount == type(uint256).max) {
             shares = marketStorage.users[account].getBalance();
-            assets = shares.toAssetsDown(marketCache);
+            assets = shares.toAssetsDown(marketCache); // Assets is the debt that will be reduced, rounding down is in favour of the vault
         } else {
             assets = amount.toAssets();
-            shares = assets.toSharesUp(marketCache);
+            shares = assets.toSharesUp(marketCache); // Shares are the vault shares that will be burned, rounding up is in favour of the vault
         }
 
         if (assets.isZero()) return 0;
 
+        // If the user requested to repay more debt than they hold, we repay all debt
         if (assets > owed) {
             assets = owed;
             shares = assets.toSharesUp(marketCache);
@@ -191,12 +197,14 @@ abstract contract BorrowingModule is IBorrowing, Base, AssetTransfers, BalanceUt
     }
 
     /// @inheritdoc IBorrowing
+    // We don't have a `pushDebt` function, and that is probably a good thing.
+    // Sometimes I wonder about what would happen in tradfi if people could just pull debt from anyone without asking for permission.
     function pullDebt(uint256 amount, address from) public virtual nonReentrant returns (uint256) {
         (MarketCache memory marketCache, address account) = initOperation(OP_PULL_DEBT, CHECKACCOUNT_CALLER);
 
         if (from == account) revert E_SelfTransfer();
 
-        Assets assets = amount == type(uint256).max ? getCurrentOwed(marketCache, from).toAssetsUp() : amount.toAssets();
+        Assets assets = amount == type(uint256).max ? getCurrentOwed(marketCache, from).toAssetsUp() : amount.toAssets(); // getCurrentOwed(marketCache, from).toAssetsUp() rounds up above the actual owed amount, but `transferBorrow` will tweak the parameter received down to the actual owed amount if that was the case.
 
         if (assets.isZero()) return 0;
         transferBorrow(marketCache, from, account, assets);
