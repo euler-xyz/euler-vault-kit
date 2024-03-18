@@ -205,12 +205,7 @@ abstract contract BorrowingModule is IBorrowing, Base, AssetTransfers, BalanceUt
     }
 
     /// @inheritdoc IBorrowing
-    function touch() public virtual nonReentrant {
-        initOperation(OP_TOUCH, CHECKACCOUNT_NONE);
-    }
-
-    /// @inheritdoc IBorrowing
-    function flashLoan(uint256 assets, bytes calldata data) public virtual nonReentrant {
+    function flashLoan(uint256 amount, bytes calldata data) public virtual nonReentrant {
         if (marketStorage.disabledOps.check(OP_FLASHLOAN)) {
             revert E_OperationDisabled();
         }
@@ -220,11 +215,16 @@ abstract contract BorrowingModule is IBorrowing, Base, AssetTransfers, BalanceUt
 
         uint256 origBalance = asset.balanceOf(address(this));
 
-        asset.safeTransfer(account, assets);
+        asset.safeTransfer(account, amount);
 
         IFlashLoan(account).onFlashLoan(data);
 
         if (asset.balanceOf(address(this)) < origBalance) revert E_FlashLoanNotRepaid();
+    }
+
+    /// @inheritdoc IBorrowing
+    function touch() public virtual nonReentrant {
+        initOperation(OP_TOUCH, CHECKACCOUNT_NONE);
     }
 }
 

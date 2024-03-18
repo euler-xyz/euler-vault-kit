@@ -49,11 +49,11 @@ contract EVault is Dispatch {
 
     function convertToShares(uint256 assets) public view override virtual useView(MODULE_VAULT) returns (uint256) {}
 
-    function maxDeposit(address) public view override virtual useView(MODULE_VAULT) returns (uint256) {}
+    function maxDeposit(address account) public view override virtual useView(MODULE_VAULT) returns (uint256) {}
 
     function previewDeposit(uint256 assets) public view override virtual useView(MODULE_VAULT) returns (uint256) {}
 
-    function maxMint(address) public view override virtual useView(MODULE_VAULT) returns (uint256) {}
+    function maxMint(address account) public view override virtual useView(MODULE_VAULT) returns (uint256) {}
 
     function previewMint(uint256 shares) public view override virtual useView(MODULE_VAULT) returns (uint256) {}
 
@@ -72,15 +72,15 @@ contract EVault is Dispatch {
     function creator() public view override virtual useView(MODULE_VAULT) returns (address) {}
 
 
-    function deposit(uint256 assets, address receiver) public override virtual callThroughEVC use(MODULE_VAULT) returns (uint256) {}
+    function deposit(uint256 amount, address receiver) public override virtual callThroughEVC use(MODULE_VAULT) returns (uint256) {}
 
-    function mint(uint256 shares, address receiver) public override virtual callThroughEVC use(MODULE_VAULT) returns (uint256) {}
+    function mint(uint256 amount, address receiver) public override virtual callThroughEVC use(MODULE_VAULT) returns (uint256) {}
 
-    function withdraw(uint256 assets, address receiver, address owner) public override virtual callThroughEVC use(MODULE_VAULT) returns (uint256) {}
+    function withdraw(uint256 amount, address receiver, address owner) public override virtual callThroughEVC use(MODULE_VAULT) returns (uint256) {}
 
-    function redeem(uint256 shares, address receiver, address owner) public override virtual callThroughEVC use(MODULE_VAULT) returns (uint256) {}
+    function redeem(uint256 amount, address receiver, address owner) public override virtual callThroughEVC use(MODULE_VAULT) returns (uint256) {}
 
-    function skim(uint256 assets, address receiver) public override virtual callThroughEVC use(MODULE_VAULT) returns (uint256) {}
+    function skim(uint256 amount, address receiver) public override virtual callThroughEVC use(MODULE_VAULT) returns (uint256) {}
 
 
 
@@ -105,17 +105,17 @@ contract EVault is Dispatch {
     function dToken() public view override virtual useView(MODULE_BORROWING) returns (address) {}
 
 
-    function borrow(uint256 assets, address receiver) public override virtual callThroughEVC use(MODULE_BORROWING) returns (uint256) {}
+    function borrow(uint256 amount, address receiver) public override virtual callThroughEVC use(MODULE_BORROWING) returns (uint256) {}
 
-    function repay(uint256 assets, address receiver) public override virtual callThroughEVC use(MODULE_BORROWING) returns (uint256) {}
+    function repay(uint256 amount, address receiver) public override virtual callThroughEVC use(MODULE_BORROWING) returns (uint256) {}
 
-    function loop(uint256 assets, address sharesReceiver) public override virtual callThroughEVC use(MODULE_BORROWING) returns (uint256) {}
+    function loop(uint256 amount, address sharesReceiver) public override virtual callThroughEVC use(MODULE_BORROWING) returns (uint256) {}
 
-    function deloop(uint256 assets, address debtFrom) public override virtual callThroughEVC use(MODULE_BORROWING) returns (uint256) {}
+    function deloop(uint256 amount, address debtFrom) public override virtual callThroughEVC use(MODULE_BORROWING) returns (uint256) {}
 
-    function pullDebt(uint256 assets, address from) public override virtual callThroughEVC use(MODULE_BORROWING) returns (uint256) {}
+    function pullDebt(uint256 amount, address from) public override virtual callThroughEVC use(MODULE_BORROWING) returns (uint256) {}
 
-    function flashLoan(uint256 assets, bytes calldata data) public override virtual use(MODULE_BORROWING) {}
+    function flashLoan(uint256 amount, bytes calldata data) public override virtual use(MODULE_BORROWING) {}
 
     function touch() public override virtual callThroughEVC use(MODULE_BORROWING) {}
 
@@ -200,11 +200,11 @@ contract EVault is Dispatch {
 
     function setName(string calldata newName) public override virtual use(MODULE_GOVERNANCE) {}
 
-    function setSymbol(string calldata newName) public override virtual use(MODULE_GOVERNANCE) {}
+    function setSymbol(string calldata newSymbol) public override virtual use(MODULE_GOVERNANCE) {}
 
     function setGovernorAdmin(address newGovernorAdmin) public override virtual use(MODULE_GOVERNANCE) {}
 
-    function setPauseGuardian(address newGovernorAdmin) public override virtual use(MODULE_GOVERNANCE) {}
+    function setPauseGuardian(address newPauseGuardian) public override virtual use(MODULE_GOVERNANCE) {}
 
     function setFeeReceiver(address newFeeReceiver) public override virtual use(MODULE_GOVERNANCE) {}
 
