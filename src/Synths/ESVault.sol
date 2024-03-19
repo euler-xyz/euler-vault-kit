@@ -25,7 +25,7 @@ contract ESVault is EVault {
     // ----------------- Initialize ----------------
 
     /// @inheritdoc IInitialize
-    function initialize(address) public override virtual reentrantOK {
+    function initialize(address) public virtual override reentrantOK {
         (bool success, bytes memory result) = MODULE_INITIALIZE.delegatecall(msg.data); // send the whole msg.data, including proxy metadata
         if (!success) RevertBytes.revertBytes(result);
 
