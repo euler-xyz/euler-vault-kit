@@ -9,6 +9,8 @@ import {GovernanceModule} from "../EVault/modules/Governance.sol";
 import {IERC20} from "../EVault/IEVault.sol";
 import {ProxyUtils} from "../EVault/shared/lib/ProxyUtils.sol";
 import {Operations} from "../EVault/shared/types/Types.sol";
+import {RevertBytes} from "../EVault/shared/lib/RevertBytes.sol";
+
 import "../EVault/shared/Constants.sol";
 import "../EVault/shared/types/Types.sol";
 
@@ -23,8 +25,9 @@ contract ESVault is EVault {
     // ----------------- Initialize ----------------
 
     /// @inheritdoc IInitialize
-    function initialize(address proxyCreator) public virtual override reentrantOK {
-        InitializeModule.initialize(proxyCreator);
+    function initialize(address) public override virtual reentrantOK {
+        (bool success, bytes memory result) = MODULE_INITIALIZE.delegatecall(msg.data); // send the whole msg.data, including proxy metadata
+        if (!success) RevertBytes.revertBytes(result);
 
         // disable not supported operations
         uint32 newDisabledOps = SYNTH_VAULT_DISABLED_OPS | Operations.unwrap(marketStorage.disabledOps);

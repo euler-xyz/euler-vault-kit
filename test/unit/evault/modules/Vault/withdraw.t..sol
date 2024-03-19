@@ -11,7 +11,7 @@ import {IAllowanceTransfer} from "permit2/src/interfaces/IAllowanceTransfer.sol"
 import "src/EVault/shared/types/Types.sol";
 import "src/EVault/shared/Constants.sol";
 
-contract ERC4626Test_MaxWithdraw is EVaultTestBase {
+contract VaultTest_withdraw is EVaultTestBase {
     using TypesLib for uint256;
 
     address depositor;
@@ -115,5 +115,79 @@ contract ERC4626Test_MaxWithdraw is EVaultTestBase {
 
         assertEq(assetBalanceAfter - assetBalanceBefore, expectedRedeemedAssets);
         assertEq(eVaultSharesBalanceBefore - eVaultSharesBalanceAfter, maxRedeemAmount);
+    }
+
+    function test_Withdraw_RevertsWhen_ReceiverIsSubaccount() public {
+        startHoax(depositor);
+        address subacc = address(uint160(depositor) >> 8 << 8);
+
+        // depositor is not known to EVC yet
+        eTST.withdraw(1, subacc, depositor);
+        assertEq(assetTST.balanceOf(subacc), 1);
+
+        // depositor is registered in EVC
+        evc.enableCollateral(depositor, address(eTST));
+
+        // addresses within sub-accounts range revert
+        vm.expectRevert(Errors.E_BadAssetReceiver.selector);
+        eTST.withdraw(1, subacc, depositor);
+
+        vm.expectRevert(Errors.E_BadAssetReceiver.selector);
+        eTST.withdraw(1, address(uint160(subacc) + 255), depositor);
+
+        // address outside of sub-accounts range are accepted
+        address otherAccount = address(uint160(subacc) - 1);
+        eTST.withdraw(1, otherAccount, depositor);
+        assertEq(assetTST.balanceOf(otherAccount), 1);
+
+        otherAccount = address(uint160(subacc) + 256);
+        eTST.withdraw(1, otherAccount, depositor);
+        assertEq(assetTST.balanceOf(otherAccount), 1);
+
+        vm.stopPrank();
+        // governance switches the protections off
+        eTST.setDisabledOps(OP_VALIDATE_ASSET_RECEIVER);
+
+        startHoax(depositor);
+        // withdrawal is allowed again
+        eTST.withdraw(1, subacc, depositor);
+        assertEq(assetTST.balanceOf(subacc), 2);
+    }
+
+    function test_Redeem_RevertsWhen_ReceiverIsSubaccount() public {
+        startHoax(depositor);
+        address subacc = address(uint160(depositor) >> 8 << 8);
+
+        // depositor is not known to EVC yet
+        eTST.redeem(1, subacc, depositor);
+        assertEq(assetTST.balanceOf(subacc), 1);
+
+        // depositor is registered in EVC
+        evc.enableCollateral(depositor, address(eTST));
+
+        // addresses within sub-accounts range revert
+        vm.expectRevert(Errors.E_BadAssetReceiver.selector);
+        eTST.redeem(1, subacc, depositor);
+
+        vm.expectRevert(Errors.E_BadAssetReceiver.selector);
+        eTST.redeem(1, address(uint160(subacc) + 255), depositor);
+
+        // address outside of sub-accounts range are accepted
+        address otherAccount = address(uint160(subacc) - 1);
+        eTST.redeem(1, otherAccount, depositor);
+        assertEq(assetTST.balanceOf(otherAccount), 1);
+
+        otherAccount = address(uint160(subacc) + 256);
+        eTST.redeem(1, otherAccount, depositor);
+        assertEq(assetTST.balanceOf(otherAccount), 1);
+
+        vm.stopPrank();
+        // governance switches the protections off
+        eTST.setDisabledOps(OP_VALIDATE_ASSET_RECEIVER);
+
+        startHoax(depositor);
+        // redeem is allowed again
+        eTST.redeem(1, subacc, depositor);
+        assertEq(assetTST.balanceOf(subacc), 2);
     }
 }
