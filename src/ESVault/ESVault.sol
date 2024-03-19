@@ -30,7 +30,7 @@ contract ESVault is EVault {
         marketStorage.disabledOps = Operations.wrap(newDisabledOps);
         emit GovSetDisabledOps(newDisabledOps);
 
-        // set default interst fee to 100%
+        // set default interest fee to 100%
         uint16 newInterestFee = INTEREST_FEE;
         marketStorage.interestFee = newInterestFee.toConfigAmount();
         emit GovSetInterestFee(newInterestFee);

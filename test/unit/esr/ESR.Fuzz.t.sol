@@ -5,7 +5,7 @@ import "./lib/ESRTest.sol";
 
 contract ESRFuzzTest is ESRTest {
     function invariant_interesLeftGreaterThanAccruedInterest() public {
-        ESR.ESRSlot memory esrSlot = esr.getESRSlot();
+        EulerSavingsRate.ESRSlot memory esrSlot = esr.getESRSlot();
         uint256 accruedInterest = esr.interestAccrued();
         assertGe(esrSlot.interestLeft, accruedInterest);
     }
@@ -43,7 +43,7 @@ contract ESRFuzzTest is ESRTest {
         doDeposit(user, depositAmount);
         esr.gulp();
 
-        ESR.ESRSlot memory esrSlot = esr.updateInterestAndReturnESRSlotCache();
+        EulerSavingsRate.ESRSlot memory esrSlot = esr.updateInterestAndReturnESRSlotCache();
         assertEq(esrSlot.interestLeft, interestAmount);
     }
 

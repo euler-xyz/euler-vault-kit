@@ -87,7 +87,7 @@ contract ESynthGeneralTest is ESynthTest {
         amount = uint128(bound(amount, 1, type(uint112).max)); // amount needs to be less then MAX_SANE_AMOUNT
         esynth.setCapacity(address(this), MAX_ALLOWED);
         esynth.mint(address(esynth), amount); // address(this) should be owner
-        esynth.deposit(address(eTST), amount);
+        esynth.allocate(address(eTST), amount);
     }
 
     function testFuzz_depositTooLarge(uint128 amount) public {
@@ -95,14 +95,14 @@ contract ESynthGeneralTest is ESynthTest {
         esynth.setCapacity(address(this), MAX_ALLOWED);
         esynth.mint(address(esynth), amount);
         vm.expectRevert(Errors.E_AmountTooLargeToEncode.selector);
-        esynth.deposit(address(eTST), amount);
+        esynth.allocate(address(eTST), amount);
     }
 
     function testFuzz_withdrawSimple(uint128 amount) public {
         amount = uint128(bound(amount, 1, type(uint112).max));
         esynth.setCapacity(address(this), MAX_ALLOWED);
         esynth.mint(address(esynth), amount);
-        esynth.deposit(address(eTST), amount);
-        esynth.withdraw(address(eTST), amount);
+        esynth.allocate(address(eTST), amount);
+        esynth.deallocate(address(eTST), amount);
     }
 }

@@ -20,8 +20,9 @@ contract ESVaultTestDeposit is ESVaultTestBase {
 
     function test_deposit_from_synth() public {
         assetTSTAsSynth.mint(address(assetTSTAsSynth), 100);
-        assetTSTAsSynth.deposit(address(eTST), 100);
+        assetTSTAsSynth.allocate(address(eTST), 100);
 
+        assertEq(assetTSTAsSynth.isIgnoredForTotalSupply(address(eTST)), true);
         assertEq(assetTST.balanceOf(address(eTST)), 100);
         assertEq(eTST.balanceOf(address(assetTST)), 100);
     }

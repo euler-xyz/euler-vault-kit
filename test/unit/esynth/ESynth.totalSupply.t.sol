@@ -48,17 +48,6 @@ contract ESynthTotalSupplyTest is Test {
         assertFalse(success);
     }
 
-    function test_addIgnored_max() public {
-        vm.startPrank(owner);
-        for (uint i = 0; i < synth.MAX_IGNORED(); i++) {
-            synth.addIgnoredForTotalSupply(makeAddr(string(abi.encodePacked("ignored", i))));
-        }
-
-        vm.expectRevert(ESynth.MaxIgnoredExceeded.selector);
-        synth.addIgnoredForTotalSupply(makeAddr("ignored31"));
-        vm.stopPrank();
-    }
-
     function test_removeIgnoredForTotalSupply_onlyOwner() public {
         vm.expectRevert(
             abi.encodeWithSelector(Ownable.OwnableUnauthorizedAccount.selector, address(this))

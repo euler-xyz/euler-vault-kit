@@ -14,7 +14,7 @@ contract ESRGulpTest is ESRTest {
         asset.mint(address(esr), interestAmount);
         esr.gulp();
 
-        ESR.ESRSlot memory esrSlot = esr.getESRSlot();
+        EulerSavingsRate.ESRSlot memory esrSlot = esr.getESRSlot();
 
         assertEq(esr.totalAssets(), depositAmount);
         assertEq(esrSlot.interestLeft, interestAmount);
@@ -34,7 +34,7 @@ contract ESRGulpTest is ESRTest {
         asset.mint(address(esr), interestAmount);
         esr.gulp();
 
-        ESR.ESRSlot memory esrSlot = esr.getESRSlot();
+        EulerSavingsRate.ESRSlot memory esrSlot = esr.getESRSlot();
 
         assertEq(esr.totalAssets(), depositAmount);
         assertEq(esrSlot.interestLeft, interestAmount * 2);
@@ -55,7 +55,7 @@ contract ESRGulpTest is ESRTest {
         asset.mint(address(esr), interestAmount);
         esr.gulp();
 
-        ESR.ESRSlot memory esrSlot = esr.getESRSlot();
+        EulerSavingsRate.ESRSlot memory esrSlot = esr.getESRSlot();
 
         assertEq(esr.totalAssets(), depositAmount + interestAmount / 2);
         assertEq(esrSlot.interestLeft, interestAmount + interestAmount / 2);
@@ -76,7 +76,7 @@ contract ESRGulpTest is ESRTest {
         asset.mint(address(esr), interestAmount);
         esr.gulp();
 
-        ESR.ESRSlot memory esrSlot = esr.getESRSlot();
+        EulerSavingsRate.ESRSlot memory esrSlot = esr.getESRSlot();
 
         assertEq(esr.totalAssets(), depositAmount + interestAmount);
         assertEq(esrSlot.interestLeft, interestAmount);

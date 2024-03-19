@@ -3,14 +3,14 @@ pragma solidity ^0.8.20;
 
 import "forge-std/Test.sol";
 import {EthereumVaultConnector as EVC} from "ethereum-vault-connector/EthereumVaultConnector.sol";
-import {ESR} from "../../../../src/ESR/ESR.sol";
+import {EulerSavingsRate} from "../../../../src/EulerSavingsRate/EulerSavingsRate.sol";
 import {MockToken} from "./MockToken.sol";
 
 // TODO test when 0 deposits for edge cases
 
 contract ESRTest is Test {
     EVC public evc;
-    ESR public esr;
+    EulerSavingsRate public esr;
     MockToken public asset;
 
     address public distributor = makeAddr("distributor");
@@ -22,7 +22,7 @@ contract ESRTest is Test {
     function setUp() public {
         asset = new MockToken();
         evc = new EVC();
-        esr = new ESR(evc, address(asset), NAME, SYMBOL);
+        esr = new EulerSavingsRate(evc, address(asset), NAME, SYMBOL);
 
         // Set a non zero timestamp
         vm.warp(420);

@@ -59,7 +59,7 @@ contract IRMSynthTest is Test {
 
         // Should have updated the rate and last updated
         assertEq(irmDataAfter.lastUpdated, block.timestamp);
-        assertEq(irmDataAfter.lastRate, irmDataBefore.lastRate + (irmDataBefore.lastRate * irm.ADJUST_AMOUNT() / irm.ADJUST_AMOUNT_SCALE()));
+        assertEq(irmDataAfter.lastRate, irmDataBefore.lastRate * irm.ADJUST_FACTOR() / irm.ADJUST_ONE());
     }
 
     function test_IRMSynth_RateAdjustDown() public {
@@ -79,7 +79,7 @@ contract IRMSynthTest is Test {
 
         // Should have updated the rate and last updated
         assertEq(irmDataAfter.lastUpdated, block.timestamp);
-        assertEq(irmDataAfter.lastRate, irmDataBefore.lastRate - (irmDataBefore.lastRate * irm.ADJUST_AMOUNT() / irm.ADJUST_AMOUNT_SCALE()));
+        assertEq(irmDataAfter.lastRate, irmDataBefore.lastRate * irm.ADJUST_ONE() / irm.ADJUST_FACTOR());
     }
 
     function test_IRMSynth_RateMinimum() public {

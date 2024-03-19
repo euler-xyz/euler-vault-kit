@@ -5,7 +5,7 @@ pragma solidity ^0.8.0;
 import "forge-std/Test.sol";
 import "forge-std/console.sol";
 
-import {PSM} from "../../../src/pegStabilityModules/PSM.sol";
+import {PegStabilityModule} from "../../../src/PegStabilityModules/PegStabilityModule.sol";
 import {ESynth, IEVC} from "../../../src/ESynth/ESynth.sol";
 import {TestERC20} from "../../mocks/TestERC20.sol";
 import {EthereumVaultConnector} from "ethereum-vault-connector/EthereumVaultConnector.sol";
@@ -21,7 +21,7 @@ contract PSMTest is Test {
     ESynth public synth;
     TestERC20 public underlying;
 
-    PSM public psm;
+    PegStabilityModule public psm;
 
     IEVC public evc;
 
@@ -42,7 +42,7 @@ contract PSMTest is Test {
 
         // Deploy PSM
         vm.prank(owner);
-        psm = new PSM(address(evc), address(synth), address(underlying), TO_UNDERLYING_FEE, TO_SYNTH_FEE);
+        psm = new PegStabilityModule(address(evc), address(synth), address(underlying), TO_UNDERLYING_FEE, TO_SYNTH_FEE);
 
         // Give PSM and wallets some underlying
         underlying.mint(address(psm), 100e18);

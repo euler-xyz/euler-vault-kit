@@ -11,8 +11,6 @@ import {IEVault} from "../EVault/IEVault.sol";
 contract ESynth is ERC20Collateral, Ownable {
     using EnumerableSet for EnumerableSet.AddressSet;
 
-    uint256 public constant MAX_IGNORED = 30;
-
     struct MinterData {
         uint128 capacity;
         uint128 minted;
@@ -22,8 +20,6 @@ contract ESynth is ERC20Collateral, Ownable {
     EnumerableSet.AddressSet internal ignoredForTotalSupply;
 
     event MinterCapacitySet(address indexed minter, uint256 capacity);
-
-    error MaxIgnoredExceeded();
     error E_CapacityReached();
 
     constructor(IEVC evc_, string memory name_, string memory symbol_) ERC20Collateral(evc_, name_, symbol_) Ownable(msg.sender) {}
@@ -72,18 +68,20 @@ contract ESynth is ERC20Collateral, Ownable {
         _burn(account, amount);
     }
 
-    /// @notice Deposit cash in the attached vault.
+    /// @notice Deposit cash from this contract into the attached vault.
+    /// @dev Adds the vault to the list of accounts to ignore for the total supply.
     /// @param vault The vault to deposit the cash in.
     /// @param amount The amount of cash to deposit.
-    function deposit(address vault, uint256 amount) external onlyOwner {
+    function allocate(address vault, uint256 amount) external onlyOwner {
+        ignoredForTotalSupply.add(vault);
         _approve(address(this), vault, amount, true);
         IEVault(vault).deposit(amount, address(this));
     }
 
-    /// @notice Withdraw cash from the attached vault.
+    /// @notice Withdraw cash from the attached vault to this contract.
     /// @param vault The vault to withdraw the cash from.
     /// @param amount The amount of cash to withdraw.
-    function withdraw(address vault, uint256 amount) external onlyOwner {
+    function deallocate(address vault, uint256 amount) external onlyOwner {
         IEVault(vault).withdraw(amount, address(this), address(this));
     }
 
@@ -102,9 +100,6 @@ contract ESynth is ERC20Collateral, Ownable {
     /// @param account The account to add to the list.
     /// @return success True when the account was not on the list and was added. False otherwise.
     function addIgnoredForTotalSupply(address account) external onlyOwner returns(bool success) {
-        if(ignoredForTotalSupply.length() >= MAX_IGNORED) {
-            revert MaxIgnoredExceeded();
-        }
         return ignoredForTotalSupply.add(account);
     }
 

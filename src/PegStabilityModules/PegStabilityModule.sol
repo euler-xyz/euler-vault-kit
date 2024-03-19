@@ -7,7 +7,7 @@ import {EVCUtil, IEVC} from "ethereum-vault-connector/utils/EVCUtil.sol";
 import {IERC20} from "openzeppelin-contracts/token/ERC20/IERC20.sol";
 import {SafeERC20} from "openzeppelin-contracts/token/ERC20/utils/SafeERC20.sol";
 
-contract PSM is EVCUtil {
+contract PegStabilityModule is EVCUtil {
     using SafeERC20 for IERC20;
 
     uint public constant BPS_SCALE = 10000;

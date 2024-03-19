@@ -7,12 +7,12 @@ import "../interfaces/IPriceOracle.sol";
 
 contract IRMSynth is IIRM {
     uint256 public constant TARGET_QUOTE = 1e18;
-    uint256 constant SECONDS_PER_YEAR = 365.2425 * 86400; // Gregorian calendar
-    uint256 public constant MAX_RATE = 1e27 * 1.5 / SECONDS_PER_YEAR; // 150% APR
-    uint256 public constant BASE_RATE = 1e27 * 0.005 / SECONDS_PER_YEAR; // 0.5% APR
-    uint256 public constant ADJUST_AMOUNT = 0.1e18; // 10% adjust of last rate per interval
-    uint256 public constant ADJUST_AMOUNT_SCALE = 1e18;
-    uint256 public constant ADJUST_INTERVAL = 1 hours;
+    uint216 internal constant SECONDS_PER_YEAR = 365.2425 * 86400; // Gregorian calendar
+    uint216 public constant MAX_RATE = 1e27 * 1.5 / SECONDS_PER_YEAR; // 150% APR
+    uint216 public constant BASE_RATE = 1e27 * 0.005 / SECONDS_PER_YEAR; // 0.5% APR
+    uint216 public constant ADJUST_FACTOR = 1.1e18; // 10% adjust of last rate per interval
+    uint216 public constant ADJUST_ONE = 1.0e18;
+    uint216 public constant ADJUST_INTERVAL = 1 hours;
 
     address public immutable synth;
     address public immutable referenceAsset;
@@ -32,7 +32,7 @@ contract IRMSynth is IIRM {
 
         irmStorage = IRMData({
             lastUpdated: uint40(block.timestamp),
-            lastRate: uint216(BASE_RATE)
+            lastRate: BASE_RATE
         });
     }
 
@@ -57,10 +57,10 @@ contract IRMSynth is IIRM {
 
     function _computeRate(IRMData memory irmCache) internal view returns (uint216 rate, bool updated) {
         updated = false;
+        rate = irmCache.lastRate;
 
         // If not time to update yet, return the last rate
         if (block.timestamp < irmCache.lastUpdated + ADJUST_INTERVAL) {
-            rate = irmCache.lastRate;
             return(rate, updated);
         }
 
@@ -68,27 +68,26 @@ contract IRMSynth is IIRM {
 
         // If the quote is 0, return the last rate
         if (quote == 0) {
-            rate = irmCache.lastRate;
             return(rate, updated);
         }
 
+        updated = true;
+
         if (quote < TARGET_QUOTE) {
             // If the quote is less than the target, increase the rate
-            rate = uint216(irmCache.lastRate + (irmCache.lastRate * ADJUST_AMOUNT / ADJUST_AMOUNT_SCALE));
+            rate = rate * ADJUST_FACTOR / ADJUST_ONE;
         } else {
             // If the quote is greater than the target, decrease the rate
-            rate = uint216(irmCache.lastRate - (irmCache.lastRate * ADJUST_AMOUNT / ADJUST_AMOUNT_SCALE));
+            rate = rate * ADJUST_ONE / ADJUST_FACTOR;
         }
 
         // Apply the min and max rates
         if (rate < BASE_RATE) {
-            rate = uint216(BASE_RATE);
+            rate = BASE_RATE;
         } else if (rate > MAX_RATE) {
-            rate = uint216(MAX_RATE);
+            rate = MAX_RATE;
         }
 
-        rate = rate;
-        updated = true;
         return(rate, updated);
     }
 
