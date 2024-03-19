@@ -21,7 +21,10 @@ contract EVaultInvariantBasicsTest is Test {
     /// forge-config: default.invariant.fail-on-revert = true
     function invariant_assetBalance() public {
         uint256 assetBalanceOf_Ghost = handler.ghost_assetTST1Balance();
-        uint256 assetBalanceOf_Real = handler.assetTST1().balanceOf(address(handler.eTST1()));
+        console2.log("assetBalanceOf_Ghost", assetBalanceOf_Ghost);
+        uint256 assetBalanceOf_Real = handler.assetTST1().balanceOf(address(handler));
+        console2.log("assetBalanceOf_Real", assetBalanceOf_Real);
+        console2.log("ghost_numCalls", handler.ghost_numCalls());
         assertEq(assetBalanceOf_Ghost, assetBalanceOf_Real);
     }
 }

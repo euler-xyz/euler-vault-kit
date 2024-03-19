@@ -17,6 +17,7 @@ contract EVaultHandler is EVaultDeployerDefault {
     constructor() {
         deployEVaultWithFactory();
         assetTST1.mint(address(this), DEAL_AMOUNT);
+        ghost_assetTST1Balance = assetTST1.balanceOf(address(this));
         assetTST1.approve(address(eTST1), type(uint256).max);
     }
 
@@ -24,7 +25,6 @@ contract EVaultHandler is EVaultDeployerDefault {
         uint256 balanceOfAssetTST1 = assetTST1.balanceOf(address(this));
         uint256 maxPossibleAmount = Math.min(balanceOfAssetTST1, MAX_SANE_AMOUNT);
         amount = bound(amount, 0, maxPossibleAmount);
-        vm.assume(amount + balanceOfAssetTST1 <= MAX_SANE_AMOUNT);
 
         uint256 sharesReceived = eTST1.deposit(amount, address(this));
         // ----------- ghost updates -----------
