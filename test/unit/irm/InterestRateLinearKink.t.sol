@@ -2,7 +2,7 @@
 pragma solidity ^0.8.13;
 
 import {Test} from "forge-std/Test.sol";
-import {IRMLinearKink} from "../../../src/interestRateModels/IRMLinearKink.sol";
+import {IRMLinearKink} from "../../../src/InterestRateModels/IRMLinearKink.sol";
 import {MathTesting} from "../../helpers/MathTesting.sol";
 
 contract InterestRateLinearKink is Test, MathTesting {

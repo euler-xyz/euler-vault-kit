@@ -3,10 +3,10 @@
 pragma solidity ^0.8.0;
 
 import {EVaultTestBase} from "../../evault/EVaultTestBase.t.sol";
-import {ESVault} from "src/synths/ESVault.sol";
+import {ESVault} from "src/Synths/ESVault.sol";
 import {IEVault, IERC20} from "src/EVault/IEVault.sol";
 import {IRMTestDefault} from "../../../mocks/IRMTestDefault.sol";
-import {ESynth} from "src/synths/ESynth.sol";
+import {ESynth} from "src/Synths/ESynth.sol";
 import {TestERC20} from "../../../mocks/TestERC20.sol";
 
 contract ESynthTest is EVaultTestBase {
