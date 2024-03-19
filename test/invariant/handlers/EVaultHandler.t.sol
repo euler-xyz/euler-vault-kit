@@ -4,25 +4,29 @@ pragma solidity ^0.8.0;
 
 import {EVault} from "src/EVault/EVault.sol";
 import {EVaultDeployerDefault} from "test/common/EVaultDeployerDefault.sol";
+import {Math} from "openzeppelin-contracts/contracts/utils/math/Math.sol";
 import "forge-std/console2.sol";
 
 contract EVaultHandler is EVaultDeployerDefault {
     uint256 public constant DEAL_AMOUNT = 100 ether;
+    uint256 public constant MAX_SANE_AMOUNT = type(uint112).max;
     uint256 public ghost_numCalls;
     uint256 public ghost_assetTST1Balance;
     uint256 public ghost_eTST1Balance;
 
-    function setUp() public override {
-        console2.log("setup start");
-        EVaultDeployerDefault.setUp();
+    constructor() {
+        deployEVaultWithFactory();
         assetTST1.mint(address(this), DEAL_AMOUNT);
         assetTST1.approve(address(eTST1), type(uint256).max);
     }
 
     function deposit(uint256 amount) public {
-        amount = bound(amount, 0, assetTST1.balanceOf(address(this)));
+        uint256 balanceOfAssetTST1 = assetTST1.balanceOf(address(this));
+        uint256 maxPossibleAmount = Math.min(balanceOfAssetTST1, MAX_SANE_AMOUNT);
+        amount = bound(amount, 0, maxPossibleAmount);
+        vm.assume(amount + balanceOfAssetTST1 <= MAX_SANE_AMOUNT);
+
         uint256 sharesReceived = eTST1.deposit(amount, address(this));
-        console2.log("sharesReceived: ", sharesReceived);
         // ----------- ghost updates -----------
         ghost_numCalls++;
         ghost_assetTST1Balance -= amount;
@@ -30,9 +34,9 @@ contract EVaultHandler is EVaultDeployerDefault {
     }
 
     function redeem(uint256 amount) public {
-        amount = bound(amount, 0, ghost_eTST1Balance);
+        uint256 maxPossibleAmount = Math.min(eTST1.balanceOf(address(this)), MAX_SANE_AMOUNT);
+        amount = bound(amount, 0, maxPossibleAmount);
         uint256 assetsReceived = eTST1.redeem(amount, address(this), address(this));
-        console2.log("assetsReceived: ", assetsReceived);
         // ----------- ghost updates -----------
         ghost_numCalls++;
         ghost_assetTST1Balance += assetsReceived;

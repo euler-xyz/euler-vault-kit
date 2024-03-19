@@ -11,7 +11,6 @@ contract EVaultInvariantBasicsTest is Test {
 
     function setUp() public {
         handler = new EVaultHandler();
-        handler.setUp();
         targetContract(address(handler));
         bytes4[] memory selectors = new bytes4[](2);
         selectors[0] = handler.deposit.selector;
@@ -19,11 +18,10 @@ contract EVaultInvariantBasicsTest is Test {
         targetSelector(FuzzSelector({addr: address(handler), selectors: selectors}));
     }
 
+    /// forge-config: default.invariant.fail-on-revert = true
     function invariant_assetBalance() public {
         uint256 assetBalanceOf_Ghost = handler.ghost_assetTST1Balance();
-        console2.log("assetBalanceOf_Ghost: ", assetBalanceOf_Ghost);
-        uint256 assetBalanceOf_Real = handler.assetTST1().balanceOf(address(handler));
-        console2.log("assetBalanceOf_Real: ", assetBalanceOf_Real);
+        uint256 assetBalanceOf_Real = handler.assetTST1().balanceOf(address(handler.eTST1()));
         assertEq(assetBalanceOf_Ghost, assetBalanceOf_Real);
     }
 }

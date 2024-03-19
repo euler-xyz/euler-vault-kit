@@ -57,15 +57,13 @@ contract EVaultDeployerDefault is Test, DeployPermit2 {
     IEVault public eTST1;
     IEVault public eTST2;
 
-    function setUp() public virtual {
-        console2.log("user preparations");
+    function deployEVaultWithFactory() public virtual {
         // ------------------------- Users Preparation -------------------------
         admin = vm.addr(1000);
         feeReceiver = makeAddr("feeReceiver");
         unitOfAccount = makeAddr("unitOfAccount");
         user1 = vm.addr(1001);
         user2 = vm.addr(1002);
-        console2.log("base integrations");
         // ------------------------- Base Integrations -------------------------
         factory = new GenericFactory(admin);
         evc = new EthereumVaultConnector();
@@ -74,7 +72,6 @@ contract EVaultDeployerDefault is Test, DeployPermit2 {
         oracle = new MockPriceOracle();
         permit2 = deployPermit2();
         integrations = Base.Integrations(address(evc), address(protocolConfig), balanceTracker, permit2);
-        console2.log("module deployments");
         // ------------------------- Module Deployments -------------------------
         modules = Dispatch.DeployedModules({
             initialize: address(new Initialize(integrations)),
@@ -87,15 +84,12 @@ contract EVaultDeployerDefault is Test, DeployPermit2 {
             governance: address(new Governance(integrations))
         });
         address evaultImpl = address(new EVault(integrations, modules));
-        console2.log("proxy deployments");
         // ------------------------- Proxy Deployments -------------------------
         vm.prank(admin);
         factory.setImplementation(evaultImpl);
-        console2.log("asset deployments");
         // ------------------------- Asset Deployments -------------------------
         assetTST1 = new TestERC20("Test Token 1", "TST1", 18, false);
         assetTST2 = new TestERC20("Test Token 2", "TST2", 18, false);
-        console2.log("eVault deployments");
         // ------------------------- EVault Deployments -------------------------
         eTST1 = IEVault(factory.createProxy(true, abi.encodePacked(address(assetTST1), address(oracle), unitOfAccount)));
         eTST1.setIRM(address(new IRMTestDefault()));
