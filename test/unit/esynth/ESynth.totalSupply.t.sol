@@ -2,7 +2,7 @@
 pragma solidity ^0.8.13;
 
 import {Test} from "forge-std/Test.sol";
-import {ESynth, IEVC, Ownable} from "src/ESynth/ESynth.sol";
+import {ESynth, IEVC, Ownable} from "src/synths/ESynth.sol";
 
 
 contract ESynthTotalSupplyTest is Test {

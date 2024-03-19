@@ -2,7 +2,7 @@
 
 pragma solidity ^0.8.0;
 
-import "./IIRM.sol";
+import "../interestRateModels/IIRM.sol";
 import "../interfaces/IPriceOracle.sol";
 
 contract IRMSynth is IIRM {

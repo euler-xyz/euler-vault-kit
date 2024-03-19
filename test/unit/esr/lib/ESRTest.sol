@@ -3,7 +3,7 @@ pragma solidity ^0.8.20;
 
 import "forge-std/Test.sol";
 import {EthereumVaultConnector as EVC} from "ethereum-vault-connector/EthereumVaultConnector.sol";
-import {EulerSavingsRate} from "../../../../src/EulerSavingsRate/EulerSavingsRate.sol";
+import {EulerSavingsRate} from "../../../../src/synths/EulerSavingsRate.sol";
 import {MockToken} from "./MockToken.sol";
 
 // TODO test when 0 deposits for edge cases

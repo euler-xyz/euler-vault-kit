@@ -4,7 +4,7 @@ pragma solidity ^0.8.20;
 import {ESynthTest} from "./lib/ESynthTest.sol";
 import {stdError} from "forge-std/Test.sol";
 import {Errors} from "src/EVault/shared/Errors.sol";
-import {ESynth} from "src/ESynth/ESynth.sol";
+import {ESynth} from "src/synths/ESynth.sol";
 
 contract ESynthGeneralTest is ESynthTest {
     uint128 constant MAX_ALLOWED = type(uint128).max;

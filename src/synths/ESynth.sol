@@ -4,8 +4,8 @@ pragma solidity ^0.8.0;
 
 import {Ownable} from "openzeppelin-contracts/access/Ownable.sol";
 import {EnumerableSet} from "openzeppelin-contracts/utils/structs/EnumerableSet.sol"; 
-import {ERC20Collateral, ERC20, Context} from "../ERC20Collateral/ERC20Collateral.sol";
 import {IEVC, EVCUtil} from "ethereum-vault-connector/utils/EVCUtil.sol";
+import {ERC20Collateral, ERC20, Context} from "./ERC20Collateral.sol";
 import {IEVault} from "../EVault/IEVault.sol";
 
 contract ESynth is ERC20Collateral, Ownable {
