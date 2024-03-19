@@ -10,7 +10,7 @@ import {IAllowanceTransfer} from "permit2/src/interfaces/IAllowanceTransfer.sol"
 import "src/EVault/shared/types/Types.sol";
 import "src/EVault/shared/Constants.sol";
 
-contract ERC4626Test_Borrow is EVaultTestBase {
+contract VaultTest_Borrow is EVaultTestBase {
     using TypesLib for uint256;
 
     address depositor;
@@ -31,7 +31,6 @@ contract ERC4626Test_Borrow is EVaultTestBase {
 
         eTST.setLTV(address(eTST2), 0.9e4, 0);
 
-
         // Depositor
 
         startHoax(depositor);
@@ -39,7 +38,6 @@ contract ERC4626Test_Borrow is EVaultTestBase {
         assetTST.mint(depositor, type(uint256).max);
         assetTST.approve(address(eTST), type(uint256).max);
         eTST.deposit(100e18, depositor);
-
 
         // Borrower
 
@@ -49,7 +47,6 @@ contract ERC4626Test_Borrow is EVaultTestBase {
         assetTST2.approve(address(eTST2), type(uint256).max);
         eTST2.deposit(10e18, borrower);
     }
-
 
     function test_basicBorrow() public {
         startHoax(borrower);
@@ -94,8 +91,8 @@ contract ERC4626Test_Borrow is EVaultTestBase {
         // deposit won't succeed without any approval
         vm.expectRevert(
             abi.encodeWithSelector(
-                SafeERC20Lib.E_TransferFromFailed.selector, 
-                abi.encodeWithSignature("Error(string)", "ERC20: transfer amount exceeds allowance"), 
+                SafeERC20Lib.E_TransferFromFailed.selector,
+                abi.encodeWithSignature("Error(string)", "ERC20: transfer amount exceeds allowance"),
                 abi.encodeWithSelector(IAllowanceTransfer.AllowanceExpired.selector, 0)
             )
         );
@@ -138,7 +135,6 @@ contract ERC4626Test_Borrow is EVaultTestBase {
         assertEq(assetTST.balanceOf(borrower), amountToBorrow);
         vm.stopPrank();
 
-
         startHoax(borrower2);
 
         evc.enableCollateral(borrower2, address(eTST2));
@@ -164,7 +160,6 @@ contract ERC4626Test_Borrow is EVaultTestBase {
         // transfering some minted asset to borrower2
         assetTST2.transfer(borrower2, 10e18);
         vm.stopPrank();
-
 
         startHoax(borrower2);
 
@@ -196,14 +191,47 @@ contract ERC4626Test_Borrow is EVaultTestBase {
         assertEq(eTST.debtOf(borrower), amountToBorrow);
         vm.stopPrank();
 
-
         startHoax(borrower2);
 
         evc.enableCollateral(borrower2, address(eTST2));
         evc.enableController(borrower2, address(eTST));
 
         vm.expectRevert(Errors.E_InsufficientBalance.selector);
-        eTST.pullDebt(amountToBorrow+1, borrower);
+        eTST.pullDebt(amountToBorrow + 1, borrower);
         vm.stopPrank();
+    }
+
+    function test_Borrow_RevertsWhen_ReceiverIsSubaccount() public {
+        startHoax(borrower);
+
+        evc.enableCollateral(borrower, address(eTST2));
+        evc.enableController(borrower, address(eTST));
+
+        address subacc = address(uint160(borrower) >> 8 << 8);
+
+        // addresses within sub-accounts range revert
+        vm.expectRevert(Errors.E_BadAssetReceiver.selector);
+        eTST.borrow(1, subacc);
+
+        vm.expectRevert(Errors.E_BadAssetReceiver.selector);
+        eTST.borrow(1, address(uint160(subacc) + 255));
+
+        // address outside of sub-accounts range are accepted
+        address otherAccount = address(uint160(subacc) - 1);
+        eTST.borrow(1, otherAccount);
+        assertEq(assetTST.balanceOf(otherAccount), 1);
+
+        otherAccount = address(uint160(subacc) + 256);
+        eTST.borrow(1, otherAccount);
+        assertEq(assetTST.balanceOf(otherAccount), 1);
+
+        vm.stopPrank();
+        // governance switches the protections off
+        eTST.setDisabledOps(OP_VALIDATE_ASSET_RECEIVER);
+
+        startHoax(borrower);
+        // borrow is allowed again
+        eTST.borrow(1, subacc);
+        assertEq(assetTST.balanceOf(subacc), 1);
     }
 }
