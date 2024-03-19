@@ -25,7 +25,7 @@ address constant CHECKACCOUNT_CALLER = address(1);
 
 // EVC authentication
 
-// the negated part of this expression, indicates which operations should check if this contract is the controller of
+// the negated part of this expression indicates which operations should check if this contract is the controller of
 // the authenticated account. the result is the bit field where each 0 indicates the operation which has to check if 
 // this contract is the controller of the authenticated account, and each 1 indicates the operation which does not 
 // have to to check it.
