@@ -71,7 +71,8 @@ abstract contract BorrowingModule is IBorrowing, Base, AssetTransfers, BalanceUt
 
         address[] memory collaterals = getCollaterals(account);
         MarketCache memory marketCache = loadMarket();
-        (uint256 totalCollateralValueRiskAdjusted, uint256 liabilityValue) = calculateLiquidity(marketCache, account, collaterals, LTVType.BORROWING);
+        (uint256 totalCollateralValueRiskAdjusted, uint256 liabilityValue) =
+            calculateLiquidity(marketCache, account, collaterals, LTVType.BORROWING);
 
         // if there is no liability or it has no value, collateral will not be locked
         if (liabilityValue == 0) return 0;
@@ -104,7 +105,6 @@ abstract contract BorrowingModule is IBorrowing, Base, AssetTransfers, BalanceUt
     function dToken() public view virtual reentrantOK returns (address) {
         return calculateDTokenAddress();
     }
-
 
     /// @inheritdoc IBorrowing
     function borrow(uint256 amount, address receiver) public virtual nonReentrant returns (uint256) {

@@ -110,7 +110,6 @@ abstract contract VaultModule is IVault, Base, AssetTransfers, BalanceUtils {
         return marketStorage.creator;
     }
 
-
     /// @inheritdoc IERC4626
     function deposit(uint256 amount, address receiver) public virtual nonReentrant returns (uint256) {
         (MarketCache memory marketCache, address account) = initOperation(OP_DEPOSIT, CHECKACCOUNT_NONE);
@@ -142,12 +141,7 @@ abstract contract VaultModule is IVault, Base, AssetTransfers, BalanceUtils {
     }
 
     /// @inheritdoc IERC4626
-    function withdraw(uint256 amount, address receiver, address owner)
-        public
-        virtual
-        nonReentrant
-        returns (uint256)
-    {
+    function withdraw(uint256 amount, address receiver, address owner) public virtual nonReentrant returns (uint256) {
         (MarketCache memory marketCache, address account) = initOperation(OP_WITHDRAW, owner);
 
         Assets assets = amount.toAssets();
@@ -180,9 +174,7 @@ abstract contract VaultModule is IVault, Base, AssetTransfers, BalanceUtils {
         (MarketCache memory marketCache, address account) = initOperation(OP_SKIM, CHECKACCOUNT_NONE);
 
         Assets balance = marketCache.asset.balanceOf(address(this)).toAssets();
-        Assets available = balance <= marketCache.cash
-            ? Assets.wrap(0)
-            : balance - marketCache.cash;
+        Assets available = balance <= marketCache.cash ? Assets.wrap(0) : balance - marketCache.cash;
 
         Assets assets;
         if (amount == type(uint256).max) {
@@ -239,7 +231,9 @@ abstract contract VaultModule is IVault, Base, AssetTransfers, BalanceUtils {
             address controller = getController(owner);
 
             if (controller != address(0)) {
-                (bool success, bytes memory data) = controller.staticcall(abi.encodeCall(IBorrowing.collateralUsed, (address(this), owner)));
+                (bool success, bytes memory data) =
+                    controller.staticcall(abi.encodeCall(IBorrowing.collateralUsed, (address(this), owner)));
+
                 // if controller doesn't implement the function, assume it will not block withdrawal
                 if (success) {
                     uint256 used = abi.decode(data, (uint256));
@@ -258,14 +252,14 @@ abstract contract VaultModule is IVault, Base, AssetTransfers, BalanceUtils {
     }
 
     function maxDepositInternal(MarketCache memory marketCache, address) private view returns (uint256) {
-        uint remainingSupply;
+        uint256 remainingSupply;
 
         // In transient state with vault status checks deferred, supply caps will not be immediately enforced
         if (isVaultStatusCheckDeferred()) {
             remainingSupply = type(uint256).max;
         } else {
             uint256 supply = totalAssetsInternal(marketCache);
-            if(supply >= marketCache.supplyCap) return 0;
+            if (supply >= marketCache.supplyCap) return 0;
 
             remainingSupply = marketCache.supplyCap - supply;
         }

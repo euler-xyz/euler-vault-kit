@@ -23,7 +23,6 @@ contract ERC4626Test_LTV is EVaultTestBase {
         oracle.setPrice(address(eTST2), unitOfAccount, 1e18);
     }
 
-
     function test_rampDown() public {
         eTST.setLTV(address(eTST2), 0.9e4, 0);
 
@@ -72,7 +71,6 @@ contract ERC4626Test_LTV is EVaultTestBase {
         assertEq(eTST.liquidationLTV(address(eTST2)), 0.8e4);
     }
 
-
     function test_rampRetarget() public {
         eTST.setLTV(address(eTST2), 0.8e4, 1000);
 
@@ -99,7 +97,6 @@ contract ERC4626Test_LTV is EVaultTestBase {
         assertEq(eTST.borrowingLTV(address(eTST2)), 0.1e4);
         assertEq(eTST.liquidationLTV(address(eTST2)), 0.1e4);
     }
-
 
     function test_ltvRange() public {
         vm.expectRevert(Errors.E_InvalidConfigAmount.selector);

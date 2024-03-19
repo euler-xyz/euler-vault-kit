@@ -16,6 +16,7 @@ import "../EVault/shared/types/Types.sol";
 
 contract ESVault is EVault {
     using TypesLib for uint16;
+
     constructor(Integrations memory integrations, DeployedModules memory modules) EVault(integrations, modules) {}
 
     uint32 public constant SYNTH_VAULT_DISABLED_OPS = OP_MINT | OP_REDEEM | OP_SKIM | OP_LOOP | OP_DELOOP;
@@ -24,7 +25,7 @@ contract ESVault is EVault {
     // ----------------- Initialize ----------------
 
     /// @inheritdoc IInitialize
-    function initialize(address) public override virtual reentrantOK {
+    function initialize(address) public virtual override reentrantOK {
         (bool success, bytes memory result) = MODULE_INITIALIZE.delegatecall(msg.data); // send the whole msg.data, including proxy metadata
         if (!success) RevertBytes.revertBytes(result);
 
@@ -42,23 +43,23 @@ contract ESVault is EVault {
     // ----------------- Governance ----------------
 
     /// @inheritdoc IGovernance
-    function setDisabledOps(uint32 newDisabledOps) public override virtual reentrantOK {
+    function setDisabledOps(uint32 newDisabledOps) public virtual override reentrantOK {
         // Enforce that ops that are not supported by the synth vault are not enabled.
         uint32 filteredOps = newDisabledOps | SYNTH_VAULT_DISABLED_OPS;
         GovernanceModule.setDisabledOps(filteredOps);
     }
 
     /// @notice Disabled for synthetic asset vaults
-    function setInterestFee(uint16) public override virtual reentrantOK {
+    function setInterestFee(uint16) public virtual override reentrantOK {
         revert E_OperationDisabled();
     }
 
     // ----------------- Vault ----------------
-    
+
     /// @dev This function can only be called by the synth contract to deposit assets into the vault.
     /// @param amount The amount of assets to deposit.
     /// @param receiver The address to receive the assets.
-    function deposit(uint256 amount, address receiver) public override virtual callThroughEVC returns (uint256) {
+    function deposit(uint256 amount, address receiver) public virtual override callThroughEVC returns (uint256) {
         // only the synth contract can call this function.
         address account = EVCAuthenticate();
         (IERC20 synth,,) = ProxyUtils.metadata();

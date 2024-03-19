@@ -7,7 +7,6 @@ import "../../../src/Synths/IRMSynth.sol";
 import "../../mocks/MockPriceOracle.sol";
 
 contract IRMSynthTest is Test {
-
     IRMSynth public irm;
     MockPriceOracle public oracle;
 
@@ -70,7 +69,6 @@ contract IRMSynthTest is Test {
         skip(irm.ADJUST_INTERVAL());
         irm.computeInterestRate(address(0), 0, 0);
 
-
         oracle.setPrice(SYNTH, REFERENCE_ASSET, irm.TARGET_QUOTE() * 2);
         IRMSynth.IRMData memory irmDataBefore = irm.getIRMData();
         skip(irm.ADJUST_INTERVAL());
@@ -101,7 +99,7 @@ contract IRMSynthTest is Test {
 
         // Loop till at max rate
         uint256 maxRate = irm.MAX_RATE();
-        while(irm.getIRMData().lastRate < maxRate) {
+        while (irm.getIRMData().lastRate < maxRate) {
             skip(irm.ADJUST_INTERVAL());
             irm.computeInterestRate(address(0), 0, 0);
         }
@@ -115,6 +113,4 @@ contract IRMSynthTest is Test {
         assertEq(irmDataAfter.lastUpdated, block.timestamp);
         assertEq(irmDataAfter.lastRate, irmDataBefore.lastRate);
     }
-
-
 }

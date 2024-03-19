@@ -19,39 +19,39 @@ contract InterestRateLinearKink is Test, MathTesting {
     }
 
     function test_MaxIR() public {
-        uint precision = 1e12;
+        uint256 precision = 1e12;
 
-        uint ir = getIr(1.0e18);
-        uint SPY = getSPY(3*1e17); //300% APY
+        uint256 ir = getIr(1.0e18);
+        uint256 SPY = getSPY(3 * 1e17); //300% APY
 
-        assertEq(ir/precision, SPY/precision);
+        assertEq(ir / precision, SPY / precision);
     }
 
     function test_KinkIR() public {
-        uint precision = 1e12;
+        uint256 precision = 1e12;
 
-        uint ir = getIr(0.5e18);
-        uint SPY = getSPY(1*1e16); //10% APY
+        uint256 ir = getIr(0.5e18);
+        uint256 SPY = getSPY(1 * 1e16); //10% APY
 
-        assertEq(ir/precision, SPY/precision);
+        assertEq(ir / precision, SPY / precision);
     }
 
     function test_UnderKinkIR() public {
-        uint precision = 1e13;
+        uint256 precision = 1e13;
 
-        uint ir = getIr(0.25e18);
-        uint SPY = getSPY(4880875385828198); //4.88% APY
+        uint256 ir = getIr(0.25e18);
+        uint256 SPY = getSPY(4880875385828198); //4.88% APY
 
-        assertEq(ir/precision, SPY/precision);
+        assertEq(ir / precision, SPY / precision);
     }
 
     function test_OverKinkIR() public {
-        uint precision = 1e13;
+        uint256 precision = 1e13;
 
-        uint ir = getIr(0.75e18);
-        uint SPY = getSPY(109761712896340360); //109.76% APY
+        uint256 ir = getIr(0.75e18);
+        uint256 SPY = getSPY(109761712896340360); //109.76% APY
 
-        assertEq(ir/precision, SPY/precision);
+        assertEq(ir / precision, SPY / precision);
     }
 
     function getIr(uint256 utilisation) private view returns (uint256) {
@@ -71,7 +71,7 @@ contract InterestRateLinearKink is Test, MathTesting {
 
     //apy: 500% APY = 5 * 1e17
     function getSPY(int128 apy) private pure returns (uint256) {
-        int apr = ln((apy + 1e17) * (2**64) / 1e17);
-        return uint(apr) * 1e27 / 2**64 / (365.2425 * 86400);
+        int256 apr = ln((apy + 1e17) * (2 ** 64) / 1e17);
+        return uint256(apr) * 1e27 / 2 ** 64 / (365.2425 * 86400);
     }
 }

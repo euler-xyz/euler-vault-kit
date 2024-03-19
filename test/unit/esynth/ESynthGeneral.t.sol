@@ -72,7 +72,7 @@ contract ESynthGeneralTest is ESynthTest {
         (, uint128 minted) = esynth.minters(address(this));
         assertEq(minted, 0);
     }
-    
+
     function testFuzz_burnFromOwner(uint128 amount) public {
         amount = uint128(bound(amount, 0, MAX_ALLOWED));
         esynth.setCapacity(user1, MAX_ALLOWED);
@@ -81,7 +81,6 @@ contract ESynthGeneralTest is ESynthTest {
         esynth.burn(user1, amount);
         assertEq(esynth.balanceOf(user1), 0);
     }
-    
 
     function testFuzz_depositSimple(uint128 amount) public {
         amount = uint128(bound(amount, 1, type(uint112).max)); // amount needs to be less then MAX_SANE_AMOUNT

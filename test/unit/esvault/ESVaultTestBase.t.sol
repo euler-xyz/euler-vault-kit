@@ -10,7 +10,6 @@ import {ESynth} from "../../../src/Synths/ESynth.sol";
 import {TestERC20} from "../../mocks/TestERC20.sol";
 
 contract ESVaultTestBase is EVaultTestBase {
-
     ESynth assetTSTAsSynth;
     ESynth assetTST2AsSynth;
 
@@ -20,12 +19,7 @@ contract ESVaultTestBase is EVaultTestBase {
     function setUp() public virtual override {
         super.setUp();
 
-        address esVaultImpl = address(
-            new ESVault(
-                integrations,
-                modules
-            )
-        );
+        address esVaultImpl = address(new ESVault(integrations, modules));
 
         vm.prank(admin);
         factory.setImplementation(esVaultImpl);

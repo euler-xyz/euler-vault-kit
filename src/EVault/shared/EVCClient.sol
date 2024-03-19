@@ -64,9 +64,7 @@ abstract contract EVCClient is Storage, Events, Errors {
         }
     }
 
-    function enforceCollateralTransfer(address collateral, uint256 amount, address from, address receiver)
-        internal
-    {
+    function enforceCollateralTransfer(address collateral, uint256 amount, address from, address receiver) internal {
         evc.controlCollateral(collateral, from, 0, abi.encodeCall(IERC20.transfer, (receiver, amount)));
     }
 

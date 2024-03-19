@@ -10,24 +10,25 @@ import {ESynth} from "./ESynth.sol";
 contract PegStabilityModule is EVCUtil {
     using SafeERC20 for IERC20;
 
-    uint public constant BPS_SCALE = 10000;
+    uint256 public constant BPS_SCALE = 10000;
 
     ESynth public immutable synth;
     IERC20 public immutable underlying;
 
-    uint public immutable TO_UNDERLYING_FEE;
-    uint public immutable TO_SYNTH_FEE;
+    uint256 public immutable TO_UNDERLYING_FEE;
+    uint256 public immutable TO_SYNTH_FEE;
 
-    constructor(address _evc, address _synth, address _underlying, uint toUnderlyingFeeBPS, uint toSynthFeeBPS) EVCUtil(IEVC(_evc)) {
+    constructor(address _evc, address _synth, address _underlying, uint256 toUnderlyingFeeBPS, uint256 toSynthFeeBPS)
+        EVCUtil(IEVC(_evc))
+    {
         synth = ESynth(_synth);
         underlying = IERC20(_underlying);
         TO_UNDERLYING_FEE = toUnderlyingFeeBPS;
         TO_SYNTH_FEE = toSynthFeeBPS;
     }
 
-
-    function swapToUnderlyingGivenIn(uint amountIn, address receiver) external returns (uint) {
-        uint amountOut = quoteToUnderlyingGivenIn(amountIn);
+    function swapToUnderlyingGivenIn(uint256 amountIn, address receiver) external returns (uint256) {
+        uint256 amountOut = quoteToUnderlyingGivenIn(amountIn);
 
         synth.burn(_msgSender(), amountIn);
         underlying.safeTransfer(receiver, amountOut);
@@ -35,8 +36,8 @@ contract PegStabilityModule is EVCUtil {
         return amountOut;
     }
 
-    function swapToUnderlyingGivenOut(uint amountOut, address receiver) external returns (uint) {
-        uint amountIn = quoteToUnderlyingGivenOut(amountOut);
+    function swapToUnderlyingGivenOut(uint256 amountOut, address receiver) external returns (uint256) {
+        uint256 amountIn = quoteToUnderlyingGivenOut(amountOut);
 
         synth.burn(_msgSender(), amountIn);
         underlying.safeTransfer(receiver, amountOut);
@@ -44,8 +45,8 @@ contract PegStabilityModule is EVCUtil {
         return amountIn;
     }
 
-    function swapToSynthGivenIn(uint256 amountIn, address receiver) external returns (uint) {
-        uint amountOut = quoteToSynthGivenIn(amountIn);
+    function swapToSynthGivenIn(uint256 amountIn, address receiver) external returns (uint256) {
+        uint256 amountOut = quoteToSynthGivenIn(amountIn);
 
         underlying.safeTransferFrom(_msgSender(), address(this), amountIn);
         synth.mint(receiver, amountOut);
@@ -53,28 +54,28 @@ contract PegStabilityModule is EVCUtil {
         return amountOut;
     }
 
-    function swapToSynthGivenOut(uint amountOut, address receiver) external returns (uint) {
-        uint amountIn = quoteToSynthGivenOut(amountOut);
-        
+    function swapToSynthGivenOut(uint256 amountOut, address receiver) external returns (uint256) {
+        uint256 amountIn = quoteToSynthGivenOut(amountOut);
+
         underlying.safeTransferFrom(_msgSender(), address(this), amountIn);
         synth.mint(receiver, amountOut);
 
         return amountIn;
     }
 
-    function quoteToUnderlyingGivenIn(uint amountIn) public view returns (uint) {
+    function quoteToUnderlyingGivenIn(uint256 amountIn) public view returns (uint256) {
         return amountIn * (BPS_SCALE - TO_UNDERLYING_FEE) / BPS_SCALE;
     }
 
-    function quoteToUnderlyingGivenOut(uint amountOut) public view returns (uint) {
+    function quoteToUnderlyingGivenOut(uint256 amountOut) public view returns (uint256) {
         return amountOut * BPS_SCALE / (BPS_SCALE - TO_UNDERLYING_FEE);
     }
 
-    function quoteToSynthGivenIn(uint amountIn) public view returns (uint) {
+    function quoteToSynthGivenIn(uint256 amountIn) public view returns (uint256) {
         return amountIn * (BPS_SCALE - TO_SYNTH_FEE) / BPS_SCALE;
     }
 
-    function quoteToSynthGivenOut(uint amountOut) public view returns (uint) {
+    function quoteToSynthGivenOut(uint256 amountOut) public view returns (uint256) {
         return amountOut * BPS_SCALE / (BPS_SCALE - TO_SYNTH_FEE);
     }
 }
