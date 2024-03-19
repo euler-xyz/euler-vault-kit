@@ -98,7 +98,7 @@ abstract contract BorrowUtils is Base {
         uint256 newInterestRate = marketStorage.interestRate;
 
         if (irm != address(0)) {
-            (bool success, bytes memory data) = irm.call(abi.encodeCall(IIRM.computeInterestRate, (
+            (bool success, bytes memory data) = irm.call(abi.encodeCall(IIRM.computeInterestRate, ( // Is there a reason to have a transactional `computeInterestRate` function in the IRM?
                                                                             address(this),
                                                                             marketCache.cash.toUint(),
                                                                             marketCache.totalBorrows.toAssetsUp().toUint()
@@ -107,7 +107,7 @@ abstract contract BorrowUtils is Base {
             if (success && data.length >= 32) {
                 newInterestRate = abi.decode(data, (uint));
                 if (newInterestRate > MAX_ALLOWED_INTEREST_RATE) newInterestRate = MAX_ALLOWED_INTEREST_RATE;
-                marketStorage.interestRate = uint72(newInterestRate);
+                marketStorage.interestRate = uint72(newInterestRate); // It is unexpected to have a `compute*` function modify storage, really. Maybe call it `updateInterestRate` and have it call `computeInterestRateView`?
             }
         }
 
@@ -119,7 +119,7 @@ abstract contract BorrowUtils is Base {
         address irm = marketStorage.interestRateModel;
         uint256 newInterestRate = marketStorage.interestRate;
 
-        if (irm != address(0) && isVaultStatusCheckDeferred()) {
+        if (irm != address(0) && isVaultStatusCheckDeferred()) { // Why do we need `isVaultStatusCheckDeferred()` here?
             (bool success, bytes memory data) = irm.staticcall(abi.encodeCall(IIRM.computeInterestRateView, (
                                                                                 address(this),
                                                                                 marketCache.cash.toUint(),

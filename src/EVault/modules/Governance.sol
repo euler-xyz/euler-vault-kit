@@ -159,6 +159,7 @@ abstract contract GovernanceModule is IGovernance, Base, BalanceUtils, BorrowUti
 
         marketStorage.accumulatedFees = marketCache.accumulatedFees = Shares.wrap(0);
 
+        // Assets variables only used to emit events, rounding doesn't really matter
         Assets governorAssets = governorShares.toAssetsDown(marketCache);
         Assets protocolAssets = protocolShares.toAssetsDown(marketCache);
 
@@ -166,13 +167,13 @@ abstract contract GovernanceModule is IGovernance, Base, BalanceUtils, BorrowUti
         marketStorage.totalShares =
             marketCache.totalShares = marketCache.totalShares - marketCache.accumulatedFees;
 
-        if (governorReceiver != address(0)) {
+        if (governorReceiver != address(0)) { // What if protocolFee == 1e4? Maybe better to do `if (!governorShares.isZero())`
             increaseBalance(
                 marketCache, governorReceiver, address(0), governorShares, governorAssets
             );
         }
 
-        increaseBalance(
+        increaseBalance( // What if protocolFee == 0? Maybe better to do `if (!protocolShares.isZero())`
             marketCache, protocolReceiver, address(0), protocolShares, protocolAssets
         );
 
@@ -268,7 +269,7 @@ abstract contract GovernanceModule is IGovernance, Base, BalanceUtils, BorrowUti
     function setCaps(uint16 supplyCap, uint16 borrowCap) public virtual nonReentrant governorOnly {
         AmountCap _supplyCap = AmountCap.wrap(supplyCap);
         // Max total assets is a sum of max pool size and max total debt, both Assets type
-        if (supplyCap > 0 && _supplyCap.toUint() > 2 * MAX_SANE_AMOUNT) revert E_BadSupplyCap();
+        if (supplyCap > 0 && _supplyCap.toUint() > 2 * MAX_SANE_AMOUNT) revert E_BadSupplyCap(); // Funny that the supply cap can be twice the max sane amount. How is that, given that this cap is for marketStorage.totalShares, which is a uint112?
 
         AmountCap _borrowCap = AmountCap.wrap(borrowCap);
         if (borrowCap > 0 && _borrowCap.toUint() > MAX_SANE_AMOUNT) revert E_BadBorrowCap();

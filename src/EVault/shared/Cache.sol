@@ -88,8 +88,14 @@ contract Cache is Storage, Errors {
                 }
             }
 
+            // The totalBorrows will increase with the interest accumulator, while individual debt is only updated when needed.
+            // If the interest fee is greater than zero, it will be accrued as new shares in `accumulatedFees`.
+            // The new fee shares dilute the existing vault token holders.
+            // To calculate the new fee shares the interest fee factor is applied to the increase in borrows dictated by the interest rate accumulator increase.
+            // We obtain an amount in assets that the new shares must be worth. We increase the amount of existing shares until the new shares are worth exactly that.
+
             uint256 newTotalBorrows =
-                marketCache.totalBorrows.toUint() * newInterestAccumulator / marketCache.interestAccumulator;
+                marketCache.totalBorrows.toUint() * newInterestAccumulator / marketCache.interestAccumulator; // Increase the totalBorrows according to the accumulator increase
             uint256 newAccumulatedFees = marketCache.accumulatedFees.toUint();
             uint256 newTotalShares = marketCache.totalShares.toUint();
 
@@ -102,7 +108,6 @@ contract Cache is Storage, Errors {
             }
 
             // Store new values in marketCache, only if no overflows will occur. Fees are not larger than total shares, since they are included in them.
-
             if (newTotalShares <= MAX_SANE_AMOUNT && newTotalBorrows <= MAX_SANE_DEBT_AMOUNT) {
                 marketCache.totalBorrows = newTotalBorrows.toOwed();
                 marketCache.interestAccumulator = newInterestAccumulator;
@@ -112,7 +117,7 @@ contract Cache is Storage, Errors {
                     marketCache.accumulatedFees = newAccumulatedFees.toShares();
                     marketCache.totalShares = newTotalShares.toShares();
                 }
-            }
+            } // If we are overflowing and return a non updated marketCache, shouldn't we return `false`?
         }
     }
 
