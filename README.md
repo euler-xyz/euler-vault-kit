@@ -1,6 +1,6 @@
 # Euler Vault Kit
 
-The Euler Vault Kit is a system for constructing credit vaults. Credit vaults are ERC-4626 vaults with added borrowing functionality. Unlike typical ERC-4626 vaults which earn yield by actively investing deposited funds, credit vaults are passive lending pools. See the [WHITEPAPER](https://docs.euler.finance/euler-vault-kit-white-paper/) for more details.
+The Euler Vault Kit is a system for constructing credit vaults. Credit vaults are ERC-4626 vaults with added borrowing functionality. Unlike typical ERC-4626 vaults which earn yield by actively investing deposited funds, credit vaults are passive lending pools. See the [whitepaper](https://docs.euler.finance/euler-vault-kit-white-paper/) for more details.
 
 ## Install
 
@@ -58,7 +58,7 @@ The Euler Vault Kit is currently undergoing security audits and should not be us
 
 ## Known limitations
 
-Refer to the [WHITEPAPER](https://docs.euler.finance/euler-vault-kit-white-paper/) for a list of known limitations and security considerations.
+Refer to the [whitepaper](https://docs.euler.finance/euler-vault-kit-white-paper/) for a list of known limitations and security considerations.
 
 ## License
 
