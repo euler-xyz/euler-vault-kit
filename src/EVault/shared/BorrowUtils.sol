@@ -4,7 +4,7 @@ pragma solidity ^0.8.0;
 
 import {Base} from "./Base.sol";
 import {DToken} from "../DToken.sol";
-import {IIRM} from "../../interestRateModels/IIRM.sol";
+import {IIRM} from "../../InterestRateModels/IIRM.sol";
 
 import "./types/Types.sol";
 

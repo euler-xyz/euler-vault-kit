@@ -2,10 +2,10 @@
 pragma solidity ^0.8.13;
 
 import {Test} from "forge-std/Test.sol";
-import {IRMLinearKink} from "../../../src/interestRateModels/IRMLinearKink.sol";
-import "../../helpers/Math.sol";
+import {IRMLinearKink} from "../../../src/InterestRateModels/IRMLinearKink.sol";
+import {MathTesting} from "../../helpers/MathTesting.sol";
 
-contract InterestRateLinearKink is Test {
+contract InterestRateLinearKink is Test, MathTesting {
     IRMLinearKink irm;
 
     function setUp() public {
@@ -71,7 +71,7 @@ contract InterestRateLinearKink is Test {
 
     //apy: 500% APY = 5 * 1e17
     function getSPY(int128 apy) private pure returns (uint256) {
-        int apr = Math.ln((apy + 1e17) * (2**64) / 1e17);
+        int apr = ln((apy + 1e17) * (2**64) / 1e17);
         return uint(apr) * 1e27 / 2**64 / (365.2425 * 86400);
     }
 }

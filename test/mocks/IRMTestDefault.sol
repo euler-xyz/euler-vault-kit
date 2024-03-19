@@ -2,7 +2,7 @@
 
 pragma solidity ^0.8.0;
 
-import "../../src/interestRateModels/IRMLinearKink.sol";
+import "../../src/InterestRateModels/IRMLinearKink.sol";
 
 contract IRMTestDefault is IRMLinearKink {
     constructor()

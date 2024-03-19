@@ -16,7 +16,6 @@ contract MockPriceOracle {
 
     function getQuote(uint256 amount, address base, address quote) public view returns (uint256 out) {
         uint256 price = prices[base][quote];
-        if (price == 0) revert PO_NoPath();
 
         return amount * price / 1e18;
     }
