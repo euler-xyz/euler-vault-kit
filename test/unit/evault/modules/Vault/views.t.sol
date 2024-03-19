@@ -4,12 +4,13 @@ pragma solidity ^0.8.0;
 
 import "../../EVaultTestBase.t.sol";
 
-contract Vault_views is EVaultTestBase {
+contract VaultTest_views is EVaultTestBase {
     function test_Vault_basicViews() public {
         assertEq(eTST.asset(), address(assetTST));
         address creator = makeAddr("creator");
         vm.prank(creator);
-        address newVault = factory.createProxy(true, abi.encodePacked(address(assetTST), address(oracle), unitOfAccount));
+        address newVault =
+            factory.createProxy(true, abi.encodePacked(address(assetTST), address(oracle), unitOfAccount));
         assertEq(IEVault(newVault).creator(), creator);
     }
 }
