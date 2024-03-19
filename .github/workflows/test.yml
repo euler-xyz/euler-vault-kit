@@ -22,7 +22,7 @@ jobs:
             - name: Run foundry build
               run: |
                   forge --version
-                  forge build --sizes
+                  forge build
               id: build
 
     lint-check:
