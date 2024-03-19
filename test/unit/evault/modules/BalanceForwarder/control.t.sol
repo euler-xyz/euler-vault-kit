@@ -25,7 +25,9 @@ contract BalanceForwarderTest_Control is EVaultTestBase {
     }
 
     function test_Enable_EVCAuthenticate() public {
-        vm.mockCall(address(evc), abi.encodeCall(evc.getCurrentOnBehalfOfAccount, (address(0))), abi.encode(alice, false));
+        vm.mockCall(
+            address(evc), abi.encodeCall(evc.getCurrentOnBehalfOfAccount, (address(0))), abi.encode(alice, false)
+        );
         vm.prank(address(evc));
         eTST.enableBalanceForwarder();
 
@@ -67,7 +69,9 @@ contract BalanceForwarderTest_Control is EVaultTestBase {
         vm.prank(alice);
         eTST.enableBalanceForwarder();
 
-        vm.mockCall(address(evc), abi.encodeCall(evc.getCurrentOnBehalfOfAccount, (address(0))), abi.encode(alice, false));
+        vm.mockCall(
+            address(evc), abi.encodeCall(evc.getCurrentOnBehalfOfAccount, (address(0))), abi.encode(alice, false)
+        );
         vm.prank(address(evc));
         eTST.disableBalanceForwarder();
 

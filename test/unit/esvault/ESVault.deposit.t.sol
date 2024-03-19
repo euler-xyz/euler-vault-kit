@@ -6,7 +6,6 @@ import {ESVaultTestBase, ESynth} from "./ESVaultTestBase.t.sol";
 import {Errors} from "../../../src/EVault/shared/Errors.sol";
 
 contract ESVaultTestDeposit is ESVaultTestBase {
-
     function setUp() public override {
         super.setUp();
 

@@ -32,7 +32,6 @@ contract ERC4626Test_MaxWithdraw is EVaultTestBase {
 
         eTST.setLTV(address(eTST2), 0.9e4, 0);
 
-
         // Depositor
 
         startHoax(depositor);
@@ -40,7 +39,6 @@ contract ERC4626Test_MaxWithdraw is EVaultTestBase {
         assetTST.mint(depositor, type(uint256).max);
         assetTST.approve(address(eTST), type(uint256).max);
         eTST.deposit(100e18, depositor);
-
 
         // Borrower
 
@@ -50,7 +48,6 @@ contract ERC4626Test_MaxWithdraw is EVaultTestBase {
         assetTST2.approve(address(eTST2), type(uint256).max);
         eTST2.deposit(10e18, borrower);
     }
-
 
     function test_basicMaxWithdraw() public {
         startHoax(borrower);
@@ -68,7 +65,7 @@ contract ERC4626Test_MaxWithdraw is EVaultTestBase {
         uint256 eVaultSharesBalanceBefore = eTST2.balanceOf(borrower);
 
         // Should only be able to withdraw up to maxWithdraw, so these should fail:
-        
+
         vm.expectRevert(Errors.E_AccountLiquidity.selector);
         eTST2.withdraw(maxWithdrawAmount + 1, borrower, borrower);
 
@@ -77,7 +74,6 @@ contract ERC4626Test_MaxWithdraw is EVaultTestBase {
 
         // Withdrawing the maximum should pass
         eTST2.withdraw(maxWithdrawAmount, borrower, borrower);
-
 
         // Assert asset & eVault share balances change as expected
         uint256 assetBalanceAfter = assetTST2.balanceOf(borrower);

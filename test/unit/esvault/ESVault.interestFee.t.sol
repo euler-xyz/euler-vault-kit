@@ -18,6 +18,5 @@ contract ESVaultTestInterestFee is ESVaultTestBase {
     function test_set_interest_fee() public {
         vm.expectRevert(Errors.E_OperationDisabled.selector);
         eTST.setInterestFee(uint16(1));
-        
     }
 }

@@ -5,7 +5,6 @@ pragma solidity ^0.8.0;
 import {console2} from "forge-std/Test.sol";
 import {EVaultTestBase} from "../../EVaultTestBase.t.sol";
 
-
 import "src/EVault/shared/types/Types.sol";
 
 contract ERC4626Test_Skim is EVaultTestBase {
@@ -24,11 +23,11 @@ contract ERC4626Test_Skim is EVaultTestBase {
     }
 
     function test_simpleSkim() public {
-        uint amount = 20e18;
+        uint256 amount = 20e18;
         vm.startPrank(user);
         assetTST.transfer(address(eTST), amount);
-        
-        uint value = 1e7;
+
+        uint256 value = 1e7;
 
         assertEq(eTST.balanceOf(user), 0);
 
@@ -42,26 +41,26 @@ contract ERC4626Test_Skim is EVaultTestBase {
     }
 
     function test_RevertIfInsufficientAssets() public {
-        uint amount = 20e18;
+        uint256 amount = 20e18;
         vm.startPrank(user);
         assetTST.transfer(address(eTST), amount);
 
-        uint value1 = 22e18;
+        uint256 value1 = 22e18;
 
         assertEq(eTST.balanceOf(user), 0);
 
         vm.expectRevert(Errors.E_InsufficientAssets.selector);
         eTST.skim(value1, user);
 
-        uint value2 = 1e18;
+        uint256 value2 = 1e18;
 
         eTST.skim(value2, user);
         assertEq(eTST.balanceOf(user), value2);
-        
-        eTST.skim(value2, user);
-        assertEq(eTST.balanceOf(user), value2*2);
 
-        uint value3 = 18e18;
+        eTST.skim(value2, user);
+        assertEq(eTST.balanceOf(user), value2 * 2);
+
+        uint256 value3 = 18e18;
 
         eTST.skim(value3, user);
         assertEq(eTST.balanceOf(user), amount);
@@ -71,30 +70,30 @@ contract ERC4626Test_Skim is EVaultTestBase {
     }
 
     function test_zeroAmount() public {
-        uint amount = 20e18;
+        uint256 amount = 20e18;
         vm.startPrank(user);
         assetTST.transfer(address(eTST), amount);
 
-        uint value = 0; 
+        uint256 value = 0;
 
         assertEq(eTST.balanceOf(user), 0);
 
-        uint result = eTST.skim(value, user);
+        uint256 result = eTST.skim(value, user);
 
         assertEq(result, value);
         assertEq(eTST.balanceOf(user), value);
     }
 
     function test_maxAmount() public {
-        uint amount = 20e18;
+        uint256 amount = 20e18;
         vm.startPrank(user);
         assetTST.transfer(address(eTST), amount);
 
-        uint value = type(uint256).max;
+        uint256 value = type(uint256).max;
 
         assertEq(eTST.balanceOf(user), 0);
 
-        uint result = eTST.skim(value, user);
+        uint256 result = eTST.skim(value, user);
 
         assertEq(result, amount);
         assertEq(eTST.balanceOf(user), amount);
@@ -104,19 +103,19 @@ contract ERC4626Test_Skim is EVaultTestBase {
     }
 
     function test_maxSaneAmount() public {
-        uint amount = MAX_SANE_AMOUNT;
+        uint256 amount = MAX_SANE_AMOUNT;
         vm.startPrank(user);
         assetTST.transfer(address(eTST), amount);
 
-        uint value = MAX_SANE_AMOUNT;
+        uint256 value = MAX_SANE_AMOUNT;
 
         assertEq(eTST.balanceOf(user), 0);
 
         vm.expectRevert(Errors.E_AmountTooLargeToEncode.selector);
         eTST.skim(value + 1, user);
 
-        uint result = eTST.skim(value, user);
-        
+        uint256 result = eTST.skim(value, user);
+
         assertEq(result, value);
         assertEq(eTST.balanceOf(user), value);
 
@@ -125,22 +124,22 @@ contract ERC4626Test_Skim is EVaultTestBase {
     }
 
     function test_zeroAddressReceiver() public {
-        uint amount = 20e18;
+        uint256 amount = 20e18;
         vm.startPrank(user);
         assetTST.transfer(address(eTST), amount);
 
-        uint value = 1e18;
+        uint256 value = 1e18;
 
         vm.expectRevert(Errors.E_BadSharesReceiver.selector);
         eTST.skim(value, address(0));
     }
 
     function test_burnAddressReceiver() public {
-        uint amount = 20e18;
+        uint256 amount = 20e18;
         vm.startPrank(user);
         assetTST.transfer(address(eTST), amount);
 
-        uint value = 1e18;
+        uint256 value = 1e18;
 
         eTST.skim(value, address(1));
         assertEq(eTST.balanceOf(user), 0);

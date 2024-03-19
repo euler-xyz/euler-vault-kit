@@ -9,6 +9,7 @@ import "../EVaultTestBase.t.sol";
 
 contract AssetTransfersHarness is AssetTransfers {
     constructor() Base(Integrations(address(0), address(0), address(0), address(0))) {}
+
     function exposed_pullAssets(MarketCache memory cache, address from, Assets amount) external {
         pullAssets(cache, from, amount);
     }

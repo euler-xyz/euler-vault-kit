@@ -17,13 +17,23 @@ contract IRMLinearKink is IIRM {
         kink = kink_;
     }
 
-    function computeInterestRate(address vault, uint256 cash, uint256 borrows) external view override returns (uint256) {
+    function computeInterestRate(address vault, uint256 cash, uint256 borrows)
+        external
+        view
+        override
+        returns (uint256)
+    {
         if (msg.sender != vault) revert E_IRMUpdateUnauthorized();
 
         return computeInterestRateInternal(vault, cash, borrows);
     }
 
-    function computeInterestRateView(address vault, uint256 cash, uint256 borrows) external view override returns (uint256) {
+    function computeInterestRateView(address vault, uint256 cash, uint256 borrows)
+        external
+        view
+        override
+        returns (uint256)
+    {
         return computeInterestRateInternal(vault, cash, borrows);
     }
 
@@ -31,8 +41,8 @@ contract IRMLinearKink is IIRM {
         uint256 totalAssets = cash + borrows;
 
         uint32 utilisation = totalAssets == 0
-           ? 0 // empty pool arbitrarily given utilisation of 0
-           : uint32(borrows * type(uint32).max / totalAssets);
+            ? 0 // empty pool arbitrarily given utilisation of 0
+            : uint32(borrows * type(uint32).max / totalAssets);
 
         uint256 ir = baseRate;
 

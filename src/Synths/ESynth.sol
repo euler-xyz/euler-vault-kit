@@ -3,7 +3,7 @@
 pragma solidity ^0.8.0;
 
 import {Ownable} from "openzeppelin-contracts/access/Ownable.sol";
-import {EnumerableSet} from "openzeppelin-contracts/utils/structs/EnumerableSet.sol"; 
+import {EnumerableSet} from "openzeppelin-contracts/utils/structs/EnumerableSet.sol";
 import {IEVC, EVCUtil} from "ethereum-vault-connector/utils/EVCUtil.sol";
 import {ERC20Collateral, ERC20, Context} from "./ERC20Collateral.sol";
 import {IEVault} from "../EVault/IEVault.sol";
@@ -20,9 +20,13 @@ contract ESynth is ERC20Collateral, Ownable {
     EnumerableSet.AddressSet internal ignoredForTotalSupply;
 
     event MinterCapacitySet(address indexed minter, uint256 capacity);
+
     error E_CapacityReached();
 
-    constructor(IEVC evc_, string memory name_, string memory symbol_) ERC20Collateral(evc_, name_, symbol_) Ownable(msg.sender) {}
+    constructor(IEVC evc_, string memory name_, string memory symbol_)
+        ERC20Collateral(evc_, name_, symbol_)
+        Ownable(msg.sender)
+    {}
 
     /// @notice Sets the minting capacity for a minter.
     /// @dev Can only be called by the owner of the contract.
@@ -99,14 +103,14 @@ contract ESynth is ERC20Collateral, Ownable {
     /// @notice Adds an account to the list of accounts to ignore for the total supply.
     /// @param account The account to add to the list.
     /// @return success True when the account was not on the list and was added. False otherwise.
-    function addIgnoredForTotalSupply(address account) external onlyOwner returns(bool success) {
+    function addIgnoredForTotalSupply(address account) external onlyOwner returns (bool success) {
         return ignoredForTotalSupply.add(account);
     }
 
     /// @notice Removes an account from the list of accounts to ignore for the total supply.
     /// @param account The account to remove from the list.
     /// @return success True when the account was on the list and was removed. False otherwise.
-    function removeIgnoredForTotalSupply(address account) external onlyOwner returns(bool success) {
+    function removeIgnoredForTotalSupply(address account) external onlyOwner returns (bool success) {
         return ignoredForTotalSupply.remove(account);
     }
 
@@ -127,10 +131,9 @@ contract ESynth is ERC20Collateral, Ownable {
     /// @return The total supply of the token.
     function totalSupply() public view override returns (uint256) {
         uint256 total = super.totalSupply();
-        for(uint256 i = 0; i < ignoredForTotalSupply.length(); i++) {
+        for (uint256 i = 0; i < ignoredForTotalSupply.length(); i++) {
             total -= balanceOf(ignoredForTotalSupply.at(i));
         }
         return total;
     }
-
 }

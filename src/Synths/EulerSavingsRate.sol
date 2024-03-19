@@ -65,7 +65,7 @@ contract EulerSavingsRate is EVCUtil, ERC4626 {
     function transfer(address to, uint256 amount)
         public
         virtual
-        override(ERC20, IERC20)
+        override (ERC20, IERC20)
         nonReentrant
         requireAccountStatusCheck(_msgSender())
         returns (bool)
@@ -81,7 +81,7 @@ contract EulerSavingsRate is EVCUtil, ERC4626 {
     function transferFrom(address from, address to, uint256 amount)
         public
         virtual
-        override(ERC20, IERC20)
+        override (ERC20, IERC20)
         nonReentrant
         requireAccountStatusCheck(from)
         returns (bool)
@@ -182,7 +182,7 @@ contract EulerSavingsRate is EVCUtil, ERC4626 {
     /// @dev This function returns the account on behalf of which the current operation is being performed, which is
     /// either msg.sender or the account authenticated by the EVC.
     /// @return The address of the message sender.
-    function _msgSender() internal view virtual override(Context, EVCUtil) returns (address) {
+    function _msgSender() internal view virtual override (Context, EVCUtil) returns (address) {
         return EVCUtil._msgSender();
     }
 }

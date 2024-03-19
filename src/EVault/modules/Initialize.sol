@@ -53,7 +53,9 @@ abstract contract InitializeModule is IInitialize, Base, BorrowUtils {
     }
 
     // prevent initialization of the implementation contract
-    constructor() {initialized = true; }
+    constructor() {
+        initialized = true;
+    }
 }
 
 contract Initialize is InitializeModule {

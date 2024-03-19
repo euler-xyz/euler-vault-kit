@@ -30,10 +30,7 @@ contract IRMSynth is IIRM {
         referenceAsset = referenceAsset_;
         oracle = IPriceOracle(oracle_);
 
-        irmStorage = IRMData({
-            lastUpdated: uint40(block.timestamp),
-            lastRate: BASE_RATE
-        });
+        irmStorage = IRMData({lastUpdated: uint40(block.timestamp), lastRate: BASE_RATE});
     }
 
     function computeInterestRate(address, uint256, uint256) external override returns (uint256) {
@@ -41,17 +38,14 @@ contract IRMSynth is IIRM {
         (uint216 rate, bool updated) = _computeRate(irmCache);
 
         if (updated) {
-            irmStorage = IRMData({
-                lastUpdated: uint40(block.timestamp),
-                lastRate: rate
-            });
+            irmStorage = IRMData({lastUpdated: uint40(block.timestamp), lastRate: rate});
         }
 
         return rate;
     }
 
     function computeInterestRateView(address, uint256, uint256) external view override returns (uint256) {
-        (uint216 rate, ) = _computeRate(irmStorage);
+        (uint216 rate,) = _computeRate(irmStorage);
         return rate;
     }
 
@@ -61,14 +55,14 @@ contract IRMSynth is IIRM {
 
         // If not time to update yet, return the last rate
         if (block.timestamp < irmCache.lastUpdated + ADJUST_INTERVAL) {
-            return(rate, updated);
+            return (rate, updated);
         }
 
         uint256 quote = oracle.getQuote(1e18, synth, referenceAsset);
 
         // If the quote is 0, return the last rate
         if (quote == 0) {
-            return(rate, updated);
+            return (rate, updated);
         }
 
         updated = true;
@@ -88,7 +82,7 @@ contract IRMSynth is IIRM {
             rate = MAX_RATE;
         }
 
-        return(rate, updated);
+        return (rate, updated);
     }
 
     function getIRMData() external view returns (IRMData memory) {

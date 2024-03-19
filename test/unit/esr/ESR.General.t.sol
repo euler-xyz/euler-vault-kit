@@ -79,16 +79,16 @@ contract ESRGeneralTest is ESRTest {
         esr.gulp();
         skip(esr.INTEREST_SMEAR());
         uint256 shares = esr.balanceOf(user);
-        uint previewRedeem = esr.previewRedeem(shares);
+        uint256 previewRedeem = esr.previewRedeem(shares);
 
         vm.startPrank(user);
         esr.redeem(shares, user, user);
         vm.stopPrank();
 
-        uint balanceAfter = asset.balanceOf(user);
+        uint256 balanceAfter = asset.balanceOf(user);
         assertEq(balanceAfter, previewRedeem);
     }
-    
+
     // test withdraw after SMEAR has ended
     function test_withdrawAfterSMEAREnd() public {
         uint256 depositAmount = 100e18;
@@ -98,13 +98,13 @@ contract ESRGeneralTest is ESRTest {
         esr.gulp();
         skip(esr.INTEREST_SMEAR());
         uint256 shares = esr.balanceOf(user);
-        uint previewRedeem = esr.previewRedeem(shares);
+        uint256 previewRedeem = esr.previewRedeem(shares);
 
         vm.startPrank(user);
         esr.withdraw(previewRedeem, user, user);
         vm.stopPrank();
 
-        uint balanceAfter = asset.balanceOf(user);
+        uint256 balanceAfter = asset.balanceOf(user);
         assertEq(balanceAfter, previewRedeem);
     }
 
@@ -112,7 +112,7 @@ contract ESRGeneralTest is ESRTest {
     function test_transferVaultToken() public {
         uint256 depositAmount = 100e18;
         doDeposit(user, depositAmount);
-        
+
         // transfer the vault token to another address
         uint256 balanceOfUser = esr.balanceOf(user);
 
@@ -128,7 +128,7 @@ contract ESRGeneralTest is ESRTest {
     function test_transferFromVaultToken() public {
         uint256 depositAmount = 100e18;
         doDeposit(user, depositAmount);
-        
+
         // transfer the vault token to another address
         uint256 balanceOfUser = esr.balanceOf(user);
 

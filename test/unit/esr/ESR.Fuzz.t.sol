@@ -9,7 +9,7 @@ contract ESRFuzzTest is ESRTest {
         uint256 accruedInterest = esr.interestAccrued();
         assertGe(esrSlot.interestLeft, accruedInterest);
     }
-    
+
     // totalAssets should be equal to the balance after SMEAR has passed
     function invariant_totalAssetsShouldBeEqualToBalanceAfterSMEAR() public {
         skip(esr.INTEREST_SMEAR()); // make sure smear has passed
@@ -22,7 +22,7 @@ contract ESRFuzzTest is ESRTest {
     {
         depositAmount = bound(depositAmount, 0, type(uint112).max);
         // this makes sure that the mint won't cause overflow in token accounting
-        interestAmount = bound(interestAmount, 0, type(uint112).max - depositAmount); 
+        interestAmount = bound(interestAmount, 0, type(uint112).max - depositAmount);
         timePassed = bound(timePassed, block.timestamp, type(uint40).max);
         doDeposit(user, depositAmount);
         asset.mint(address(esr), interestAmount);
@@ -66,5 +66,4 @@ contract ESRFuzzTest is ESRTest {
         vm.stopPrank();
         assertEq(esr.totalAssets(), depositAmount - withdrawAmount);
     }
-
 }

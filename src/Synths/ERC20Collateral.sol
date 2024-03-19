@@ -11,7 +11,11 @@ import {IEVC, EVCUtil} from "ethereum-vault-connector/utils/EVCUtil.sol";
 /// @notice It extends the ERC20 token standard to add the EVC authentication and account status checks so that the
 /// token contract can be used as collateral in the EVC ecosystem.
 abstract contract ERC20Collateral is EVCUtil, ERC20Permit, ReentrancyGuard {
-    constructor(IEVC _evc_, string memory _name_, string memory _symbol_) EVCUtil(_evc_) ERC20(_name_, _symbol_) ERC20Permit(_name_) {}
+    constructor(IEVC _evc_, string memory _name_, string memory _symbol_)
+        EVCUtil(_evc_)
+        ERC20(_name_, _symbol_)
+        ERC20Permit(_name_)
+    {}
 
     /// @notice Transfers a certain amount of tokens to a recipient.
     /// @dev Overriden to add re-entrancy protection.
@@ -28,11 +32,13 @@ abstract contract ERC20Collateral is EVCUtil, ERC20Permit, ReentrancyGuard {
     /// @param to The recipient of the transfer.
     /// @param amount The amount of shares to transfer.
     /// @return A boolean indicating whether the transfer was successful.
-    function transferFrom(
-        address from,
-        address to,
-        uint256 amount
-    ) public virtual override nonReentrant returns (bool) {
+    function transferFrom(address from, address to, uint256 amount)
+        public
+        virtual
+        override
+        nonReentrant
+        returns (bool)
+    {
         return super.transferFrom(from, to, amount);
     }
 

@@ -4,13 +4,14 @@ pragma solidity ^0.8.23;
 
 contract MockBalanceTracker {
     uint256 public numCalls;
-    mapping (address => mapping(uint256 => mapping(bool => uint256))) public calls;
-    mapping (address => uint256) public balance;
+    mapping(address => mapping(uint256 => mapping(bool => uint256))) public calls;
+    mapping(address => uint256) public balance;
 
     struct ReentrantCall {
         address to;
         bytes data;
     }
+
     ReentrantCall reentrantCall;
 
     function balanceTrackerHook(address account, uint256 newAccountBalance, bool forfeitRecentReward) external {
@@ -40,4 +41,3 @@ contract MockBalanceTracker {
         return;
     }
 }
-

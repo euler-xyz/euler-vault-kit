@@ -9,11 +9,7 @@ pragma solidity >=0.8.0;
 
 library RPow {
     /// @dev If overflow is true, an overflow occurred and the value of z is undefined
-    function rpow(
-        uint256 x,
-        uint256 n,
-        uint256 scalar
-    ) internal pure returns (uint256 z, bool overflow) {
+    function rpow(uint256 x, uint256 n, uint256 scalar) internal pure returns (uint256 z, bool overflow) {
         /// @solidity memory-safe-assembly
         assembly {
             switch x
