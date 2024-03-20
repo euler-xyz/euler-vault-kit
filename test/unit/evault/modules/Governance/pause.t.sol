@@ -56,23 +56,47 @@ contract Governance_PauseAndOps is EVaultTestBase {
     }
 
     function testFuzz_disablingDepositOpsShouldFailAfterDisabled(uint256 amount, address receiver) public {
+        amount = bound(amount, 1, MINT_AMOUNT);
+        vm.assume(receiver != address(0));
+
         eTST.setDisabledOps(OP_DEPOSIT);
         vm.expectRevert(Errors.E_OperationDisabled.selector);
+        eTST.deposit(amount, receiver);
+
+        // re-enable
+        eTST.setDisabledOps(0);
+        vm.prank(depositor);
         eTST.deposit(amount, receiver);
     }
 
     function testFuzz_disablingMintOpsShouldFailAfterDisabled(uint256 amount, address receiver) public {
+        amount = bound(amount, 1, MINT_AMOUNT);
+        vm.assume(receiver != address(0));
+
         eTST.setDisabledOps(OP_MINT);
         vm.expectRevert(Errors.E_OperationDisabled.selector);
+        eTST.mint(amount, receiver);
+
+        // re-enable
+        eTST.setDisabledOps(0);
+        vm.prank(depositor);
         eTST.mint(amount, receiver);
     }
 
     function testFuzz_disablingWithdrawOpsShouldFailAfterDisabled(uint256 amount, address receiver, address owner)
         public
     {
+        amount = bound(amount, 1, MINT_AMOUNT);
+        vm.assume(receiver != address(0));
+
         eTST.setDisabledOps(OP_WITHDRAW);
         vm.expectRevert(Errors.E_OperationDisabled.selector);
         eTST.withdraw(amount, receiver, owner);
+
+        // re-enable
+        eTST.setDisabledOps(0);
+        vm.prank(depositor);
+        eTST.withdraw(amount, receiver, depositor);
     }
 
     function testFuzz_disablingRedeemOpsShouldFailAfterDisabled(uint256 amount, address receiver, address owner)
@@ -160,7 +184,7 @@ contract Governance_PauseAndOps is EVaultTestBase {
     function testFuzz_validateAssetsReceiverDisabledShouldFailBorrowAfterDisabled(uint256 amount, address receiver)
         public
     {
-        amount = bound(amount, 1, MINT_AMOUNT);
+        amount = bound(amount, 1, MINT_AMOUNT / 2);
         vm.assume(receiver != address(0));
 
         address subacc = address(uint160(borrower) >> 8 << 8);
@@ -175,7 +199,13 @@ contract Governance_PauseAndOps is EVaultTestBase {
         eTST.setDisabledOps(OP_VALIDATE_ASSET_RECEIVER);
 
         vm.startPrank(borrower);
-        eTST.borrow(amount, receiver);
+        eTST.borrow(amount, subacc);
         vm.stopPrank();
+
+        eTST.setDisabledOps(0);
+        vm.startPrank(borrower);
+        // should be disabled again
+        vm.expectRevert(Errors.E_BadAssetReceiver.selector); //! note this is a different error
+        eTST.borrow(amount, subacc);
     }
 }
