@@ -4,7 +4,7 @@ pragma solidity ^0.8.20;
 import "./lib/ESRTest.sol";
 
 contract ESRFuzzTest is ESRTest {
-    function invariant_interesLeftGreaterThanAccruedInterest() public {
+    function invariant_interestLeftGreaterThanAccruedInterest() public view {
         EulerSavingsRate.ESRSlot memory esrSlot = esr.getESRSlot();
         uint256 accruedInterest = esr.interestAccrued();
         assertGe(esrSlot.interestLeft, accruedInterest);
@@ -17,7 +17,7 @@ contract ESRFuzzTest is ESRTest {
         assertEq(esr.totalAssets(), balance);
     }
 
-    function testFuzz_interestAccrued_uder_uint168(uint256 interestAmount, uint256 depositAmount, uint256 timePassed)
+    function testFuzz_interestAccrued_under_uint168(uint256 interestAmount, uint256 depositAmount, uint256 timePassed)
         public
     {
         depositAmount = bound(depositAmount, 0, type(uint112).max);
@@ -34,7 +34,7 @@ contract ESRFuzzTest is ESRTest {
 
     // this tests shows that when you have a very small deposit and a very large interestAmount minted to the contract
     // some interest might be lost due to the uint168 cast
-    function testFuzz_gulp_uder_uint168(uint256 interestAmount, uint256 depositAmount, uint256 timePassed) public {
+    function testFuzz_gulp_under_uint168(uint256 interestAmount, uint256 depositAmount, uint256 timePassed) public {
         depositAmount = bound(depositAmount, 0, type(uint112).max);
         interestAmount = bound(interestAmount, 0, type(uint112).max - depositAmount); // this makes sure that the mint won't cause overflow
         timePassed = bound(timePassed, block.timestamp, type(uint40).max);

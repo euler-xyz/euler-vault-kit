@@ -72,7 +72,7 @@ contract PSMTest is Test {
         synth.approve(address(psm), 100e18);
     }
 
-    function testConstructor() public {
+    function testConstructor() public view {
         assertEq(address(psm.synth()), address(synth));
         assertEq(psm.TO_UNDERLYING_FEE(), TO_UNDERLYING_FEE);
         assertEq(psm.TO_SYNTH_FEE(), TO_SYNTH_FEE);
@@ -159,7 +159,7 @@ contract PSMTest is Test {
     }
 
     // Test quotes
-    function testQuoteToUnderlyingGivenIn() public {
+    function testQuoteToUnderlyingGivenIn() public view {
         uint256 amountIn = 10e18;
         uint256 expectedAmountOut = amountIn * (BPS_SCALE - TO_UNDERLYING_FEE) / BPS_SCALE;
 
@@ -168,7 +168,7 @@ contract PSMTest is Test {
         assertEq(amountOut, expectedAmountOut);
     }
 
-    function testQuoteToUnderlyingGivenOut() public {
+    function testQuoteToUnderlyingGivenOut() public view {
         uint256 amountOut = 10e18;
         uint256 expectedAmountIn = amountOut * BPS_SCALE / (BPS_SCALE - TO_UNDERLYING_FEE);
 
@@ -177,7 +177,7 @@ contract PSMTest is Test {
         assertEq(amountIn, expectedAmountIn);
     }
 
-    function testQuoteToSynthGivenIn() public {
+    function testQuoteToSynthGivenIn() public view {
         uint256 amountIn = 10e18;
         uint256 expectedAmountOut = amountIn * (BPS_SCALE - TO_SYNTH_FEE) / BPS_SCALE;
 
@@ -186,7 +186,7 @@ contract PSMTest is Test {
         assertEq(amountOut, expectedAmountOut);
     }
 
-    function testQuoteToSynthGivenOut() public {
+    function testQuoteToSynthGivenOut() public view {
         uint256 amountOut = 10e18;
         uint256 expectedAmountIn = amountOut * BPS_SCALE / (BPS_SCALE - TO_SYNTH_FEE);
 

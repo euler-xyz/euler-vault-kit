@@ -10,7 +10,7 @@ contract ESVaultTestInterestFee is ESVaultTestBase {
         super.setUp();
     }
 
-    function test_interest_fee() public {
+    function test_interest_fee() public view {
         uint256 interestFee = eTST.interestFee();
         assertEq(interestFee, 1e4);
     }
