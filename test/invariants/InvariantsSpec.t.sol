@@ -22,7 +22,7 @@ abstract contract InvariantsSpec {
 
     string constant TM_INVARIANT_B = "TM_INVARIANT_B: balanceOf(actor) == sum of all shares owned by address";
 
-    string constant TM_INVARIANT_C = "TM_INVARIANT_C: totalSupply == sum of balanceOf(actors)";
+    string constant TM_INVARIANT_C = "TM_INVARIANT_C: totalSupply == sum of balanceOf(actors) + accumulatedFees";
 
     ///////////////////////////////////////////////////////////////////////////////////////////////
     //                                       VAULT MODULE                                        //

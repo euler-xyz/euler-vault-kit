@@ -67,7 +67,7 @@ abstract contract BorrowingModuleInvariants is HandlerAggregator {
             // If it has decimals, debtOf should be equal that debtOfExact rounded to the next integer
             assertEq(
                 eTST.debtOf(_actor),
-                eTST.debtOfExact(_actor) >> INTERNAL_DEBT_PRECISION + 1,
+                (eTST.debtOfExact(_actor) >> INTERNAL_DEBT_PRECISION) + 1,
                 BM_INVARIANT_J
             );
         }

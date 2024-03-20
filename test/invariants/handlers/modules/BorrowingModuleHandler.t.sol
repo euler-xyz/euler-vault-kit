@@ -40,7 +40,6 @@ contract BorrowingModuleHandler is BaseHandler {
         _before();
         (success, returnData) =
             actor.proxy(target, abi.encodeWithSelector(IBorrowing.borrow.selector, assets, receiver));
-        console.log("Success: ", success);
 
         if (!isAccountHealthyBefore) {
             /// @dev BM_INVARIANT_E
@@ -80,7 +79,7 @@ contract BorrowingModuleHandler is BaseHandler {
         }
     }
 
-    function loop(uint256 assets, uint256 i) external setup {
+    function loop(uint256 amount, uint256 i) external setup {
         bool success;
         bytes memory returnData;
 
@@ -91,14 +90,14 @@ contract BorrowingModuleHandler is BaseHandler {
 
         _before();
         (success, returnData) =
-            actor.proxy(target, abi.encodeWithSelector(IBorrowing.loop.selector, assets, receiver));
+            actor.proxy(target, abi.encodeWithSelector(IBorrowing.loop.selector, amount, receiver));
 
         if (success) {
-            assert(true);
+            _increaseGhostShares(amount, address(receiver));
         }
     }
 
-    function deloop(uint256 assets, uint256 i) external setup {
+    function deloop(uint256 amount, uint256 i) external setup {
         bool success;
         bytes memory returnData;
 
@@ -109,10 +108,10 @@ contract BorrowingModuleHandler is BaseHandler {
 
         _before();
         (success, returnData) =
-            actor.proxy(target, abi.encodeWithSelector(IBorrowing.deloop.selector, assets, receiver));
+            actor.proxy(target, abi.encodeWithSelector(IBorrowing.deloop.selector, amount, receiver));
 
         if (success) {
-            assert(true);
+            _decreaseGhostShares(amount, address(actor));
         }
     }
 
@@ -130,6 +129,7 @@ contract BorrowingModuleHandler is BaseHandler {
             actor.proxy(target, abi.encodeWithSelector(IBorrowing.pullDebt.selector, from, assets));
 
         if (success) {
+            assert(false);
             _after();
         }
     }

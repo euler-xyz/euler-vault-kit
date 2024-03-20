@@ -100,7 +100,7 @@ abstract contract VaultModuleInvariants is HandlerAggregator {
     //                                      ERC4626: MINT                                        //
     ///////////////////////////////////////////////////////////////////////////////////////////////
 
-    function assert_ERC4626_MINT_INVARIANT_A(address _account) internal {
+    function assert_ERC4626_MINT_INVARIANT_A(address _account) internal {//@audit-issue when exchange rate is negative maxMint reverts
         try eTST.maxMint(_account) {}
         catch {
             fail(ERC4626_MINT_INVARIANT_A);

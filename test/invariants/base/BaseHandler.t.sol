@@ -114,4 +114,25 @@ contract BaseHandler is HookAggregator {
         _mintAndApprove(address(eTST.asset()), owner, vault, eTST.convertToAssets(amount) * 2);
         eTST.mint(amount, owner);
     }
+
+    //  GHOST VARIABLES UPDATES
+    function _increaseGhostAssets(uint256 assets, address receiver) internal {
+        ghost_sumBalances += assets;
+        ghost_sumBalancesPerUser[receiver] += assets;
+    }
+
+    function _decreaseGhostAssets(uint256 assets, address owner) internal {
+        ghost_sumBalances -= assets;
+        ghost_sumBalancesPerUser[owner] -= assets;
+    }
+
+    function _increaseGhostShares(uint256 shares, address receiver) internal {
+        ghost_sumSharesBalances += shares;
+        ghost_sumSharesBalancesPerUser[receiver] += shares;
+    }
+
+    function _decreaseGhostShares(uint256 shares, address owner) internal {
+        ghost_sumSharesBalances -= shares;
+        ghost_sumSharesBalancesPerUser[owner] -= shares;
+    }
 }

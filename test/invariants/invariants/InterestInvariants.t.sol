@@ -14,14 +14,15 @@ import {HandlerAggregator} from "../HandlerAggregator.t.sol";
 abstract contract InterestInvariants is HandlerAggregator {
 
     function assert_I_INVARIANT_A() internal {
+        (uint256 min, uint256 max) = protocolConfig.interestFeeRange(address(eTST));
         assertLe(
             eTST.interestFee(),
-            MAX_INTEREST_FEE,
+            max,
             I_INVARIANT_A
         );
         assertGe(
             eTST.interestFee(),
-            MIN_INTEREST_FEE,
+            min,
             I_INVARIANT_A
         );
     }

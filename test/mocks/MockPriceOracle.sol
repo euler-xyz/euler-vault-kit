@@ -18,7 +18,7 @@ contract MockPriceOracle {
         uint256 price = prices[base][quote];
         if (price == 0) revert PO_NoPath();
 
-        return amount * price / 1e18;
+        return amount * price / 1e18; // @audit-issue round up price for debt
     }
 
     function getQuotes(uint256 amount, address base, address quote) external view returns (uint256 bidOut, uint256 askOut) {

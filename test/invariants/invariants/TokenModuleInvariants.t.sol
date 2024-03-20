@@ -21,6 +21,6 @@ abstract contract TokenModuleInvariants is HandlerAggregator {
     }
 
     function assert_TM_INVARIANT_C(uint256 _sumBalances) internal {
-        assertEq(eTST.totalSupply(), _sumBalances, TM_INVARIANT_C);
+        assertEq(eTST.totalSupply(), _sumBalances + eTST.accumulatedFees(), TM_INVARIANT_C);
     } 
 }
