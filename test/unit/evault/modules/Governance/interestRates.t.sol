@@ -4,8 +4,6 @@ pragma solidity ^0.8.0;
 
 import "../../EVaultTestBase.t.sol";
 
-import { console2 as console } from "forge-std/console2.sol";
-
 contract GovernanceTest is EVaultTestBase {
     using TypesLib for uint256;
 
