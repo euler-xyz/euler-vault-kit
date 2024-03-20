@@ -1,34 +1,72 @@
-name: test
+name: ci
 
-on: workflow_dispatch
-
-env:
-  FOUNDRY_PROFILE: ci
+on:
+    push:
+        branches:
+            - master
+    pull_request:
 
 jobs:
-  check:
-    strategy:
-      fail-fast: true
+    build:
+        runs-on: ubuntu-latest
+        steps:
+            - uses: actions/checkout@v3
+              with:
+                  submodules: recursive
 
-    name: Foundry project
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-        with:
-          submodules: recursive
+            - name: Install foundry
+              uses: foundry-rs/foundry-toolchain@v1
+              with:
+                  version: nightly
 
-      - name: Install Foundry
-        uses: foundry-rs/foundry-toolchain@v1
-        with:
-          version: nightly
+            - name: Run foundry build
+              run: |
+                  forge --version
+                  forge build
+              id: build
 
-      - name: Run Forge build
-        run: |
-          forge --version
-          forge build --sizes
-        id: build
+    lint-check:
+        runs-on: ubuntu-latest
+        needs: build
+        steps:
+            - uses: actions/checkout@v3
+              with:
+                  submodules: recursive
+            - uses: foundry-rs/foundry-toolchain@v1
+              with:
+                  version: nightly
 
-      - name: Run Forge tests
-        run: |
-          forge test -vvv
-        id: test
+            - name: Run foundry fmt check
+              run: |
+                  forge fmt --check
+              id: fmt
+
+    test:
+        runs-on: ubuntu-latest
+        needs: lint-check
+        steps:
+            - uses: actions/checkout@v3
+              with:
+                  submodules: recursive
+            - uses: foundry-rs/foundry-toolchain@v1
+              with:
+                  version: nightly
+            - name: Run foundry tests
+              run: |
+                  forge test -vv --gas-report
+              id: test
+
+    coverage:
+        runs-on: ubuntu-latest
+        needs: lint-check
+        steps:
+            - uses: actions/checkout@v3
+              with:
+                  submodules: recursive
+            - uses: foundry-rs/foundry-toolchain@v1
+              with:
+                  version: nightly
+            - name: Run foundry coverage
+              run: |
+                  FOUNDRY_PROFILE=coverage forge coverage --report summary
+              id: coverage
