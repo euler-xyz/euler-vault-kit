@@ -43,7 +43,6 @@ contract LiquidationModuleHandler is BaseHandler {
             );
         }
         if (success) {
-            assert(false);
             _after();
 
             /// @dev LM_INVARIANT_A

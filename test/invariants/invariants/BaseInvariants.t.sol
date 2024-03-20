@@ -17,7 +17,7 @@ abstract contract BaseInvariants is HandlerAggregator {
 
     function assert_BASE_INVARIANT_B() internal {
         Snapshot memory _snapshot = eTST.getSnapshot();
-        assertEq(_snapshot._stamp, 1, BASE_INVARIANT_B);
+        assertEq(_snapshot._stamp, 1 << 31, BASE_INVARIANT_B);
         assertEq(Assets.unwrap(_snapshot.cash), 0, BASE_INVARIANT_B);
         assertEq(Assets.unwrap(_snapshot.borrows), 0, BASE_INVARIANT_B);
     }

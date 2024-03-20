@@ -28,6 +28,10 @@ contract EVaultExtended is EVault {
         return marketStorage.lastInterestAccumulatorUpdate;
     }
 
+    function getUserInterestAccumulator(address user) external view returns (uint256) {
+        return marketStorage.users[user].interestAccumulator;
+    }
+
     function isDisabledOp(uint32 bitMask) external view returns (bool) {
         return marketStorage.disabledOps.check(bitMask);
     }

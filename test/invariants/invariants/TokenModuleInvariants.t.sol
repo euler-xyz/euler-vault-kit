@@ -3,6 +3,8 @@ pragma solidity ^0.8.19;
 
 import {HandlerAggregator} from "../HandlerAggregator.t.sol";
 
+import "forge-std/console.sol";
+
 // Contracts
 
 /// @title TokenModuleInvariants
@@ -11,8 +13,9 @@ import {HandlerAggregator} from "../HandlerAggregator.t.sol";
 abstract contract TokenModuleInvariants is HandlerAggregator {
 
     function assert_TM_INVARIANT_A() internal {
+        uint256 extrabalance = eTST.balanceOf(eTST.feeReceiver()) + eTST.balanceOf(eTST.protocolFeeReceiver());
         assertApproxEqAbs(
-            eTST.totalSupply(), ghost_sumSharesBalances, NUMBER_OF_ACTORS, TM_INVARIANT_A
+            eTST.totalSupply(), ghost_sumSharesBalances + eTST.accumulatedFees() + extrabalance, NUMBER_OF_ACTORS, TM_INVARIANT_A
         );
     }
 
@@ -21,6 +24,8 @@ abstract contract TokenModuleInvariants is HandlerAggregator {
     }
 
     function assert_TM_INVARIANT_C(uint256 _sumBalances) internal {
-        assertEq(eTST.totalSupply(), _sumBalances + eTST.accumulatedFees(), TM_INVARIANT_C);
+        console.log("SumBalances: ", _sumBalances);
+        uint256 extrabalance = eTST.balanceOf(eTST.feeReceiver()) + eTST.balanceOf(eTST.protocolFeeReceiver());
+        assertEq(eTST.totalSupply(), _sumBalances + eTST.accumulatedFees() + extrabalance, TM_INVARIANT_C);
     } 
 }

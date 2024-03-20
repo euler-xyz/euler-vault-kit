@@ -19,7 +19,7 @@ abstract contract BorrowingModuleInvariants is HandlerAggregator {
     function assert_BM_INVARIANT_A(
         address _borrower
     ) internal {
-        assertGe(
+       assertGe(
             eTST.totalBorrows(),
             eTST.debtOf(_borrower),
             BM_INVARIANT_A

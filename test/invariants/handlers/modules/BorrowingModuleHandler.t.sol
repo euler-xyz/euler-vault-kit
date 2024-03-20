@@ -129,7 +129,7 @@ contract BorrowingModuleHandler is BaseHandler {
             actor.proxy(target, abi.encodeWithSelector(IBorrowing.pullDebt.selector, from, assets));
 
         if (success) {
-            assert(false);
+            //assert(false);
             _after();
         }
     }

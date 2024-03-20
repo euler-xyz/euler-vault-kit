@@ -66,14 +66,10 @@ contract GovernanceModuleHandler is BaseHandler {
         if (status) bitmask = removeConfiguration(bitmask, OP_SOCIALIZE_DEBT);
         else bitmask = addConfiguration(bitmask, OP_SOCIALIZE_DEBT);
         eTST.setDisabledOps(bitmask);
-
-        assert(false);
     }
 
     function setCaps(uint16 supplyCap, uint16 borrowCap) external {
         eTST.setCaps(supplyCap, borrowCap);
-
-        assert(false);
     }
 
     //TODO

@@ -56,8 +56,6 @@ contract VaultModuleHandler is BaseHandler {
         // Get one of the three actors randomly
         address receiver = _getRandomActor(i);
 
-        console.log("Receiver: %s", receiver);
-
         address target = address(eTST);
 
         uint256 previewedShares = eTST.previewDeposit(assets);

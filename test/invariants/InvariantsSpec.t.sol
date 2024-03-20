@@ -18,7 +18,7 @@ abstract contract InvariantsSpec {
     //                                       TOKEN MODULE                                        //
     ///////////////////////////////////////////////////////////////////////////////////////////////
 
-    string constant TM_INVARIANT_A = "TM_INVARIANT_A: totalSupply = sum of all minted shares";
+    string constant TM_INVARIANT_A = "TM_INVARIANT_A: totalSupply = sum of all minted shares + accumulatedFees";
 
     string constant TM_INVARIANT_B = "TM_INVARIANT_B: balanceOf(actor) == sum of all shares owned by address";
 
