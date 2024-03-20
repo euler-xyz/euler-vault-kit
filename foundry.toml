@@ -33,5 +33,3 @@ seed = "0xee1d0f7d9556539a9c0e26aed5e63556"
 runs = 1000
 
 # See more config options https://github.com/foundry-rs/foundry/blob/master/crates/config/README.md#all-options
-[profile.default.invariant]
-fail_on_revert = true

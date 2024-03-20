@@ -52,8 +52,9 @@ jobs:
               with:
                   version: nightly
             - name: Run foundry tests
+              # --ast tests enables inline configs to work https://github.com/foundry-rs/foundry/issues/7310#issuecomment-1978088200
               run: |
-                  forge test -vv --gas-report
+                  forge test -vv --gas-report --ast 
               id: test
 
     coverage:
