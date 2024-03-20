@@ -38,8 +38,10 @@ abstract contract GovernanceModule is IGovernance, Base, BalanceUtils, BorrowUti
         _;
     }
 
-    modifier pauseGuardianOnly() {
-        if (msg.sender != marketStorage.pauseGuardian) revert E_Unauthorized();
+    modifier governorOrPauseGuardianOnly() {
+        if (msg.sender != marketStorage.governorAdmin && msg.sender != marketStorage.pauseGuardian) {
+            revert E_Unauthorized();
+        }
         _;
     }
 
@@ -246,7 +248,7 @@ abstract contract GovernanceModule is IGovernance, Base, BalanceUtils, BorrowUti
     }
 
     /// @inheritdoc IGovernance
-    function setDisabledOps(uint32 newDisabledOps) public virtual nonReentrant pauseGuardianOnly {
+    function setDisabledOps(uint32 newDisabledOps) public virtual nonReentrant governorOrPauseGuardianOnly {
         // market is updated because:
         // if disabling interest accrual - the pending interest should be accrued
         // if re-enabling interest - last updated timestamp needs to be reset to skip the disabled period
