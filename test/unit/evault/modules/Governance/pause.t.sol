@@ -16,12 +16,27 @@ import "src/EVault/shared/types/Types.sol";
 
 contract Governance_PauseAndOps is EVaultTestBase {
     address notGovernor;
-    uint32[] allOps;
+    address borrower;
+    address depositor;
+    uint256 constant MINT_AMOUNT = 100e18;
 
     function setUp() public override {
         super.setUp();
         notGovernor = makeAddr("notGovernor");
-        allOps = [OP_DEPOSIT, OP_MINT, OP_WITHDRAW, OP_REDEEM, OP_TRANSFER];
+        borrower = makeAddr("borrower");
+        depositor = makeAddr("depositor");
+        // ----------------- Setup depositor -----------------
+        vm.startPrank(depositor);
+        assetTST.mint(depositor, type(uint256).max);
+        assetTST.approve(address(eTST), type(uint256).max);
+        eTST.deposit(MINT_AMOUNT, depositor);
+        vm.stopPrank();
+        // ----------------- Setup borrower -----------------
+        vm.startPrank(borrower);
+        assetTST2.mint(borrower, type(uint256).max);
+        assetTST2.approve(address(eTST2), type(uint256).max);
+        eTST2.deposit(MINT_AMOUNT, borrower);
+        vm.stopPrank();
     }
 
     function testFuzz_setDisabledOpsShouldFailIfNotGovernor(uint32 newDisabledOps) public {
@@ -40,79 +55,83 @@ contract Governance_PauseAndOps is EVaultTestBase {
         assertEq(eTST.disabledOps(), newDisabledOps);
     }
 
-    function test_disablingDepositOpsShouldFailAfterDisabled(uint256 amount, address receiver) public {
+    function testFuzz_disablingDepositOpsShouldFailAfterDisabled(uint256 amount, address receiver) public {
         eTST.setDisabledOps(OP_DEPOSIT);
         vm.expectRevert(Errors.E_OperationDisabled.selector);
         eTST.deposit(amount, receiver);
     }
 
-    function test_disablingMintOpsShouldFailAfterDisabled(uint256 amount, address receiver) public {
+    function testFuzz_disablingMintOpsShouldFailAfterDisabled(uint256 amount, address receiver) public {
         eTST.setDisabledOps(OP_MINT);
         vm.expectRevert(Errors.E_OperationDisabled.selector);
         eTST.mint(amount, receiver);
     }
 
-    function test_disablingWithdrawOpsShouldFailAfterDisabled(uint256 amount, address receiver, address owner) public {
+    function testFuzz_disablingWithdrawOpsShouldFailAfterDisabled(uint256 amount, address receiver, address owner)
+        public
+    {
         eTST.setDisabledOps(OP_WITHDRAW);
         vm.expectRevert(Errors.E_OperationDisabled.selector);
         eTST.withdraw(amount, receiver, owner);
     }
 
-    function test_disablingRedeemOpsShouldFailAfterDisabled(uint256 amount, address receiver, address owner) public {
+    function testFuzz_disablingRedeemOpsShouldFailAfterDisabled(uint256 amount, address receiver, address owner)
+        public
+    {
         eTST.setDisabledOps(OP_REDEEM);
         vm.expectRevert(Errors.E_OperationDisabled.selector);
         eTST.redeem(amount, receiver, owner);
     }
 
-    function test_disablingTransferOpsShouldFailAfterDisabled(address to, uint256 amount) public {
+    function testFuzz_disablingTransferOpsShouldFailAfterDisabled(address to, uint256 amount) public {
         eTST.setDisabledOps(OP_TRANSFER);
         vm.expectRevert(Errors.E_OperationDisabled.selector);
         eTST.transfer(to, amount);
     }
 
-    function test_skimmingDisabledOpsShouldFailAfterDisabled(uint256 amount, address receiver) public {
+    function testFuzz_skimmingDisabledOpsShouldFailAfterDisabled(uint256 amount, address receiver) public {
         eTST.setDisabledOps(OP_SKIM);
         vm.expectRevert(Errors.E_OperationDisabled.selector);
         eTST.skim(amount, receiver);
     }
 
-    function test_borrowingDisabledOpsShouldFailAfterDisabled(uint256 amount, address receiver) public {
+    function testFuzz_borrowingDisabledOpsShouldFailAfterDisabled(uint256 amount, address receiver) public {
         eTST.setDisabledOps(OP_BORROW);
         vm.expectRevert(Errors.E_OperationDisabled.selector);
         eTST.borrow(amount, receiver);
     }
 
-    function test_repayingDisabledOpsShouldFailAfterDisabled(uint256 amount, address receiver) public {
+    function testFuzz_repayingDisabledOpsShouldFailAfterDisabled(uint256 amount, address receiver) public {
         eTST.setDisabledOps(OP_REPAY);
         vm.expectRevert(Errors.E_OperationDisabled.selector);
         eTST.repay(amount, receiver);
     }
 
-    function test_loopingDisabledOpsShouldFailAfterDisabled(uint256 amount, address sharesReceiver) public {
+    function testFuzz_loopingDisabledOpsShouldFailAfterDisabled(uint256 amount, address sharesReceiver) public {
         eTST.setDisabledOps(OP_LOOP);
         vm.expectRevert(Errors.E_OperationDisabled.selector);
         eTST.loop(amount, sharesReceiver);
     }
 
-    function test_deloopingDisabledOpsShouldFailAfterDisabled(uint256 amount, address debtFrom) public {
+    function testFuzz_deloopingDisabledOpsShouldFailAfterDisabled(uint256 amount, address debtFrom) public {
         eTST.setDisabledOps(OP_DELOOP);
         vm.expectRevert(Errors.E_OperationDisabled.selector);
         eTST.deloop(amount, debtFrom);
     }
 
-    function test_pullingDebtDisabledOpsShouldFailAfterDisabled(uint256 amount, address from) public {
+    function testFuzz_pullingDebtDisabledOpsShouldFailAfterDisabled(uint256 amount, address from) public {
         eTST.setDisabledOps(OP_PULL_DEBT);
         vm.expectRevert(Errors.E_OperationDisabled.selector);
         eTST.pullDebt(amount, from);
     }
 
-    function test_convertingFeesDisabledOpsShouldFailAfterDisabled() public {
+    function testFuzz_convertingFeesDisabledOpsShouldFailAfterDisabled() public {
         eTST.setDisabledOps(OP_CONVERT_FEES);
         vm.expectRevert(Errors.E_OperationDisabled.selector);
         eTST.convertFees();
     }
 
-    function test_liquidatingDisabledOpsShouldFailAfterDisabled(
+    function testFuzz_liquidatingDisabledOpsShouldFailAfterDisabled(
         address violator,
         address collateral,
         uint256 repayAssets,
@@ -123,13 +142,13 @@ contract Governance_PauseAndOps is EVaultTestBase {
         eTST.liquidate(violator, collateral, repayAssets, minYieldBalance);
     }
 
-    function test_flashLoanDisabledOpsShouldFailAfterDisabled(uint256 amount, bytes calldata data) public {
+    function testFuzz_flashLoanDisabledOpsShouldFailAfterDisabled(uint256 amount, bytes calldata data) public {
         eTST.setDisabledOps(OP_FLASHLOAN);
         vm.expectRevert(Errors.E_OperationDisabled.selector);
         eTST.flashLoan(amount, data);
     }
 
-    function test_touchDisabledOpsShouldFailAfterDisabled() public {
+    function testFuzz_touchDisabledOpsShouldFailAfterDisabled() public {
         eTST.setDisabledOps(OP_TOUCH);
         vm.expectRevert(Errors.E_OperationDisabled.selector);
         eTST.touch();
@@ -138,17 +157,25 @@ contract Governance_PauseAndOps is EVaultTestBase {
     // TODO: accrue interest is a little bit different
     // TODO: socialize debt is a little bit different
 
-    function test_validateAssetsReceiverDisabledShouldFailBorrowAfterDisabled(uint256 amount, address receiver)
+    function testFuzz_validateAssetsReceiverDisabledShouldFailBorrowAfterDisabled(uint256 amount, address receiver)
         public
     {
-        eTST.setDisabledOps(OP_VALIDATE_ASSET_RECEIVER);
-        receiver = address(0);
-        vm.mockCall(
-            address(evc),
-            abi.encodeWithSelector(EthereumVaultConnector.getCurrentOnBehalfOfAccount.selector, address(eTST)),
-            abi.encode(true, true)
-        );
+        amount = bound(amount, 1, MINT_AMOUNT);
+        vm.assume(receiver != address(0));
+
+        address subacc = address(uint160(borrower) >> 8 << 8);
+
+        vm.startPrank(borrower);
+        evc.enableCollateral(borrower, address(eTST2));
+        evc.enableController(borrower, address(eTST));
         vm.expectRevert(Errors.E_BadAssetReceiver.selector); //! note this is a different error
+        eTST.borrow(amount, subacc);
+        vm.stopPrank();
+
+        eTST.setDisabledOps(OP_VALIDATE_ASSET_RECEIVER);
+
+        vm.startPrank(borrower);
         eTST.borrow(amount, receiver);
+        vm.stopPrank();
     }
 }
