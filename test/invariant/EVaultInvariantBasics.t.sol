@@ -4,7 +4,6 @@ pragma solidity ^0.8.0;
 
 import "forge-std/Test.sol";
 import {EVaultHandler} from "test/invariant/handlers/EVaultHandler.t.sol";
-import "forge-std/console2.sol";
 
 contract EVaultInvariantBasicsTest is Test {
     EVaultHandler handler;
