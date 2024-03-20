@@ -4,7 +4,7 @@ pragma solidity ^0.8.0;
 
 import {EVault} from "src/EVault/EVault.sol";
 import {EVaultDeployerDefault} from "test/common/EVaultDeployerDefault.sol";
-import {Math} from "openzeppelin-contracts/contracts/utils/math/Math.sol";
+import {Math} from "openzeppelin-contracts/utils/math/Math.sol";
 import "forge-std/console2.sol";
 
 contract EVaultHandler is EVaultDeployerDefault {

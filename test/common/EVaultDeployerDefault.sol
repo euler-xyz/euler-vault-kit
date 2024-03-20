@@ -23,10 +23,10 @@ import {TestERC20} from "test/mocks/TestERC20.sol";
 import {MockBalanceTracker} from "test/mocks/MockBalanceTracker.sol";
 import {MockPriceOracle} from "test/mocks/MockPriceOracle.sol";
 import {IRMTestDefault} from "test/mocks/IRMTestDefault.sol";
-// import {AssertionsCustomTypes} from "test/helpers/AssertionsCustomTypes.sol";
+import {AssertionsCustomTypes} from "test/helpers/AssertionsCustomTypes.sol";
 import "src/EVault/shared/Constants.sol";
 
-contract EVaultDeployerDefault is Test, DeployPermit2 {
+contract EVaultDeployerDefault is Test, AssertionsCustomTypes, DeployPermit2 {
     // ------------------------- Base -------------------------
     EthereumVaultConnector public evc;
     GenericFactory public factory;
