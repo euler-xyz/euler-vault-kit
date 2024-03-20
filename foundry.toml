@@ -9,7 +9,6 @@ solc = "0.8.24"
 
 fs_permissions = [{ access = "read-write", path = "./"}]
 
-etherscan_api_key = ""
 gas_reports = ["*"]
 
 
