@@ -2,7 +2,6 @@
 
 pragma solidity ^0.8.0;
 
-import {console2} from "forge-std/Test.sol";
 import {EVaultTestBase} from "../../EVaultTestBase.t.sol";
 import {Events} from "src/EVault/shared/Events.sol";
 import {SafeERC20Lib} from "src/EVault/shared/lib/SafeERC20Lib.sol";

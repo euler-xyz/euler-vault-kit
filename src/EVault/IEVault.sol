@@ -416,20 +416,20 @@ interface IEVault is
     IBalanceForwarder,
     IGovernance
 {
-    /// @notice Fetch address of the `Initialize` module 
-    function MODULE_INITIALIZE() external view returns(address);
-    /// @notice Fetch address of the `Token` module 
-    function MODULE_TOKEN() external view returns(address);
-    /// @notice Fetch address of the `Vault` module 
-    function MODULE_VAULT() external view returns(address);
-    /// @notice Fetch address of the `Borrowing` module 
-    function MODULE_BORROWING() external view returns(address);
-    /// @notice Fetch address of the `Liquidation` module 
-    function MODULE_LIQUIDATION() external view returns(address);
-    /// @notice Fetch address of the `RiskManager` module 
-    function MODULE_RISKMANAGER() external view returns(address);
-    /// @notice Fetch address of the `BalanceForwarder` module 
-    function MODULE_BALANCE_FORWARDER() external view returns(address);
-    /// @notice Fetch address of the `Governance` module 
-    function MODULE_GOVERNANCE() external view returns(address);
+    /// @notice Fetch address of the `Initialize` module
+    function MODULE_INITIALIZE() external view returns (address);
+    /// @notice Fetch address of the `Token` module
+    function MODULE_TOKEN() external view returns (address);
+    /// @notice Fetch address of the `Vault` module
+    function MODULE_VAULT() external view returns (address);
+    /// @notice Fetch address of the `Borrowing` module
+    function MODULE_BORROWING() external view returns (address);
+    /// @notice Fetch address of the `Liquidation` module
+    function MODULE_LIQUIDATION() external view returns (address);
+    /// @notice Fetch address of the `RiskManager` module
+    function MODULE_RISKMANAGER() external view returns (address);
+    /// @notice Fetch address of the `BalanceForwarder` module
+    function MODULE_BALANCE_FORWARDER() external view returns (address);
+    /// @notice Fetch address of the `Governance` module
+    function MODULE_GOVERNANCE() external view returns (address);
 }

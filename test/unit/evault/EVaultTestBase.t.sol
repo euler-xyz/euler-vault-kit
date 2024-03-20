@@ -55,7 +55,6 @@ contract EVaultTestBase is AssertionsCustomTypes, Test, DeployPermit2 {
     IEVault public eTST;
     IEVault public eTST2;
 
-
     address initializeModule;
     address tokenModule;
     address vaultModule;
@@ -64,7 +63,6 @@ contract EVaultTestBase is AssertionsCustomTypes, Test, DeployPermit2 {
     address riskManagerModule;
     address balanceForwarderModule;
     address governanceModule;
-
 
     function setUp() public virtual {
         admin = vm.addr(1000);
