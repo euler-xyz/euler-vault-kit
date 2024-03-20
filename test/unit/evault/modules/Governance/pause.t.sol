@@ -4,6 +4,7 @@ pragma solidity ^0.8.0;
 
 import {EVaultTestBase} from "test/unit/evault/EVaultTestBase.t.sol";
 import {Errors} from "src/EVault/shared/Errors.sol";
+import "src/EVault/shared/Constants.sol";
 
 // If this address is installed, it should be able to set disabled ops
 // Use a different address than the governor
@@ -11,6 +12,7 @@ import {Errors} from "src/EVault/shared/Errors.sol";
 // After pausing, trying to invoke the disabled ops should fail
 // The pause guardian should be able to re-enable the ops (unpause)
 // After re-enabling, the ops should start working again
+
 contract Governance_PauseAndOps is EVaultTestBase {
     address notGovernor;
     uint32[] allOps;
@@ -36,5 +38,33 @@ contract Governance_PauseAndOps is EVaultTestBase {
         assertEq(eTST.disabledOps(), newDisabledOps);
     }
 
-    // after setting disabled ops, setting them again should fail
+    function test_disablingDepositOPShouldFailAfterDisabled(uint256 amount, address receiver) public {
+        eTST.setDisabledOps(OP_DEPOSIT);
+        vm.expectRevert(Errors.E_OperationDisabled.selector);
+        eTST.deposit(amount, receiver);
+    }
+
+    function test_disablingMintOPShouldFailAfterDisabled(uint256 amount, address receiver) public {
+        eTST.setDisabledOps(OP_MINT);
+        vm.expectRevert(Errors.E_OperationDisabled.selector);
+        eTST.mint(amount, receiver);
+    }
+
+    function test_disablingWithdrawOPShouldFailAfterDisabled(uint256 amount, address receiver, address owner) public {
+        eTST.setDisabledOps(OP_WITHDRAW);
+        vm.expectRevert(Errors.E_OperationDisabled.selector);
+        eTST.withdraw(amount, receiver, owner);
+    }
+
+    function test_disablingRedeemOPShouldFailAfterDisabled(uint256 amount, address receiver, address owner) public {
+        eTST.setDisabledOps(OP_REDEEM);
+        vm.expectRevert(Errors.E_OperationDisabled.selector);
+        eTST.redeem(amount, receiver, owner);
+    }
+
+    function test_disablingTransferOPShouldFailAfterDisabled(address to, uint256 amount) public {
+        eTST.setDisabledOps(OP_TRANSFER);
+        vm.expectRevert(Errors.E_OperationDisabled.selector);
+        eTST.transfer(to, amount);
+    }
 }
