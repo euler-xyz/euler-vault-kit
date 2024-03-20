@@ -42,13 +42,4 @@ contract EVaultHandler is EVaultDeployerDefault {
         ghost_assetTST1Balance += assetsReceived;
         ghost_eTST1Balance -= amount;
     }
-
-    // function withdraw(uint256 amount) {
-    //     uint256 eTST1Balance = eTST1.balanceOf(address(this));
-    //     uint256 assetsAmount = eTST1.convertToAssets(eTST1Balance);
-    //     amount = bound(amount, 0, assetsAmount);
-    //     ghost_numCalls++;
-    //     ghost_assetTST1Balance += amount;
-    //     eTST1.withdraw(amount, receiver);
-    // }
 }
