@@ -4,7 +4,7 @@ pragma solidity ^0.8.0;
 
 import {IAllowanceTransfer} from "permit2/src/interfaces/IAllowanceTransfer.sol";
 import {IEVC} from "ethereum-vault-connector/interfaces/IEthereumVaultConnector.sol";
-import {IRewardStreams} from "reward-streams/interfaces/IRewardStreams.sol";
+//import {IRewardStreams} from "reward-streams/interfaces/IRewardStreams.sol";
 import {IEVault} from "../EVault/IEVault.sol";
 import {RPow} from "../EVault/shared/lib/RPow.sol";
 import "../EVault/shared/types/AmountCap.sol";
@@ -19,7 +19,7 @@ contract EVaultLens {
 
         result.evcUserInfo = getEVCUserInfo(IEVault(vault).EVC(), account);
         result.vaultUserInfo = getVaultUserInfo(account, vault);
-        result.rewardUserInfo = getRewardUserInfo(account, vault);
+        //result.rewardUserInfo = getRewardUserInfo(account, vault);
 
         return result;
     }
@@ -169,7 +169,7 @@ contract EVaultLens {
 
         return result;
     }
-
+    /*
     function getRewardUserInfo(address account, address vault) public view returns (RewardUserInfo memory) {
         RewardUserInfo memory result;
 
@@ -259,8 +259,9 @@ contract EVaultLens {
 
         return result;
     }
-
+    */
     /// @dev for tokens like MKR which return bytes32 on name() or symbol()
+
     function getStringOrBytes32(address contractAddress, bytes4 selector) private view returns (string memory) {
         (bool success, bytes memory result) = contractAddress.staticcall(abi.encodeWithSelector(selector));
 

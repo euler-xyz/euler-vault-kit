@@ -4,8 +4,8 @@ pragma solidity ^0.8.19;
 
 import "forge-std/Script.sol";
 import {EthereumVaultConnector} from "ethereum-vault-connector/EthereumVaultConnector.sol";
-import {StakingFreeRewardStreams} from "reward-streams/StakingFreeRewardStreams.sol";
-import {IEVC} from "reward-streams/StakingFreeRewardStreams.sol";
+//import {StakingFreeRewardStreams} from "reward-streams/StakingFreeRewardStreams.sol";
+//import {IEVC} from "reward-streams/StakingFreeRewardStreams.sol";
 import {ProtocolConfig} from "../src/ProtocolConfig/ProtocolConfig.sol";
 import {GenericFactory} from "../src/GenericFactory/GenericFactory.sol";
 import {Base} from "../src/EVault/shared/Base.sol";
@@ -43,7 +43,7 @@ contract Deployment is Script {
             address evc = address(new EthereumVaultConnector());
 
             // deploy the reward streams contract
-            address rewardStreams = address(new StakingFreeRewardStreams(IEVC(evc), 10 days));
+            address rewardStreams = address(0); //address(new StakingFreeRewardStreams(IEVC(evc), 10 days));
 
             // deploy the protocol config
             address protocolConfig = address(new ProtocolConfig(deployer, deployer));
