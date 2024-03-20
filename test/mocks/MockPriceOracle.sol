@@ -9,10 +9,11 @@ contract MockPriceOracle {
     mapping(address vault => address asset) public resolvedVaults;
 
     function getQuote(uint256 inAmount, address base, address quote) external view returns (uint256) {
-        uint256 price;        
+        uint256 price;
         (inAmount, base, quote, price) = _resolveOracle(inAmount, base, quote);
 
-        (bool success, bytes memory data) = address(base).staticcall(abi.encodeWithSelector(IERC20(base).decimals.selector));
+        (bool success, bytes memory data) =
+            address(base).staticcall(abi.encodeWithSelector(IERC20(base).decimals.selector));
         uint8 decimals = success && data.length >= 32 ? abi.decode(data, (uint8)) : 18;
 
         if (base == quote) {
@@ -26,7 +27,8 @@ contract MockPriceOracle {
         uint256 price;
         (inAmount, base, quote, price) = _resolveOracle(inAmount, base, quote);
 
-        (bool success, bytes memory data) = address(base).staticcall(abi.encodeWithSelector(IERC20(base).decimals.selector));
+        (bool success, bytes memory data) =
+            address(base).staticcall(abi.encodeWithSelector(IERC20(base).decimals.selector));
         uint8 decimals = success && data.length >= 32 ? abi.decode(data, (uint8)) : 18;
 
         uint256 outAmount;
