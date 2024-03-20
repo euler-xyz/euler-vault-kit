@@ -26,14 +26,14 @@ abstract contract Dispatch is
     BalanceForwarderModule,
     GovernanceModule
 {
-    address immutable MODULE_INITIALIZE;
-    address immutable MODULE_TOKEN;
-    address immutable MODULE_VAULT;
-    address immutable MODULE_BORROWING;
-    address immutable MODULE_LIQUIDATION;
-    address immutable MODULE_RISKMANAGER;
-    address immutable MODULE_BALANCE_FORWARDER;
-    address immutable MODULE_GOVERNANCE;
+    address immutable public MODULE_INITIALIZE;
+    address immutable public MODULE_TOKEN;
+    address immutable public MODULE_VAULT;
+    address immutable public MODULE_BORROWING;
+    address immutable public MODULE_LIQUIDATION;
+    address immutable public MODULE_RISKMANAGER;
+    address immutable public MODULE_BALANCE_FORWARDER;
+    address immutable public MODULE_GOVERNANCE;
 
     struct DeployedModules {
         address initialize;

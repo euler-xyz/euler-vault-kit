@@ -55,6 +55,17 @@ contract EVaultTestBase is AssertionsCustomTypes, Test, DeployPermit2 {
     IEVault public eTST;
     IEVault public eTST2;
 
+
+    address initializeModule;
+    address tokenModule;
+    address vaultModule;
+    address borrowingModule;
+    address liquidationModule;
+    address riskManagerModule;
+    address balanceForwarderModule;
+    address governanceModule;
+
+
     function setUp() public virtual {
         admin = vm.addr(1000);
         feeReceiver = makeAddr("feeReceiver");
@@ -68,15 +79,24 @@ contract EVaultTestBase is AssertionsCustomTypes, Test, DeployPermit2 {
         permit2 = deployPermit2();
         integrations = Base.Integrations(address(evc), address(protocolConfig), balanceTracker, permit2);
 
+        initializeModule = address(new Initialize(integrations));
+        tokenModule = address(new Token(integrations));
+        vaultModule = address(new Vault(integrations));
+        borrowingModule = address(new Borrowing(integrations));
+        liquidationModule = address(new Liquidation(integrations));
+        riskManagerModule = address(new RiskManager(integrations));
+        balanceForwarderModule = address(new BalanceForwarder(integrations));
+        governanceModule = address(new Governance(integrations));
+
         modules = Dispatch.DeployedModules({
-            initialize: address(new Initialize(integrations)),
-            token: address(new Token(integrations)),
-            vault: address(new Vault(integrations)),
-            borrowing: address(new Borrowing(integrations)),
-            liquidation: address(new Liquidation(integrations)),
-            riskManager: address(new RiskManager(integrations)),
-            balanceForwarder: address(new BalanceForwarder(integrations)),
-            governance: address(new Governance(integrations))
+            initialize: initializeModule,
+            token: tokenModule,
+            vault: vaultModule,
+            borrowing: borrowingModule,
+            liquidation: liquidationModule,
+            riskManager: riskManagerModule,
+            balanceForwarder: balanceForwarderModule,
+            governance: governanceModule
         });
 
         address evaultImpl = address(new EVault(integrations, modules));
