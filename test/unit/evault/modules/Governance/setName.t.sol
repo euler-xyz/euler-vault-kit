@@ -19,14 +19,14 @@ contract Governance_SetName is EVaultTestBase {
         eTST.setName(name);
     }
 
-    function testFuzz_governorSetNameEmptyShouldReturnUnnamedEulerVault() public {
-        eTST.setName("");
-        assertEq(eTST.name(), "Unnamed Euler Vault");
-    }
-
     function testFuzz_governorShouldBeAbleToSetName(string memory name) public {
         vm.assume(bytes(name).length > 0);
         eTST.setName(name);
         assertEq(eTST.name(), name);
+    }
+
+    function test_governorSetNameEmptyShouldReturnUnnamedEulerVault() public {
+        eTST.setName("");
+        assertEq(eTST.name(), "Unnamed Euler Vault");
     }
 }
