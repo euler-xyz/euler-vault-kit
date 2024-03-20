@@ -69,8 +69,7 @@ contract FactoryTest is Test {
 
             address randomUser = vm.addr(5000);
             vm.prank(randomUser);
-            (string memory outputArg, address theMsgSender, address marketAsset) =
-                eTST.arbitraryFunction(inputArg);
+            (string memory outputArg, address theMsgSender, address marketAsset) = eTST.arbitraryFunction(inputArg);
 
             assertEq(outputArg, inputArg);
             assertEq(theMsgSender, randomUser);
@@ -173,9 +172,7 @@ contract FactoryTest is Test {
         TestERC20 asset = new TestERC20("Test Token", "TST", 17, false);
 
         vm.expectEmit(false, true, true, true);
-        emit GenericFactory.ProxyCreated(
-            address(1), true, address(mockEvaultImpl), abi.encodePacked(address(asset))
-        );
+        emit GenericFactory.ProxyCreated(address(1), true, address(mockEvaultImpl), abi.encodePacked(address(asset)));
 
         factory.createProxy(true, abi.encodePacked(address(asset)));
     }
@@ -296,5 +293,5 @@ contract FactoryTest is Test {
         config = factory.getProxyConfig(address(eVaultNonUpg));
         assertNotEq(config.implementation, factory.implementation());
         assertEq(eVaultNonUpg.implementation(), "TRANSPARENT");
-    }   
+    }
 }

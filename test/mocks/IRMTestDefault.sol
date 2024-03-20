@@ -2,16 +2,11 @@
 
 pragma solidity ^0.8.0;
 
-import "../../src/interestRateModels/IRMLinearKink.sol";
+import "../../src/InterestRateModels/IRMLinearKink.sol";
 
 contract IRMTestDefault is IRMLinearKink {
     constructor()
-        IRMLinearKink(
-            // Base=0% APY,  Kink(50%)=10% APY  Max=300% APY
-            0,
-            1406417851,
-            19050045013,
-            2147483648
-        )
+        // Base=0% APY,  Kink(50%)=10% APY  Max=300% APY
+        IRMLinearKink(0, 1406417851, 19050045013, 2147483648)
     {}
 }

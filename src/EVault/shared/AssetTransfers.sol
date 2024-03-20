@@ -18,14 +18,15 @@ abstract contract AssetTransfers is Base {
 
     function pushAssets(MarketCache memory marketCache, address to, Assets amount) internal {
         if (
-            to == address(0) ||
-            // If the op is enabled, do not send assets to an address that is recognized by EVC 
+            to == address(0)
+            // If the op is enabled, do not send assets to an address that is recognized by EVC
             // as a sub-account of some other address. If the asset itself is not compatible with EVC
             // and sub-accounts, the funds would be lost.
-            (!marketCache.disabledOps.check(OP_VALIDATE_ASSET_RECEIVER) && isKnownSubaccount(to))
+            || (!marketCache.disabledOps.check(OP_VALIDATE_ASSET_RECEIVER) && isKnownSubaccount(to))
         ) {
-             revert E_BadAssetReceiver();
+            revert E_BadAssetReceiver();
         }
+
         marketStorage.cash = marketCache.cash = marketCache.cash - amount;
         marketCache.asset.safeTransfer(to, amount.toUint());
     }

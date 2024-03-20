@@ -62,12 +62,15 @@ abstract contract Base is EVCClient, Cache {
         // The snapshot is used only to verify that supply increased when checking the supply cap, and to verify that the borrows
         // increased when checking the borrowing cap. Caps are not checked when the capped variables decrease (become safer).
         // For this reason, the snapshot is disabled if both caps are disabled.
-        if (!marketCache.snapshotInitialized && (marketCache.supplyCap < type(uint256).max || marketCache.borrowCap < type(uint256).max)) {
+        if (
+            !marketCache.snapshotInitialized
+                && (marketCache.supplyCap < type(uint256).max || marketCache.borrowCap < type(uint256).max)
+        ) {
             marketStorage.snapshotInitialized = marketCache.snapshotInitialized = true;
             snapshot.set(marketCache.cash, marketCache.totalBorrows.toAssetsUp());
         }
 
-        account = EVCAuthenticateDeferred(Operations.wrap(CONTROLLER_ONLY_OPERATIONS).check(operation));
+        account = EVCAuthenticateDeferred(!Operations.wrap(CONTROLLER_NEUTRAL_OPERATIONS).check(operation));
 
         EVCRequireStatusChecks(accountToCheck == CHECKACCOUNT_CALLER ? account : accountToCheck);
     }

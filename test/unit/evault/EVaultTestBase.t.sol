@@ -33,7 +33,6 @@ import {IRMTestDefault} from "../../mocks/IRMTestDefault.sol";
 
 import {AssertionsCustomTypes} from "../../helpers/AssertionsCustomTypes.sol";
 
-
 import "src/EVault/shared/Constants.sol";
 
 contract EVaultTestBase is AssertionsCustomTypes, Test, DeployPermit2 {
@@ -46,6 +45,9 @@ contract EVaultTestBase is AssertionsCustomTypes, Test, DeployPermit2 {
     address unitOfAccount;
     address permit2;
     GenericFactory public factory;
+
+    Base.Integrations integrations;
+    Dispatch.DeployedModules modules;
 
     TestERC20 assetTST;
     TestERC20 assetTST2;
@@ -64,9 +66,9 @@ contract EVaultTestBase is AssertionsCustomTypes, Test, DeployPermit2 {
         oracle = new MockPriceOracle();
         unitOfAccount = address(1);
         permit2 = deployPermit2();
-        Base.Integrations memory integrations = Base.Integrations(address(evc), address(protocolConfig), balanceTracker, permit2);
+        integrations = Base.Integrations(address(evc), address(protocolConfig), balanceTracker, permit2);
 
-        Dispatch.DeployedModules memory modules = Dispatch.DeployedModules({
+        modules = Dispatch.DeployedModules({
             initialize: address(new Initialize(integrations)),
             token: address(new Token(integrations)),
             vault: address(new Vault(integrations)),

@@ -28,7 +28,7 @@ contract Cache is Storage, Errors {
         }
     }
 
-    // Returns an updated MarketCache 
+    // Returns an updated MarketCache
     function loadMarket() internal view returns (MarketCache memory marketCache) {
         initMarketCache(marketCache);
     }
@@ -92,8 +92,8 @@ contract Cache is Storage, Errors {
                 marketCache.totalBorrows.toUint() * newInterestAccumulator / marketCache.interestAccumulator;
             uint256 newAccumulatedFees = marketCache.accumulatedFees.toUint();
             uint256 newTotalShares = marketCache.totalShares.toUint();
-
-            uint256 feeAssets = interestFee.mulDiv(newTotalBorrows - marketCache.totalBorrows.toUint(), 1 << INTERNAL_DEBT_PRECISION);
+            uint256 feeAssets =
+                interestFee.mulDiv(newTotalBorrows - marketCache.totalBorrows.toUint(), 1 << INTERNAL_DEBT_PRECISION);
 
             if (feeAssets != 0) {
                 uint256 newTotalAssets = marketCache.cash.toUint() + (newTotalBorrows >> INTERNAL_DEBT_PRECISION);

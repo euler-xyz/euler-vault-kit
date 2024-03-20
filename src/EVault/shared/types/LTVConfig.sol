@@ -39,7 +39,11 @@ library LTVConfigLib {
         return ConfigAmount.wrap(uint16(ltv));
     }
 
-    function setLTV(LTVConfig memory self, ConfigAmount targetLTV, uint32 rampDuration) internal view returns (LTVConfig memory newLTV) {
+    function setLTV(LTVConfig memory self, ConfigAmount targetLTV, uint32 rampDuration)
+        internal
+        view
+        returns (LTVConfig memory newLTV)
+    {
         newLTV.targetTimestamp = uint48(block.timestamp + rampDuration);
         newLTV.targetLTV = targetLTV;
         newLTV.rampDuration = rampDuration;

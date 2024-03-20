@@ -4,7 +4,7 @@ pragma solidity ^0.8.0;
 
 import {Base} from "./Base.sol";
 import {DToken} from "../DToken.sol";
-import {IIRM} from "../../interestRateModels/IIRM.sol";
+import {IIRM} from "../../InterestRateModels/IIRM.sol";
 
 import "./types/Types.sol";
 
@@ -58,9 +58,8 @@ abstract contract BorrowUtils is Base {
         }
 
         marketStorage.users[account].setOwed(owedRemaining);
-        marketStorage.totalBorrows = marketCache.totalBorrows = marketCache.totalBorrows > owedExact 
-            ? marketCache.totalBorrows - owedExact + owedRemaining 
-            : owedRemaining;
+        marketStorage.totalBorrows = marketCache.totalBorrows =
+            marketCache.totalBorrows > owedExact ? marketCache.totalBorrows - owedExact + owedRemaining : owedRemaining;
 
         logBorrowChange(account, prevOwed, owedRemaining);
     }
@@ -72,8 +71,8 @@ abstract contract BorrowUtils is Base {
         (Owed toOwed, Owed toOwedPrev) = updateUserBorrow(marketCache, to);
 
         // If amount was rounded up, or dust is left over, transfer exact amount owed
-        if ((amount > fromOwed && (amount - fromOwed).isDust()) ||
-            (amount < fromOwed && (fromOwed - amount).isDust())) {
+        if ((amount > fromOwed && (amount - fromOwed).isDust()) || (amount < fromOwed && (fromOwed - amount).isDust()))
+        {
             amount = fromOwed;
         }
 
@@ -98,14 +97,15 @@ abstract contract BorrowUtils is Base {
         uint256 newInterestRate = marketStorage.interestRate;
 
         if (irm != address(0)) {
-            (bool success, bytes memory data) = irm.call(abi.encodeCall(IIRM.computeInterestRate, (
-                                                                            address(this),
-                                                                            marketCache.cash.toUint(),
-                                                                            marketCache.totalBorrows.toAssetsUp().toUint()
-                                                                       )));
+            (bool success, bytes memory data) = irm.call(
+                abi.encodeCall(
+                    IIRM.computeInterestRate,
+                    (address(this), marketCache.cash.toUint(), marketCache.totalBorrows.toAssetsUp().toUint())
+                )
+            );
 
             if (success && data.length >= 32) {
-                newInterestRate = abi.decode(data, (uint));
+                newInterestRate = abi.decode(data, (uint256));
                 if (newInterestRate > MAX_ALLOWED_INTEREST_RATE) newInterestRate = MAX_ALLOWED_INTEREST_RATE;
                 marketStorage.interestRate = uint72(newInterestRate);
             }
@@ -120,13 +120,15 @@ abstract contract BorrowUtils is Base {
         uint256 newInterestRate = marketStorage.interestRate;
 
         if (irm != address(0) && isVaultStatusCheckDeferred()) {
-            (bool success, bytes memory data) = irm.staticcall(abi.encodeCall(IIRM.computeInterestRateView, (
-                                                                                address(this),
-                                                                                marketCache.cash.toUint(),
-                                                                                marketCache.totalBorrows.toAssetsUp().toUint()
-                                                                        )));
+            (bool success, bytes memory data) = irm.staticcall(
+                abi.encodeCall(
+                    IIRM.computeInterestRateView,
+                    (address(this), marketCache.cash.toUint(), marketCache.totalBorrows.toAssetsUp().toUint())
+                )
+            );
+
             if (success && data.length >= 32) {
-                newInterestRate = abi.decode(data, (uint));
+                newInterestRate = abi.decode(data, (uint256));
                 if (newInterestRate > MAX_ALLOWED_INTEREST_RATE) newInterestRate = MAX_ALLOWED_INTEREST_RATE;
             }
         }

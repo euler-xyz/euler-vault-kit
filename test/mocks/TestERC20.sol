@@ -23,7 +23,6 @@ pragma solidity ^0.8.0;
  *     symbol/return-bytes32                                                   Returns bytes32 instead of string
  *     permit/allowed                                                          Switch permit type to DAI-like 'allowed'
  */
-
 contract TestERC20 {
     address owner;
     string _name;

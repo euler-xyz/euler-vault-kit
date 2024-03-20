@@ -9,12 +9,7 @@ solc = "0.8.23"
 
 fs_permissions = [{ access = "read-write", path = "./"}]
 
-# etherscan_api_key = ""
-# remappings = [
-#   "ethereum-vault-connector/=lib/ethereum-vault-connector/src",
-#   "permit2/=lib/permit2"
-# ]
-# gas_reports = ["*"]
+gas_reports = ["*"]
 
 
 [profile.default.fmt]
@@ -27,7 +22,6 @@ number_underscore = "preserve"
 override_spacing = true
 ignore = [
     "src/EVault/EVault.sol",
-    "src/EVault/shared/Storage.sol",
     "src/EVault/shared/types/MarketStorage.sol",
     "src/EVault/shared/types/MarketCache.sol"
 ]

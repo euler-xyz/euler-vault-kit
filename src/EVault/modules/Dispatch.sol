@@ -26,7 +26,6 @@ abstract contract Dispatch is
     BalanceForwarderModule,
     GovernanceModule
 {
-
     address immutable MODULE_INITIALIZE;
     address immutable MODULE_TOKEN;
     address immutable MODULE_VAULT;
@@ -47,9 +46,7 @@ abstract contract Dispatch is
         address governance;
     }
 
-    constructor(Integrations memory integrations, DeployedModules memory modules)
-        Base(integrations) 
-    {
+    constructor(Integrations memory integrations, DeployedModules memory modules) Base(integrations) {
         MODULE_INITIALIZE = modules.initialize;
         MODULE_TOKEN = modules.token;
         MODULE_VAULT = modules.vault;

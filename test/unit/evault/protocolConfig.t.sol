@@ -101,7 +101,6 @@ contract ERC4626Test_ProtocolConfig is EVaultTestBase {
         (address protocolFeeReceiver,) = protocolConfig.protocolFeeConfig(address(0));
         assertEq(protocolFeeReceiver, newFeeReceiver);
 
-
         vm.prank(admin);
         protocolConfig.setProtocolFeeShare(0.2e4);
 

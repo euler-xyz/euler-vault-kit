@@ -103,7 +103,9 @@ contract ERC20Test_Actions is EVaultTestBase {
         vm.prank(alice);
         eTST.enableBalanceForwarder();
 
-        MockBalanceTracker(balanceTracker).setReentrantCall(address(eTST), abi.encodeCall(eTST.transfer, (bob, 0.5 ether)));
+        MockBalanceTracker(balanceTracker).setReentrantCall(
+            address(eTST), abi.encodeCall(eTST.transfer, (bob, 0.5 ether))
+        );
 
         assertEq(eTST.balanceOf(bob), 0);
         vm.prank(alice);
@@ -153,7 +155,9 @@ contract ERC20Test_Actions is EVaultTestBase {
         assertEq(eTST.allowance(alice, bob), allowance);
     }
 
-    function test_TransferFrom_RevertsWhen_InsufficientBalance(uint256 balance, uint256 allowance, uint256 amount) public {
+    function test_TransferFrom_RevertsWhen_InsufficientBalance(uint256 balance, uint256 allowance, uint256 amount)
+        public
+    {
         amount = bound(amount, 2, MAX_SANE_AMOUNT);
         balance = bound(balance, 1, amount - 1);
         allowance = bound(allowance, amount, MAX_SANE_AMOUNT);
@@ -168,7 +172,9 @@ contract ERC20Test_Actions is EVaultTestBase {
         eTST.transferFrom(alice, bob, amount);
     }
 
-    function test_TransferFrom_RevertsWhen_InsufficientAllowance(uint256 balance, uint256 allowance, uint256 amount) public {
+    function test_TransferFrom_RevertsWhen_InsufficientAllowance(uint256 balance, uint256 allowance, uint256 amount)
+        public
+    {
         amount = bound(amount, 1, MAX_SANE_AMOUNT);
         balance = bound(balance, amount, MAX_SANE_AMOUNT);
         allowance = bound(allowance, 0, amount - 1);
@@ -200,7 +206,7 @@ contract ERC20Test_Actions is EVaultTestBase {
         _mintAndDeposit(alice, balance);
         vm.prank(alice);
         eTST.approve(bob, balance);
-        
+
         vm.prank(bob);
         bool success = eTST.transferFromMax(alice, bob);
 
@@ -227,7 +233,9 @@ contract ERC20Test_Actions is EVaultTestBase {
     }
 
     function test_Approve_EVCOnBehalfOf(uint256 allowance) public {
-        vm.mockCall(address(evc), abi.encodeCall(evc.getCurrentOnBehalfOfAccount, (address(0))), abi.encode(alice, false));
+        vm.mockCall(
+            address(evc), abi.encodeCall(evc.getCurrentOnBehalfOfAccount, (address(0))), abi.encode(alice, false)
+        );
         vm.prank(address(evc));
         bool success = eTST.approve(bob, allowance);
         assertTrue(success);

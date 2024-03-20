@@ -77,7 +77,6 @@ abstract contract TokenModule is IToken, Base, BalanceUtils {
 
         return true;
     }
-
 }
 
 contract Token is TokenModule {
