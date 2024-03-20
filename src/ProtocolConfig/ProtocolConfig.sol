@@ -9,6 +9,7 @@ contract ProtocolConfig is IProtocolConfig {
     error E_InvalidVault();
     error E_InvalidReceiver();
     error E_InvalidConfigValue();
+    error E_InvalidAdmin();
 
     struct InterestFeeRange {
         bool exists;
@@ -44,6 +45,7 @@ contract ProtocolConfig is IProtocolConfig {
     event SetVaultInterestFeeRange(address indexed vault, bool exists, uint16 minInterestFee, uint16 maxInterestFee);
     event SetFeeConfigSetting(address indexed ault, bool exists, address indexed feeReceiver, uint16 protocolFeeShare);
     event SetProtocolFeeShare(uint16 protocolFeeShare, uint16 newProtocolFeeShare);
+    event SetAdmin(address indexed newAdmin);
 
     /**
      * @dev constructor
@@ -102,6 +104,18 @@ contract ProtocolConfig is IProtocolConfig {
     }
 
     /**
+     * @notice set admin address
+     * @param newAdmin admin's address
+     */
+    function setAdmin(address newAdmin) external onlyAdmin {
+        if (newAdmin == address(0)) revert E_InvalidAdmin();
+
+        admin = newAdmin;
+
+        emit SetAdmin(newAdmin);
+    }
+
+    /**
      * @notice set protocol fee receiver
      * @dev can only be called by admin
      * @param newReceiver new receiver address
@@ -109,9 +123,9 @@ contract ProtocolConfig is IProtocolConfig {
     function setFeeReceiver(address newReceiver) external onlyAdmin {
         if (newReceiver == address(0)) revert E_InvalidReceiver();
 
-        emit SetFeeReceiver(newReceiver);
-
         feeReceiver = newReceiver;
+
+        emit SetFeeReceiver(newReceiver);
     }
 
     /**
@@ -136,10 +150,10 @@ contract ProtocolConfig is IProtocolConfig {
     function setInterestFeeRange(uint16 minInterestFee_, uint16 maxInterestFee_) external onlyAdmin {
         if (maxInterestFee_ > 1e4 || minInterestFee_ > maxInterestFee_) revert E_InvalidConfigValue();
 
-        emit SetInterestFeeRange(minInterestFee_, maxInterestFee_);
-
         minInterestFee = minInterestFee_;
         maxInterestFee = maxInterestFee_;
+
+        emit SetInterestFeeRange(minInterestFee_, maxInterestFee_);
     }
 
     /**
