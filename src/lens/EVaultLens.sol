@@ -21,7 +21,7 @@ contract EVaultLens {
 
         result.evcAccountInfo = getEVCAccountInfo(IEVault(vault).EVC(), account);
         result.vaultAccountInfo = getVaultAccountInfo(account, vault);
-        //result.rewardAccountInfo = getRewardAccountInfo(account, vault);
+        //result.accountRewardInfo = getRewardAccountInfo(account, vault);
 
         return result;
     }
@@ -186,8 +186,8 @@ contract EVaultLens {
         return result;
     }
     /*
-    function getRewardAccountInfo(address account, address vault) public view returns (RewardAccountInfo memory) {
-        RewardAccountInfo memory result;
+    function getRewardAccountInfo(address account, address vault) public view returns (AccountRewardInfo memory) {
+        AccountRewardInfo memory result;
 
         result.timestamp = block.timestamp;
         result.blockNumber = block.number;
@@ -280,11 +280,11 @@ contract EVaultLens {
     function getVaultInterestRateModelInfo(address vault, uint256[] memory cash, uint256[] memory borrows)
         public
         view
-        returns (InterestRateModelInfo memory)
+        returns (VaultInterestRateModelInfo memory)
     {
         require(cash.length == borrows.length, "EVaultLens: invalid input");
 
-        InterestRateModelInfo memory result;
+        VaultInterestRateModelInfo memory result;
 
         result.vault = vault;
         result.interestRateModel = IEVault(vault).interestRateModel();
@@ -309,11 +309,11 @@ contract EVaultLens {
         return result;
     }
 
-    function getVaultKinkInterestRateModelInfo(address vault) public view returns (InterestRateModelInfo memory) {
+    function getVaultKinkInterestRateModelInfo(address vault) public view returns (VaultInterestRateModelInfo memory) {
         address interestRateModel = IEVault(vault).interestRateModel();
 
         if (interestRateModel == address(0)) {
-            InterestRateModelInfo memory result;
+            VaultInterestRateModelInfo memory result;
             result.vault = vault;
             result.interestRateModel = address(0);
             return result;
@@ -333,8 +333,8 @@ contract EVaultLens {
         return getVaultInterestRateModelInfo(vault, cash, borrows);
     }
 
-    function getVaultAssetPriceInfo(address vault, address asset) public view returns (VaultPriceInfo memory) {
-        VaultPriceInfo memory result;
+    function getVaultAssetPriceInfo(address vault, address asset) public view returns (VaultAssetPriceInfo memory) {
+        VaultAssetPriceInfo memory result;
 
         result.timestamp = block.timestamp;
         result.blockNumber = block.number;

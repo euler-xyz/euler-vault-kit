@@ -5,7 +5,7 @@ pragma solidity ^0.8.0;
 struct AccountInfo {
     EVCAccountInfo evcAccountInfo;
     VaultAccountInfo vaultAccountInfo;
-    RewardAccountInfo rewardAccountInfo;
+    AccountRewardInfo accountRewardInfo;
 }
 
 struct EVCAccountInfo {
@@ -98,6 +98,7 @@ struct VaultInfo {
     address governorAdmin;
     address pauseGuardian;
     LTVInfo[] ltvs;
+    CollateralLiquidityInfo[] collateralLiquidityBorrowingInfo;
 }
 
 struct LTVInfo {
@@ -109,7 +110,7 @@ struct LTVInfo {
     uint256 rampDuration;
 }
 
-struct RewardAccountInfo {
+struct AccountRewardInfo {
     uint256 timestamp;
     uint256 blockNumber;
     address account;
@@ -126,7 +127,7 @@ struct EnabledRewardInfo {
     uint256 earnedRewardRecentForfeited;
 }
 
-struct RewardInfo {
+struct VaultRewardInfo {
     uint256 timestamp;
     uint256 blockNumber;
     address vault;
@@ -148,7 +149,7 @@ struct RewardAmountInfo {
     uint256 rewardAmount;
 }
 
-struct InterestRateModelInfo {
+struct VaultInterestRateModelInfo {
     address vault;
     address interestRateModel;
     APYInfo[] apyInfo;
@@ -161,7 +162,7 @@ struct APYInfo {
     uint256 supplyInterestRateAPY;
 }
 
-struct VaultPriceInfo {
+struct VaultAssetPriceInfo {
     uint256 timestamp;
     uint256 blockNumber;
     address vault;
