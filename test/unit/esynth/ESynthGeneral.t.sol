@@ -80,12 +80,13 @@ contract ESynthGeneralTest is ESynthTest {
         assertEq(minted, 0);
     }
 
-    function testFuzz_burnFromUser(uint128 amount) public {
+    function testFuzz_burnFromOwner(uint128 amount) public {
         amount = uint128(bound(amount, 1, MAX_ALLOWED));
         esynth.setCapacity(user1, MAX_ALLOWED);
         vm.prank(user1);
         esynth.mint(user1, amount);
 
+        // the owner of the synth can always burn from synth but cannot from other accounts without allowance
         vm.expectRevert(abi.encodeWithSelector(ERC20InsufficientAllowance.selector, address(this), 0, amount));
         esynth.burn(user1, amount);
 
