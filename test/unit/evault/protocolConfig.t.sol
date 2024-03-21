@@ -2,7 +2,7 @@
 
 pragma solidity ^0.8.0;
 
-import {EVaultTestBase} from "test/unit/evault/EVaultTestBase.t.sol";
+import {EVaultTestBase, ProtocolConfig} from "test/unit/evault/EVaultTestBase.t.sol";
 import {Errors} from "src/EVault/shared/Errors.sol";
 import {GovernanceModule} from "src/EVault/modules/Governance.sol";
 import "src/EVault/modules/Governance.sol";
@@ -13,9 +13,6 @@ uint16 constant DEFAULT_INTEREST_FEE = 0.23e4; // TODO expose in harness from In
 
 contract ERC4626Test_ProtocolConfig is EVaultTestBase {
     using TypesLib for uint256;
-
-    error E_InvalidConfigValue();
-    error E_InvalidVault();
 
     address user = makeAddr("user");
 
@@ -136,36 +133,48 @@ contract ERC4626Test_ProtocolConfig is EVaultTestBase {
 
         // Bad config values
 
-        vm.expectRevert(E_InvalidConfigValue.selector);
+        vm.expectRevert(ProtocolConfig.E_InvalidConfigValue.selector);
         protocolConfig.setProtocolFeeShare(1e4 + 1);
 
-        vm.expectRevert(E_InvalidConfigValue.selector);
+        vm.expectRevert(ProtocolConfig.E_InvalidConfigValue.selector);
         protocolConfig.setInterestFeeRange(0, 1e4 + 1);
 
-        vm.expectRevert(E_InvalidConfigValue.selector);
+        vm.expectRevert(ProtocolConfig.E_InvalidConfigValue.selector);
         protocolConfig.setInterestFeeRange(1e4 + 1, 1e4 + 2);
 
-        vm.expectRevert(E_InvalidConfigValue.selector);
+        vm.expectRevert(ProtocolConfig.E_InvalidConfigValue.selector);
         protocolConfig.setInterestFeeRange(0.6e4, 0.4e4);
 
-        vm.expectRevert(E_InvalidConfigValue.selector);
+        vm.expectRevert(ProtocolConfig.E_InvalidConfigValue.selector);
         protocolConfig.setVaultInterestFeeRange(address(eTST), true, 0.1e4, 1e4 + 1);
 
-        vm.expectRevert(E_InvalidConfigValue.selector);
+        vm.expectRevert(ProtocolConfig.E_InvalidConfigValue.selector);
         protocolConfig.setVaultInterestFeeRange(address(eTST), true, 1e4 + 1, 1e4 + 2);
 
-        vm.expectRevert(E_InvalidConfigValue.selector);
+        vm.expectRevert(ProtocolConfig.E_InvalidConfigValue.selector);
         protocolConfig.setVaultInterestFeeRange(address(eTST), true, 0.6e4, 0.4e4);
 
-        vm.expectRevert(E_InvalidConfigValue.selector);
+        vm.expectRevert(ProtocolConfig.E_InvalidConfigValue.selector);
         protocolConfig.setVaultFeeConfig(address(eTST), true, address(0), 1e4 + 1);
 
         // Bad vaults
 
-        vm.expectRevert(E_InvalidVault.selector);
+        vm.expectRevert(ProtocolConfig.E_InvalidVault.selector);
         protocolConfig.setVaultInterestFeeRange(address(0), true, 0.1e4, 0.2e4);
 
-        vm.expectRevert(E_InvalidVault.selector);
+        vm.expectRevert(ProtocolConfig.E_InvalidVault.selector);
         protocolConfig.setVaultFeeConfig(address(0), true, address(0), 0.1e4);
+    }
+
+    function test_setAdmin() public {
+        address newAdmin = makeAddr("newAdmin");
+
+        vm.startPrank(admin);
+
+        vm.expectRevert(ProtocolConfig.E_InvalidAdmin.selector);
+        protocolConfig.setAdmin(address(0));
+
+        protocolConfig.setAdmin(newAdmin);
+        assertEq(protocolConfig.admin(), newAdmin);
     }
 }
