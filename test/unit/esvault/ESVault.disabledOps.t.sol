@@ -10,7 +10,7 @@ contract ESVaultTestDisabledOps is ESVaultTestBase {
         super.setUp();
     }
 
-    function test_disabled_ops_after_init() public {
+    function test_disabled_ops_after_init() public view {
         uint32 disabledOps = eTST.disabledOps();
         assertEq(disabledOps, eTSTAsESVault.SYNTH_VAULT_DISABLED_OPS());
     }

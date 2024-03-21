@@ -38,8 +38,10 @@ abstract contract GovernanceModule is IGovernance, Base, BalanceUtils, BorrowUti
         _;
     }
 
-    modifier pauseGuardianOnly() {
-        if (msg.sender != marketStorage.pauseGuardian) revert E_Unauthorized();
+    modifier governorOrPauseGuardianOnly() {
+        if (msg.sender != marketStorage.governorAdmin && msg.sender != marketStorage.pauseGuardian) {
+            revert E_Unauthorized();
+        }
         _;
     }
 
@@ -158,18 +160,19 @@ abstract contract GovernanceModule is IGovernance, Base, BalanceUtils, BorrowUti
 
         marketStorage.accumulatedFees = marketCache.accumulatedFees = Shares.wrap(0);
 
-        Assets governorAssets = governorShares.toAssetsDown(marketCache);
-        Assets protocolAssets = protocolShares.toAssetsDown(marketCache);
-
         // Decrease totalShares because increaseBalance will increase it by that total amount
         marketStorage.totalShares = marketCache.totalShares = marketCache.totalShares - marketCache.accumulatedFees;
 
-        if (governorReceiver != address(0)) {
-            increaseBalance(marketCache, governorReceiver, address(0), governorShares, governorAssets);
+        // For the Deposit events in increaseBalance the assets amount is zero - the shares are covered with the accrued interest
+        if (!governorShares.isZero()) {
+            increaseBalance(marketCache, governorReceiver, address(0), governorShares, Assets.wrap(0));
         }
 
-        increaseBalance(marketCache, protocolReceiver, address(0), protocolShares, protocolAssets);
-        emit ConvertFees(account, protocolReceiver, governorReceiver, protocolAssets.toUint(), governorAssets.toUint());
+        if (!protocolShares.isZero()) {
+            increaseBalance(marketCache, protocolReceiver, address(0), protocolShares, Assets.wrap(0));
+        }
+
+        emit ConvertFees(account, protocolReceiver, governorReceiver, protocolShares.toUint(), governorShares.toUint());
     }
 
     /// @inheritdoc IGovernance
@@ -207,8 +210,13 @@ abstract contract GovernanceModule is IGovernance, Base, BalanceUtils, BorrowUti
         // self-collateralization is not allowed
         if (collateral == address(this)) revert E_InvalidLTVAsset();
 
+        ConfigAmount newLTVAmount = ltv.toConfigAmount();
         LTVConfig memory origLTV = marketStorage.ltvLookup[collateral];
-        LTVConfig memory newLTV = origLTV.setLTV(ltv.toConfigAmount(), rampDuration);
+
+        // If new LTV is higher than the previous, or the same, it should take effect immediately
+        if (!(newLTVAmount < origLTV.getLTV(LTVType.LIQUIDATION)) && rampDuration > 0) revert E_LTVRamp();
+
+        LTVConfig memory newLTV = origLTV.setLTV(newLTVAmount, rampDuration);
 
         marketStorage.ltvLookup[collateral] = newLTV;
 
@@ -246,7 +254,7 @@ abstract contract GovernanceModule is IGovernance, Base, BalanceUtils, BorrowUti
     }
 
     /// @inheritdoc IGovernance
-    function setDisabledOps(uint32 newDisabledOps) public virtual nonReentrant pauseGuardianOnly {
+    function setDisabledOps(uint32 newDisabledOps) public virtual nonReentrant governorOrPauseGuardianOnly {
         // market is updated because:
         // if disabling interest accrual - the pending interest should be accrued
         // if re-enabling interest - last updated timestamp needs to be reset to skip the disabled period
@@ -274,6 +282,10 @@ abstract contract GovernanceModule is IGovernance, Base, BalanceUtils, BorrowUti
 
     /// @inheritdoc IGovernance
     function setInterestFee(uint16 newInterestFee) public virtual nonReentrant governorOnly {
+        // Update market to apply the current interest fee to the pending interest
+        MarketCache memory marketCache = updateMarket();
+        logMarketStatus(marketCache, marketStorage.interestRate);
+
         // Interest fees in guaranteed range are always allowed, otherwise ask protocolConfig
         if (newInterestFee < GUARANTEED_INTEREST_FEE_MIN || newInterestFee > GUARANTEED_INTEREST_FEE_MAX) {
             if (!protocolConfig.isValidInterestFee(address(this), newInterestFee)) revert E_BadFee();

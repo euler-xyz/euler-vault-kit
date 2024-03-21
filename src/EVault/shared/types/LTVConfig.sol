@@ -22,18 +22,18 @@ library LTVConfigLib {
     }
 
     function getLTV(LTVConfig memory self, LTVType ltvType) internal view returns (ConfigAmount) {
-        if (ltvType == LTVType.BORROWING || block.timestamp >= self.targetTimestamp) return self.targetLTV;
+        if (
+            ltvType == LTVType.BORROWING || block.timestamp >= self.targetTimestamp || self.targetLTV > self.originalLTV
+        ) {
+            return self.targetLTV;
+        }
 
         uint256 ltv = self.originalLTV.toUint16();
 
         unchecked {
             uint256 timeElapsed = self.rampDuration - (self.targetTimestamp - block.timestamp);
 
-            if (self.targetLTV > self.originalLTV) {
-                ltv += ((self.targetLTV.toUint16() - self.originalLTV.toUint16()) * timeElapsed / self.rampDuration);
-            } else {
-                ltv -= ((self.originalLTV.toUint16() - self.targetLTV.toUint16()) * timeElapsed / self.rampDuration);
-            }
+            ltv = ltv - ((ltv - self.targetLTV.toUint16()) * timeElapsed / self.rampDuration);
         }
 
         return ConfigAmount.wrap(uint16(ltv));

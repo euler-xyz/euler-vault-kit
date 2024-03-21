@@ -23,14 +23,6 @@ address constant CHECKACCOUNT_NONE = address(0);
 // account status check should be scheduled for the authenticated account
 address constant CHECKACCOUNT_CALLER = address(1);
 
-// EVC authentication
-
-// the negated part of this expression indicates which operations should check if this contract is the controller of
-// the authenticated account. the result is the bit field where each 0 indicates the operation which has to check if
-// this contract is the controller of the authenticated account, and each 1 indicates the operation which does not
-// have to to check it.
-uint32 constant CONTROLLER_NEUTRAL_OPERATIONS = type(uint32).max & ~(OP_BORROW | OP_LOOP | OP_PULL_DEBT | OP_LIQUIDATE);
-
 // Operations
 
 uint32 constant OP_DEPOSIT = 1 << 0;
@@ -51,3 +43,8 @@ uint32 constant OP_TOUCH = 1 << 14;
 uint32 constant OP_ACCRUE_INTEREST = 1 << 15;
 uint32 constant OP_SOCIALIZE_DEBT = 1 << 16;
 uint32 constant OP_VALIDATE_ASSET_RECEIVER = 1 << 17;
+
+// EVC authentication
+
+// in order to perform these operations, the account must have the vault installed as a controller
+uint32 constant CONTROLLER_REQUIRED_OPS = OP_BORROW | OP_LOOP | OP_PULL_DEBT | OP_LIQUIDATE;

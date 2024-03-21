@@ -9,7 +9,7 @@ import {IAllowanceTransfer} from "permit2/src/interfaces/IAllowanceTransfer.sol"
 
 import "src/EVault/shared/types/Types.sol";
 
-contract ERC4626Test_Deposit is EVaultTestBase {
+contract VaultTest_Deposit is EVaultTestBase {
     using TypesLib for uint256;
 
     address user;

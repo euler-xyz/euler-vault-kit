@@ -6,7 +6,7 @@ import "../../../src/EVault/shared/lib/RPow.sol";
 import "../../../src/EVault/shared/Constants.sol";
 
 contract IRMLimit is Test {
-    function test_IRMLimit_sanity() public {
+    function test_IRMLimit_sanity() public pure {
         // 500% APY:
         //   floor( ln(1 + 5) * 10**27 / (365.2425 * 86400) )
         uint256 ir = 56778597287471077714;
@@ -24,7 +24,7 @@ contract IRMLimit is Test {
         assertApproxEqAbs(accum, 6e27, 0.000001e27);
     }
 
-    function test_IRMLimit_rpow() public {
+    function test_IRMLimit_rpow() public pure {
         // 1,000,000% APY is an accumulator of 10,000 + 1 after a year:
 
         {
@@ -42,7 +42,7 @@ contract IRMLimit is Test {
         }
     }
 
-    function test_IRMLimit_accum_max() public {
+    function test_IRMLimit_accum_max() public pure {
         // With sustained 1,000,000% APY, computing the accumulator will not overflow for 5 years:
 
         uint256 accum = 1e27;
@@ -55,7 +55,7 @@ contract IRMLimit is Test {
         }
     }
 
-    function test_IRMLimit_accum_50() public {
+    function test_IRMLimit_accum_50() public pure {
         uint256 ir = 12848677781048055591; // 50% APY
 
         uint256 accum = 1e27;
@@ -67,7 +67,7 @@ contract IRMLimit is Test {
         }
     }
 
-    function test_IRMLimit_accum_500() public {
+    function test_IRMLimit_accum_500() public pure {
         uint256 ir = 56778597287471077714; // 500% APY
 
         uint256 accum = 1e27;

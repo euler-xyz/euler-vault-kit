@@ -9,7 +9,7 @@ import {Events} from "src/EVault/shared/Events.sol";
 contract BalanceForwarderTest_Control is EVaultTestBase {
     address alice = makeAddr("alice");
 
-    function test_BalanceTrackerAddress_Integrity() public {
+    function test_BalanceTrackerAddress_Integrity() public view {
         assertEq(eTST.balanceTrackerAddress(), balanceTracker);
     }
 
