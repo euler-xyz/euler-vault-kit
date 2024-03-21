@@ -276,6 +276,10 @@ abstract contract GovernanceModule is IGovernance, Base, BalanceUtils, BorrowUti
 
     /// @inheritdoc IGovernance
     function setInterestFee(uint16 newInterestFee) public virtual nonReentrant governorOnly {
+        // Update market to apply the current interest fee to the pending interest
+        MarketCache memory marketCache = updateMarket();
+        logMarketStatus(marketCache, marketStorage.interestRate);
+
         // Interest fees in guaranteed range are always allowed, otherwise ask protocolConfig
         if (newInterestFee < GUARANTEED_INTEREST_FEE_MIN || newInterestFee > GUARANTEED_INTEREST_FEE_MAX) {
             if (!protocolConfig.isValidInterestFee(address(this), newInterestFee)) revert E_BadFee();
