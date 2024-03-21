@@ -45,6 +45,13 @@ contract Governance_PauseAndOps is EVaultTestBase {
         eTST.setDisabledOps(newDisabledOps);
     }
 
+    // disabled ops should fail if governor is not set
+    function testFuzz_disabledOpsShouldFailIfGovernorNotSet(uint32 newDisabledOps) public {
+        eTST.setPauseGuardian(address(0));
+        vm.expectRevert(Errors.E_Unauthorized.selector);
+        eTST.setDisabledOps(newDisabledOps);
+    }
+
     function testFuzz_pauseGuardianShouldBeAbleToSetPauseGuardian(address newGovernor) public {
         eTST.setPauseGuardian(newGovernor);
         assertEq(eTST.pauseGuardian(), newGovernor);
@@ -203,6 +210,10 @@ contract Governance_PauseAndOps is EVaultTestBase {
         eTST.setDisabledOps(OP_CONVERT_FEES);
         vm.expectRevert(Errors.E_OperationDisabled.selector);
         eTST.convertFees();
+
+        // re-enable
+        eTST.setDisabledOps(0);
+        eTST.convertFees();
     }
 
     function testFuzz_liquidatingDisabledOpsShouldFailAfterDisabled(
@@ -214,12 +225,18 @@ contract Governance_PauseAndOps is EVaultTestBase {
         eTST.setDisabledOps(OP_LIQUIDATE);
         vm.expectRevert(Errors.E_OperationDisabled.selector);
         eTST.liquidate(violator, collateral, repayAssets, minYieldBalance);
+        // TODO: re-enable testing
     }
 
     function testFuzz_flashLoanDisabledOpsShouldFailAfterDisabled(uint256 amount, bytes calldata data) public {
         eTST.setDisabledOps(OP_FLASHLOAN);
         vm.expectRevert(Errors.E_OperationDisabled.selector);
         eTST.flashLoan(amount, data);
+
+        amount = bound(amount, 1, MINT_AMOUNT);
+        // re-enable
+        eTST.setDisabledOps(0);
+        eTST.flashLoan(amount, abi.encode(amount, address(assetTST)));
     }
 
     function testFuzz_touchDisabledOpsShouldFailAfterDisabled() public {
@@ -257,5 +274,13 @@ contract Governance_PauseAndOps is EVaultTestBase {
         // should be disabled again
         vm.expectRevert(Errors.E_BadAssetReceiver.selector); //! note this is a different error
         eTST.borrow(amount, subacc);
+    }
+
+    // helpers
+    function onFlashLoan(bytes calldata data) external {
+        // decode data as amount and address
+        (uint256 amount, address eTSTAddr) = abi.decode(data, (uint256, address));
+        // return the amount to the
+        IERC20(eTSTAddr).transfer(address(eTST), amount);
     }
 }
