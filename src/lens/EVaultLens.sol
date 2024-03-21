@@ -7,6 +7,8 @@ import {IEVC} from "ethereum-vault-connector/interfaces/IEthereumVaultConnector.
 //import {IRewardStreams} from "reward-streams/interfaces/IRewardStreams.sol";
 import {IEVault} from "../EVault/IEVault.sol";
 import {RPow} from "../EVault/shared/lib/RPow.sol";
+import {IIRM, IRMLinearKink} from "../InterestRateModels/IRMLinearKink.sol";
+import {IPriceOracle} from "../interfaces/IPriceOracle.sol";
 import "../EVault/shared/types/AmountCap.sol";
 import "./LensTypes.sol";
 
@@ -124,14 +126,9 @@ contract EVaultLens {
 
         result.interestFee = IEVault(vault).interestFee();
         result.borrowInterestRateSPY = IEVault(vault).interestRate();
-        (result.borrowInterestRateAPY,) = RPow.rpow(result.borrowInterestRateSPY + ONE, SECONDS_PER_YEAR, ONE);
-        result.borrowInterestRateAPY -= ONE;
-
-        result.supplyInterestRateSPY = result.totalAssets == 0
-            ? 0
-            : result.borrowInterestRateSPY * result.totalBorrowed * (1e4 - result.interestFee) / result.totalAssets / 1e4;
-        (result.supplyInterestRateAPY,) = RPow.rpow(result.supplyInterestRateSPY + ONE, SECONDS_PER_YEAR, ONE);
-        result.supplyInterestRateAPY -= ONE;
+        (result.supplyInterestRateSPY, result.borrowInterestRateAPY, result.supplyInterestRateAPY) = computeInterestRate(
+            result.borrowInterestRateSPY, result.totalCash, result.totalBorrowed, result.interestFee
+        );
 
         result.disabledOperations = IEVault(vault).disabledOps();
 
@@ -183,21 +180,21 @@ contract EVaultLens {
         result.balanceTracker = IEVault(vault).balanceTrackerAddress();
         result.balanceForwarderEnabled = IEVault(vault).balanceForwarderEnabled(account);
 
-        if (result.balanceTracker != address(0)) {
-            result.balance = IRewardStreams(result.balanceTracker).balanceOf(account, vault);
+        if (result.balanceTracker == address(0)) return result;
 
-            address[] memory enabledRewards = IRewardStreams(result.balanceTracker).enabledRewards(account, vault);
-            result.enabledRewardsInfo = new EnabledRewardInfo[](enabledRewards.length);
+        result.balance = IRewardStreams(result.balanceTracker).balanceOf(account, vault);
 
-            for (uint256 i; i < enabledRewards.length; ++i) {
-                result.enabledRewardsInfo[i].reward = enabledRewards[i];
+        address[] memory enabledRewards = IRewardStreams(result.balanceTracker).enabledRewards(account, vault);
+        result.enabledRewardsInfo = new EnabledRewardInfo[](enabledRewards.length);
 
-                result.enabledRewardsInfo[i].earnedReward =
-                    IRewardStreams(result.balanceTracker).earnedReward(account, vault, enabledRewards[i], false);
+        for (uint256 i; i < enabledRewards.length; ++i) {
+            result.enabledRewardsInfo[i].reward = enabledRewards[i];
 
-                result.enabledRewardsInfo[i].earnedRewardRecentForfeited =
-                    IRewardStreams(result.balanceTracker).earnedReward(account, vault, enabledRewards[i], true);
-            }
+            result.enabledRewardsInfo[i].earnedReward =
+                IRewardStreams(result.balanceTracker).earnedReward(account, vault, enabledRewards[i], false);
+
+            result.enabledRewardsInfo[i].earnedRewardRecentForfeited =
+                IRewardStreams(result.balanceTracker).earnedReward(account, vault, enabledRewards[i], true);
         }
 
         return result;
@@ -217,44 +214,44 @@ contract EVaultLens {
         result.reward = reward;
         result.balanceTracker = IEVault(vault).balanceTrackerAddress();
 
-        if (result.balanceTracker != address(0)) {
-            result.epochDuration = IRewardStreams(result.balanceTracker).EPOCH_DURATION();
-            result.currentEpoch = IRewardStreams(result.balanceTracker).currentEpoch();
-            result.totalRewardEligible = IRewardStreams(result.balanceTracker).totalRewardedEligible(vault, reward);
-            result.totalRewardRegistered = IRewardStreams(result.balanceTracker).totalRewardRegistered(vault, reward);
-            result.totalRewardClaimed = IRewardStreams(result.balanceTracker).totalRewardClaimed(vault, reward);
+        if (result.balanceTracker == address(0)) return result;
 
-            result.epochInfoPrevious = new RewardAmountInfo[](numberOfEpochs);
-            result.epochInfoUpcoming = new RewardAmountInfo[](numberOfEpochs);
+        result.epochDuration = IRewardStreams(result.balanceTracker).EPOCH_DURATION();
+        result.currentEpoch = IRewardStreams(result.balanceTracker).currentEpoch();
+        result.totalRewardEligible = IRewardStreams(result.balanceTracker).totalRewardedEligible(vault, reward);
+        result.totalRewardRegistered = IRewardStreams(result.balanceTracker).totalRewardRegistered(vault, reward);
+        result.totalRewardClaimed = IRewardStreams(result.balanceTracker).totalRewardClaimed(vault, reward);
 
-            for (uint256 i; i < 2 * numberOfEpochs; ++i) {
-                if (i < numberOfEpochs) {
-                    uint256 index = i;
-                    result.epochInfoPrevious[index].epoch = result.currentEpoch - numberOfEpochs + i;
+        result.epochInfoPrevious = new RewardAmountInfo[](numberOfEpochs);
+        result.epochInfoUpcoming = new RewardAmountInfo[](numberOfEpochs);
 
-                    result.epochInfoPrevious[index].epochStart = IRewardStreams(result.balanceTracker)
-                        .getEpochStartTimestamp(uint48(result.epochInfoPrevious[index].epoch));
+        for (uint256 i; i < 2 * numberOfEpochs; ++i) {
+            if (i < numberOfEpochs) {
+                uint256 index = i;
+                result.epochInfoPrevious[index].epoch = result.currentEpoch - numberOfEpochs + i;
 
-                    result.epochInfoPrevious[index].epochEnd = IRewardStreams(result.balanceTracker)
-                        .getEpochEndTimestamp(uint48(result.epochInfoPrevious[index].epoch));
+                result.epochInfoPrevious[index].epochStart = IRewardStreams(result.balanceTracker)
+                    .getEpochStartTimestamp(uint48(result.epochInfoPrevious[index].epoch));
 
-                    result.epochInfoPrevious[index].rewardAmount = IRewardStreams(result.balanceTracker).rewardAmount(
-                        vault, reward, uint48(result.epochInfoPrevious[index].epoch)
-                    );
-                } else {
-                    uint256 index = i - numberOfEpochs;
-                    result.epochInfoUpcoming[index].epoch = result.currentEpoch - numberOfEpochs + i;
+                result.epochInfoPrevious[index].epochEnd = IRewardStreams(result.balanceTracker)
+                    .getEpochEndTimestamp(uint48(result.epochInfoPrevious[index].epoch));
 
-                    result.epochInfoUpcoming[index].epochStart = IRewardStreams(result.balanceTracker)
-                        .getEpochStartTimestamp(uint48(result.epochInfoUpcoming[index].epoch));
+                result.epochInfoPrevious[index].rewardAmount = IRewardStreams(result.balanceTracker).rewardAmount(
+                    vault, reward, uint48(result.epochInfoPrevious[index].epoch)
+                );
+            } else {
+                uint256 index = i - numberOfEpochs;
+                result.epochInfoUpcoming[index].epoch = result.currentEpoch - numberOfEpochs + i;
 
-                    result.epochInfoUpcoming[index].epochEnd = IRewardStreams(result.balanceTracker)
-                        .getEpochEndTimestamp(uint48(result.epochInfoUpcoming[index].epoch));
+                result.epochInfoUpcoming[index].epochStart = IRewardStreams(result.balanceTracker)
+                    .getEpochStartTimestamp(uint48(result.epochInfoUpcoming[index].epoch));
 
-                    result.epochInfoUpcoming[index].rewardAmount = IRewardStreams(result.balanceTracker).rewardAmount(
-                        vault, reward, uint48(result.epochInfoUpcoming[index].epoch)
-                    );
-                }
+                result.epochInfoUpcoming[index].epochEnd = IRewardStreams(result.balanceTracker)
+                    .getEpochEndTimestamp(uint48(result.epochInfoUpcoming[index].epoch));
+
+                result.epochInfoUpcoming[index].rewardAmount = IRewardStreams(result.balanceTracker).rewardAmount(
+                    vault, reward, uint48(result.epochInfoUpcoming[index].epoch)
+                );
             }
         }
 
@@ -262,10 +259,104 @@ contract EVaultLens {
     }
     */
 
+    function getInterestRateModelInfo(address vault, uint256[] memory cash, uint256[] memory borrows)
+        public
+        view
+        returns (InterestRateModelInfo memory)
+    {
+        require(cash.length == borrows.length, "EVaultLens: invalid input");
+
+        InterestRateModelInfo memory result;
+
+        result.vault = vault;
+        result.interestRateModel = IEVault(vault).interestRateModel();
+
+        if (result.interestRateModel == address(0)) return result;
+
+        uint256 interestFee = IEVault(vault).interestFee();
+        result.apyInfo = new APYInfo[](cash.length);
+
+        for (uint256 i = 0; i < cash.length; ++i) {
+            result.apyInfo[i].cash = cash[i];
+            result.apyInfo[i].borrows = borrows[i];
+
+            uint256 borrowSPY = IIRM(result.interestRateModel).computeInterestRateView(
+                vault, result.apyInfo[i].cash, result.apyInfo[i].borrows
+            );
+
+            (, result.apyInfo[i].borrowInterestRateAPY, result.apyInfo[i].supplyInterestRateAPY) =
+                computeInterestRate(borrowSPY, cash[i], borrows[i], interestFee);
+        }
+
+        return result;
+    }
+
+    function getKinkInterestRateModelInfo(address vault) external view returns (InterestRateModelInfo memory) {
+        address interestRateModel = IEVault(vault).interestRateModel();
+
+        if (interestRateModel == address(0)) {
+            InterestRateModelInfo memory result;
+            result.vault = vault;
+            result.interestRateModel = address(0);
+            return result;
+        }
+
+        uint256[] memory cash = new uint256[](3);
+        uint256[] memory borrows = new uint256[](3);
+        uint256 kink = IRMLinearKink(interestRateModel).kink();
+
+        cash[0] = type(uint32).max;
+        cash[1] = type(uint32).max - kink;
+        cash[2] = 0;
+        borrows[0] = 0;
+        borrows[1] = kink;
+        borrows[2] = type(uint32).max;
+
+        return getInterestRateModelInfo(vault, cash, borrows);
+    }
+
+    function getVaultPriceInfo(address vault, address asset) external view returns (VaultPriceInfo memory) {
+        VaultPriceInfo memory result;
+
+        result.timestamp = block.timestamp;
+        result.blockNumber = block.number;
+
+        result.vault = vault;
+        result.oracle = IEVault(vault).oracle();
+        result.asset = asset;
+        result.unitOfAccount = IEVault(vault).unitOfAccount();
+
+        if (result.oracle == address(0)) return result;
+
+        result.amountIn = 10 ** IEVault(result.asset).decimals();
+        result.amountOut = IPriceOracle(result.oracle).getQuote(result.amountIn, result.asset, result.unitOfAccount);
+
+        return result;
+    }
+
     /// @dev for tokens like MKR which return bytes32 on name() or symbol()
     function getStringOrBytes32(address contractAddress, bytes4 selector) private view returns (string memory) {
         (bool success, bytes memory result) = contractAddress.staticcall(abi.encodeWithSelector(selector));
 
         return success ? result.length == 32 ? string(abi.encodePacked(result)) : abi.decode(result, (string)) : "";
+    }
+
+    function computeInterestRate(uint256 borrowSPY, uint256 cash, uint256 borrows, uint256 interestFee)
+        public
+        pure
+        returns (uint256 supplySPY, uint256 borrowAPY, uint256 supplyAPY)
+    {
+        uint256 totalAssets = cash + borrows;
+        bool overflowBorrow;
+        bool overflowSupply;
+
+        supplySPY = totalAssets == 0 ? 0 : borrowSPY * borrows * (1e4 - interestFee) / totalAssets / 1e4;
+        (borrowAPY, overflowBorrow) = RPow.rpow(borrowSPY + ONE, SECONDS_PER_YEAR, ONE);
+        (supplyAPY, overflowSupply) = RPow.rpow(supplySPY + ONE, SECONDS_PER_YEAR, ONE);
+
+        if (overflowBorrow || overflowSupply) return (supplySPY, 0, 0);
+
+        borrowAPY -= ONE;
+        supplyAPY -= ONE;
     }
 }

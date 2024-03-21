@@ -136,3 +136,27 @@ struct RewardAmountInfo {
     uint256 epochEnd;
     uint256 rewardAmount;
 }
+
+struct InterestRateModelInfo {
+    address vault;
+    address interestRateModel;
+    APYInfo[] apyInfo;
+}
+
+struct APYInfo {
+    uint256 cash;
+    uint256 borrows;
+    uint256 borrowInterestRateAPY;
+    uint256 supplyInterestRateAPY;
+}
+
+struct VaultPriceInfo {
+    uint256 timestamp;
+    uint256 blockNumber;
+    address vault;
+    address oracle;
+    address asset;
+    address unitOfAccount;
+    uint256 amountIn;
+    uint256 amountOut;
+}
