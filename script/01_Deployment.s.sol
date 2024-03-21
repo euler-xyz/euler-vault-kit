@@ -9,7 +9,6 @@ import {EthereumVaultConnector} from "ethereum-vault-connector/EthereumVaultConn
 import {ProtocolConfig} from "../src/ProtocolConfig/ProtocolConfig.sol";
 import {GenericFactory} from "../src/GenericFactory/GenericFactory.sol";
 import {Base} from "../src/EVault/shared/Base.sol";
-import {Dispatch} from "../src/EVault/modules/Dispatch.sol";
 import {Initialize} from "../src/EVault/modules/Initialize.sol";
 import {Token} from "../src/EVault/modules/Token.sol";
 import {Vault} from "../src/EVault/modules/Vault.sol";
@@ -18,6 +17,7 @@ import {Liquidation} from "../src/EVault/modules/Liquidation.sol";
 import {RiskManager} from "../src/EVault/modules/RiskManager.sol";
 import {BalanceForwarder} from "../src/EVault/modules/BalanceForwarder.sol";
 import {Governance} from "../src/EVault/modules/Governance.sol";
+import {Dispatch} from "../src/EVault/Dispatch.sol";
 import {EVault} from "../src/EVault/EVault.sol";
 import {EVaultLens} from "../src/lens/EVaultLens.sol";
 import {VaultInfo} from "../src/lens/LensTypes.sol";
