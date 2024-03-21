@@ -30,19 +30,22 @@ contract ERC4626Test_ProtocolConfig is EVaultTestBase {
         vm.expectRevert(Errors.E_BadFee.selector);
         eTST.setInterestFee(0.005e4);
 
-        vm.expectRevert(Errors.E_BadFee.selector);
-        eTST.setInterestFee(0.9e4);
+        eTST.setInterestFee(1e4);
+        assertEq(eTST.interestFee(), 1e4);
 
-        eTST.setInterestFee(0.4e4);
-        assertEq(eTST.interestFee(), 0.4e4);
+        eTST.setInterestFee(0.1e4);
+        assertEq(eTST.interestFee(), 0.1e4);
+
+        eTST.setInterestFee(0.9e4);
+        assertEq(eTST.interestFee(), 0.9e4);
     }
 
     function test_interestFees_extended() public {
         vm.prank(admin);
-        protocolConfig.setVaultInterestFeeRange(address(eTST), true, 0.002e4, 0.6e4);
+        protocolConfig.setVaultInterestFeeRange(address(eTST), true, 0.05e4, 1e4);
 
-        eTST.setInterestFee(0.005e4);
-        assertEq(eTST.interestFee(), 0.005e4);
+        eTST.setInterestFee(0.08e4);
+        assertEq(eTST.interestFee(), 0.08e4);
 
         vm.expectRevert(Errors.E_BadFee.selector);
         eTST.setInterestFee(0.001e4);
@@ -50,11 +53,11 @@ contract ERC4626Test_ProtocolConfig is EVaultTestBase {
         eTST.setInterestFee(0.55e4);
         assertEq(eTST.interestFee(), 0.55e4);
 
-        vm.expectRevert(Errors.E_BadFee.selector);
-        eTST.setInterestFee(0.65e4);
+        eTST.setInterestFee(1e4);
+        assertEq(eTST.interestFee(), 1e4);
     }
 
-    function test_interestFees_maliciousProtocolConfig() public {
+    function test_interestFees_rogueProtocolConfig() public {
         vm.prank(admin);
         protocolConfig.setVaultInterestFeeRange(address(eTST), true, 0.8e4, 0.9e4);
 
@@ -66,7 +69,7 @@ contract ERC4626Test_ProtocolConfig is EVaultTestBase {
         // But will outside the always-valid range
 
         vm.expectRevert(Errors.E_BadFee.selector);
-        eTST.setInterestFee(0.55e4);
+        eTST.setInterestFee(0.05e4);
     }
 
     function test_override_interestFeeRanges() public {

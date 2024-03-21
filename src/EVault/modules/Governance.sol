@@ -17,8 +17,8 @@ abstract contract GovernanceModule is IGovernance, Base, BalanceUtils, BorrowUti
 
     // Protocol guarantees
     uint16 constant MAX_PROTOCOL_FEE_SHARE = 0.5e4;
-    uint16 constant GUARANTEED_INTEREST_FEE_MIN = 0.01e4;
-    uint16 constant GUARANTEED_INTEREST_FEE_MAX = 0.5e4;
+    uint16 constant GUARANTEED_INTEREST_FEE_MIN = 0.1e4;
+    uint16 constant GUARANTEED_INTEREST_FEE_MAX = 1e4;
 
     event GovSetName(string newName);
     event GovSetSymbol(string newSymbol);
