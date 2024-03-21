@@ -145,9 +145,8 @@ contract EVaultLens {
 
         result.interestFee = IEVault(vault).interestFee();
         result.borrowInterestRateSPY = IEVault(vault).interestRate();
-        (result.supplyInterestRateSPY, result.borrowInterestRateAPY, result.supplyInterestRateAPY) = computeInterestRate(
-            result.borrowInterestRateSPY, result.totalCash, result.totalBorrowed, result.interestFee
-        );
+        (result.supplyInterestRateSPY, result.borrowInterestRateAPY, result.supplyInterestRateAPY) =
+        computeInterestRates(result.borrowInterestRateSPY, result.totalCash, result.totalBorrowed, result.interestFee);
 
         result.disabledOperations = IEVault(vault).disabledOps();
 
@@ -304,7 +303,7 @@ contract EVaultLens {
             );
 
             (, result.apyInfo[i].borrowInterestRateAPY, result.apyInfo[i].supplyInterestRateAPY) =
-                computeInterestRate(borrowSPY, cash[i], borrows[i], interestFee);
+                computeInterestRates(borrowSPY, cash[i], borrows[i], interestFee);
         }
 
         return result;
@@ -360,8 +359,8 @@ contract EVaultLens {
         return success ? result.length == 32 ? string(abi.encodePacked(result)) : abi.decode(result, (string)) : "";
     }
 
-    function computeInterestRate(uint256 borrowSPY, uint256 cash, uint256 borrows, uint256 interestFee)
-        public
+    function computeInterestRates(uint256 borrowSPY, uint256 cash, uint256 borrows, uint256 interestFee)
+        private
         pure
         returns (uint256 supplySPY, uint256 borrowAPY, uint256 supplyAPY)
     {
