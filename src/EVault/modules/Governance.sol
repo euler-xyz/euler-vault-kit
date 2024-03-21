@@ -212,8 +212,8 @@ abstract contract GovernanceModule is IGovernance, Base, BalanceUtils, BorrowUti
         ConfigAmount newLTVAmount = ltv.toConfigAmount();
         LTVConfig memory origLTV = marketStorage.ltvLookup[collateral];
 
-        // If new LTV is higher than the previous, or the same, it should take effect immediatelly
-        if (newLTVAmount >= origLTV.getLTV(LTVType.LIQUIDATION) && rampDuration > 0) revert E_LTVRamp();
+        // If new LTV is higher than the previous, or the same, it should take effect immediately
+        if (!(newLTVAmount < origLTV.getLTV(LTVType.LIQUIDATION)) && rampDuration > 0) revert E_LTVRamp();
 
         LTVConfig memory newLTV = origLTV.setLTV(newLTVAmount, rampDuration);
 
