@@ -49,7 +49,13 @@ using OwedLib for Owed global;
 using {addOwed as +, subOwed as -, eqOwed as ==, neqOwed as !=, gtOwed as >, ltOwed as <} for Owed global;
 
 using ConfigAmountLib for ConfigAmount global;
-using {addConfigAmount as +, subConfigAmount as -, gtConfigAmount as >, gteConfigAmount as >=, ltConfigAmount as <} for ConfigAmount global;
+using {
+    addConfigAmount as +,
+    subConfigAmount as -,
+    gtConfigAmount as >,
+    gteConfigAmount as >=,
+    ltConfigAmount as <
+} for ConfigAmount global;
 
 using AmountCapLib for AmountCap global;
 using OperationsLib for Operations global;
