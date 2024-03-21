@@ -70,8 +70,7 @@ abstract contract Base is EVCClient, Cache {
             snapshot.set(marketCache.cash, marketCache.totalBorrows.toAssetsUp());
         }
 
-        account =
-            EVCAuthenticateDeferred(!Operations.wrap(type(uint32).max & ~CONTROLLER_REQUIRED_OPS).check(operation));
+        account = EVCAuthenticateDeferred((type(uint32).max & ~CONTROLLER_REQUIRED_OPS) & operation == 0);
 
         EVCRequireStatusChecks(accountToCheck == CHECKACCOUNT_CALLER ? account : accountToCheck);
     }
