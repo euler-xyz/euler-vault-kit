@@ -65,7 +65,7 @@ contract Cache is Storage, Errors {
         if (deltaT > 0) {
             dirty = true;
 
-            if (marketCache.disabledOps.check(OP_ACCRUE_INTEREST)) {
+            if (marketCache.disabledOps.isSet(OP_ACCRUE_INTEREST)) {
                 marketCache.lastInterestAccumulatorUpdate = uint48(block.timestamp);
                 return dirty;
             }

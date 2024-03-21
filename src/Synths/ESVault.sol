@@ -8,7 +8,7 @@ import {VaultModule} from "../EVault/modules/Vault.sol";
 import {GovernanceModule} from "../EVault/modules/Governance.sol";
 import {IERC20} from "../EVault/IEVault.sol";
 import {ProxyUtils} from "../EVault/shared/lib/ProxyUtils.sol";
-import {Operations} from "../EVault/shared/types/Types.sol";
+import {Flags} from "../EVault/shared/types/Types.sol";
 import {RevertBytes} from "../EVault/shared/lib/RevertBytes.sol";
 
 import "../EVault/shared/Constants.sol";
@@ -30,8 +30,8 @@ contract ESVault is EVault {
         if (!success) RevertBytes.revertBytes(result);
 
         // disable not supported operations
-        uint32 newDisabledOps = SYNTH_VAULT_DISABLED_OPS | Operations.unwrap(marketStorage.disabledOps);
-        marketStorage.disabledOps = Operations.wrap(newDisabledOps);
+        uint32 newDisabledOps = SYNTH_VAULT_DISABLED_OPS | Flags.unwrap(marketStorage.disabledOps);
+        marketStorage.disabledOps = Flags.wrap(newDisabledOps);
         emit GovSetDisabledOps(newDisabledOps);
 
         // set default interest fee to 100%

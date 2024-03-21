@@ -396,7 +396,7 @@ interface IGovernance {
     /// @param newModel Address of the contract
     function setIRM(address newModel) external;
 
-    /// @notice Set new bitmap indicating which operations should be disabled. Operations are defined in Constants contract
+    /// @notice Set new bitmap indicating which operations should be disabled. Operations are defined in Constants.sol
     function setDisabledOps(uint32 newDisabledOps) external;
 
     /// @notice Set new supply and borrow caps in AmountCap format
