@@ -62,16 +62,6 @@ contract EVaultLens {
         result.assets = IEVault(vault).convertToAssets(result.shares);
         result.borrowed = IEVault(vault).debtOf(account);
 
-        try IEVault(vault).accountLiquidity(account, false) returns (uint256 collateralValue, uint256 liabilityValue) {
-            result.liabilityValueBorrowing = liabilityValue;
-            result.collateralValueBorrowing = collateralValue;
-        } catch {}
-
-        try IEVault(vault).accountLiquidity(account, true) returns (uint256 collateralValue, uint256 liabilityValue) {
-            result.liabilityValueLiquidation = liabilityValue;
-            result.collateralValueLiquidation = collateralValue;
-        } catch {}
-
         result.maxDeposit = IEVault(vault).maxDeposit(account);
         result.maxMint = IEVault(vault).maxMint(account);
         result.maxWithdraw = IEVault(vault).maxWithdraw(account);
@@ -92,6 +82,37 @@ contract EVaultLens {
         address evc = IEVault(vault).EVC();
         result.isController = IEVC(evc).isControllerEnabled(account, vault);
         result.isCollateral = IEVC(evc).isCollateralEnabled(account, vault);
+
+        try IEVault(vault).accountLiquidity(account, false) returns (uint256 collateralValue, uint256 liabilityValue) {
+            result.liquidityInfo.liabilityValue = liabilityValue;
+            result.liquidityInfo.collateralValueBorrowing = collateralValue;
+        } catch {}
+
+        try IEVault(vault).accountLiquidity(account, true) returns (uint256 collateralValue, uint256) {
+            result.liquidityInfo.collateralValueLiquidation = collateralValue;
+        } catch {}
+
+        try IEVault(vault).accountLiquidityFull(account, false) returns (
+            address[] memory collaterals, uint256[] memory collateralValues, uint256
+        ) {
+            result.liquidityInfo.collateralLiquidityBorrowingInfo = new CollateralLiquidityInfo[](collaterals.length);
+
+            for (uint256 i = 0; i < collaterals.length; ++i) {
+                result.liquidityInfo.collateralLiquidityBorrowingInfo[i].collateral = collaterals[i];
+                result.liquidityInfo.collateralLiquidityBorrowingInfo[i].collateralValue = collateralValues[i];
+            }
+        } catch {}
+
+        try IEVault(vault).accountLiquidityFull(account, true) returns (
+            address[] memory collaterals, uint256[] memory collateralValues, uint256
+        ) {
+            result.liquidityInfo.collateralLiquidityLiquidationInfo = new CollateralLiquidityInfo[](collaterals.length);
+
+            for (uint256 i = 0; i < collaterals.length; ++i) {
+                result.liquidityInfo.collateralLiquidityLiquidationInfo[i].collateral = collaterals[i];
+                result.liquidityInfo.collateralLiquidityLiquidationInfo[i].collateralValue = collateralValues[i];
+            }
+        } catch {}
 
         return result;
     }

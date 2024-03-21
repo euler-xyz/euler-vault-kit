@@ -30,10 +30,6 @@ struct VaultAccountInfo {
     uint256 shares;
     uint256 assets;
     uint256 borrowed;
-    uint256 liabilityValueBorrowing;
-    uint256 collateralValueBorrowing;
-    uint256 liabilityValueLiquidation;
-    uint256 collateralValueLiquidation;
     uint256 maxDeposit;
     uint256 maxMint;
     uint256 maxWithdraw;
@@ -45,6 +41,20 @@ struct VaultAccountInfo {
     bool balanceForwarderEnabled;
     bool isController;
     bool isCollateral;
+    AccountLiquidityInfo liquidityInfo;
+}
+
+struct AccountLiquidityInfo {
+    uint256 liabilityValue;
+    uint256 collateralValueBorrowing;
+    uint256 collateralValueLiquidation;
+    CollateralLiquidityInfo[] collateralLiquidityBorrowingInfo;
+    CollateralLiquidityInfo[] collateralLiquidityLiquidationInfo;
+}
+
+struct CollateralLiquidityInfo {
+    address collateral;
+    uint256 collateralValue;
 }
 
 struct VaultInfo {
