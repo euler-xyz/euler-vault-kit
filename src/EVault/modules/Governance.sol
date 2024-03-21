@@ -160,18 +160,19 @@ abstract contract GovernanceModule is IGovernance, Base, BalanceUtils, BorrowUti
 
         marketStorage.accumulatedFees = marketCache.accumulatedFees = Shares.wrap(0);
 
-        Assets governorAssets = governorShares.toAssetsDown(marketCache);
-        Assets protocolAssets = protocolShares.toAssetsDown(marketCache);
-
         // Decrease totalShares because increaseBalance will increase it by that total amount
         marketStorage.totalShares = marketCache.totalShares = marketCache.totalShares - marketCache.accumulatedFees;
 
-        if (governorReceiver != address(0)) {
-            increaseBalance(marketCache, governorReceiver, address(0), governorShares, governorAssets);
+        // For the Deposit events in increaseBalance the assets amount is zero - the shares are covered with the accrued interest
+        if (!governorShares.isZero()) {
+            increaseBalance(marketCache, governorReceiver, address(0), governorShares, Assets.wrap(0));
         }
 
-        increaseBalance(marketCache, protocolReceiver, address(0), protocolShares, protocolAssets);
-        emit ConvertFees(account, protocolReceiver, governorReceiver, protocolAssets.toUint(), governorAssets.toUint());
+        if (!protocolShares.isZero()) {
+            increaseBalance(marketCache, protocolReceiver, address(0), protocolShares, Assets.wrap(0));
+        }
+
+        emit ConvertFees(account, protocolReceiver, governorReceiver, protocolShares.toUint(), governorShares.toUint());
     }
 
     /// @inheritdoc IGovernance
