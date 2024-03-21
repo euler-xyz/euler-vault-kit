@@ -96,7 +96,7 @@ contract Governance_PauseAndOps is EVaultTestBase {
         // re-enable
         eTST.setDisabledOps(0);
         vm.prank(depositor);
-        eTST.withdraw(amount, receiver, depositor);
+        eTST.withdraw(amount, receiver, depositor); // depositor should be able to withdraw
     }
 
     function testFuzz_disablingRedeemOpsShouldFailAfterDisabled(uint256 amount, address receiver, address owner)
@@ -105,48 +105,98 @@ contract Governance_PauseAndOps is EVaultTestBase {
         eTST.setDisabledOps(OP_REDEEM);
         vm.expectRevert(Errors.E_OperationDisabled.selector);
         eTST.redeem(amount, receiver, owner);
+
+        // re-enable
+        eTST.setDisabledOps(0);
+        vm.prank(depositor);
+        // type(uint256).max redeems all of the shares
+        eTST.redeem(type(uint256).max, depositor, depositor); // depositor should be able to redeem
     }
 
     function testFuzz_disablingTransferOpsShouldFailAfterDisabled(address to, uint256 amount) public {
         eTST.setDisabledOps(OP_TRANSFER);
         vm.expectRevert(Errors.E_OperationDisabled.selector);
         eTST.transfer(to, amount);
+
+        // re-enable
+        eTST.setDisabledOps(0);
+        uint256 balance = eTST.balanceOf(depositor);
+        vm.prank(depositor);
+        eTST.transfer(to, balance);
     }
 
     function testFuzz_skimmingDisabledOpsShouldFailAfterDisabled(uint256 amount, address receiver) public {
         eTST.setDisabledOps(OP_SKIM);
         vm.expectRevert(Errors.E_OperationDisabled.selector);
         eTST.skim(amount, receiver);
+
+        // re-enable
+        eTST.setDisabledOps(0);
+        vm.prank(depositor);
+        // type(uint256).max skims all of the shares
+        eTST.skim(type(uint256).max, receiver);
     }
 
     function testFuzz_borrowingDisabledOpsShouldFailAfterDisabled(uint256 amount, address receiver) public {
         eTST.setDisabledOps(OP_BORROW);
         vm.expectRevert(Errors.E_OperationDisabled.selector);
         eTST.borrow(amount, receiver);
+
+        // re-enable
+        eTST.setDisabledOps(0);
+        vm.startPrank(depositor);
+        evc.enableController(depositor, address(eTST));
+        vm.assume(receiver != address(0));
+        eTST.borrow(type(uint256).max, receiver);
+        vm.stopPrank();
     }
 
     function testFuzz_repayingDisabledOpsShouldFailAfterDisabled(uint256 amount, address receiver) public {
         eTST.setDisabledOps(OP_REPAY);
         vm.expectRevert(Errors.E_OperationDisabled.selector);
         eTST.repay(amount, receiver);
+
+        // re-enable
+        eTST.setDisabledOps(0);
+        vm.prank(borrower);
+        eTST.repay(type(uint256).max, receiver);
     }
 
     function testFuzz_loopingDisabledOpsShouldFailAfterDisabled(uint256 amount, address sharesReceiver) public {
         eTST.setDisabledOps(OP_LOOP);
         vm.expectRevert(Errors.E_OperationDisabled.selector);
         eTST.loop(amount, sharesReceiver);
+
+        // re-enable
+        eTST.setDisabledOps(0);
+        vm.startPrank(depositor);
+        evc.enableController(depositor, address(eTST));
+        vm.assume(sharesReceiver != address(0));
+        eTST.loop(MINT_AMOUNT, sharesReceiver);
+        vm.stopPrank();
     }
 
     function testFuzz_deloopingDisabledOpsShouldFailAfterDisabled(uint256 amount, address debtFrom) public {
         eTST.setDisabledOps(OP_DELOOP);
         vm.expectRevert(Errors.E_OperationDisabled.selector);
         eTST.deloop(amount, debtFrom);
+
+        // re-enable
+        eTST.setDisabledOps(0);
+        vm.prank(borrower);
+        eTST.deloop(amount, borrower);
     }
 
     function testFuzz_pullingDebtDisabledOpsShouldFailAfterDisabled(uint256 amount, address from) public {
         eTST.setDisabledOps(OP_PULL_DEBT);
         vm.expectRevert(Errors.E_OperationDisabled.selector);
         eTST.pullDebt(amount, from);
+
+        // re-enable
+        eTST.setDisabledOps(0);
+        vm.startPrank(depositor);
+        evc.enableController(depositor, address(eTST));
+        eTST.pullDebt(type(uint256).max, borrower);
     }
 
     function testFuzz_convertingFeesDisabledOpsShouldFailAfterDisabled() public {
