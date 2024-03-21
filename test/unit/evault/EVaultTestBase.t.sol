@@ -9,7 +9,7 @@ import {GenericFactory} from "src/GenericFactory/GenericFactory.sol";
 import {EVault} from "src/EVault/EVault.sol";
 import {ProtocolConfig} from "src/ProtocolConfig/ProtocolConfig.sol";
 
-import {Dispatch} from "src/EVault/modules/Dispatch.sol";
+import {Dispatch} from "src/EVault/Dispatch.sol";
 
 import {Initialize} from "src/EVault/modules/Initialize.sol";
 import {Token} from "src/EVault/modules/Token.sol";

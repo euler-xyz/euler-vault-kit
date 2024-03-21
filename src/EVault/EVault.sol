@@ -2,7 +2,7 @@
 
 pragma solidity ^0.8.0;
 
-import {Dispatch} from "./modules/Dispatch.sol";
+import {Dispatch} from "./Dispatch.sol";
 
 contract EVault is Dispatch {
     constructor(Integrations memory integrations, DeployedModules memory modules) Dispatch(integrations, modules) {}
