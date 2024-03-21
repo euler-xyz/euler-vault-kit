@@ -14,18 +14,18 @@ contract EVaultLens {
     uint256 internal constant SECONDS_PER_YEAR = 365.2425 * 86400;
     uint256 internal constant ONE = 1e27;
 
-    function getUserInfo(address account, address vault) public view returns (UserInfo memory) {
-        UserInfo memory result;
+    function getAccountInfo(address account, address vault) public view returns (AccountInfo memory) {
+        AccountInfo memory result;
 
-        result.evcUserInfo = getEVCUserInfo(IEVault(vault).EVC(), account);
-        result.vaultUserInfo = getVaultUserInfo(account, vault);
-        //result.rewardUserInfo = getRewardUserInfo(account, vault);
+        result.evcAccountInfo = getEVCAccountInfo(IEVault(vault).EVC(), account);
+        result.vaultAccountInfo = getVaultAccountInfo(account, vault);
+        //result.rewardAccountInfo = getRewardAccountInfo(account, vault);
 
         return result;
     }
 
-    function getEVCUserInfo(address evc, address account) public view returns (EVCUserInfo memory) {
-        EVCUserInfo memory result;
+    function getEVCAccountInfo(address evc, address account) public view returns (EVCAccountInfo memory) {
+        EVCAccountInfo memory result;
 
         result.timestamp = block.timestamp;
         result.blockNumber = block.number;
@@ -46,8 +46,8 @@ contract EVaultLens {
         return result;
     }
 
-    function getVaultUserInfo(address account, address vault) public view returns (VaultUserInfo memory) {
-        VaultUserInfo memory result;
+    function getVaultAccountInfo(address account, address vault) public view returns (VaultAccountInfo memory) {
+        VaultAccountInfo memory result;
 
         result.timestamp = block.timestamp;
         result.blockNumber = block.number;
@@ -61,8 +61,8 @@ contract EVaultLens {
         result.borrowed = IEVault(vault).debtOf(account);
 
         try IEVault(vault).accountLiquidity(account, false) returns (uint256 collateralValue, uint256 liabilityValue) {
-            result.liabilityValueTarget = liabilityValue;
-            result.collateralValueTarget = collateralValue;
+            result.liabilityValueBorrowing = liabilityValue;
+            result.collateralValueBorrowing = collateralValue;
         } catch {}
 
         try IEVault(vault).accountLiquidity(account, true) returns (uint256 collateralValue, uint256 liabilityValue) {
@@ -159,9 +159,10 @@ contract EVaultLens {
         for (uint256 i = 0; i < collaterals.length; ++i) {
             result.ltvs[i].collateral = collaterals[i];
             result.ltvs[i].liquidationLTV = IEVault(vault).liquidationLTV(collaterals[i]);
+
             (
                 result.ltvs[i].targetTimestamp,
-                result.ltvs[i].targetLTV,
+                result.ltvs[i].borrowingLTV,
                 result.ltvs[i].rampDuration,
                 result.ltvs[i].originalLTV
             ) = IEVault(vault).LTVFull(collaterals[i]);
@@ -170,8 +171,8 @@ contract EVaultLens {
         return result;
     }
     /*
-    function getRewardUserInfo(address account, address vault) public view returns (RewardUserInfo memory) {
-        RewardUserInfo memory result;
+    function getRewardAccountInfo(address account, address vault) public view returns (RewardAccountInfo memory) {
+        RewardAccountInfo memory result;
 
         result.timestamp = block.timestamp;
         result.blockNumber = block.number;
@@ -260,8 +261,8 @@ contract EVaultLens {
         return result;
     }
     */
-    /// @dev for tokens like MKR which return bytes32 on name() or symbol()
 
+    /// @dev for tokens like MKR which return bytes32 on name() or symbol()
     function getStringOrBytes32(address contractAddress, bytes4 selector) private view returns (string memory) {
         (bool success, bytes memory result) = contractAddress.staticcall(abi.encodeWithSelector(selector));
 

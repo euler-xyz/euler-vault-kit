@@ -2,13 +2,13 @@
 
 pragma solidity ^0.8.0;
 
-struct UserInfo {
-    EVCUserInfo evcUserInfo;
-    VaultUserInfo vaultUserInfo;
-    RewardUserInfo rewardUserInfo;
+struct AccountInfo {
+    EVCAccountInfo evcAccountInfo;
+    VaultAccountInfo vaultAccountInfo;
+    RewardAccountInfo rewardAccountInfo;
 }
 
-struct EVCUserInfo {
+struct EVCAccountInfo {
     uint256 timestamp;
     uint256 blockNumber;
     address evc;
@@ -21,7 +21,7 @@ struct EVCUserInfo {
     address[] enabledCollaterals;
 }
 
-struct VaultUserInfo {
+struct VaultAccountInfo {
     uint256 timestamp;
     uint256 blockNumber;
     address account;
@@ -30,8 +30,8 @@ struct VaultUserInfo {
     uint256 shares;
     uint256 assets;
     uint256 borrowed;
-    uint256 liabilityValueTarget;
-    uint256 collateralValueTarget;
+    uint256 liabilityValueBorrowing;
+    uint256 collateralValueBorrowing;
     uint256 liabilityValueLiquidation;
     uint256 collateralValueLiquidation;
     uint256 maxDeposit;
@@ -91,14 +91,14 @@ struct VaultInfo {
 
 struct LTVInfo {
     address collateral;
+    uint256 liquidationLTV;
+    uint256 borrowingLTV;
     uint256 originalLTV;
-    uint256 targetLTV;
     uint256 targetTimestamp;
     uint256 rampDuration;
-    uint256 liquidationLTV;
 }
 
-struct RewardUserInfo {
+struct RewardAccountInfo {
     uint256 timestamp;
     uint256 blockNumber;
     address account;
