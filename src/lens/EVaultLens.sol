@@ -55,7 +55,7 @@ contract EVaultLens {
         result.vault = vault;
         result.asset = IEVault(vault).asset();
 
-        result.accountAssets = IEVault(result.asset).balanceOf(account);
+        result.assetsAccount = IEVault(result.asset).balanceOf(account);
         result.shares = IEVault(vault).balanceOf(account);
         result.assets = IEVault(vault).convertToAssets(result.shares);
         result.borrowed = IEVault(vault).debtOf(account);

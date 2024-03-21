@@ -27,7 +27,7 @@ struct VaultAccountInfo {
     address account;
     address vault;
     address asset;
-    uint256 accountAssets;
+    uint256 assetsAccount;
     uint256 shares;
     uint256 assets;
     uint256 borrowed;
