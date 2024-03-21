@@ -209,8 +209,13 @@ abstract contract GovernanceModule is IGovernance, Base, BalanceUtils, BorrowUti
         // self-collateralization is not allowed
         if (collateral == address(this)) revert E_InvalidLTVAsset();
 
+        ConfigAmount newLTVAmount = ltv.toConfigAmount();
         LTVConfig memory origLTV = marketStorage.ltvLookup[collateral];
-        LTVConfig memory newLTV = origLTV.setLTV(ltv.toConfigAmount(), rampDuration);
+
+        // If new LTV is higher than the previous, or the same, it should take effect immediatelly
+        if (newLTVAmount >= origLTV.getLTV(LTVType.LIQUIDATION) && rampDuration > 0) revert E_LTVRamp();
+
+        LTVConfig memory newLTV = origLTV.setLTV(newLTVAmount, rampDuration);
 
         marketStorage.ltvLookup[collateral] = newLTV;
 
