@@ -42,7 +42,7 @@ contract BeaconProxy {
         (metadata0, metadata1, metadata2, metadata3) = abi.decode(trailingData, (bytes32, bytes32, bytes32, bytes32));
     }
 
-    fallback() external {
+    fallback() external payable {
         address beacon_ = beacon;
         uint256 metadataLength_ = metadataLength;
         bytes32 metadata0_ = metadata0;
