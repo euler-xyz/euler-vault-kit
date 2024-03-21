@@ -277,7 +277,7 @@ contract EVaultLens {
     }
     */
 
-    function getInterestRateModelInfo(address vault, uint256[] memory cash, uint256[] memory borrows)
+    function getVaultInterestRateModelInfo(address vault, uint256[] memory cash, uint256[] memory borrows)
         public
         view
         returns (InterestRateModelInfo memory)
@@ -309,7 +309,7 @@ contract EVaultLens {
         return result;
     }
 
-    function getKinkInterestRateModelInfo(address vault) external view returns (InterestRateModelInfo memory) {
+    function getVaultKinkInterestRateModelInfo(address vault) public view returns (InterestRateModelInfo memory) {
         address interestRateModel = IEVault(vault).interestRateModel();
 
         if (interestRateModel == address(0)) {
@@ -330,10 +330,10 @@ contract EVaultLens {
         borrows[1] = kink;
         borrows[2] = type(uint32).max;
 
-        return getInterestRateModelInfo(vault, cash, borrows);
+        return getVaultInterestRateModelInfo(vault, cash, borrows);
     }
 
-    function getVaultPriceInfo(address vault, address asset) external view returns (VaultPriceInfo memory) {
+    function getVaultAssetPriceInfo(address vault, address asset) public view returns (VaultPriceInfo memory) {
         VaultPriceInfo memory result;
 
         result.timestamp = block.timestamp;
