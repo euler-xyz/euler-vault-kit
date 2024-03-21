@@ -15,6 +15,7 @@ import "./LensTypes.sol";
 contract EVaultLens {
     uint256 internal constant SECONDS_PER_YEAR = 365.2425 * 86400;
     uint256 internal constant ONE = 1e27;
+    uint256 internal constant CONFIG_SCALE = 1e4;
 
     function getAccountInfo(address account, address vault) public view returns (AccountInfo memory) {
         AccountInfo memory result;
@@ -169,18 +170,49 @@ contract EVaultLens {
         result.pauseGuardian = IEVault(vault).pauseGuardian();
 
         address[] memory collaterals = IEVault(vault).LTVList();
-        result.ltvs = new LTVInfo[](collaterals.length);
+        LTVInfo[] memory collateralLTVInfo = new LTVInfo[](collaterals.length);
+        uint256 numberOfRecognizedCollaterals = 0;
 
         for (uint256 i = 0; i < collaterals.length; ++i) {
-            result.ltvs[i].collateral = collaterals[i];
-            result.ltvs[i].liquidationLTV = IEVault(vault).liquidationLTV(collaterals[i]);
+            collateralLTVInfo[i].collateral = collaterals[i];
+            collateralLTVInfo[i].liquidationLTV = IEVault(vault).liquidationLTV(collaterals[i]);
 
             (
-                result.ltvs[i].targetTimestamp,
-                result.ltvs[i].borrowingLTV,
-                result.ltvs[i].rampDuration,
-                result.ltvs[i].originalLTV
+                collateralLTVInfo[i].targetTimestamp,
+                collateralLTVInfo[i].borrowingLTV,
+                collateralLTVInfo[i].rampDuration,
+                collateralLTVInfo[i].originalLTV
             ) = IEVault(vault).LTVFull(collaterals[i]);
+
+            if (collateralLTVInfo[i].targetTimestamp != 0) {
+                ++numberOfRecognizedCollaterals;
+            }
+        }
+
+        result.collateralLTVInfo = new LTVInfo[](numberOfRecognizedCollaterals);
+
+        for (uint256 i = 0; i < collaterals.length; ++i) {
+            if (collateralLTVInfo[i].targetTimestamp != 0) {
+                result.collateralLTVInfo[i] = collateralLTVInfo[i];
+            }
+        }
+
+        if (result.oracle != address(0)) {
+            result.collateralPriceInfo = new PriceInfo[](numberOfRecognizedCollaterals);
+
+            for (uint256 i = 0; i < result.collateralLTVInfo.length; ++i) {
+                VaultAssetPriceInfo memory priceInfo =
+                    getVaultAssetPriceInfo(vault, result.collateralLTVInfo[i].collateral);
+
+                result.collateralPriceInfo[i].collateral = priceInfo.asset;
+                result.collateralPriceInfo[i].unitOfAccount = priceInfo.unitOfAccount;
+                result.collateralPriceInfo[i].amountIn = priceInfo.amountIn;
+                result.collateralPriceInfo[i].amountOutNotAdjusted = priceInfo.amountOut;
+                result.collateralPriceInfo[i].amountOutBorrowing =
+                    priceInfo.amountOut * result.collateralLTVInfo[i].borrowingLTV / CONFIG_SCALE;
+                result.collateralPriceInfo[i].amountOutLiquidation =
+                    priceInfo.amountOut * result.collateralLTVInfo[i].liquidationLTV / CONFIG_SCALE;
+            }
         }
 
         return result;
@@ -368,7 +400,8 @@ contract EVaultLens {
         bool overflowBorrow;
         bool overflowSupply;
 
-        supplySPY = totalAssets == 0 ? 0 : borrowSPY * borrows * (1e4 - interestFee) / totalAssets / 1e4;
+        supplySPY =
+            totalAssets == 0 ? 0 : borrowSPY * borrows * (CONFIG_SCALE - interestFee) / totalAssets / CONFIG_SCALE;
         (borrowAPY, overflowBorrow) = RPow.rpow(borrowSPY + ONE, SECONDS_PER_YEAR, ONE);
         (supplyAPY, overflowSupply) = RPow.rpow(supplySPY + ONE, SECONDS_PER_YEAR, ONE);
 

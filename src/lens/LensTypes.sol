@@ -97,8 +97,8 @@ struct VaultInfo {
     address creator;
     address governorAdmin;
     address pauseGuardian;
-    LTVInfo[] ltvs;
-    CollateralLiquidityInfo[] collateralLiquidityBorrowingInfo;
+    LTVInfo[] collateralLTVInfo;
+    PriceInfo[] collateralPriceInfo;
 }
 
 struct LTVInfo {
@@ -108,6 +108,15 @@ struct LTVInfo {
     uint256 originalLTV;
     uint256 targetTimestamp;
     uint256 rampDuration;
+}
+
+struct PriceInfo {
+    address collateral;
+    address unitOfAccount;
+    uint256 amountIn;
+    uint256 amountOutNotAdjusted;
+    uint256 amountOutBorrowing;
+    uint256 amountOutLiquidation;
 }
 
 struct AccountRewardInfo {
