@@ -35,10 +35,7 @@ contract EVaultLens {
         result.evc = evc;
         result.account = account;
         result.addressPrefix = IEVC(evc).getAddressPrefix(account);
-
-        try IEVC(evc).getAccountOwner(account) returns (address _owner) {
-            result.owner = _owner;
-        } catch {}
+        result.owner = IEVC(evc).getAccountOwner(account);
 
         result.isLockdownMode = IEVC(evc).isLockdownMode(result.addressPrefix);
         result.isPermitDisabledMode = IEVC(evc).isPermitDisabledMode(result.addressPrefix);
@@ -58,6 +55,7 @@ contract EVaultLens {
         result.vault = vault;
         result.asset = IEVault(vault).asset();
 
+        result.accountAssets = IEVault(result.asset).balanceOf(account);
         result.shares = IEVault(vault).balanceOf(account);
         result.assets = IEVault(vault).convertToAssets(result.shares);
         result.borrowed = IEVault(vault).debtOf(account);
