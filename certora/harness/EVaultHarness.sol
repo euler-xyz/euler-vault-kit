@@ -3,7 +3,6 @@
 pragma solidity ^0.8.0;
 
 import {Base} from "../../src/EVault/shared/Base.sol";
-// import {ModuleDispatch} from "../../src/EVault/modules/ModuleDispatch.sol";
 
 import {TokenModule} from "../../src/EVault/modules/Token.sol";
 import {VaultModule} from "../../src/EVault/modules/Vault.sol";
