@@ -30,6 +30,7 @@ abstract contract GovernanceModule is IGovernance, Base, BalanceUtils, BorrowUti
     );
     event GovSetIRM(address interestRateModel);
     event GovSetDisabledOps(uint32 newDisabledOps);
+    event GovSetLockedOps(uint32 newLockedOps);
     event GovSetCaps(uint16 newSupplyCap, uint16 newBorrowCap);
     event GovSetInterestFee(uint16 newFee);
 
@@ -106,6 +107,11 @@ abstract contract GovernanceModule is IGovernance, Base, BalanceUtils, BorrowUti
     /// @inheritdoc IGovernance
     function disabledOps() public view virtual reentrantOK returns (uint32) {
         return (marketStorage.disabledOps.toUint32());
+    }
+
+    /// @inheritdoc IGovernance
+    function lockedOps() public view virtual reentrantOK returns (uint32) {
+        return (marketStorage.lockedOps.toUint32());
     }
 
     /// @inheritdoc IGovernance
@@ -255,6 +261,10 @@ abstract contract GovernanceModule is IGovernance, Base, BalanceUtils, BorrowUti
 
     /// @inheritdoc IGovernance
     function setDisabledOps(uint32 newDisabledOps) public virtual nonReentrant governorOrPauseGuardianOnly {
+        // Overwrite bits of locked ops with their currently set values
+        newDisabledOps = (newDisabledOps & ~marketStorage.lockedOps.toUint32())
+            | (marketStorage.disabledOps.toUint32() & marketStorage.lockedOps.toUint32());
+
         // market is updated because:
         // if disabling interest accrual - the pending interest should be accrued
         // if re-enabling interest - last updated timestamp needs to be reset to skip the disabled period
@@ -263,6 +273,12 @@ abstract contract GovernanceModule is IGovernance, Base, BalanceUtils, BorrowUti
 
         marketStorage.disabledOps = Flags.wrap(newDisabledOps);
         emit GovSetDisabledOps(newDisabledOps);
+    }
+
+    /// @inheritdoc IGovernance
+    function setLockedOps(uint32 newLockedOps) public virtual nonReentrant governorOnly {
+        marketStorage.lockedOps = Flags.wrap(newLockedOps);
+        emit GovSetLockedOps(newLockedOps);
     }
 
     /// @inheritdoc IGovernance

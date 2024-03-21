@@ -183,6 +183,8 @@ contract EVault is Dispatch {
 
     function disabledOps() public override virtual useView(MODULE_GOVERNANCE) view returns (uint32) {}
 
+    function lockedOps() public override virtual useView(MODULE_GOVERNANCE) view returns (uint32) {}
+
     function caps() public override virtual useView(MODULE_GOVERNANCE) view returns (uint16 supplyCap, uint16 borrowCap) {}
 
     function feeReceiver() public override virtual useView(MODULE_GOVERNANCE) view returns (address) {}
@@ -215,6 +217,8 @@ contract EVault is Dispatch {
     function setIRM(address newModel) public override virtual use(MODULE_GOVERNANCE) {}
 
     function setDisabledOps(uint32 newDisabledOps) public override virtual use(MODULE_GOVERNANCE) {}
+
+    function setLockedOps(uint32 newLockedOps) public override virtual use(MODULE_GOVERNANCE) {}
 
     function setCaps(uint16 supplyCap, uint16 borrowCap) public override virtual use(MODULE_GOVERNANCE) {}
 

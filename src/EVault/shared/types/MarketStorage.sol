@@ -36,6 +36,7 @@ struct MarketStorage {
 
     address governorAdmin;
     address pauseGuardian;
+    Flags lockedOps;
     address feeReceiver;
 
     mapping(address account => UserStorage) users;
