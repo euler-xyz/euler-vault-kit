@@ -7,7 +7,7 @@ import {EVaultTestBase} from "../../EVaultTestBase.t.sol";
 
 import "src/EVault/shared/types/Types.sol";
 
-contract ERC4626Test_Skim is EVaultTestBase {
+contract VaultTest_Skim is EVaultTestBase {
     using TypesLib for uint256;
 
     address user;

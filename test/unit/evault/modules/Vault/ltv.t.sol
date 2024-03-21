@@ -8,7 +8,7 @@ import {Events} from "src/EVault/shared/Events.sol";
 import "src/EVault/shared/types/Types.sol";
 import "src/EVault/shared/Constants.sol";
 
-contract ERC4626Test_LTV is EVaultTestBase {
+contract VaultTest_LTV is EVaultTestBase {
     using TypesLib for uint256;
 
     address depositor;
