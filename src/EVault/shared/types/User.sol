@@ -6,13 +6,13 @@ import {Shares, Owed} from "./Types.sol";
 
 type PackedUserSlot is uint256;
 
-struct UserStorage {
+struct User {
     PackedUserSlot data; // Shares and debt balance, balance forwarder opt-in flag
     uint256 interestAccumulator;
     mapping(address spender => uint256 allowance) eTokenAllowance;
 }
 
-library UserStorageLib {
+library UserLib {
     uint256 constant BALANCE_FORWARDER_MASK = 0x8000000000000000000000000000000000000000000000000000000000000000;
     uint256 constant OWED_MASK = 0x7FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF0000000000000000000000000000;
     uint256 constant SHARES_MASK = 0x000000000000000000000000000000000000FFFFFFFFFFFFFFFFFFFFFFFFFFFF;

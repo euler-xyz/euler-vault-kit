@@ -4,9 +4,9 @@ pragma solidity ^0.8.0;
 
 import {Assets, Shares, Owed, AmountCap, ConfigAmount, Flags} from "./Types.sol";
 import {LTVConfig} from "./LTVConfig.sol";
-import {UserStorage} from "./UserStorage.sol";
+import {User} from "./User.sol";
 
-struct MarketStorage {
+struct Market {
     // Packed slot 6 + 14 + 2 + 2 + 4 + 1 + 1 = 30
     uint48 lastInterestAccumulatorUpdate;
     Assets cash;
@@ -41,7 +41,7 @@ struct MarketStorage {
     Flags lockedOps;
     address feeReceiver;
 
-    mapping(address account => UserStorage) users;
+    mapping(address account => User) users;
 
     mapping(address collateral => LTVConfig) ltvLookup;
     address[] ltvList;

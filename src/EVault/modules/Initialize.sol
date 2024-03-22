@@ -18,11 +18,19 @@ abstract contract InitializeModule is IInitialize, Base, BorrowUtils {
 
     uint256 constant INITIAL_INTEREST_ACCUMULATOR = 1e27; // 1 ray
     uint16 constant DEFAULT_INTEREST_FEE = 0.23e4;
+    // keccak256(abi.encode(uint256(keccak256("euler.evault.storage.Initialize")) - 1)) & ~bytes32(uint256(0xff))
+    bytes32 private constant INITIALIZE_STORAGE = 0xa751f44bd531ee367ee4afe8b302ebe9c90d72d4cb5022352fe2f526c8608b00;
+
+    /// @dev Storage of the Initialize module, implemented on a custom ERC-7201 namespace.
+    /// @custom:storage-location erc7201:euler.evault.storage.Initialize
+    struct InitializeStorage {
+        bool initialized;
+    }
 
     /// @inheritdoc IInitialize
     function initialize(address proxyCreator) public virtual reentrantOK {
-        if (initialized) revert E_Initialized();
-        initialized = true;
+        if (initializeStorage().initialized) revert E_Initialized();
+        initializeStorage().initialized = true;
 
         // Validate proxy immutables
 
@@ -55,6 +63,12 @@ abstract contract InitializeModule is IInitialize, Base, BorrowUtils {
     // prevent initialization of the implementation contract
     constructor() {
         initialized = true;
+    }
+
+    function initializeStorage() private view returns (InitializeStorage storage data) {
+        assembly {
+            data.slot := INITIALIZE_STORAGE
+        }
     }
 }
 
