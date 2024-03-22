@@ -9,6 +9,7 @@ import {DToken} from "../DToken.sol";
 import {ProxyUtils} from "../shared/lib/ProxyUtils.sol";
 import {RevertBytes} from "../shared/lib/RevertBytes.sol";
 import {MarketCache} from "../shared/types/MarketCache.sol";
+// import {SnapshotStorage} from "../shared/SnapshotStorage.sol";
 
 import "../shared/Constants.sol";
 import "../shared/types/Types.sol";
@@ -47,12 +48,12 @@ abstract contract InitializeModule is IInitialize, Base, BorrowUtils {
 
         // Initialize storage
 
-        marketStorage.lastInterestAccumulatorUpdate = uint48(block.timestamp);
-        marketStorage.interestAccumulator = INITIAL_INTEREST_ACCUMULATOR;
-        marketStorage.interestFee = DEFAULT_INTEREST_FEE.toConfigAmount();
-        marketStorage.creator = marketStorage.governorAdmin = marketStorage.pauseGuardian = proxyCreator;
+        marketStorage().lastInterestAccumulatorUpdate = uint48(block.timestamp);
+        marketStorage().interestAccumulator = INITIAL_INTEREST_ACCUMULATOR;
+        marketStorage().interestFee = DEFAULT_INTEREST_FEE.toConfigAmount();
+        marketStorage().creator = marketStorage().governorAdmin = marketStorage().pauseGuardian = proxyCreator;
 
-        snapshot.reset();
+        snapshotStorage().reset();
 
         // Emit logs
 
@@ -62,7 +63,7 @@ abstract contract InitializeModule is IInitialize, Base, BorrowUtils {
 
     // prevent initialization of the implementation contract
     constructor() {
-        initialized = true;
+        initializeStorage().initialized = true;
     }
 
     function initializeStorage() private view returns (InitializeStorage storage data) {

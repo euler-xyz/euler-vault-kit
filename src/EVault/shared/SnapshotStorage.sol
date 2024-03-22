@@ -9,12 +9,13 @@ abstract contract SnapshotStorage {
     bytes32 private constant SNAPSHOT_STORAGE = 0x8de38e95fe92fb64c3c6fa79a422833a72fa1e96f015d453352825a959c71e00;
 
     /// @dev Vault snapshot storage, implemented on a custom ERC-7201 namespace.
+    /// SnaphotStorageStruct is wrapping Snapshot under the same slot only to apply ERC7201 annotation.
     /// @custom:storage-location erc7201:euler.evault.storage.Snapshot
-    struct SnaphotStorage {
-        Snaphsot snapshot;
+    struct SnaphotStorageStruct {
+        Snapshot snapshot;
     }
 
-    function snapshotStorage() internal view virtual returns (Snapshot storage data) {
+    function snapshotStorage() internal pure virtual returns (Snapshot storage data) {
         assembly {
             data.slot := SNAPSHOT_STORAGE // The extrenal struct's slot is the same as internal's
         }

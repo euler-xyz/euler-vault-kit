@@ -49,14 +49,14 @@ abstract contract RiskManagerModule is IRiskManager, Base, LiquidityUtils {
             );
         }
 
-        liabilityValue = getLiabilityValue(marketCache, account, marketStorage.users[account].getOwed());
+        liabilityValue = getLiabilityValue(marketCache, account, marketStorage().users[account].getOwed());
     }
 
     /// @inheritdoc IRiskManager
     function disableController() public virtual nonReentrant {
         address account = EVCAuthenticate();
 
-        if (!marketStorage.users[account].getOwed().isZero()) revert E_OutstandingDebt();
+        if (!marketStorage().users[account].getOwed().isZero()) revert E_OutstandingDebt();
 
         disableControllerInternal(account);
     }
@@ -91,8 +91,9 @@ abstract contract RiskManagerModule is IRiskManager, Base, LiquidityUtils {
         // If snapshot is initialized, then caps are configured.
         // If caps are set in the middle of a batch, then snapshots represent the state of the vault at that time.
         if (marketCache.snapshotInitialized) {
-            marketStorage.snapshotInitialized = marketCache.snapshotInitialized = false;
+            marketStorage().snapshotInitialized = marketCache.snapshotInitialized = false;
 
+            Snapshot storage snapshot = snapshotStorage();
             Assets snapshotCash = snapshot.cash;
             Assets snapshotBorrows = snapshot.borrows;
 

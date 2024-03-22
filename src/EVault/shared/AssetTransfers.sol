@@ -13,7 +13,7 @@ abstract contract AssetTransfers is Base {
 
     function pullAssets(MarketCache memory marketCache, address from, Assets amount) internal {
         marketCache.asset.safeTransferFrom(from, address(this), amount.toUint(), permit2);
-        marketStorage.cash = marketCache.cash = marketCache.cash + amount;
+        marketStorage().cash = marketCache.cash = marketCache.cash + amount;
     }
 
     function pushAssets(MarketCache memory marketCache, address to, Assets amount) internal {
@@ -27,7 +27,7 @@ abstract contract AssetTransfers is Base {
             revert E_BadAssetReceiver();
         }
 
-        marketStorage.cash = marketCache.cash = marketCache.cash - amount;
+        marketStorage().cash = marketCache.cash = marketCache.cash - amount;
         marketCache.asset.safeTransfer(to, amount.toUint());
     }
 }

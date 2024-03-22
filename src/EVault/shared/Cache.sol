@@ -2,7 +2,7 @@
 
 pragma solidity ^0.8.0;
 
-import {Storage} from "./Storage.sol";
+import {MarketStorage} from "./MarketStorage.sol";
 import {Errors} from "./Errors.sol";
 import {RPow} from "./lib/RPow.sol";
 import {SafeERC20Lib} from "./lib/SafeERC20Lib.sol";
@@ -10,7 +10,7 @@ import {ProxyUtils} from "./lib/ProxyUtils.sol";
 
 import "./types/Types.sol";
 
-contract Cache is Storage, Errors {
+contract Cache is MarketStorage, Errors {
     using TypesLib for uint256;
     using SafeERC20Lib for IERC20;
 
@@ -18,13 +18,13 @@ contract Cache is Storage, Errors {
     // If different from MarketStorage, updates MarketStorage
     function updateMarket() internal returns (MarketCache memory marketCache) {
         if (initMarketCache(marketCache)) {
-            marketStorage.lastInterestAccumulatorUpdate = marketCache.lastInterestAccumulatorUpdate;
-            marketStorage.accumulatedFees = marketCache.accumulatedFees;
+            marketStorage().lastInterestAccumulatorUpdate = marketCache.lastInterestAccumulatorUpdate;
+            marketStorage().accumulatedFees = marketCache.accumulatedFees;
 
-            marketStorage.totalShares = marketCache.totalShares;
-            marketStorage.totalBorrows = marketCache.totalBorrows;
+            marketStorage().totalShares = marketCache.totalShares;
+            marketStorage().totalBorrows = marketCache.totalBorrows;
 
-            marketStorage.interestAccumulator = marketCache.interestAccumulator;
+            marketStorage().interestAccumulator = marketCache.interestAccumulator;
         }
     }
 
@@ -45,20 +45,20 @@ contract Cache is Storage, Errors {
 
         // Storage loads
 
-        marketCache.lastInterestAccumulatorUpdate = marketStorage.lastInterestAccumulatorUpdate;
-        marketCache.cash = marketStorage.cash;
-        marketCache.supplyCap = marketStorage.supplyCap.toUint();
-        marketCache.borrowCap = marketStorage.borrowCap.toUint();
-        marketCache.disabledOps = marketStorage.disabledOps;
-        marketCache.snapshotInitialized = marketStorage.snapshotInitialized;
+        marketCache.lastInterestAccumulatorUpdate = marketStorage().lastInterestAccumulatorUpdate;
+        marketCache.cash = marketStorage().cash;
+        marketCache.supplyCap = marketStorage().supplyCap.toUint();
+        marketCache.borrowCap = marketStorage().borrowCap.toUint();
+        marketCache.disabledOps = marketStorage().disabledOps;
+        marketCache.snapshotInitialized = marketStorage().snapshotInitialized;
 
-        marketCache.totalShares = marketStorage.totalShares;
-        marketCache.totalBorrows = marketStorage.totalBorrows;
+        marketCache.totalShares = marketStorage().totalShares;
+        marketCache.totalBorrows = marketStorage().totalBorrows;
 
-        marketCache.accumulatedFees = marketStorage.accumulatedFees;
-        marketCache.configFlags = marketStorage.configFlags;
+        marketCache.accumulatedFees = marketStorage().accumulatedFees;
+        marketCache.configFlags = marketStorage().configFlags;
 
-        marketCache.interestAccumulator = marketStorage.interestAccumulator;
+        marketCache.interestAccumulator = marketStorage().interestAccumulator;
 
         // Update interest accumulator and fees balance
         uint256 deltaT = block.timestamp - marketCache.lastInterestAccumulatorUpdate;
@@ -73,8 +73,8 @@ contract Cache is Storage, Errors {
 
             // Compute new values. Use full precision for intermediate results.
 
-            ConfigAmount interestFee = marketStorage.interestFee;
-            uint256 interestRate = marketStorage.interestRate;
+            ConfigAmount interestFee = marketStorage().interestFee;
+            uint256 interestRate = marketStorage().interestRate;
 
             uint256 newInterestAccumulator = marketCache.interestAccumulator;
 

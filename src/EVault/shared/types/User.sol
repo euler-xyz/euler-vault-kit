@@ -18,36 +18,36 @@ library UserLib {
     uint256 constant SHARES_MASK = 0x000000000000000000000000000000000000FFFFFFFFFFFFFFFFFFFFFFFFFFFF;
     uint256 constant OWED_OFFSET = 112;
 
-    function getBalanceForwarderEnabled(UserStorage storage self) internal view returns (bool) {
+    function getBalanceForwarderEnabled(User storage self) internal view returns (bool) {
         return unpackBalanceForwarder(self.data);
     }
 
-    function getOwed(UserStorage storage self) internal view returns (Owed) {
+    function getOwed(User storage self) internal view returns (Owed) {
         return Owed.wrap(uint144((PackedUserSlot.unwrap(self.data) & OWED_MASK) >> OWED_OFFSET));
     }
 
-    function getBalance(UserStorage storage self) internal view returns (Shares) {
+    function getBalance(User storage self) internal view returns (Shares) {
         return unpackBalance(self.data);
     }
 
-    function getBalanceAndBalanceForwarder(UserStorage storage self) internal view returns (Shares, bool) {
+    function getBalanceAndBalanceForwarder(User storage self) internal view returns (Shares, bool) {
         PackedUserSlot data = self.data; // single SLOAD
         return (unpackBalance(data), unpackBalanceForwarder(data));
     }
 
-    function setBalanceForwarder(UserStorage storage self, bool newValue) internal {
+    function setBalanceForwarder(User storage self, bool newValue) internal {
         self.data = newValue
             ? PackedUserSlot.wrap(PackedUserSlot.unwrap(self.data) | BALANCE_FORWARDER_MASK)
             : PackedUserSlot.wrap(PackedUserSlot.unwrap(self.data) & ~BALANCE_FORWARDER_MASK);
     }
 
-    function setOwed(UserStorage storage self, Owed owed) internal {
+    function setOwed(User storage self, Owed owed) internal {
         uint256 data = PackedUserSlot.unwrap(self.data);
 
         self.data = PackedUserSlot.wrap((owed.toUint() << 112) | (data & (BALANCE_FORWARDER_MASK | SHARES_MASK)));
     }
 
-    function setBalance(UserStorage storage self, Shares balance) internal {
+    function setBalance(User storage self, Shares balance) internal {
         uint256 data = PackedUserSlot.unwrap(self.data);
 
         self.data = PackedUserSlot.wrap(balance.toUint() | (data & (BALANCE_FORWARDER_MASK | OWED_MASK)));
@@ -62,4 +62,4 @@ library UserLib {
     }
 }
 
-using UserStorageLib for UserStorage global;
+using UserLib for User global;

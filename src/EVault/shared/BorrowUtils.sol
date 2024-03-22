@@ -16,22 +16,22 @@ abstract contract BorrowUtils is Base {
         if (owed.isZero()) return Owed.wrap(0);
 
         // Can't divide by 0 here: If owed is non-zero, we must've initialized the user's interestAccumulator
-        return owed.mulDiv(marketCache.interestAccumulator, marketStorage.users[account].interestAccumulator);
+        return owed.mulDiv(marketCache.interestAccumulator, marketStorage().users[account].interestAccumulator);
     }
 
     function getCurrentOwed(MarketCache memory marketCache, address account) internal view returns (Owed) {
-        return getCurrentOwed(marketCache, account, marketStorage.users[account].getOwed());
+        return getCurrentOwed(marketCache, account, marketStorage().users[account].getOwed());
     }
 
     function updateUserBorrow(MarketCache memory marketCache, address account)
         private
         returns (Owed newOwed, Owed prevOwed)
     {
-        prevOwed = marketStorage.users[account].getOwed();
+        prevOwed = marketStorage().users[account].getOwed();
         newOwed = getCurrentOwed(marketCache, account, prevOwed);
 
-        marketStorage.users[account].setOwed(newOwed);
-        marketStorage.users[account].interestAccumulator = marketCache.interestAccumulator;
+        marketStorage().users[account].setOwed(newOwed);
+        marketStorage().users[account].interestAccumulator = marketCache.interestAccumulator;
     }
 
     function increaseBorrow(MarketCache memory marketCache, address account, Assets assets) internal {
@@ -40,8 +40,8 @@ abstract contract BorrowUtils is Base {
         Owed amount = assets.toOwed();
         owed = owed + amount;
 
-        marketStorage.users[account].setOwed(owed);
-        marketStorage.totalBorrows = marketCache.totalBorrows = marketCache.totalBorrows + amount;
+        marketStorage().users[account].setOwed(owed);
+        marketStorage().totalBorrows = marketCache.totalBorrows = marketCache.totalBorrows + amount;
 
         logBorrowChange(account, prevOwed, owed);
     }
@@ -57,8 +57,8 @@ abstract contract BorrowUtils is Base {
             owedRemaining = (owed - amount).toOwed();
         }
 
-        marketStorage.users[account].setOwed(owedRemaining);
-        marketStorage.totalBorrows = marketCache.totalBorrows =
+        marketStorage().users[account].setOwed(owedRemaining);
+        marketStorage().totalBorrows = marketCache.totalBorrows =
             marketCache.totalBorrows > owedExact ? marketCache.totalBorrows - owedExact + owedRemaining : owedRemaining;
 
         logBorrowChange(account, prevOwed, owedRemaining);
@@ -84,8 +84,8 @@ abstract contract BorrowUtils is Base {
 
         toOwed = toOwed + amount;
 
-        marketStorage.users[from].setOwed(fromOwed);
-        marketStorage.users[to].setOwed(toOwed);
+        marketStorage().users[from].setOwed(fromOwed);
+        marketStorage().users[to].setOwed(toOwed);
 
         logBorrowChange(from, fromOwedPrev, fromOwed);
         logBorrowChange(to, toOwedPrev, toOwed);
@@ -93,8 +93,8 @@ abstract contract BorrowUtils is Base {
 
     function computeInterestRate(MarketCache memory marketCache) internal virtual returns (uint256) {
         // single sload
-        address irm = marketStorage.interestRateModel;
-        uint256 newInterestRate = marketStorage.interestRate;
+        address irm = marketStorage().interestRateModel;
+        uint256 newInterestRate = marketStorage().interestRate;
 
         if (irm != address(0)) {
             (bool success, bytes memory data) = irm.call(
@@ -107,7 +107,7 @@ abstract contract BorrowUtils is Base {
             if (success && data.length >= 32) {
                 newInterestRate = abi.decode(data, (uint256));
                 if (newInterestRate > MAX_ALLOWED_INTEREST_RATE) newInterestRate = MAX_ALLOWED_INTEREST_RATE;
-                marketStorage.interestRate = uint72(newInterestRate);
+                marketStorage().interestRate = uint72(newInterestRate);
             }
         }
 
@@ -116,8 +116,8 @@ abstract contract BorrowUtils is Base {
 
     function computeInterestRateView(MarketCache memory marketCache) internal view virtual returns (uint256) {
         // single sload
-        address irm = marketStorage.interestRateModel;
-        uint256 newInterestRate = marketStorage.interestRate;
+        address irm = marketStorage().interestRateModel;
+        uint256 newInterestRate = marketStorage().interestRate;
 
         if (irm != address(0) && isVaultStatusCheckDeferred()) {
             (bool success, bytes memory data) = irm.staticcall(

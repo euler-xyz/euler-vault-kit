@@ -4,6 +4,7 @@ pragma solidity ^0.8.0;
 
 import {IBalanceForwarder} from "../IEVault.sol";
 import {Base} from "../shared/Base.sol";
+import {User} from "../shared/types/User.sol";
 
 abstract contract BalanceForwarderModule is IBalanceForwarder, Base {
     /// @inheritdoc IBalanceForwarder
@@ -35,9 +36,10 @@ abstract contract BalanceForwarderModule is IBalanceForwarder, Base {
         if (address(balanceTracker) == address(0)) revert E_BalanceForwarderUnsupported();
 
         address account = EVCAuthenticate();
-        bool wasBalanceForwarderEnabled = marketStorage.users[account].getBalanceForwarderEnabled();
+        User storage user = marketStorage().users[account];
+        bool wasBalanceForwarderEnabled = user.getBalanceForwarderEnabled();
 
-        marketStorage.users[account].setBalanceForwarder(false);
+        user.setBalanceForwarder(false);
         balanceTracker.balanceTrackerHook(account, 0, false);
 
         if (wasBalanceForwarderEnabled) emit BalanceForwarderStatus(account, false);

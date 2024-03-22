@@ -33,7 +33,7 @@ abstract contract BorrowingModule is IBorrowing, Base, AssetTransfers, BalanceUt
 
     /// @inheritdoc IBorrowing
     function cash() public view virtual nonReentrantView returns (uint256) {
-        return marketStorage.cash.toUint();
+        return marketStorage().cash.toUint();
     }
 
     /// @inheritdoc IBorrowing
@@ -167,7 +167,7 @@ abstract contract BorrowingModule is IBorrowing, Base, AssetTransfers, BalanceUt
         Shares shares;
 
         if (amount == type(uint256).max) {
-            shares = marketStorage.users[account].getBalance();
+            shares = marketStorage().users[account].getBalance();
             assets = shares.toAssetsDown(marketCache);
         } else {
             assets = amount.toAssets();
@@ -206,7 +206,7 @@ abstract contract BorrowingModule is IBorrowing, Base, AssetTransfers, BalanceUt
 
     /// @inheritdoc IBorrowing
     function flashLoan(uint256 amount, bytes calldata data) public virtual nonReentrant {
-        if (marketStorage.disabledOps.isSet(OP_FLASHLOAN)) {
+        if (marketStorage().disabledOps.isSet(OP_FLASHLOAN)) {
             revert E_OperationDisabled();
         }
 

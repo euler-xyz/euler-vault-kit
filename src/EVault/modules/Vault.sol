@@ -107,7 +107,7 @@ abstract contract VaultModule is IVault, Base, AssetTransfers, BalanceUtils {
 
     /// @inheritdoc IVault
     function creator() public view virtual reentrantOK returns (address) {
-        return marketStorage.creator;
+        return marketStorage().creator;
     }
 
     /// @inheritdoc IERC4626
@@ -158,7 +158,7 @@ abstract contract VaultModule is IVault, Base, AssetTransfers, BalanceUtils {
     function redeem(uint256 amount, address receiver, address owner) public virtual nonReentrant returns (uint256) {
         (MarketCache memory marketCache, address account) = initOperation(OP_REDEEM, owner);
 
-        Shares shares = amount == type(uint256).max ? marketStorage.users[owner].getBalance() : amount.toShares();
+        Shares shares = amount == type(uint256).max ? marketStorage().users[owner].getBalance() : amount.toShares();
         if (shares.isZero()) return 0;
 
         Assets assets = shares.toAssetsDown(marketCache);
@@ -193,7 +193,7 @@ abstract contract VaultModule is IVault, Base, AssetTransfers, BalanceUtils {
         }
 
         increaseBalance(marketCache, receiver, account, shares, assets);
-        marketStorage.cash = marketCache.cash = marketCache.cash + assets;
+        marketStorage().cash = marketCache.cash = marketCache.cash + assets;
 
         return shares.toUint();
     }
@@ -231,7 +231,7 @@ abstract contract VaultModule is IVault, Base, AssetTransfers, BalanceUtils {
     }
 
     function maxRedeemInternal(address owner) internal view returns (Shares) {
-        Shares max = marketStorage.users[owner].getBalance();
+        Shares max = marketStorage().users[owner].getBalance();
         if (max.isZero()) return max;
 
         // When checks are deferred, all of the balance can be withdrawn, even if only temporarily

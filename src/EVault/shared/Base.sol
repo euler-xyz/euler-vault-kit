@@ -4,13 +4,14 @@ pragma solidity ^0.8.0;
 
 import {EVCClient} from "./EVCClient.sol";
 import {Cache} from "./Cache.sol";
+import {SnapshotStorage} from "./SnapshotStorage.sol";
 
 import {IProtocolConfig} from "../../ProtocolConfig/IProtocolConfig.sol";
 import {IBalanceTracker} from "../../interfaces/IBalanceTracker.sol";
 
 import "./types/Types.sol";
 
-abstract contract Base is EVCClient, Cache {
+abstract contract Base is EVCClient, Cache, SnapshotStorage {
     IProtocolConfig immutable protocolConfig;
     IBalanceTracker immutable balanceTracker;
     address immutable permit2;
@@ -33,15 +34,15 @@ abstract contract Base is EVCClient, Cache {
     } // documentation only
 
     modifier nonReentrant() {
-        if (marketStorage.reentrancyLocked) revert E_Reentrancy();
+        if (marketStorage().reentrancyLocked) revert E_Reentrancy();
 
-        marketStorage.reentrancyLocked = true;
+        marketStorage().reentrancyLocked = true;
         _;
-        marketStorage.reentrancyLocked = false;
+        marketStorage().reentrancyLocked = false;
     }
 
     modifier nonReentrantView() {
-        if (marketStorage.reentrancyLocked) revert E_Reentrancy();
+        if (marketStorage().reentrancyLocked) revert E_Reentrancy();
         _;
     }
 
@@ -66,8 +67,8 @@ abstract contract Base is EVCClient, Cache {
             !marketCache.snapshotInitialized
                 && (marketCache.supplyCap < type(uint256).max || marketCache.borrowCap < type(uint256).max)
         ) {
-            marketStorage.snapshotInitialized = marketCache.snapshotInitialized = true;
-            snapshot.set(marketCache.cash, marketCache.totalBorrows.toAssetsUp());
+            marketStorage().snapshotInitialized = marketCache.snapshotInitialized = true;
+            snapshotStorage().set(marketCache.cash, marketCache.totalBorrows.toAssetsUp());
         }
 
         account = EVCAuthenticateDeferred(~CONTROLLER_REQUIRED_OPS & operation == 0);
