@@ -2,15 +2,15 @@
 
 pragma solidity ^0.8.0;
 
-import {MarketStorage} from "./MarketStorage.sol";
+import {VaultStorage} from "./VaultStorage.sol";
 import "./types/Types.sol";
 
-abstract contract LTVUtils is MarketStorage {
+abstract contract LTVUtils is VaultStorage {
     function getLTV(address collateral, LTVType ltvType) internal view virtual returns (ConfigAmount) {
-        return marketStorage().ltvLookup[collateral].getLTV(ltvType);
+        return vaultStorage().ltvLookup[collateral].getLTV(ltvType);
     }
 
     function isRecognizedCollateral(address collateral) internal view virtual returns (bool) {
-        return marketStorage().ltvLookup[collateral].isRecognizedCollateral();
+        return vaultStorage().ltvLookup[collateral].isRecognizedCollateral();
     }
 }

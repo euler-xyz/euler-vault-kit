@@ -19,13 +19,13 @@ abstract contract RiskManagerModule is IRiskManager, Base, LiquidityUtils {
         nonReentrantView
         returns (uint256 collateralValue, uint256 liabilityValue)
     {
-        MarketCache memory marketCache = loadMarket();
+        VaultCache memory vaultCache = loadMarket();
 
         verifyController(account);
         address[] memory collaterals = getCollaterals(account);
 
         return
-            calculateLiquidity(marketCache, account, collaterals, liquidation ? LTVType.LIQUIDATION : LTVType.BORROWING);
+            calculateLiquidity(vaultCache, account, collaterals, liquidation ? LTVType.LIQUIDATION : LTVType.BORROWING);
     }
 
     /// @inheritdoc IRiskManager
@@ -36,27 +36,27 @@ abstract contract RiskManagerModule is IRiskManager, Base, LiquidityUtils {
         nonReentrantView
         returns (address[] memory collaterals, uint256[] memory collateralValues, uint256 liabilityValue)
     {
-        MarketCache memory marketCache = loadMarket();
+        VaultCache memory vaultCache = loadMarket();
 
         verifyController(account);
-        validateOracle(marketCache);
+        validateOracle(vaultCache);
         collaterals = getCollaterals(account);
         collateralValues = new uint256[](collaterals.length);
 
         for (uint256 i; i < collaterals.length; ++i) {
             collateralValues[i] = getCollateralValue(
-                marketCache, account, collaterals[i], liquidation ? LTVType.LIQUIDATION : LTVType.BORROWING
+                vaultCache, account, collaterals[i], liquidation ? LTVType.LIQUIDATION : LTVType.BORROWING
             );
         }
 
-        liabilityValue = getLiabilityValue(marketCache, account, marketStorage().users[account].getOwed());
+        liabilityValue = getLiabilityValue(vaultCache, account, vaultStorage().users[account].getOwed());
     }
 
     /// @inheritdoc IRiskManager
     function disableController() public virtual nonReentrant {
         address account = EVCAuthenticate();
 
-        if (!marketStorage().users[account].getOwed().isZero()) revert E_OutstandingDebt();
+        if (!vaultStorage().users[account].getOwed().isZero()) revert E_OutstandingDebt();
 
         disableControllerInternal(account);
     }
@@ -82,30 +82,30 @@ abstract contract RiskManagerModule is IRiskManager, Base, LiquidityUtils {
     /// @dev See comment about re-entrancy for `checkAccountStatus`
     function checkVaultStatus() public virtual reentrantOK onlyEVCChecks returns (bytes4 magicValue) {
         // Use the updating variant to make sure interest is accrued in storage before the interest rate update
-        MarketCache memory marketCache = updateMarket();
-        uint256 newInterestRate = computeInterestRate(marketCache);
+        VaultCache memory vaultCache = updateMarket();
+        uint256 newInterestRate = computeInterestRate(vaultCache);
 
-        logMarketStatus(marketCache, newInterestRate);
+        logMarketStatus(vaultCache, newInterestRate);
 
         // We use the snapshot to check if the borrows or supply grew, and if so then we check the borrow and supply caps.
         // If snapshot is initialized, then caps are configured.
         // If caps are set in the middle of a batch, then snapshots represent the state of the vault at that time.
-        if (marketCache.snapshotInitialized) {
-            marketStorage().snapshotInitialized = marketCache.snapshotInitialized = false;
+        if (vaultCache.snapshotInitialized) {
+            vaultStorage().snapshotInitialized = vaultCache.snapshotInitialized = false;
 
             Snapshot storage snapshot = snapshotStorage();
             Assets snapshotCash = snapshot.cash;
             Assets snapshotBorrows = snapshot.borrows;
 
             uint256 prevBorrows = snapshotBorrows.toUint();
-            uint256 borrows = marketCache.totalBorrows.toAssetsUp().toUint();
+            uint256 borrows = vaultCache.totalBorrows.toAssetsUp().toUint();
 
-            if (borrows > marketCache.borrowCap && borrows > prevBorrows) revert E_BorrowCapExceeded();
+            if (borrows > vaultCache.borrowCap && borrows > prevBorrows) revert E_BorrowCapExceeded();
 
             uint256 prevSupply = snapshotCash.toUint() + prevBorrows;
-            uint256 supply = totalAssetsInternal(marketCache);
+            uint256 supply = totalAssetsInternal(vaultCache);
 
-            if (supply > marketCache.supplyCap && supply > prevSupply) revert E_SupplyCapExceeded();
+            if (supply > vaultCache.supplyCap && supply > prevSupply) revert E_SupplyCapExceeded();
 
             snapshot.reset();
         }

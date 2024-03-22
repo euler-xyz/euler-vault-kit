@@ -13,7 +13,7 @@ abstract contract BalanceUtils is Base {
     // Balances
 
     function increaseBalance(
-        MarketCache memory marketCache,
+        VaultCache memory vaultCache,
         address account,
         address sender,
         Shares amount,
@@ -21,13 +21,13 @@ abstract contract BalanceUtils is Base {
     ) internal {
         if (account == address(0)) revert E_BadSharesReceiver();
 
-        Market storage _marketStorage = marketStorage();
+        VaultData storage _vaultStorage = vaultStorage();
         (Shares origBalance, bool balanceForwarderEnabled) =
-            _marketStorage.users[account].getBalanceAndBalanceForwarder();
+            _vaultStorage.users[account].getBalanceAndBalanceForwarder();
         Shares newBalance = origBalance + amount;
 
-        _marketStorage.users[account].setBalance(newBalance);
-        _marketStorage.totalShares = marketCache.totalShares = marketCache.totalShares + amount;
+        _vaultStorage.users[account].setBalance(newBalance);
+        _vaultStorage.totalShares = vaultCache.totalShares = vaultCache.totalShares + amount;
 
         if (balanceForwarderEnabled) {
             tryBalanceTrackerHook(account, newBalance.toUint(), false);
@@ -38,17 +38,17 @@ abstract contract BalanceUtils is Base {
     }
 
     function decreaseBalance(
-        MarketCache memory marketCache,
+        VaultCache memory vaultCache,
         address account,
         address sender,
         address receiver,
         Shares amount,
         Assets assets
     ) internal {
-        Market storage _marketStorage = marketStorage();
+        VaultData storage _vaultStorage = vaultStorage();
 
         (Shares origBalance, bool balanceForwarderEnabled) =
-            _marketStorage.users[account].getBalanceAndBalanceForwarder();
+            _vaultStorage.users[account].getBalanceAndBalanceForwarder();
         if (origBalance < amount) revert E_InsufficientBalance();
 
         Shares newBalance;
@@ -56,8 +56,8 @@ abstract contract BalanceUtils is Base {
             newBalance = origBalance - amount;
         }
 
-        _marketStorage.users[account].setBalance(newBalance);
-        _marketStorage.totalShares = marketCache.totalShares = marketCache.totalShares - amount;
+        _vaultStorage.users[account].setBalance(newBalance);
+        _vaultStorage.totalShares = vaultCache.totalShares = vaultCache.totalShares - amount;
 
         if (balanceForwarderEnabled) {
             tryBalanceTrackerHook(account, newBalance.toUint(), isControlCollateralInProgress());
@@ -68,14 +68,14 @@ abstract contract BalanceUtils is Base {
     }
 
     function transferBalance(address from, address to, Shares amount) internal {
-        Market storage _marketStorage = marketStorage();
+        VaultData storage _vaultStorage = vaultStorage();
 
         if (!amount.isZero()) {
             (Shares origFromBalance, bool fromBalanceForwarderEnabled) =
-                _marketStorage.users[from].getBalanceAndBalanceForwarder();
+                _vaultStorage.users[from].getBalanceAndBalanceForwarder();
 
             (Shares origToBalance, bool toBalanceForwarderEnabled) =
-                _marketStorage.users[to].getBalanceAndBalanceForwarder();
+                _vaultStorage.users[to].getBalanceAndBalanceForwarder();
 
             if (origFromBalance < amount) revert E_InsufficientBalance();
 
@@ -85,8 +85,8 @@ abstract contract BalanceUtils is Base {
             }
             Shares newToBalance = origToBalance + amount;
 
-            _marketStorage.users[from].setBalance(newFromBalance);
-            _marketStorage.users[to].setBalance(newToBalance);
+            _vaultStorage.users[from].setBalance(newFromBalance);
+            _vaultStorage.users[to].setBalance(newToBalance);
 
             if (fromBalanceForwarderEnabled) {
                 tryBalanceTrackerHook(from, newFromBalance.toUint(), isControlCollateralInProgress());
@@ -105,21 +105,21 @@ abstract contract BalanceUtils is Base {
     function setAllowance(address owner, address spender, uint256 amount) internal {
         if (spender == owner) revert E_SelfApproval();
 
-        marketStorage().users[owner].eTokenAllowance[spender] = amount;
+        vaultStorage().users[owner].eTokenAllowance[spender] = amount;
         emit Approval(owner, spender, amount);
     }
 
     function decreaseAllowance(address owner, address spender, Shares amount) internal {
         if (amount.isZero()) return;
-        Market storage _marketStorage = marketStorage();
+        VaultData storage _vaultStorage = vaultStorage();
 
-        uint256 allowance = _marketStorage.users[owner].eTokenAllowance[spender];
+        uint256 allowance = _vaultStorage.users[owner].eTokenAllowance[spender];
         if (owner != spender && allowance != type(uint256).max) {
             if (allowance < amount.toUint()) revert E_InsufficientAllowance();
             unchecked {
                 allowance -= amount.toUint();
             }
-            _marketStorage.users[owner].eTokenAllowance[spender] = allowance;
+            _vaultStorage.users[owner].eTokenAllowance[spender] = allowance;
             emit Approval(owner, spender, allowance);
         }
     }

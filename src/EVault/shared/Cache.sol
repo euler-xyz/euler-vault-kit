@@ -2,7 +2,7 @@
 
 pragma solidity ^0.8.0;
 
-import {MarketStorage} from "./MarketStorage.sol";
+import {VaultStorage} from "./VaultStorage.sol";
 import {Errors} from "./Errors.sol";
 import {RPow} from "./lib/RPow.sol";
 import {SafeERC20Lib} from "./lib/SafeERC20Lib.sol";
@@ -10,74 +10,74 @@ import {ProxyUtils} from "./lib/ProxyUtils.sol";
 
 import "./types/Types.sol";
 
-contract Cache is MarketStorage, Errors {
+contract Cache is VaultStorage, Errors {
     using TypesLib for uint256;
     using SafeERC20Lib for IERC20;
 
-    // Returns an updated MarketCache
-    // If different from MarketStorage, updates MarketStorage
-    function updateMarket() internal returns (MarketCache memory marketCache) {
-        if (initMarketCache(marketCache)) {
-            Market storage _marketStorage = marketStorage();
-            _marketStorage.lastInterestAccumulatorUpdate = marketCache.lastInterestAccumulatorUpdate;
-            _marketStorage.accumulatedFees = marketCache.accumulatedFees;
+    // Returns an updated VaultCache
+    // If different from VaultStorage, updates VaultStorage
+    function updateMarket() internal returns (VaultCache memory vaultCache) {
+        if (initMarketCache(vaultCache)) {
+            VaultData storage _vaultStorage = vaultStorage();
+            _vaultStorage.lastInterestAccumulatorUpdate = vaultCache.lastInterestAccumulatorUpdate;
+            _vaultStorage.accumulatedFees = vaultCache.accumulatedFees;
 
-            _marketStorage.totalShares = marketCache.totalShares;
-            _marketStorage.totalBorrows = marketCache.totalBorrows;
+            _vaultStorage.totalShares = vaultCache.totalShares;
+            _vaultStorage.totalBorrows = vaultCache.totalBorrows;
 
-            _marketStorage.interestAccumulator = marketCache.interestAccumulator;
+            _vaultStorage.interestAccumulator = vaultCache.interestAccumulator;
         }
     }
 
-    // Returns an updated MarketCache
-    function loadMarket() internal view returns (MarketCache memory marketCache) {
-        initMarketCache(marketCache);
+    // Returns an updated VaultCache
+    function loadMarket() internal view returns (VaultCache memory vaultCache) {
+        initMarketCache(vaultCache);
     }
 
-    // Takes a MarketCache struct, overwrites it with MarketStorage data and, if time has passed since MarkeStorage
+    // Takes a VaultCache struct, overwrites it with VaultStorage data and, if time has passed since MarkeStorage
     // was last updated, updates MarkeStorage.
-    // Returns a MarketCache updated to this block.
-    function initMarketCache(MarketCache memory marketCache) private view returns (bool dirty) {
+    // Returns a VaultCache updated to this block.
+    function initMarketCache(VaultCache memory vaultCache) private view returns (bool dirty) {
         dirty = false;
 
         // Proxy metadata
 
-        (marketCache.asset, marketCache.oracle, marketCache.unitOfAccount) = ProxyUtils.metadata();
+        (vaultCache.asset, vaultCache.oracle, vaultCache.unitOfAccount) = ProxyUtils.metadata();
 
         // Storage loads
-        Market storage _marketStorage = marketStorage();
-        marketCache.lastInterestAccumulatorUpdate = _marketStorage.lastInterestAccumulatorUpdate;
-        marketCache.cash = _marketStorage.cash;
-        marketCache.supplyCap = _marketStorage.supplyCap.toUint();
-        marketCache.borrowCap = _marketStorage.borrowCap.toUint();
-        marketCache.disabledOps = _marketStorage.disabledOps;
-        marketCache.snapshotInitialized = _marketStorage.snapshotInitialized;
+        VaultData storage _vaultStorage = vaultStorage();
+        vaultCache.lastInterestAccumulatorUpdate = _vaultStorage.lastInterestAccumulatorUpdate;
+        vaultCache.cash = _vaultStorage.cash;
+        vaultCache.supplyCap = _vaultStorage.supplyCap.toUint();
+        vaultCache.borrowCap = _vaultStorage.borrowCap.toUint();
+        vaultCache.disabledOps = _vaultStorage.disabledOps;
+        vaultCache.snapshotInitialized = _vaultStorage.snapshotInitialized;
 
-        marketCache.totalShares = _marketStorage.totalShares;
-        marketCache.totalBorrows = _marketStorage.totalBorrows;
+        vaultCache.totalShares = _vaultStorage.totalShares;
+        vaultCache.totalBorrows = _vaultStorage.totalBorrows;
 
-        marketCache.accumulatedFees = _marketStorage.accumulatedFees;
-        marketCache.configFlags = _marketStorage.configFlags;
+        vaultCache.accumulatedFees = _vaultStorage.accumulatedFees;
+        vaultCache.configFlags = _vaultStorage.configFlags;
 
-        marketCache.interestAccumulator = _marketStorage.interestAccumulator;
+        vaultCache.interestAccumulator = _vaultStorage.interestAccumulator;
 
         // Update interest accumulator and fees balance
-        uint256 deltaT = block.timestamp - marketCache.lastInterestAccumulatorUpdate;
+        uint256 deltaT = block.timestamp - vaultCache.lastInterestAccumulatorUpdate;
 
         if (deltaT > 0) {
             dirty = true;
 
-            if (marketCache.disabledOps.isSet(OP_ACCRUE_INTEREST)) {
-                marketCache.lastInterestAccumulatorUpdate = uint48(block.timestamp);
+            if (vaultCache.disabledOps.isSet(OP_ACCRUE_INTEREST)) {
+                vaultCache.lastInterestAccumulatorUpdate = uint48(block.timestamp);
                 return dirty;
             }
 
             // Compute new values. Use full precision for intermediate results.
 
-            ConfigAmount interestFee = _marketStorage.interestFee;
-            uint256 interestRate = _marketStorage.interestRate;
+            ConfigAmount interestFee = _vaultStorage.interestFee;
+            uint256 interestRate = _vaultStorage.interestRate;
 
-            uint256 newInterestAccumulator = marketCache.interestAccumulator;
+            uint256 newInterestAccumulator = vaultCache.interestAccumulator;
 
             unchecked {
                 (uint256 multiplier, bool overflow) = RPow.rpow(interestRate + 1e27, deltaT, 1e27);
@@ -91,35 +91,35 @@ contract Cache is MarketStorage, Errors {
             }
 
             uint256 newTotalBorrows =
-                marketCache.totalBorrows.toUint() * newInterestAccumulator / marketCache.interestAccumulator;
-            uint256 newAccumulatedFees = marketCache.accumulatedFees.toUint();
-            uint256 newTotalShares = marketCache.totalShares.toUint();
+                vaultCache.totalBorrows.toUint() * newInterestAccumulator / vaultCache.interestAccumulator;
+            uint256 newAccumulatedFees = vaultCache.accumulatedFees.toUint();
+            uint256 newTotalShares = vaultCache.totalShares.toUint();
             uint256 feeAssets =
-                interestFee.mulDiv(newTotalBorrows - marketCache.totalBorrows.toUint(), 1 << INTERNAL_DEBT_PRECISION);
+                interestFee.mulDiv(newTotalBorrows - vaultCache.totalBorrows.toUint(), 1 << INTERNAL_DEBT_PRECISION);
 
             if (feeAssets != 0) {
-                uint256 newTotalAssets = marketCache.cash.toUint() + (newTotalBorrows >> INTERNAL_DEBT_PRECISION);
+                uint256 newTotalAssets = vaultCache.cash.toUint() + (newTotalBorrows >> INTERNAL_DEBT_PRECISION);
                 newTotalShares = newTotalAssets * newTotalShares / (newTotalAssets - feeAssets);
-                newAccumulatedFees += newTotalShares - marketCache.totalShares.toUint();
+                newAccumulatedFees += newTotalShares - vaultCache.totalShares.toUint();
             }
 
-            // Store new values in marketCache, only if no overflows will occur. Fees are not larger than total shares, since they are included in them.
+            // Store new values in vaultCache, only if no overflows will occur. Fees are not larger than total shares, since they are included in them.
 
             if (newTotalShares <= MAX_SANE_AMOUNT && newTotalBorrows <= MAX_SANE_DEBT_AMOUNT) {
-                marketCache.totalBorrows = newTotalBorrows.toOwed();
-                marketCache.interestAccumulator = newInterestAccumulator;
-                marketCache.lastInterestAccumulatorUpdate = uint48(block.timestamp);
+                vaultCache.totalBorrows = newTotalBorrows.toOwed();
+                vaultCache.interestAccumulator = newInterestAccumulator;
+                vaultCache.lastInterestAccumulatorUpdate = uint48(block.timestamp);
 
-                if (newTotalShares != Shares.unwrap(marketCache.totalShares)) {
-                    marketCache.accumulatedFees = newAccumulatedFees.toShares();
-                    marketCache.totalShares = newTotalShares.toShares();
+                if (newTotalShares != Shares.unwrap(vaultCache.totalShares)) {
+                    vaultCache.accumulatedFees = newAccumulatedFees.toShares();
+                    vaultCache.totalShares = newTotalShares.toShares();
                 }
             }
         }
     }
 
-    function totalAssetsInternal(MarketCache memory marketCache) internal pure returns (uint256) {
+    function totalAssetsInternal(VaultCache memory vaultCache) internal pure returns (uint256) {
         // total assets can exceed Assets max amount (MAX_SANE_AMOUNT)
-        return marketCache.cash.toUint() + marketCache.totalBorrows.toAssetsUp().toUint();
+        return vaultCache.cash.toUint() + vaultCache.totalBorrows.toAssetsUp().toUint();
     }
 }

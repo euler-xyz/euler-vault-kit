@@ -3,7 +3,7 @@
 pragma solidity ^0.8.0;
 
 import {Assets, Shares, Owed, TypesLib} from "./Types.sol";
-import {MarketCache} from "./MarketCache.sol";
+import {VaultCache} from "./VaultCache.sol";
 import "../Constants.sol";
 import "./ConversionHelpers.sol";
 
@@ -16,15 +16,15 @@ library AssetsLib {
         return Assets.unwrap(self) == 0;
     }
 
-    function toSharesDown(Assets amount, MarketCache memory marketCache) internal pure returns (Shares) {
-        (uint256 totalAssets, uint256 totalShares) = conversionTotals(marketCache);
+    function toSharesDown(Assets amount, VaultCache memory vaultCache) internal pure returns (Shares) {
+        (uint256 totalAssets, uint256 totalShares) = conversionTotals(vaultCache);
         unchecked {
             return TypesLib.toShares(amount.toUint() * totalShares / totalAssets);
         }
     }
 
-    function toSharesUp(Assets amount, MarketCache memory marketCache) internal pure returns (Shares) {
-        (uint256 totalAssets, uint256 totalShares) = conversionTotals(marketCache);
+    function toSharesUp(Assets amount, VaultCache memory vaultCache) internal pure returns (Shares) {
+        (uint256 totalAssets, uint256 totalShares) = conversionTotals(vaultCache);
         unchecked {
             return TypesLib.toShares((amount.toUint() * totalShares + (totalAssets - 1)) / totalAssets);
         }

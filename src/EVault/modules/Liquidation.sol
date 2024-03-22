@@ -46,16 +46,16 @@ abstract contract LiquidationModule is ILiquidation, Base, BalanceUtils, Liquidi
         virtual
         nonReentrant
     {
-        (MarketCache memory marketCache, address liquidator) = initOperation(OP_LIQUIDATE, CHECKACCOUNT_CALLER);
+        (VaultCache memory vaultCache, address liquidator) = initOperation(OP_LIQUIDATE, CHECKACCOUNT_CALLER);
 
         LiquidationCache memory liqCache =
-            calculateLiquidation(marketCache, liquidator, violator, collateral, repayAssets);
+            calculateLiquidation(vaultCache, liquidator, violator, collateral, repayAssets);
 
-        executeLiquidation(marketCache, liqCache, minYieldBalance);
+        executeLiquidation(vaultCache, liqCache, minYieldBalance);
     }
 
     function calculateLiquidation(
-        MarketCache memory marketCache,
+        VaultCache memory vaultCache,
         address liquidator,
         address violator,
         address collateral,
@@ -69,7 +69,7 @@ abstract contract LiquidationModule is ILiquidation, Base, BalanceUtils, Liquidi
 
         liqCache.repay = Assets.wrap(0);
         liqCache.yieldBalance = 0;
-        liqCache.owed = getCurrentOwed(marketCache, violator).toAssetsUp();
+        liqCache.owed = getCurrentOwed(vaultCache, violator).toAssetsUp();
         liqCache.collaterals = getCollaterals(violator);
 
         // Checks
@@ -91,7 +91,7 @@ abstract contract LiquidationModule is ILiquidation, Base, BalanceUtils, Liquidi
 
         // Calculate max yield and repay
 
-        liqCache = calculateMaxLiquidation(liqCache, marketCache);
+        liqCache = calculateMaxLiquidation(liqCache, vaultCache);
 
         // Adjust for desired repay
 
@@ -106,7 +106,7 @@ abstract contract LiquidationModule is ILiquidation, Base, BalanceUtils, Liquidi
         }
     }
 
-    function calculateMaxLiquidation(LiquidationCache memory liqCache, MarketCache memory marketCache)
+    function calculateMaxLiquidation(LiquidationCache memory liqCache, VaultCache memory vaultCache)
         private
         view
         returns (LiquidationCache memory)
@@ -114,7 +114,7 @@ abstract contract LiquidationModule is ILiquidation, Base, BalanceUtils, Liquidi
         // Check account health
 
         (uint256 liquidityCollateralValue, uint256 liquidityLiabilityValue) =
-            calculateLiquidity(marketCache, liqCache.violator, liqCache.collaterals, LTVType.LIQUIDATION);
+            calculateLiquidity(vaultCache, liqCache.violator, liqCache.collaterals, LTVType.LIQUIDATION);
 
         // no violation
         if (liquidityCollateralValue >= liquidityLiabilityValue) return liqCache;
@@ -131,7 +131,7 @@ abstract contract LiquidationModule is ILiquidation, Base, BalanceUtils, Liquidi
 
         uint256 collateralBalance = IERC20(liqCache.collateral).balanceOf(liqCache.violator);
         uint256 collateralValue =
-            marketCache.oracle.getQuote(collateralBalance, liqCache.collateral, marketCache.unitOfAccount);
+            vaultCache.oracle.getQuote(collateralBalance, liqCache.collateral, vaultCache.unitOfAccount);
 
         if (collateralValue == 0) {
             // worthless collateral can be claimed with no repay
@@ -140,10 +140,10 @@ abstract contract LiquidationModule is ILiquidation, Base, BalanceUtils, Liquidi
         }
 
         uint256 liabilityValue = liqCache.owed.toUint();
-        if (address(marketCache.asset) != marketCache.unitOfAccount) {
+        if (address(vaultCache.asset) != vaultCache.unitOfAccount) {
             // liquidation, in contrast to liquidity calculation, uses mid-point pricing instead of bid/ask
             liabilityValue =
-                marketCache.oracle.getQuote(liabilityValue, address(marketCache.asset), marketCache.unitOfAccount);
+                vaultCache.oracle.getQuote(liabilityValue, address(vaultCache.asset), vaultCache.unitOfAccount);
         }
 
         uint256 maxRepayValue = liabilityValue;
@@ -163,18 +163,16 @@ abstract contract LiquidationModule is ILiquidation, Base, BalanceUtils, Liquidi
         return liqCache;
     }
 
-    function executeLiquidation(
-        MarketCache memory marketCache,
-        LiquidationCache memory liqCache,
-        uint256 minYieldBalance
-    ) private {
+    function executeLiquidation(VaultCache memory vaultCache, LiquidationCache memory liqCache, uint256 minYieldBalance)
+        private
+    {
         // Check minimum yield.
 
         if (minYieldBalance > liqCache.yieldBalance) revert E_MinYield();
 
         // Handle repay: liquidator takes on violator's debt:
 
-        transferBorrow(marketCache, liqCache.violator, liqCache.liquidator, liqCache.repay);
+        transferBorrow(vaultCache, liqCache.violator, liqCache.liquidator, liqCache.repay);
 
         // Handle yield: liquidator receives violator's collateral
 
@@ -205,7 +203,7 @@ abstract contract LiquidationModule is ILiquidation, Base, BalanceUtils, Liquidi
                 && checkNoCollateral(liqCache.violator, liqCache.collaterals)
         ) {
             Assets owedRemaining = liqCache.owed - liqCache.repay;
-            decreaseBorrow(marketCache, liqCache.violator, owedRemaining);
+            decreaseBorrow(vaultCache, liqCache.violator, owedRemaining);
 
             // decreaseBorrow emits Repay without any assets entering the vault. Emit Withdraw from and to zero address to cover the missing amount for offchain trackers.
             emit Withdraw(liqCache.liquidator, address(0), address(0), owedRemaining.toUint(), 0);

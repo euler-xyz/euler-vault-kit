@@ -2,7 +2,7 @@
 
 pragma solidity ^0.8.0;
 
-import {MarketStorage} from "./MarketStorage.sol";
+import {VaultStorage} from "./VaultStorage.sol";
 import {Events} from "./Events.sol";
 import {Errors} from "./Errors.sol";
 import {ProxyUtils} from "./lib/ProxyUtils.sol";
@@ -11,7 +11,7 @@ import "./Constants.sol";
 import {IERC20} from "../IEVault.sol";
 import {IEVC} from "ethereum-vault-connector/interfaces/IEthereumVaultConnector.sol";
 
-abstract contract EVCClient is MarketStorage, Events, Errors {
+abstract contract EVCClient is VaultStorage, Events, Errors {
     IEVC immutable evc;
 
     modifier onlyEVCChecks() {

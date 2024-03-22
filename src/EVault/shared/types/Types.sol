@@ -4,7 +4,7 @@ pragma solidity ^0.8.0;
 
 import "../../IEVault.sol";
 
-import "./Market.sol";
+import "./VaultData.sol";
 import "./Snapshot.sol";
 import "./User.sol";
 import "./LTVConfig.sol";

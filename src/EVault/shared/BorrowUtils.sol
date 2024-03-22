@@ -11,45 +11,45 @@ import "./types/Types.sol";
 abstract contract BorrowUtils is Base {
     using TypesLib for uint256;
 
-    function getCurrentOwed(MarketCache memory marketCache, address account, Owed owed) internal view returns (Owed) {
+    function getCurrentOwed(VaultCache memory vaultCache, address account, Owed owed) internal view returns (Owed) {
         // Don't bother loading the user's accumulator
         if (owed.isZero()) return Owed.wrap(0);
 
         // Can't divide by 0 here: If owed is non-zero, we must've initialized the user's interestAccumulator
-        return owed.mulDiv(marketCache.interestAccumulator, marketStorage().users[account].interestAccumulator);
+        return owed.mulDiv(vaultCache.interestAccumulator, vaultStorage().users[account].interestAccumulator);
     }
 
-    function getCurrentOwed(MarketCache memory marketCache, address account) internal view returns (Owed) {
-        return getCurrentOwed(marketCache, account, marketStorage().users[account].getOwed());
+    function getCurrentOwed(VaultCache memory vaultCache, address account) internal view returns (Owed) {
+        return getCurrentOwed(vaultCache, account, vaultStorage().users[account].getOwed());
     }
 
-    function updateUserBorrow(MarketCache memory marketCache, address account)
+    function updateUserBorrow(VaultCache memory vaultCache, address account)
         private
         returns (Owed newOwed, Owed prevOwed)
     {
-        Market storage _marketStorage = marketStorage();
-        prevOwed = _marketStorage.users[account].getOwed();
-        newOwed = getCurrentOwed(marketCache, account, prevOwed);
+        VaultData storage _vaultStorage = vaultStorage();
+        prevOwed = _vaultStorage.users[account].getOwed();
+        newOwed = getCurrentOwed(vaultCache, account, prevOwed);
 
-        _marketStorage.users[account].setOwed(newOwed);
-        _marketStorage.users[account].interestAccumulator = marketCache.interestAccumulator;
+        _vaultStorage.users[account].setOwed(newOwed);
+        _vaultStorage.users[account].interestAccumulator = vaultCache.interestAccumulator;
     }
 
-    function increaseBorrow(MarketCache memory marketCache, address account, Assets assets) internal {
-        (Owed owed, Owed prevOwed) = updateUserBorrow(marketCache, account);
+    function increaseBorrow(VaultCache memory vaultCache, address account, Assets assets) internal {
+        (Owed owed, Owed prevOwed) = updateUserBorrow(vaultCache, account);
 
         Owed amount = assets.toOwed();
         owed = owed + amount;
 
-        Market storage _marketStorage = marketStorage();
-        _marketStorage.users[account].setOwed(owed);
-        _marketStorage.totalBorrows = marketCache.totalBorrows = marketCache.totalBorrows + amount;
+        VaultData storage _vaultStorage = vaultStorage();
+        _vaultStorage.users[account].setOwed(owed);
+        _vaultStorage.totalBorrows = vaultCache.totalBorrows = vaultCache.totalBorrows + amount;
 
         logBorrowChange(account, prevOwed, owed);
     }
 
-    function decreaseBorrow(MarketCache memory marketCache, address account, Assets amount) internal {
-        (Owed owedExact, Owed prevOwed) = updateUserBorrow(marketCache, account);
+    function decreaseBorrow(VaultCache memory vaultCache, address account, Assets amount) internal {
+        (Owed owedExact, Owed prevOwed) = updateUserBorrow(vaultCache, account);
         Assets owed = owedExact.toAssetsUp();
 
         if (amount > owed) revert E_RepayTooMuch();
@@ -59,19 +59,19 @@ abstract contract BorrowUtils is Base {
             owedRemaining = (owed - amount).toOwed();
         }
 
-        Market storage _marketStorage = marketStorage();
-        _marketStorage.users[account].setOwed(owedRemaining);
-        _marketStorage.totalBorrows = marketCache.totalBorrows =
-            marketCache.totalBorrows > owedExact ? marketCache.totalBorrows - owedExact + owedRemaining : owedRemaining;
+        VaultData storage _vaultStorage = vaultStorage();
+        _vaultStorage.users[account].setOwed(owedRemaining);
+        _vaultStorage.totalBorrows = vaultCache.totalBorrows =
+            vaultCache.totalBorrows > owedExact ? vaultCache.totalBorrows - owedExact + owedRemaining : owedRemaining;
 
         logBorrowChange(account, prevOwed, owedRemaining);
     }
 
-    function transferBorrow(MarketCache memory marketCache, address from, address to, Assets assets) internal {
+    function transferBorrow(VaultCache memory vaultCache, address from, address to, Assets assets) internal {
         Owed amount = assets.toOwed();
 
-        (Owed fromOwed, Owed fromOwedPrev) = updateUserBorrow(marketCache, from);
-        (Owed toOwed, Owed toOwedPrev) = updateUserBorrow(marketCache, to);
+        (Owed fromOwed, Owed fromOwedPrev) = updateUserBorrow(vaultCache, from);
+        (Owed toOwed, Owed toOwedPrev) = updateUserBorrow(vaultCache, to);
 
         // If amount was rounded up, or dust is left over, transfer exact amount owed
         if ((amount > fromOwed && (amount - fromOwed).isDust()) || (amount < fromOwed && (fromOwed - amount).isDust()))
@@ -87,49 +87,49 @@ abstract contract BorrowUtils is Base {
 
         toOwed = toOwed + amount;
 
-        Market storage _marketStorage = marketStorage();
-        _marketStorage.users[from].setOwed(fromOwed);
-        _marketStorage.users[to].setOwed(toOwed);
+        VaultData storage _vaultStorage = vaultStorage();
+        _vaultStorage.users[from].setOwed(fromOwed);
+        _vaultStorage.users[to].setOwed(toOwed);
 
         logBorrowChange(from, fromOwedPrev, fromOwed);
         logBorrowChange(to, toOwedPrev, toOwed);
     }
 
-    function computeInterestRate(MarketCache memory marketCache) internal virtual returns (uint256) {
+    function computeInterestRate(VaultCache memory vaultCache) internal virtual returns (uint256) {
         // single sload
-        Market storage _marketStorage = marketStorage();
-        address irm = _marketStorage.interestRateModel;
-        uint256 newInterestRate = _marketStorage.interestRate;
+        VaultData storage _vaultStorage = vaultStorage();
+        address irm = _vaultStorage.interestRateModel;
+        uint256 newInterestRate = _vaultStorage.interestRate;
 
         if (irm != address(0)) {
             (bool success, bytes memory data) = irm.call(
                 abi.encodeCall(
                     IIRM.computeInterestRate,
-                    (address(this), marketCache.cash.toUint(), marketCache.totalBorrows.toAssetsUp().toUint())
+                    (address(this), vaultCache.cash.toUint(), vaultCache.totalBorrows.toAssetsUp().toUint())
                 )
             );
 
             if (success && data.length >= 32) {
                 newInterestRate = abi.decode(data, (uint256));
                 if (newInterestRate > MAX_ALLOWED_INTEREST_RATE) newInterestRate = MAX_ALLOWED_INTEREST_RATE;
-                marketStorage().interestRate = uint72(newInterestRate);
+                vaultStorage().interestRate = uint72(newInterestRate);
             }
         }
 
         return newInterestRate;
     }
 
-    function computeInterestRateView(MarketCache memory marketCache) internal view virtual returns (uint256) {
+    function computeInterestRateView(VaultCache memory vaultCache) internal view virtual returns (uint256) {
         // single sload
-        Market storage _marketStorage = marketStorage();
-        address irm = _marketStorage.interestRateModel;
-        uint256 newInterestRate = _marketStorage.interestRate;
+        VaultData storage _vaultStorage = vaultStorage();
+        address irm = _vaultStorage.interestRateModel;
+        uint256 newInterestRate = _vaultStorage.interestRate;
 
         if (irm != address(0) && isVaultStatusCheckDeferred()) {
             (bool success, bytes memory data) = irm.staticcall(
                 abi.encodeCall(
                     IIRM.computeInterestRateView,
-                    (address(this), marketCache.cash.toUint(), marketCache.totalBorrows.toAssetsUp().toUint())
+                    (address(this), vaultCache.cash.toUint(), vaultCache.totalBorrows.toAssetsUp().toUint())
                 )
             );
 
