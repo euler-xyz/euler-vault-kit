@@ -17,7 +17,7 @@ abstract contract SnapshotStorage {
 
     function snapshotStorage() internal pure virtual returns (Snapshot storage data) {
         assembly {
-            data.slot := SNAPSHOT_STORAGE // The extrenal struct's slot is the same as internal's
+            data.slot := SNAPSHOT_STORAGE
         }
     }
 

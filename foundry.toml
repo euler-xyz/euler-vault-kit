@@ -22,7 +22,7 @@ number_underscore = "preserve"
 override_spacing = true
 ignore = [
     "src/EVault/EVault.sol",
-    "src/EVault/shared/types/Market.sol",
+    "src/EVault/shared/types/VaultData.sol",
 ]
 
 

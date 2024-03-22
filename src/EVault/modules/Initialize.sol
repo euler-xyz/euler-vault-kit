@@ -9,7 +9,6 @@ import {DToken} from "../DToken.sol";
 import {ProxyUtils} from "../shared/lib/ProxyUtils.sol";
 import {RevertBytes} from "../shared/lib/RevertBytes.sol";
 import {VaultCache} from "../shared/types/VaultCache.sol";
-// import {SnapshotStorage} from "../shared/SnapshotStorage.sol";
 
 import "../shared/Constants.sol";
 import "../shared/types/Types.sol";
