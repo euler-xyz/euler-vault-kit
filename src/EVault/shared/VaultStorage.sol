@@ -10,7 +10,7 @@ abstract contract VaultStorage {
 
     /// @dev Storage for main vault data, shared by most modules, implemented on a custom ERC-7201 namespace.
     /// VaultStorageStruct is wrapping VaultData under the same slot for ERC7201 annotation.
-    /// @custom:storage-location erc7201:euler.evault.storage.VaultData
+    /// @custom:storage-location erc7201:euler.evault.storage.Vault
     struct VaultStorageStruct {
         VaultData market;
     }
