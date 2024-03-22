@@ -14,6 +14,7 @@ import {GovernanceModule} from "../../src/EVault/modules/Governance.sol";
 import {RiskManagerModule} from "../../src/EVault/modules/RiskManager.sol";
 
 contract EVaultHarness is
+    Base,
     InitializeModule,
     TokenModule,
     VaultModule,
