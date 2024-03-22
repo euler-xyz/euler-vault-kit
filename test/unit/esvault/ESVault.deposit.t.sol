@@ -13,7 +13,7 @@ contract ESVaultTestDeposit is ESVaultTestBase {
     }
 
     function test_deposit_from_non_synth() public {
-        vm.expectRevert(Errors.E_Unauthorized.selector);
+        vm.expectRevert(Errors.E_OnlyAssetCanDeposit.selector);
         eTST.deposit(100, address(this));
     }
 
