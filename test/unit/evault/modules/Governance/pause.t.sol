@@ -33,12 +33,16 @@ contract Governance_PauseAndOps is EVaultTestBase {
         assetTST.approve(address(eTST), type(uint256).max);
         eTST.deposit(MINT_AMOUNT, depositor);
         vm.stopPrank();
+        vm.label(depositor, "DEPOSITOR");
         // ----------------- Setup borrower -----------------
         vm.startPrank(borrower);
         assetTST2.mint(borrower, type(uint256).max);
         assetTST2.approve(address(eTST2), type(uint256).max);
         eTST2.deposit(MINT_AMOUNT, borrower);
         vm.stopPrank();
+        vm.label(borrower, "BORROWER");
+        // ----------------- this is the pause guardian -----------------
+        vm.label(address(this), "PAUSE_GUARDIAN/ADMIN");
     }
 
     function testFuzz_setDisabledOpsShouldFailIfNotGovernor(uint32 newDisabledOps) public {
@@ -228,6 +232,22 @@ contract Governance_PauseAndOps is EVaultTestBase {
         vm.expectRevert(Errors.E_OperationDisabled.selector);
         eTST.liquidate(violator, collateral, repayAssets, minYieldBalance);
         // TODO: re-enable testing
+
+        eTST.setLTV(address(eTST2), 1e4, 0);
+        oracle.setPrice(address(eTST2), address(assetTST), 0);
+
+        // re-enable
+        eTST.setDisabledOps(0);
+        vm.startPrank(borrower);
+        evc.enableController(borrower, address(eTST));
+        // evc.enableCollateral(borrower, address(eTST2));
+        eTST.borrow(type(uint256).max, borrower);
+        vm.stopPrank();
+
+        oracle.setPrice(address(eTST2), address(assetTST), 0);
+
+        evc.enableController(address(this), address(eTST));
+        eTST.liquidate(borrower, address(eTST2), type(uint256).max, 0);
     }
 
     function testFuzz_flashLoanDisabledOpsShouldFailAfterDisabled(uint256 amount, bytes calldata data) public {
