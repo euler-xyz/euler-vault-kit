@@ -20,7 +20,8 @@ contract Initialize_ConfigFlags is EVaultTestBase {
         {
             TestERC20 assetJUNK = new TestERC20("Test Token", "JUNK", 18, false);
 
-            IEVault eJUNK = IEVault(factory.createProxy(true, abi.encodePacked(address(assetJUNK), address(oracle), unitOfAccount)));
+            IEVault eJUNK =
+                IEVault(factory.createProxy(true, abi.encodePacked(address(assetJUNK), address(oracle), unitOfAccount)));
             assertTrue(eJUNK.configFlags() & CFG_EVC_COMPATIBLE_ASSET == 0);
         }
 
@@ -29,7 +30,8 @@ contract Initialize_ConfigFlags is EVaultTestBase {
             TestERC20 assetJUNK = new TestERC20("Test Token", "JUNK", 18, false);
             assetJUNK.configure("evc/address", abi.encode(address(evc)));
 
-            IEVault eJUNK = IEVault(factory.createProxy(true, abi.encodePacked(address(assetJUNK), address(oracle), unitOfAccount)));
+            IEVault eJUNK =
+                IEVault(factory.createProxy(true, abi.encodePacked(address(assetJUNK), address(oracle), unitOfAccount)));
             assertTrue(eJUNK.configFlags() & CFG_EVC_COMPATIBLE_ASSET != 0);
         }
 
@@ -38,7 +40,8 @@ contract Initialize_ConfigFlags is EVaultTestBase {
             TestERC20 assetJUNK = new TestERC20("Test Token", "JUNK", 18, false);
             assetJUNK.configure("evc/address", abi.encode(address(eTST)));
 
-            IEVault eJUNK = IEVault(factory.createProxy(true, abi.encodePacked(address(assetJUNK), address(oracle), unitOfAccount)));
+            IEVault eJUNK =
+                IEVault(factory.createProxy(true, abi.encodePacked(address(assetJUNK), address(oracle), unitOfAccount)));
             assertTrue(eJUNK.configFlags() & CFG_EVC_COMPATIBLE_ASSET == 0);
         }
     }

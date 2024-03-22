@@ -201,7 +201,9 @@ abstract contract VaultModule is IVault, Base, AssetTransfers, BalanceUtils {
         address sender,
         address receiver
     ) private {
-        if (marketCache.configFlags.isSet(CFG_ONLY_ASSET_CAN_DEPOSIT) && sender != asset()) revert E_OnlyAssetCanDeposit();
+        if (marketCache.configFlags.isSet(CFG_ONLY_ASSET_CAN_DEPOSIT) && sender != asset()) {
+            revert E_OnlyAssetCanDeposit();
+        }
 
         pullAssets(marketCache, sender, assets);
 
