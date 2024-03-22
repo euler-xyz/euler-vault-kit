@@ -346,11 +346,11 @@ interface IGovernance {
     /// @notice Retrieves a bitmask indicating which operations are disabled.
     function disabledOps() external view returns (uint32);
 
-    /// @notice Retrieves a bitmask indicating enabled config flags.
-    function configFlags() external view returns (uint32);
-
     /// @notice Retrieves a bitmask indicating which operations are locked.
     function lockedOps() external view returns (uint32);
+
+    /// @notice Retrieves a bitmask indicating enabled config flags.
+    function configFlags() external view returns (uint32);
 
     /// @notice Retrieves supply and borrow caps in AmountCap format
     function caps() external view returns (uint16 supplyCap, uint16 borrowCap);

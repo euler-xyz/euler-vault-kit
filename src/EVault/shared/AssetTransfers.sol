@@ -19,10 +19,10 @@ abstract contract AssetTransfers is Base {
     function pushAssets(MarketCache memory marketCache, address to, Assets amount) internal {
         if (
             to == address(0)
-            // If the op is enabled, do not send assets to an address that is recognized by EVC
-            // as a sub-account of some other address. If the asset itself is not compatible with EVC
-            // and sub-accounts, the funds would be lost.
-            || (marketCache.configFlags.isSet(CFG_EVC_COMPATIBLE_ASSET) && isKnownSubaccount(to))
+            // If the underlying asset is not EVC-compatible, do not transfer assets to any
+            // address that the EVC knows to be a sub-account. Non-EVC-compatible tokens do
+            // not know about sub-accounts, so the funds would be lost.
+            || (marketCache.configFlags.isNotSet(CFG_EVC_COMPATIBLE_ASSET) && isKnownSubaccount(to))
         ) {
             revert E_BadAssetReceiver();
         }

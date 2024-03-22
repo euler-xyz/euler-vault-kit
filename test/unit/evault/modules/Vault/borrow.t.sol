@@ -204,8 +204,8 @@ contract VaultTest_Borrow is EVaultTestBase {
     }
 
     function test_Borrow_RevertsWhen_ReceiverIsSubaccount() public {
-        // Ensure validate flag is set
-        eTST.setConfigFlags(eTST.configFlags() | CFG_EVC_COMPATIBLE_ASSET);
+        // Configure vault as non-EVC compatible: protections on
+        eTST.setConfigFlags(eTST.configFlags() & ~CFG_EVC_COMPATIBLE_ASSET);
 
         startHoax(borrower);
 
@@ -215,7 +215,7 @@ contract VaultTest_Borrow is EVaultTestBase {
         address subaccBase = address(uint160(borrower) >> 8 << 8);
 
         // addresses within sub-accounts range revert
-        for (uint160 i; i < 255; i++) {
+        for (uint160 i; i < 256; i++) {
             address subacc = address(uint160(subaccBase) | i);
             if (subacc != borrower) vm.expectRevert(Errors.E_BadAssetReceiver.selector);
             eTST.borrow(1, subacc);
@@ -233,8 +233,8 @@ contract VaultTest_Borrow is EVaultTestBase {
 
         vm.stopPrank();
 
-        // governance switches the protections off
-        eTST.setConfigFlags(eTST.configFlags() & ~CFG_EVC_COMPATIBLE_ASSET);
+        // governance switches the protection off
+        eTST.setConfigFlags(eTST.configFlags() | CFG_EVC_COMPATIBLE_ASSET);
 
         startHoax(borrower);
 
