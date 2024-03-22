@@ -46,6 +46,8 @@ contract VaultTest_Borrow is EVaultTestBase {
         assetTST2.mint(borrower, type(uint256).max);
         assetTST2.approve(address(eTST2), type(uint256).max);
         eTST2.deposit(10e18, borrower);
+
+        vm.stopPrank();
     }
 
     function test_basicBorrow() public {
@@ -202,36 +204,46 @@ contract VaultTest_Borrow is EVaultTestBase {
     }
 
     function test_Borrow_RevertsWhen_ReceiverIsSubaccount() public {
+        // Ensure validate flag is set
+        eTST.setConfigFlags(eTST.configFlags() | CFG_VALIDATE_ASSET_RECEIVER);
+
         startHoax(borrower);
 
         evc.enableCollateral(borrower, address(eTST2));
         evc.enableController(borrower, address(eTST));
 
-        address subacc = address(uint160(borrower) >> 8 << 8);
+        address subaccBase = address(uint160(borrower) >> 8 << 8);
 
         // addresses within sub-accounts range revert
-        vm.expectRevert(Errors.E_BadAssetReceiver.selector);
-        eTST.borrow(1, subacc);
-
-        vm.expectRevert(Errors.E_BadAssetReceiver.selector);
-        eTST.borrow(1, address(uint160(subacc) + 255));
+        for (uint160 i; i < 255; i++) {
+            address subacc = address(uint160(subaccBase) | i);
+            if (subacc != borrower) vm.expectRevert(Errors.E_BadAssetReceiver.selector);
+            eTST.borrow(1, subacc);
+        }
+        assertEq(assetTST.balanceOf(borrower), 1);
 
         // address outside of sub-accounts range are accepted
-        address otherAccount = address(uint160(subacc) - 1);
+        address otherAccount = address(uint160(subaccBase) - 1);
         eTST.borrow(1, otherAccount);
         assertEq(assetTST.balanceOf(otherAccount), 1);
 
-        otherAccount = address(uint160(subacc) + 256);
+        otherAccount = address(uint160(subaccBase) + 256);
         eTST.borrow(1, otherAccount);
         assertEq(assetTST.balanceOf(otherAccount), 1);
 
         vm.stopPrank();
+
         // governance switches the protections off
-        eTST.setDisabledOps(OP_VALIDATE_ASSET_RECEIVER);
+        eTST.setConfigFlags(eTST.configFlags() & ~CFG_VALIDATE_ASSET_RECEIVER);
 
         startHoax(borrower);
+
         // borrow is allowed again
-        eTST.borrow(1, subacc);
-        assertEq(assetTST.balanceOf(subacc), 1);
+        {
+            address subacc = address(uint160(borrower) ^ 42);
+            assertEq(assetTST.balanceOf(subacc), 0);
+            eTST.borrow(1, subacc);
+            assertEq(assetTST.balanceOf(subacc), 1);
+        }
     }
 }

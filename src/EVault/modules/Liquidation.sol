@@ -201,7 +201,7 @@ abstract contract LiquidationModule is ILiquidation, Base, BalanceUtils, Liquidi
         // Handle debt socialization
 
         if (
-            marketCache.disabledOps.isNotSet(OP_SOCIALIZE_DEBT) && liqCache.owed > liqCache.repay
+            marketCache.configFlags.isSet(CFG_SOCIALIZE_DEBT) && liqCache.owed > liqCache.repay
                 && checkNoCollateral(liqCache.violator, liqCache.collaterals)
         ) {
             Assets owedRemaining = liqCache.owed - liqCache.repay;

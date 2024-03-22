@@ -41,8 +41,11 @@ uint32 constant OP_LIQUIDATE = 1 << 12;
 uint32 constant OP_FLASHLOAN = 1 << 13;
 uint32 constant OP_TOUCH = 1 << 14;
 uint32 constant OP_ACCRUE_INTEREST = 1 << 15;
-uint32 constant OP_SOCIALIZE_DEBT = 1 << 16;
-uint32 constant OP_VALIDATE_ASSET_RECEIVER = 1 << 17;
+
+// Config Flags
+
+uint32 constant CFG_SOCIALIZE_DEBT = 1 << 0;
+uint32 constant CFG_VALIDATE_ASSET_RECEIVER = 1 << 1;
 
 // EVC authentication
 

@@ -7,7 +7,7 @@ import {LTVConfig} from "./LTVConfig.sol";
 import {UserStorage} from "./UserStorage.sol";
 
 struct MarketStorage {
-    // Packed slot 6 + 14 + 2 + 2 + 4 + 1 = 29
+    // Packed slot 6 + 14 + 2 + 2 + 4 + 1 + 1 = 30
     uint48 lastInterestAccumulatorUpdate;
     Assets cash;
     AmountCap supplyCap;
@@ -20,7 +20,9 @@ struct MarketStorage {
     Shares totalShares;
     Owed totalBorrows;
 
+    // Packed slot 14 + 4 = 18
     Shares accumulatedFees;
+    Flags configFlags;
 
     uint256 interestAccumulator;
 

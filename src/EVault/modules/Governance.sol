@@ -30,6 +30,7 @@ abstract contract GovernanceModule is IGovernance, Base, BalanceUtils, BorrowUti
     );
     event GovSetIRM(address interestRateModel);
     event GovSetDisabledOps(uint32 newDisabledOps);
+    event GovSetConfigFlags(uint32 newConfigFlags);
     event GovSetLockedOps(uint32 newLockedOps);
     event GovSetCaps(uint16 newSupplyCap, uint16 newBorrowCap);
     event GovSetInterestFee(uint16 newFee);
@@ -107,6 +108,11 @@ abstract contract GovernanceModule is IGovernance, Base, BalanceUtils, BorrowUti
     /// @inheritdoc IGovernance
     function disabledOps() public view virtual reentrantOK returns (uint32) {
         return (marketStorage.disabledOps.toUint32());
+    }
+
+    /// @inheritdoc IGovernance
+    function configFlags() public view virtual reentrantOK returns (uint32) {
+        return (marketStorage.configFlags.toUint32());
     }
 
     /// @inheritdoc IGovernance
@@ -279,6 +285,12 @@ abstract contract GovernanceModule is IGovernance, Base, BalanceUtils, BorrowUti
     function setLockedOps(uint32 newLockedOps) public virtual nonReentrant governorOnly {
         marketStorage.lockedOps = Flags.wrap(newLockedOps);
         emit GovSetLockedOps(newLockedOps);
+    }
+
+    /// @inheritdoc IGovernance
+    function setConfigFlags(uint32 newConfigFlags) public virtual nonReentrant governorOnly {
+        marketStorage.configFlags = Flags.wrap(newConfigFlags);
+        emit GovSetConfigFlags(newConfigFlags);
     }
 
     /// @inheritdoc IGovernance

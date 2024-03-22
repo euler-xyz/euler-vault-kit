@@ -346,6 +346,9 @@ interface IGovernance {
     /// @notice Retrieves a bitmask indicating which operations are disabled.
     function disabledOps() external view returns (uint32);
 
+    /// @notice Retrieves a bitmask indicating enabled config flags.
+    function configFlags() external view returns (uint32);
+
     /// @notice Retrieves a bitmask indicating which operations are locked.
     function lockedOps() external view returns (uint32);
 
@@ -404,6 +407,9 @@ interface IGovernance {
 
     /// @notice Set new bitmap indicating which operations should be locked. Operations are defined in Constants.sol
     function setLockedOps(uint32 newLockedOps) external;
+
+    /// @notice Set new bitmap indicating which config flags should be enabled. Flags are defined in Constants.sol
+    function setConfigFlags(uint32 newConfigFlags) external;
 
     /// @notice Set new supply and borrow caps in AmountCap format
     function setCaps(uint16 supplyCap, uint16 borrowCap) external;

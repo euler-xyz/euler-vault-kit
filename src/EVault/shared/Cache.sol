@@ -56,6 +56,7 @@ contract Cache is Storage, Errors {
         marketCache.totalBorrows = marketStorage.totalBorrows;
 
         marketCache.accumulatedFees = marketStorage.accumulatedFees;
+        marketCache.configFlags = marketStorage.configFlags;
 
         marketCache.interestAccumulator = marketStorage.interestAccumulator;
 
