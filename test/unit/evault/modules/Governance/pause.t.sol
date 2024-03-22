@@ -6,7 +6,8 @@ import {EVaultTestBase, EthereumVaultConnector} from "test/unit/evault/EVaultTes
 import {Errors} from "src/EVault/shared/Errors.sol";
 import "src/EVault/shared/Constants.sol";
 import "src/EVault/shared/types/Types.sol";
-
+import "src/EVault/shared/Events.sol";
+import "forge-std/Vm.sol";
 import "forge-std/console2.sol";
 
 // If this address is installed, it should be able to set disabled ops
@@ -231,23 +232,10 @@ contract Governance_PauseAndOps is EVaultTestBase {
         eTST.setDisabledOps(OP_LIQUIDATE);
         vm.expectRevert(Errors.E_OperationDisabled.selector);
         eTST.liquidate(violator, collateral, repayAssets, minYieldBalance);
-        // TODO: re-enable testing
-
-        eTST.setLTV(address(eTST2), 1e4, 0);
-        oracle.setPrice(address(eTST2), address(assetTST), 1e4);
 
         // re-enable
         eTST.setDisabledOps(0);
-        vm.startPrank(borrower);
-        evc.enableController(borrower, address(eTST));
-        evc.enableCollateral(borrower, address(eTST2));
-        eTST.borrow(type(uint256).max, borrower);
-        vm.stopPrank();
-
-        oracle.setPrice(address(eTST2), address(assetTST), 1);
-
-        evc.enableController(address(this), address(eTST));
-        eTST.liquidate(borrower, address(eTST2), type(uint256).max, 0);
+        liquidateSetup();
     }
 
     function testFuzz_flashLoanDisabledOpsShouldFailAfterDisabled(uint256 amount, bytes calldata data) public {
@@ -267,7 +255,6 @@ contract Governance_PauseAndOps is EVaultTestBase {
         eTST.touch();
     }
 
-    // TODO: accrue interest is a little bit different
     function testFuzz_accrueInterestDisabledOpsShouldFailAfterDisabled() public {
         eTST.setDisabledOps(OP_ACCRUE_INTEREST);
 
@@ -290,6 +277,36 @@ contract Governance_PauseAndOps is EVaultTestBase {
     }
 
     // TODO: socialize debt is a little bit different
+    function testFuzz_socializeDebtDisabledOpsShouldFailAfterDisabled(uint256 amount, address receiver) public {
+        eTST.setDisabledOps(OP_SOCIALIZE_DEBT);
+        vm.recordLogs();
+        liquidateSetup();
+        Vm.Log[] memory entries = vm.getRecordedLogs();
+        for (uint256 i = 0; i < entries.length; i++) {
+            console2.logBytes32(entries[i].topics[0]);
+            bytes32 topic = entries[i].topics[0];
+            assertNotEq(topic, Events.DebtSocialized.selector);
+        }
+
+        // re-enable
+        eTST.setDisabledOps(0);
+        vm.recordLogs();
+        assetTST2.mint(address(this), type(uint256).max);
+        assetTST2.approve(address(eTST2), type(uint256).max);
+        eTST2.deposit(MINT_AMOUNT, address(this));
+        liquidateSetup();
+        Vm.Log[] memory entriesReEnabled = vm.getRecordedLogs();
+        bool foundLog = false;
+        for (uint256 i = 0; i < entriesReEnabled.length; i++) {
+            console2.logBytes32(entriesReEnabled[i].topics[0]);
+            bytes32 topic = entriesReEnabled[i].topics[0];
+            if (topic == Events.DebtSocialized.selector) {
+                foundLog = true;
+                break;
+            }
+        }
+        assertTrue(foundLog);
+    }
 
     function testFuzz_validateAssetsReceiverDisabledShouldFailBorrowAfterDisabled(uint256 amount, address receiver)
         public
@@ -325,5 +342,28 @@ contract Governance_PauseAndOps is EVaultTestBase {
         (uint256 amount, address eTSTAddr) = abi.decode(data, (uint256, address));
         // return the amount to the
         IERC20(eTSTAddr).transfer(address(eTST), amount);
+    }
+
+    function liquidateSetup() internal {
+        eTST.setLTV(address(eTST2), 1e4, 0);
+        oracle.setPrice(address(assetTST), unitOfAccount, 1e4);
+        oracle.setPrice(address(eTST2), unitOfAccount, 1.1e4);
+
+        vm.startPrank(borrower);
+        evc.enableController(borrower, address(eTST));
+        evc.enableCollateral(borrower, address(eTST2));
+        eTST.borrow(type(uint256).max, borrower);
+        vm.stopPrank();
+        skip(1 weeks);
+        oracle.setPrice(address(assetTST), unitOfAccount, 10e4);
+        oracle.setPrice(address(eTST2), unitOfAccount, 0.5e4);
+
+        // check liquidation
+        (uint256 maxRepay, uint256 maxYield) = eTST.checkLiquidation(address(this), borrower, address(eTST2));
+        console2.log("maxRepay", maxRepay);
+        console2.log("maxYield", maxYield);
+
+        evc.enableController(address(this), address(eTST));
+        eTST.liquidate(borrower, address(eTST2), maxRepay / 2, 0);
     }
 }
