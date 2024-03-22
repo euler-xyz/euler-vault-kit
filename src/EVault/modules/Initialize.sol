@@ -55,7 +55,7 @@ abstract contract InitializeModule is IInitialize, Base, BorrowUtils {
         _vaultStorage.interestFee = DEFAULT_INTEREST_FEE.toConfigAmount();
         _vaultStorage.creator = _vaultStorage.governorAdmin = _vaultStorage.pauseGuardian = proxyCreator;
 
-        snapshotStorage().reset();
+        resetSnapshot();
 
         // Emit logs
 

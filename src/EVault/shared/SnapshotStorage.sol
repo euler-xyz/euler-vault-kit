@@ -20,4 +20,8 @@ abstract contract SnapshotStorage {
             data.slot := SNAPSHOT_STORAGE // The extrenal struct's slot is the same as internal's
         }
     }
+
+    function resetSnapshot() internal virtual {
+        snapshotStorage().reset();
+    }
 }

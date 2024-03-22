@@ -107,7 +107,7 @@ abstract contract RiskManagerModule is IRiskManager, Base, LiquidityUtils {
 
             if (supply > vaultCache.supplyCap && supply > prevSupply) revert E_SupplyCapExceeded();
 
-            snapshot.reset();
+            resetSnapshot();
         }
 
         magicValue = IEVCVault.checkVaultStatus.selector;
