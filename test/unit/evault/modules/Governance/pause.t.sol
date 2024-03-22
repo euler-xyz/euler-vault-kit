@@ -7,6 +7,8 @@ import {Errors} from "src/EVault/shared/Errors.sol";
 import "src/EVault/shared/Constants.sol";
 import "src/EVault/shared/types/Types.sol";
 
+import "forge-std/console2.sol";
+
 // If this address is installed, it should be able to set disabled ops
 // Use a different address than the governor
 // The pauseGuardian() accessor should return the currently installed pause guardian
@@ -246,6 +248,27 @@ contract Governance_PauseAndOps is EVaultTestBase {
     }
 
     // TODO: accrue interest is a little bit different
+    function testFuzz_accrueInterestDisabledOpsShouldFailAfterDisabled() public {
+        eTST.setDisabledOps(OP_ACCRUE_INTEREST);
+
+        vm.startPrank(borrower);
+        evc.enableCollateral(borrower, address(eTST2));
+        evc.enableController(borrower, address(eTST));
+        eTST.borrow(MINT_AMOUNT, borrower);
+        uint256 interestAccumulatorBefore = eTST.interestAccumulator();
+        skip(1 weeks);
+        uint256 interestAccumulatorAfter = eTST.interestAccumulator();
+        vm.stopPrank();
+        assertEq(interestAccumulatorBefore, interestAccumulatorAfter);
+
+        // re-enable
+        eTST.setDisabledOps(0);
+        uint256 interestAccumulatorBeforeReEanbled = eTST.interestAccumulator();
+        skip(1 weeks);
+        uint256 interestAccumulatorAfterReEnabled = eTST.interestAccumulator();
+        assertGt(interestAccumulatorAfterReEnabled, interestAccumulatorBeforeReEanbled);
+    }
+
     // TODO: socialize debt is a little bit different
 
     function testFuzz_validateAssetsReceiverDisabledShouldFailBorrowAfterDisabled(uint256 amount, address receiver)
