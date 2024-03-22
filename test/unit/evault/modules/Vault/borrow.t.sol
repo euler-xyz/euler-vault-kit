@@ -205,7 +205,7 @@ contract VaultTest_Borrow is EVaultTestBase {
 
     function test_Borrow_RevertsWhen_ReceiverIsSubaccount() public {
         // Ensure validate flag is set
-        eTST.setConfigFlags(eTST.configFlags() | CFG_VALIDATE_ASSET_RECEIVER);
+        eTST.setConfigFlags(eTST.configFlags() | CFG_EVC_COMPATIBLE_ASSET);
 
         startHoax(borrower);
 
@@ -234,7 +234,7 @@ contract VaultTest_Borrow is EVaultTestBase {
         vm.stopPrank();
 
         // governance switches the protections off
-        eTST.setConfigFlags(eTST.configFlags() & ~CFG_VALIDATE_ASSET_RECEIVER);
+        eTST.setConfigFlags(eTST.configFlags() & ~CFG_EVC_COMPATIBLE_ASSET);
 
         startHoax(borrower);
 

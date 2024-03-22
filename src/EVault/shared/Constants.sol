@@ -45,7 +45,7 @@ uint32 constant OP_ACCRUE_INTEREST = 1 << 15;
 // Config Flags
 
 uint32 constant CFG_SOCIALIZE_DEBT = 1 << 0;
-uint32 constant CFG_VALIDATE_ASSET_RECEIVER = 1 << 1;
+uint32 constant CFG_EVC_COMPATIBLE_ASSET = 1 << 1;
 
 // EVC authentication
 

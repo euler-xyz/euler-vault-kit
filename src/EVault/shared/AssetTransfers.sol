@@ -22,7 +22,7 @@ abstract contract AssetTransfers is Base {
             // If the op is enabled, do not send assets to an address that is recognized by EVC
             // as a sub-account of some other address. If the asset itself is not compatible with EVC
             // and sub-accounts, the funds would be lost.
-            || (marketCache.configFlags.isSet(CFG_VALIDATE_ASSET_RECEIVER) && isKnownSubaccount(to))
+            || (marketCache.configFlags.isSet(CFG_EVC_COMPATIBLE_ASSET) && isKnownSubaccount(to))
         ) {
             revert E_BadAssetReceiver();
         }

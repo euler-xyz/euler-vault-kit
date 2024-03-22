@@ -120,7 +120,7 @@ contract VaultTest_withdraw is EVaultTestBase {
 
     function test_Withdraw_RevertsWhen_ReceiverIsSubaccount() public {
         // Ensure validate flag is set
-        eTST.setConfigFlags(eTST.configFlags() | CFG_VALIDATE_ASSET_RECEIVER);
+        eTST.setConfigFlags(eTST.configFlags() | CFG_EVC_COMPATIBLE_ASSET);
 
         startHoax(depositor);
         address subacc = address(uint160(depositor) ^ 42);
@@ -144,7 +144,7 @@ contract VaultTest_withdraw is EVaultTestBase {
         vm.stopPrank();
 
         // governance switches the protections off
-        eTST.setConfigFlags(eTST.configFlags() & ~CFG_VALIDATE_ASSET_RECEIVER);
+        eTST.setConfigFlags(eTST.configFlags() & ~CFG_EVC_COMPATIBLE_ASSET);
 
         startHoax(depositor);
         // withdrawal is allowed again
@@ -154,7 +154,7 @@ contract VaultTest_withdraw is EVaultTestBase {
 
     function test_Redeem_RevertsWhen_ReceiverIsSubaccount() public {
         // Ensure validate flag is set
-        eTST.setConfigFlags(eTST.configFlags() | CFG_VALIDATE_ASSET_RECEIVER);
+        eTST.setConfigFlags(eTST.configFlags() | CFG_EVC_COMPATIBLE_ASSET);
 
         startHoax(depositor);
         address subacc = address(uint160(depositor) ^ 42);
@@ -178,7 +178,7 @@ contract VaultTest_withdraw is EVaultTestBase {
         vm.stopPrank();
 
         // governance switches the protections off
-        eTST.setConfigFlags(eTST.configFlags() & ~CFG_VALIDATE_ASSET_RECEIVER);
+        eTST.setConfigFlags(eTST.configFlags() & ~CFG_EVC_COMPATIBLE_ASSET);
 
         startHoax(depositor);
         // redeem is allowed again

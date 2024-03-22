@@ -22,6 +22,7 @@ pragma solidity ^0.8.0;
  *     name/return-bytes32                                                     Returns bytes32 instead of string
  *     symbol/return-bytes32                                                   Returns bytes32 instead of string
  *     permit/allowed                                                          Switch permit type to DAI-like 'allowed'
+ *     evc/address                             address addr                    EVC() function returns address
  */
 contract TestERC20 {
     address owner;
@@ -313,5 +314,11 @@ contract TestERC20 {
 
     function testExcludeFromCoverage() public pure {
         return;
+    }
+
+    function EVC() external view returns (address) {
+        (bool isSet, bytes memory data) = behaviour("evc/address");
+        if (isSet) return abi.decode(data, (address));
+        revert("no such function");
     }
 }

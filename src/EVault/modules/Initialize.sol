@@ -46,6 +46,12 @@ abstract contract InitializeModule is IInitialize, Base, BorrowUtils {
 
         snapshot.reset();
 
+        {
+            uint32 defaultConfigFlags = CFG_SOCIALIZE_DEBT;
+            if (isEVCCompatible(address(asset))) defaultConfigFlags |= CFG_EVC_COMPATIBLE_ASSET;
+            marketStorage.configFlags = Flags.wrap(defaultConfigFlags);
+        }
+
         // Emit logs
 
         emit EVaultCreated(proxyCreator, address(asset), dToken);
@@ -55,6 +61,11 @@ abstract contract InitializeModule is IInitialize, Base, BorrowUtils {
     // prevent initialization of the implementation contract
     constructor() {
         initialized = true;
+    }
+
+    function isEVCCompatible(address asset) private view returns (bool) {
+        (bool success, bytes memory data) = asset.staticcall(abi.encodeCall(IGovernance.EVC, ()));
+        return success && data.length >= 32 && abi.decode(data, (address)) == address(evc);
     }
 }
 
