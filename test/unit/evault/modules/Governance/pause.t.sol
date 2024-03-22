@@ -234,17 +234,17 @@ contract Governance_PauseAndOps is EVaultTestBase {
         // TODO: re-enable testing
 
         eTST.setLTV(address(eTST2), 1e4, 0);
-        oracle.setPrice(address(eTST2), address(assetTST), 0);
+        oracle.setPrice(address(eTST2), address(assetTST), 1e4);
 
         // re-enable
         eTST.setDisabledOps(0);
         vm.startPrank(borrower);
         evc.enableController(borrower, address(eTST));
-        // evc.enableCollateral(borrower, address(eTST2));
+        evc.enableCollateral(borrower, address(eTST2));
         eTST.borrow(type(uint256).max, borrower);
         vm.stopPrank();
 
-        oracle.setPrice(address(eTST2), address(assetTST), 0);
+        oracle.setPrice(address(eTST2), address(assetTST), 1);
 
         evc.enableController(address(this), address(eTST));
         eTST.liquidate(borrower, address(eTST2), type(uint256).max, 0);
