@@ -21,12 +21,13 @@ abstract contract BalanceUtils is Base {
     ) internal {
         if (account == address(0)) revert E_BadSharesReceiver();
 
+        Market storage _marketStorage = marketStorage();
         (Shares origBalance, bool balanceForwarderEnabled) =
-            marketStorage().users[account].getBalanceAndBalanceForwarder();
+            _marketStorage.users[account].getBalanceAndBalanceForwarder();
         Shares newBalance = origBalance + amount;
 
-        marketStorage().users[account].setBalance(newBalance);
-        marketStorage().totalShares = marketCache.totalShares = marketCache.totalShares + amount;
+        _marketStorage.users[account].setBalance(newBalance);
+        _marketStorage.totalShares = marketCache.totalShares = marketCache.totalShares + amount;
 
         if (balanceForwarderEnabled) {
             tryBalanceTrackerHook(account, newBalance.toUint(), false);
@@ -44,8 +45,10 @@ abstract contract BalanceUtils is Base {
         Shares amount,
         Assets assets
     ) internal {
+        Market storage _marketStorage = marketStorage();
+
         (Shares origBalance, bool balanceForwarderEnabled) =
-            marketStorage().users[account].getBalanceAndBalanceForwarder();
+            _marketStorage.users[account].getBalanceAndBalanceForwarder();
         if (origBalance < amount) revert E_InsufficientBalance();
 
         Shares newBalance;
@@ -53,8 +56,8 @@ abstract contract BalanceUtils is Base {
             newBalance = origBalance - amount;
         }
 
-        marketStorage().users[account].setBalance(newBalance);
-        marketStorage().totalShares = marketCache.totalShares = marketCache.totalShares - amount;
+        _marketStorage.users[account].setBalance(newBalance);
+        _marketStorage.totalShares = marketCache.totalShares = marketCache.totalShares - amount;
 
         if (balanceForwarderEnabled) {
             tryBalanceTrackerHook(account, newBalance.toUint(), isControlCollateralInProgress());
@@ -65,12 +68,14 @@ abstract contract BalanceUtils is Base {
     }
 
     function transferBalance(address from, address to, Shares amount) internal {
+        Market storage _marketStorage = marketStorage();
+
         if (!amount.isZero()) {
             (Shares origFromBalance, bool fromBalanceForwarderEnabled) =
-                marketStorage().users[from].getBalanceAndBalanceForwarder();
+                _marketStorage.users[from].getBalanceAndBalanceForwarder();
 
             (Shares origToBalance, bool toBalanceForwarderEnabled) =
-                marketStorage().users[to].getBalanceAndBalanceForwarder();
+                _marketStorage.users[to].getBalanceAndBalanceForwarder();
 
             if (origFromBalance < amount) revert E_InsufficientBalance();
 
@@ -80,8 +85,8 @@ abstract contract BalanceUtils is Base {
             }
             Shares newToBalance = origToBalance + amount;
 
-            marketStorage().users[from].setBalance(newFromBalance);
-            marketStorage().users[to].setBalance(newToBalance);
+            _marketStorage.users[from].setBalance(newFromBalance);
+            _marketStorage.users[to].setBalance(newToBalance);
 
             if (fromBalanceForwarderEnabled) {
                 tryBalanceTrackerHook(from, newFromBalance.toUint(), isControlCollateralInProgress());
@@ -106,14 +111,15 @@ abstract contract BalanceUtils is Base {
 
     function decreaseAllowance(address owner, address spender, Shares amount) internal {
         if (amount.isZero()) return;
+        Market storage _marketStorage = marketStorage();
 
-        uint256 allowance = marketStorage().users[owner].eTokenAllowance[spender];
+        uint256 allowance = _marketStorage.users[owner].eTokenAllowance[spender];
         if (owner != spender && allowance != type(uint256).max) {
             if (allowance < amount.toUint()) revert E_InsufficientAllowance();
             unchecked {
                 allowance -= amount.toUint();
             }
-            marketStorage().users[owner].eTokenAllowance[spender] = allowance;
+            _marketStorage.users[owner].eTokenAllowance[spender] = allowance;
             emit Approval(owner, spender, allowance);
         }
     }

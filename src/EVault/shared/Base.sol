@@ -34,11 +34,12 @@ abstract contract Base is EVCClient, Cache, SnapshotStorage {
     } // documentation only
 
     modifier nonReentrant() {
-        if (marketStorage().reentrancyLocked) revert E_Reentrancy();
+        Market storage _marketStorage = marketStorage();
+        if (_marketStorage.reentrancyLocked) revert E_Reentrancy();
 
-        marketStorage().reentrancyLocked = true;
+        _marketStorage.reentrancyLocked = true;
         _;
-        marketStorage().reentrancyLocked = false;
+        _marketStorage.reentrancyLocked = false;
     }
 
     modifier nonReentrantView() {
