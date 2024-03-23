@@ -34,7 +34,10 @@ contract Escrow is BaseProductLine {
         vault.setName(string.concat("Escrow vault: ", getTokenName(asset)));
         vault.setSymbol(string.concat("e", getTokenSymbol(asset)));
 
-        vault.setDisabledOps(OP_BORROW | OP_REPAY | OP_LOOP | OP_DELOOP | OP_PULL_DEBT | OP_CONVERT_FEES | OP_LIQUIDATE | OP_TOUCH | OP_ACCRUE_INTEREST);
+        vault.setDisabledOps(
+            OP_BORROW | OP_REPAY | OP_LOOP | OP_DELOOP | OP_PULL_DEBT | OP_CONVERT_FEES | OP_LIQUIDATE | OP_TOUCH
+                | OP_ACCRUE_INTEREST
+        );
 
         // Renounce governorship
         vault.setGovernorAdmin(address(0));

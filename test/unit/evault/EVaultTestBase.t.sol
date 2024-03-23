@@ -108,16 +108,16 @@ contract EVaultTestBase is AssertionsCustomTypes, Test, DeployPermit2 {
         vm.prank(admin);
         factory.setImplementation(evaultImpl);
 
-        coreProductLine = new Core(address(factory), address(evc), address(this), feeReceiver, address(oracle), unitOfAccount);
+        coreProductLine = new Core(address(factory), address(evc), address(this), feeReceiver);
         escrowProductLine = new Escrow(address(factory), address(evc));
 
         assetTST = new TestERC20("Test Token", "TST", 18, false);
         assetTST2 = new TestERC20("Test Token 2", "TST2", 18, false);
 
-        eTST = IEVault(coreProductLine.createVault(address(assetTST)));
+        eTST = IEVault(coreProductLine.createVault(address(assetTST), address(oracle), unitOfAccount));
         eTST.setInterestRateModel(address(new IRMTestDefault()));
 
-        eTST2 = IEVault(coreProductLine.createVault(address(assetTST2)));
+        eTST2 = IEVault(coreProductLine.createVault(address(assetTST2), address(oracle), unitOfAccount));
         eTST.setInterestRateModel(address(new IRMTestDefault()));
     }
 

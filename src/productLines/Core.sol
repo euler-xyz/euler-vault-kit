@@ -14,8 +14,6 @@ contract Core is BaseProductLine {
 
     address public governor;
     address public feeReceiver;
-    address public oracle;
-    address public unitOfAccount;
 
     // Errors
 
@@ -23,12 +21,11 @@ contract Core is BaseProductLine {
 
     // Interface
 
-    constructor(address vaultFactory_, address evc_, address governor_, address feeReceiver_, address oracle_, address unitOfAccount_) BaseProductLine(vaultFactory_, evc_) {
+    constructor(address vaultFactory_, address evc_, address governor_, address feeReceiver_)
+        BaseProductLine(vaultFactory_, evc_)
+    {
         governor = governor_;
         feeReceiver = feeReceiver_;
-
-        oracle = oracle_;
-        unitOfAccount = unitOfAccount_;
     }
 
     modifier governorOnly() {
@@ -36,7 +33,11 @@ contract Core is BaseProductLine {
         _;
     }
 
-    function createVault(address asset) external governorOnly returns (address) {
+    function createVault(address asset, address oracle, address unitOfAccount)
+        external
+        governorOnly
+        returns (address)
+    {
         IEVault vault = makeNewVaultInternal(asset, UPGRADEABLE, oracle, unitOfAccount);
 
         vault.setName(string.concat("Core vault: ", getTokenName(asset)));
