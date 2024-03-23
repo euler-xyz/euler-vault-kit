@@ -2,7 +2,7 @@
 
 pragma solidity ^0.8.0;
 
-import "../EVault/EVaultTestBase.t.sol";
+import "../evault/EVaultTestBase.t.sol";
 
 contract ProductLine_Core is EVaultTestBase {
     function test_Core_basicViews() public view {
