@@ -111,4 +111,20 @@ contract EVaultTestBase is AssertionsCustomTypes, Test, DeployPermit2 {
         eTST2 = IEVault(factory.createProxy(true, abi.encodePacked(address(assetTST2), address(oracle), unitOfAccount)));
         eTST2.setIRM(address(new IRMTestDefault()));
     }
+
+    uint32 internal constant SYNTH_VAULT_DISABLED_OPS = OP_MINT | OP_REDEEM | OP_SKIM | OP_LOOP | OP_DELOOP;
+
+    function createSynthEVault(address asset) internal returns (IEVault) {
+        IEVault v = IEVault(factory.createProxy(true, abi.encodePacked(address(asset), address(oracle), unitOfAccount)));
+        v.setIRM(address(new IRMTestDefault()));
+
+        v.setDisabledOps(SYNTH_VAULT_DISABLED_OPS);
+        v.setLockedOps(SYNTH_VAULT_DISABLED_OPS);
+
+        v.setInterestFee(1e4);
+
+        v.setConfigFlags(v.configFlags() | CFG_ONLY_ASSET_CAN_DEPOSIT);
+
+        return v;
+    }
 }

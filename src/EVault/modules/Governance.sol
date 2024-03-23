@@ -17,8 +17,8 @@ abstract contract GovernanceModule is IGovernance, Base, BalanceUtils, BorrowUti
 
     // Protocol guarantees
     uint16 constant MAX_PROTOCOL_FEE_SHARE = 0.5e4;
-    uint16 constant GUARANTEED_INTEREST_FEE_MIN = 0.01e4;
-    uint16 constant GUARANTEED_INTEREST_FEE_MAX = 0.5e4;
+    uint16 constant GUARANTEED_INTEREST_FEE_MIN = 0.1e4;
+    uint16 constant GUARANTEED_INTEREST_FEE_MAX = 1e4;
 
     event GovSetName(string newName);
     event GovSetSymbol(string newSymbol);
@@ -30,6 +30,8 @@ abstract contract GovernanceModule is IGovernance, Base, BalanceUtils, BorrowUti
     );
     event GovSetIRM(address interestRateModel);
     event GovSetDisabledOps(uint32 newDisabledOps);
+    event GovSetConfigFlags(uint32 newConfigFlags);
+    event GovSetLockedOps(uint32 newLockedOps);
     event GovSetCaps(uint16 newSupplyCap, uint16 newBorrowCap);
     event GovSetInterestFee(uint16 newFee);
 
@@ -106,6 +108,16 @@ abstract contract GovernanceModule is IGovernance, Base, BalanceUtils, BorrowUti
     /// @inheritdoc IGovernance
     function disabledOps() public view virtual reentrantOK returns (uint32) {
         return (marketStorage.disabledOps.toUint32());
+    }
+
+    /// @inheritdoc IGovernance
+    function configFlags() public view virtual reentrantOK returns (uint32) {
+        return (marketStorage.configFlags.toUint32());
+    }
+
+    /// @inheritdoc IGovernance
+    function lockedOps() public view virtual reentrantOK returns (uint32) {
+        return (marketStorage.lockedOps.toUint32());
     }
 
     /// @inheritdoc IGovernance
@@ -255,14 +267,30 @@ abstract contract GovernanceModule is IGovernance, Base, BalanceUtils, BorrowUti
 
     /// @inheritdoc IGovernance
     function setDisabledOps(uint32 newDisabledOps) public virtual nonReentrant governorOrPauseGuardianOnly {
+        // Overwrite bits of locked ops with their currently set values
+        newDisabledOps = (newDisabledOps & ~marketStorage.lockedOps.toUint32())
+            | (marketStorage.disabledOps.toUint32() & marketStorage.lockedOps.toUint32());
+
         // market is updated because:
         // if disabling interest accrual - the pending interest should be accrued
         // if re-enabling interest - last updated timestamp needs to be reset to skip the disabled period
         MarketCache memory marketCache = updateMarket();
         logMarketStatus(marketCache, marketStorage.interestRate);
 
-        marketStorage.disabledOps = Operations.wrap(newDisabledOps);
+        marketStorage.disabledOps = Flags.wrap(newDisabledOps);
         emit GovSetDisabledOps(newDisabledOps);
+    }
+
+    /// @inheritdoc IGovernance
+    function setLockedOps(uint32 newLockedOps) public virtual nonReentrant governorOnly {
+        marketStorage.lockedOps = Flags.wrap(newLockedOps);
+        emit GovSetLockedOps(newLockedOps);
+    }
+
+    /// @inheritdoc IGovernance
+    function setConfigFlags(uint32 newConfigFlags) public virtual nonReentrant governorOnly {
+        marketStorage.configFlags = Flags.wrap(newConfigFlags);
+        emit GovSetConfigFlags(newConfigFlags);
     }
 
     /// @inheritdoc IGovernance

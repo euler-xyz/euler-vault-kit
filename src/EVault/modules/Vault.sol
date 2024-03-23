@@ -42,7 +42,7 @@ abstract contract VaultModule is IVault, Base, AssetTransfers, BalanceUtils {
     /// @inheritdoc IERC4626
     function maxDeposit(address account) public view virtual nonReentrantView returns (uint256) {
         MarketCache memory marketCache = loadMarket();
-        if (marketCache.disabledOps.check(OP_DEPOSIT)) return 0;
+        if (marketCache.disabledOps.isSet(OP_DEPOSIT)) return 0;
 
         return maxDepositInternal(marketCache, account);
     }
@@ -56,7 +56,7 @@ abstract contract VaultModule is IVault, Base, AssetTransfers, BalanceUtils {
     function maxMint(address account) public view virtual nonReentrantView returns (uint256) {
         MarketCache memory marketCache = loadMarket();
 
-        if (marketCache.disabledOps.check(OP_MINT)) return 0;
+        if (marketCache.disabledOps.isSet(OP_MINT)) return 0;
         return maxDepositInternal(marketCache, account).toAssets().toSharesDown(marketCache).toUint();
     }
 
@@ -69,7 +69,7 @@ abstract contract VaultModule is IVault, Base, AssetTransfers, BalanceUtils {
     /// @inheritdoc IERC4626
     function maxWithdraw(address owner) public view virtual nonReentrantView returns (uint256) {
         MarketCache memory marketCache = loadMarket();
-        if (marketCache.disabledOps.check(OP_WITHDRAW)) return 0;
+        if (marketCache.disabledOps.isSet(OP_WITHDRAW)) return 0;
 
         return maxRedeemInternal(owner).toAssetsDown(marketCache).toUint();
     }
@@ -83,7 +83,7 @@ abstract contract VaultModule is IVault, Base, AssetTransfers, BalanceUtils {
     /// @inheritdoc IERC4626
     function maxRedeem(address owner) public view virtual nonReentrantView returns (uint256) {
         MarketCache memory marketCache = loadMarket();
-        if (marketCache.disabledOps.check(OP_REDEEM)) return 0;
+        if (marketCache.disabledOps.isSet(OP_REDEEM)) return 0;
 
         return maxRedeemInternal(owner).toUint();
     }
@@ -188,6 +188,10 @@ abstract contract VaultModule is IVault, Base, AssetTransfers, BalanceUtils {
         Shares shares = assets.toSharesDown(marketCache);
         if (shares.isZero()) revert E_ZeroShares();
 
+        if (marketCache.configFlags.isSet(CFG_ONLY_ASSET_CAN_DEPOSIT) && receiver != asset()) {
+            revert E_OnlyAssetCanDeposit();
+        }
+
         increaseBalance(marketCache, receiver, account, shares, assets);
         marketStorage.cash = marketCache.cash = marketCache.cash + assets;
 
@@ -201,6 +205,10 @@ abstract contract VaultModule is IVault, Base, AssetTransfers, BalanceUtils {
         address sender,
         address receiver
     ) private {
+        if (marketCache.configFlags.isSet(CFG_ONLY_ASSET_CAN_DEPOSIT) && sender != asset()) {
+            revert E_OnlyAssetCanDeposit();
+        }
+
         pullAssets(marketCache, sender, assets);
 
         increaseBalance(marketCache, receiver, sender, shares, assets);

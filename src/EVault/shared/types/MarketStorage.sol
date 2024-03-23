@@ -2,17 +2,17 @@
 
 pragma solidity ^0.8.0;
 
-import {Assets, Shares, Owed, AmountCap, ConfigAmount, Operations} from "./Types.sol";
+import {Assets, Shares, Owed, AmountCap, ConfigAmount, Flags} from "./Types.sol";
 import {LTVConfig} from "./LTVConfig.sol";
 import {UserStorage} from "./UserStorage.sol";
 
 struct MarketStorage {
-    // Packed slot 6 + 14 + 2 + 2 + 4 + 1 = 29
+    // Packed slot 6 + 14 + 2 + 2 + 4 + 1 + 1 = 30
     uint48 lastInterestAccumulatorUpdate;
     Assets cash;
     AmountCap supplyCap;
     AmountCap borrowCap;
-    Operations disabledOps;
+    Flags disabledOps;
     bool reentrancyLocked;
     bool snapshotInitialized;
 
@@ -20,7 +20,9 @@ struct MarketStorage {
     Shares totalShares;
     Owed totalBorrows;
 
+    // Packed slot 14 + 4 = 18
     Shares accumulatedFees;
+    Flags configFlags;
 
     uint256 interestAccumulator;
 
@@ -36,6 +38,7 @@ struct MarketStorage {
 
     address governorAdmin;
     address pauseGuardian;
+    Flags lockedOps;
     address feeReceiver;
 
     mapping(address account => UserStorage) users;

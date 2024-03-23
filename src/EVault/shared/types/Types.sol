@@ -13,7 +13,7 @@ import "./Shares.sol";
 import "./Assets.sol";
 import "./Owed.sol";
 import "./ConfigAmount.sol";
-import "./Operations.sol";
+import "./Flags.sol";
 import "./AmountCap.sol";
 import "./LTVType.sol";
 
@@ -27,7 +27,7 @@ type AmountCap is uint16;
 
 type ConfigAmount is uint16;
 
-type Operations is uint32;
+type Flags is uint32;
 
 using SharesLib for Shares global;
 using {
@@ -52,7 +52,7 @@ using ConfigAmountLib for ConfigAmount global;
 using {addConfigAmount as +, subConfigAmount as -, gtConfigAmount as >, ltConfigAmount as <} for ConfigAmount global;
 
 using AmountCapLib for AmountCap global;
-using OperationsLib for Operations global;
+using FlagsLib for Flags global;
 
 library TypesLib {
     function toShares(uint256 amount) internal pure returns (Shares) {

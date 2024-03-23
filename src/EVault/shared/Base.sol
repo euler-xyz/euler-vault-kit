@@ -55,7 +55,7 @@ abstract contract Base is EVCClient, Cache {
     {
         marketCache = updateMarket();
 
-        if (marketCache.disabledOps.check(operation)) {
+        if (marketCache.disabledOps.isSet(operation)) {
             revert E_OperationDisabled();
         }
 

@@ -56,8 +56,8 @@ contract ProtocolConfig is IProtocolConfig {
         admin = admin_;
         feeReceiver = feeReceiver_;
 
-        minInterestFee = 0.01e4;
-        maxInterestFee = 0.5e4;
+        minInterestFee = 0.1e4;
+        maxInterestFee = 1e4;
         protocolFeeShare = 0.1e4;
     }
 

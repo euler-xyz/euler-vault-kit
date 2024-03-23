@@ -12,7 +12,7 @@ contract ESVaultTestDisabledOps is ESVaultTestBase {
 
     function test_disabled_ops_after_init() public view {
         uint32 disabledOps = eTST.disabledOps();
-        assertEq(disabledOps, eTSTAsESVault.SYNTH_VAULT_DISABLED_OPS());
+        assertEq(disabledOps, SYNTH_VAULT_DISABLED_OPS);
     }
 
     function test_set_unsupported_ops_enabled() public {
@@ -20,6 +20,6 @@ contract ESVaultTestDisabledOps is ESVaultTestBase {
         eTST.setDisabledOps(newDisabledOps);
         uint32 disabledOps = eTST.disabledOps();
 
-        assertEq(disabledOps, newDisabledOps | eTSTAsESVault.SYNTH_VAULT_DISABLED_OPS());
+        assertEq(disabledOps, newDisabledOps | SYNTH_VAULT_DISABLED_OPS);
     }
 }
