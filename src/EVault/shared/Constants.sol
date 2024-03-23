@@ -40,13 +40,11 @@ uint32 constant OP_CONVERT_FEES = 1 << 11;
 uint32 constant OP_LIQUIDATE = 1 << 12;
 uint32 constant OP_FLASHLOAN = 1 << 13;
 uint32 constant OP_TOUCH = 1 << 14;
-uint32 constant OP_ACCRUE_INTEREST = 1 << 15;
 
 // Config Flags
 
 uint32 constant CFG_DONT_SOCIALIZE_DEBT = 1 << 0;
 uint32 constant CFG_EVC_COMPATIBLE_ASSET = 1 << 1;
-uint32 constant CFG_ONLY_ASSET_CAN_DEPOSIT = 1 << 2;
 
 // EVC authentication
 

@@ -21,7 +21,7 @@ abstract contract RiskManagerModule is IRiskManager, Base, LiquidityUtils {
     {
         VaultCache memory vaultCache = loadVault();
 
-        verifyController(account);
+        validateController(account);
         address[] memory collaterals = getCollaterals(account);
 
         return
@@ -38,7 +38,7 @@ abstract contract RiskManagerModule is IRiskManager, Base, LiquidityUtils {
     {
         VaultCache memory vaultCache = loadVault();
 
-        verifyController(account);
+        validateController(account);
         validateOracle(vaultCache);
         collaterals = getCollaterals(account);
         collateralValues = new uint256[](collaterals.length);

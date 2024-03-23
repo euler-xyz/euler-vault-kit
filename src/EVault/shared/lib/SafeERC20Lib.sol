@@ -4,10 +4,7 @@ pragma solidity ^0.8.0;
 
 import {IERC20} from "../../IEVault.sol";
 import {RevertBytes} from "./RevertBytes.sol";
-
-interface IPermit2 {
-    function transferFrom(address from, address to, uint160 amount, address token) external;
-}
+import {IPermit2} from "../../../interfaces/IPermit2.sol";
 
 library SafeERC20Lib {
     error E_TransferFromFailed(bytes errorTransferFrom, bytes errorPermit2);

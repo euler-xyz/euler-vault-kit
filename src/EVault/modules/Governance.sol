@@ -23,15 +23,14 @@ abstract contract GovernanceModule is IGovernance, Base, BalanceUtils, BorrowUti
     event GovSetName(string newName);
     event GovSetSymbol(string newSymbol);
     event GovSetGovernorAdmin(address indexed newGovernorAdmin);
-    event GovSetPauseGuardian(address newPauseGuardian);
     event GovSetFeeReceiver(address indexed newFeeReceiver);
+    event GovSetHookTarget(address indexed newHookTarget);
     event GovSetLTV(
         address indexed collateral, uint48 targetTimestamp, uint16 targetLTV, uint32 rampDuration, uint16 originalLTV
     );
-    event GovSetInterestRateModel(address interestRateModel);
-    event GovSetDisabledOps(uint32 newDisabledOps);
+    event GovSetIRM(address interestRateModel);
+    event GovSetHookedOps(uint32 newHookeddOps);
     event GovSetConfigFlags(uint32 newConfigFlags);
-    event GovSetLockedOps(uint32 newLockedOps);
     event GovSetCaps(uint16 newSupplyCap, uint16 newBorrowCap);
     event GovSetInterestFee(uint16 newFee);
 
@@ -40,21 +39,9 @@ abstract contract GovernanceModule is IGovernance, Base, BalanceUtils, BorrowUti
         _;
     }
 
-    modifier governorOrPauseGuardianOnly() {
-        if (msg.sender != vaultStorage.governorAdmin && msg.sender != vaultStorage.pauseGuardian) {
-            revert E_Unauthorized();
-        }
-        _;
-    }
-
     /// @inheritdoc IGovernance
     function governorAdmin() public view virtual reentrantOK returns (address) {
         return vaultStorage.governorAdmin;
-    }
-
-    /// @inheritdoc IGovernance
-    function pauseGuardian() public view virtual reentrantOK returns (address) {
-        return vaultStorage.pauseGuardian;
     }
 
     /// @inheritdoc IGovernance
@@ -106,18 +93,13 @@ abstract contract GovernanceModule is IGovernance, Base, BalanceUtils, BorrowUti
     }
 
     /// @inheritdoc IGovernance
-    function disabledOps() public view virtual reentrantOK returns (uint32) {
-        return (vaultStorage.disabledOps.toUint32());
+    function hookedOps() public view virtual reentrantOK returns (uint32) {
+        return (vaultStorage.hookedOps.toUint32());
     }
 
     /// @inheritdoc IGovernance
     function configFlags() public view virtual reentrantOK returns (uint32) {
         return (vaultStorage.configFlags.toUint32());
-    }
-
-    /// @inheritdoc IGovernance
-    function lockedOps() public view virtual reentrantOK returns (uint32) {
-        return (vaultStorage.lockedOps.toUint32());
     }
 
     /// @inheritdoc IGovernance
@@ -128,6 +110,11 @@ abstract contract GovernanceModule is IGovernance, Base, BalanceUtils, BorrowUti
     /// @inheritdoc IGovernance
     function feeReceiver() public view virtual reentrantOK returns (address) {
         return vaultStorage.feeReceiver;
+    }
+
+    /// @inheritdoc IGovernance
+    function hookTarget() public view virtual reentrantOK returns (address) {
+        return vaultStorage.hookTarget;
     }
 
     /// @inheritdoc IGovernance
@@ -206,15 +193,15 @@ abstract contract GovernanceModule is IGovernance, Base, BalanceUtils, BorrowUti
     }
 
     /// @inheritdoc IGovernance
-    function setPauseGuardian(address newPauseGuardian) public virtual nonReentrant governorOnly {
-        vaultStorage.pauseGuardian = newPauseGuardian;
-        emit GovSetPauseGuardian(newPauseGuardian);
-    }
-
-    /// @inheritdoc IGovernance
     function setFeeReceiver(address newFeeReceiver) public virtual nonReentrant governorOnly {
         vaultStorage.feeReceiver = newFeeReceiver;
         emit GovSetFeeReceiver(newFeeReceiver);
+    }
+
+    /// @inheritdoc IGovernance
+    function setHookTarget(address newHookTarget) public virtual nonReentrant governorOnly {
+        vaultStorage.hookTarget = newHookTarget;
+        emit GovSetHookTarget(newHookTarget);
     }
 
     /// @inheritdoc IGovernance
@@ -266,25 +253,9 @@ abstract contract GovernanceModule is IGovernance, Base, BalanceUtils, BorrowUti
     }
 
     /// @inheritdoc IGovernance
-    function setDisabledOps(uint32 newDisabledOps) public virtual nonReentrant governorOrPauseGuardianOnly {
-        // Overwrite bits of locked ops with their currently set values
-        newDisabledOps = (newDisabledOps & ~vaultStorage.lockedOps.toUint32())
-            | (vaultStorage.disabledOps.toUint32() & vaultStorage.lockedOps.toUint32());
-
-        // vault is updated because:
-        // if disabling interest accrual - the pending interest should be accrued
-        // if re-enabling interest - last updated timestamp needs to be reset to skip the disabled period
-        VaultCache memory vaultCache = updateVault();
-        logVaultStatus(vaultCache, vaultStorage.interestRate);
-
-        vaultStorage.disabledOps = Flags.wrap(newDisabledOps);
-        emit GovSetDisabledOps(newDisabledOps);
-    }
-
-    /// @inheritdoc IGovernance
-    function setLockedOps(uint32 newLockedOps) public virtual nonReentrant governorOnly {
-        vaultStorage.lockedOps = Flags.wrap(newLockedOps);
-        emit GovSetLockedOps(newLockedOps);
+    function setHookedOps(uint32 newHookedOps) public virtual nonReentrant governorOnly {
+        vaultStorage.hookedOps = Flags.wrap(newHookedOps);
+        emit GovSetHookedOps(newHookedOps);
     }
 
     /// @inheritdoc IGovernance

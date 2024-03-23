@@ -187,10 +187,6 @@ abstract contract VaultModule is IVault, Base, AssetTransfers, BalanceUtils {
         Shares shares = assets.toSharesDown(vaultCache);
         if (shares.isZero()) revert E_ZeroShares();
 
-        if (vaultCache.configFlags.isSet(CFG_ONLY_ASSET_CAN_DEPOSIT) && receiver != asset()) {
-            revert E_OnlyAssetCanDeposit();
-        }
-
         increaseBalance(vaultCache, receiver, account, shares, assets);
         vaultStorage.cash = vaultCache.cash = vaultCache.cash + assets;
 
@@ -204,10 +200,6 @@ abstract contract VaultModule is IVault, Base, AssetTransfers, BalanceUtils {
         address sender,
         address receiver
     ) private {
-        if (vaultCache.configFlags.isSet(CFG_ONLY_ASSET_CAN_DEPOSIT) && sender != asset()) {
-            revert E_OnlyAssetCanDeposit();
-        }
-
         pullAssets(vaultCache, sender, assets);
 
         increaseBalance(vaultCache, receiver, sender, shares, assets);
