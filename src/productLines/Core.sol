@@ -42,7 +42,7 @@ contract Core is BaseProductLine {
         vault.setName(string.concat("Core vault: ", getTokenName(asset)));
         vault.setSymbol(string.concat("e", getTokenSymbol(asset)));
 
-        vault.setFeeReceiver(governor);
+        vault.setFeeReceiver(feeReceiver);
         vault.setGovernorAdmin(governor);
 
         return address(vault);
