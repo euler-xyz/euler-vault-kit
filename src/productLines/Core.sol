@@ -4,6 +4,7 @@ pragma solidity ^0.8.0;
 
 import "./BaseProductLine.sol";
 
+/// @notice Contract deploying EVaults, forming the `Core` product line, which are upgradeable and fully governed.
 contract Core is BaseProductLine {
     // Constants
 
@@ -12,6 +13,9 @@ contract Core is BaseProductLine {
     // State
 
     address public governor;
+    address public feeReceiver;
+    address public oracle;
+    address public unitOfAccount;
 
     // Errors
 
@@ -19,8 +23,12 @@ contract Core is BaseProductLine {
 
     // Interface
 
-    constructor(address vaultFactory_, address governor_) BaseProductLine(vaultFactory_) {
-        governor_ = governor;
+    constructor(address vaultFactory_, address evc_, address governor_, address feeReceiver_, address oracle_, address unitOfAccount_) BaseProductLine(vaultFactory_, evc_) {
+        governor = governor_;
+        feeReceiver = feeReceiver_;
+
+        oracle = oracle_;
+        unitOfAccount = unitOfAccount_;
     }
 
     modifier governorOnly() {
@@ -29,12 +37,11 @@ contract Core is BaseProductLine {
     }
 
     function createVault(address asset) external governorOnly returns (address) {
-        IEVault vault = makeNewVaultInternal(asset, UPGRADEABLE);
+        IEVault vault = makeNewVaultInternal(asset, UPGRADEABLE, oracle, unitOfAccount);
 
         vault.setName(string.concat("Core vault: ", getTokenName(asset)));
         vault.setSymbol(string.concat("e", getTokenSymbol(asset)));
 
-        // FIXME: use different addresses for the following
         vault.setFeeReceiver(governor);
         vault.setGovernorAdmin(governor);
 

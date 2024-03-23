@@ -2,10 +2,13 @@
 
 pragma solidity ^0.8.0;
 
-import {IERC20, IEVault} from "../EVault/IEVault.sol";
+import {IERC20, IEVault, IGovernance} from "../EVault/IEVault.sol";
 import {GenericFactory} from "../GenericFactory/GenericFactory.sol";
 import {RevertBytes} from "../EVault/shared/lib/RevertBytes.sol";
 
+import "../EVault/shared/Constants.sol";
+
+/// @notice Base contract for product line contracts, which deploy pre-configured EVaults through a GenericFactory
 abstract contract BaseProductLine {
     // Constants
 
@@ -13,6 +16,7 @@ abstract contract BaseProductLine {
     uint256 constant REENTRANCYLOCK__LOCKED = 2;
 
     address public immutable vaultFactory;
+    address public immutable evc;
 
     // State
 
@@ -43,17 +47,23 @@ abstract contract BaseProductLine {
 
     // Interface
 
-    constructor(address vaultFactory_) {
+    constructor(address vaultFactory_, address evc_) {
         vaultFactory = vaultFactory_;
+        evc = evc_;
 
         emit Genesis();
     }
 
-    function makeNewVaultInternal(address asset, bool upgradeable) internal returns (IEVault) {
-        address newVault = GenericFactory(vaultFactory).createProxy(upgradeable, abi.encodePacked(asset));
+    function makeNewVaultInternal(address asset, bool upgradeable, address oracle, address unitOfAccount) internal returns (IEVault) {
+        address newVault = GenericFactory(vaultFactory).createProxy(upgradeable, abi.encodePacked(asset, oracle, unitOfAccount));
 
         vaultLookup[newVault] = true;
         vaultList.push(newVault);
+
+        if (isEVCCompatible(asset)) {
+            uint32 flags = IEVault(newVault).configFlags();
+            IEVault(newVault).setConfigFlags(flags | CFG_EVC_COMPATIBLE_ASSET);
+        }
 
         emit VaultCreated(newVault, asset, upgradeable);
 
@@ -88,5 +98,10 @@ abstract contract BaseProductLine {
         for (uint256 i; i < end - start; ++i) {
             list[i] = vaultList[start + i];
         }
+    }
+
+    function isEVCCompatible(address asset) private view returns (bool) {
+        (bool success, bytes memory data) = asset.staticcall(abi.encodeCall(IGovernance.EVC, ()));
+        return success && data.length >= 32 && abi.decode(data, (address)) == address(evc);
     }
 }
