@@ -273,8 +273,8 @@ abstract contract GovernanceModule is IGovernance, Base, BalanceUtils, BorrowUti
         VaultData storage vs = vaultStorage();
 
         // Overwrite bits of locked ops with their currently set values
-        newDisabledOps = (newDisabledOps & ~vs.lockedOps.toUint32())
-            | (vs.disabledOps.toUint32() & vs.lockedOps.toUint32());
+        newDisabledOps =
+            (newDisabledOps & ~vs.lockedOps.toUint32()) | (vs.disabledOps.toUint32() & vs.lockedOps.toUint32());
 
         // vault is updated because:
         // if disabling interest accrual - the pending interest should be accrued

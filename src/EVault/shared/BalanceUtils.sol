@@ -22,8 +22,7 @@ abstract contract BalanceUtils is Base {
         if (account == address(0)) revert E_BadSharesReceiver();
 
         VaultData storage vs = vaultStorage();
-        (Shares origBalance, bool balanceForwarderEnabled) =
-            vs.users[account].getBalanceAndBalanceForwarder();
+        (Shares origBalance, bool balanceForwarderEnabled) = vs.users[account].getBalanceAndBalanceForwarder();
         Shares newBalance = origBalance + amount;
 
         vs.users[account].setBalance(newBalance);
@@ -47,8 +46,7 @@ abstract contract BalanceUtils is Base {
     ) internal {
         VaultData storage vs = vaultStorage();
 
-        (Shares origBalance, bool balanceForwarderEnabled) =
-            vs.users[account].getBalanceAndBalanceForwarder();
+        (Shares origBalance, bool balanceForwarderEnabled) = vs.users[account].getBalanceAndBalanceForwarder();
         if (origBalance < amount) revert E_InsufficientBalance();
 
         Shares newBalance;
@@ -71,11 +69,9 @@ abstract contract BalanceUtils is Base {
         VaultData storage vs = vaultStorage();
 
         if (!amount.isZero()) {
-            (Shares origFromBalance, bool fromBalanceForwarderEnabled) =
-                vs.users[from].getBalanceAndBalanceForwarder();
+            (Shares origFromBalance, bool fromBalanceForwarderEnabled) = vs.users[from].getBalanceAndBalanceForwarder();
 
-            (Shares origToBalance, bool toBalanceForwarderEnabled) =
-                vs.users[to].getBalanceAndBalanceForwarder();
+            (Shares origToBalance, bool toBalanceForwarderEnabled) = vs.users[to].getBalanceAndBalanceForwarder();
 
             if (origFromBalance < amount) revert E_InsufficientBalance();
 
