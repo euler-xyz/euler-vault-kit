@@ -74,20 +74,6 @@ abstract contract BaseProductLine {
         return IEVault(newVault);
     }
 
-    function getTokenName(address asset) internal view returns (string memory) {
-        // Handle MKR like tokens returning bytes32
-        (bool success, bytes memory data) = address(asset).staticcall(abi.encodeWithSelector(IERC20.name.selector));
-        if (!success) RevertBytes.revertBytes(data);
-        return data.length == 32 ? string(data) : abi.decode(data, (string));
-    }
-
-    function getTokenSymbol(address asset) internal view returns (string memory) {
-        // Handle MKR like tokens returning bytes32
-        (bool success, bytes memory data) = address(asset).staticcall(abi.encodeWithSelector(IERC20.symbol.selector));
-        if (!success) RevertBytes.revertBytes(data);
-        return data.length == 32 ? string(data) : abi.decode(data, (string));
-    }
-
     // Getters
 
     function getVaultListLength() external view returns (uint256) {
@@ -102,6 +88,20 @@ abstract contract BaseProductLine {
         for (uint256 i; i < end - start; ++i) {
             list[i] = vaultList[start + i];
         }
+    }
+
+    function getTokenName(address asset) internal view returns (string memory) {
+        // Handle MKR like tokens returning bytes32
+        (bool success, bytes memory data) = address(asset).staticcall(abi.encodeWithSelector(IERC20.name.selector));
+        if (!success) RevertBytes.revertBytes(data);
+        return data.length == 32 ? string(data) : abi.decode(data, (string));
+    }
+
+    function getTokenSymbol(address asset) internal view returns (string memory) {
+        // Handle MKR like tokens returning bytes32
+        (bool success, bytes memory data) = address(asset).staticcall(abi.encodeWithSelector(IERC20.symbol.selector));
+        if (!success) RevertBytes.revertBytes(data);
+        return data.length == 32 ? string(data) : abi.decode(data, (string));
     }
 
     function isEVCCompatible(address asset) private view returns (bool) {
