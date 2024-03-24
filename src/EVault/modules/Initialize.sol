@@ -47,12 +47,12 @@ abstract contract InitializeModule is IInitialize, Base, BorrowUtils {
 
         // Initialize storage
 
-        VaultData storage _vaultStorage = vaultStorage();
+        VaultData storage vs = vaultStorage();
 
-        _vaultStorage.lastInterestAccumulatorUpdate = uint48(block.timestamp);
-        _vaultStorage.interestAccumulator = INITIAL_INTEREST_ACCUMULATOR;
-        _vaultStorage.interestFee = DEFAULT_INTEREST_FEE.toConfigAmount();
-        _vaultStorage.creator = _vaultStorage.governorAdmin = _vaultStorage.pauseGuardian = proxyCreator;
+        vs.lastInterestAccumulatorUpdate = uint48(block.timestamp);
+        vs.interestAccumulator = INITIAL_INTEREST_ACCUMULATOR;
+        vs.interestFee = DEFAULT_INTEREST_FEE.toConfigAmount();
+        vs.creator = vs.governorAdmin = vs.pauseGuardian = proxyCreator;
 
         resetSnapshot();
 

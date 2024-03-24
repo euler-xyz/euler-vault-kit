@@ -158,9 +158,9 @@ abstract contract GovernanceModule is IGovernance, Base, BalanceUtils, BorrowUti
 
         if (vaultCache.accumulatedFees.isZero()) return;
 
-        VaultData storage _vaultStorage = vaultStorage();
+        VaultData storage vs = vaultStorage();
         (address protocolReceiver, uint16 protocolFee) = protocolConfig.protocolFeeConfig(address(this));
-        address governorReceiver = _vaultStorage.feeReceiver;
+        address governorReceiver = vs.feeReceiver;
 
         if (governorReceiver == address(0)) {
             protocolFee = 1e4; // governor forfeits fees
@@ -171,10 +171,10 @@ abstract contract GovernanceModule is IGovernance, Base, BalanceUtils, BorrowUti
         Shares governorShares = vaultCache.accumulatedFees.mulDiv(1e4 - protocolFee, 1e4);
         Shares protocolShares = vaultCache.accumulatedFees - governorShares;
 
-        _vaultStorage.accumulatedFees = vaultCache.accumulatedFees = Shares.wrap(0);
+        vs.accumulatedFees = vaultCache.accumulatedFees = Shares.wrap(0);
 
         // Decrease totalShares because increaseBalance will increase it by that total amount
-        _vaultStorage.totalShares = vaultCache.totalShares = vaultCache.totalShares - vaultCache.accumulatedFees;
+        vs.totalShares = vaultCache.totalShares = vaultCache.totalShares - vaultCache.accumulatedFees;
 
         // For the Deposit events in increaseBalance the assets amount is zero - the shares are covered with the accrued interest
         if (!governorShares.isZero()) {
@@ -223,18 +223,18 @@ abstract contract GovernanceModule is IGovernance, Base, BalanceUtils, BorrowUti
         // self-collateralization is not allowed
         if (collateral == address(this)) revert E_InvalidLTVAsset();
 
-        VaultData storage _vaultStorage = vaultStorage();
+        VaultData storage vs = vaultStorage();
         ConfigAmount newLTVAmount = ltv.toConfigAmount();
-        LTVConfig memory origLTV = _vaultStorage.ltvLookup[collateral];
+        LTVConfig memory origLTV = vs.ltvLookup[collateral];
 
         // If new LTV is higher than the previous, or the same, it should take effect immediately
         if (!(newLTVAmount < origLTV.getLTV(LTVType.LIQUIDATION)) && rampDuration > 0) revert E_LTVRamp();
 
         LTVConfig memory newLTV = origLTV.setLTV(newLTVAmount, rampDuration);
 
-        _vaultStorage.ltvLookup[collateral] = newLTV;
+        vs.ltvLookup[collateral] = newLTV;
 
-        if (!origLTV.initialized) _vaultStorage.ltvList.push(collateral);
+        if (!origLTV.initialized) vs.ltvList.push(collateral);
 
         emit GovSetLTV(
             collateral,
@@ -257,9 +257,9 @@ abstract contract GovernanceModule is IGovernance, Base, BalanceUtils, BorrowUti
     function setInterestRateModel(address newModel) public virtual nonReentrant governorOnly {
         VaultCache memory vaultCache = updateVault();
 
-        VaultData storage _vaultStorage = vaultStorage();
-        _vaultStorage.interestRateModel = newModel;
-        _vaultStorage.interestRate = 0;
+        VaultData storage vs = vaultStorage();
+        vs.interestRateModel = newModel;
+        vs.interestRate = 0;
 
         uint256 newInterestRate = computeInterestRate(vaultCache);
 
@@ -270,19 +270,19 @@ abstract contract GovernanceModule is IGovernance, Base, BalanceUtils, BorrowUti
 
     /// @inheritdoc IGovernance
     function setDisabledOps(uint32 newDisabledOps) public virtual nonReentrant governorOrPauseGuardianOnly {
-        VaultData storage _vaultStorage = vaultStorage();
+        VaultData storage vs = vaultStorage();
 
         // Overwrite bits of locked ops with their currently set values
-        newDisabledOps = (newDisabledOps & ~_vaultStorage.lockedOps.toUint32())
-            | (_vaultStorage.disabledOps.toUint32() & _vaultStorage.lockedOps.toUint32());
+        newDisabledOps = (newDisabledOps & ~vs.lockedOps.toUint32())
+            | (vs.disabledOps.toUint32() & vs.lockedOps.toUint32());
 
         // vault is updated because:
         // if disabling interest accrual - the pending interest should be accrued
         // if re-enabling interest - last updated timestamp needs to be reset to skip the disabled period
         VaultCache memory vaultCache = updateVault();
-        logVaultStatus(vaultCache, _vaultStorage.interestRate);
+        logVaultStatus(vaultCache, vs.interestRate);
 
-        _vaultStorage.disabledOps = Flags.wrap(newDisabledOps);
+        vs.disabledOps = Flags.wrap(newDisabledOps);
         emit GovSetDisabledOps(newDisabledOps);
     }
 
@@ -307,9 +307,9 @@ abstract contract GovernanceModule is IGovernance, Base, BalanceUtils, BorrowUti
         AmountCap newBorrowCap = AmountCap.wrap(borrowCap);
         if (borrowCap > 0 && newBorrowCap.toUint() > MAX_SANE_AMOUNT) revert E_BadBorrowCap();
 
-        VaultData storage _vaultStorage = vaultStorage();
-        _vaultStorage.supplyCap = newSupplyCap;
-        _vaultStorage.borrowCap = newBorrowCap;
+        VaultData storage vs = vaultStorage();
+        vs.supplyCap = newSupplyCap;
+        vs.borrowCap = newBorrowCap;
 
         emit GovSetCaps(supplyCap, borrowCap);
     }
@@ -318,15 +318,15 @@ abstract contract GovernanceModule is IGovernance, Base, BalanceUtils, BorrowUti
     function setInterestFee(uint16 newInterestFee) public virtual nonReentrant governorOnly {
         // Update vault to apply the current interest fee to the pending interest
         VaultCache memory vaultCache = updateVault();
-        VaultData storage _vaultStorage = vaultStorage();
-        logVaultStatus(vaultCache, _vaultStorage.interestRate);
+        VaultData storage vs = vaultStorage();
+        logVaultStatus(vaultCache, vs.interestRate);
 
         // Interest fees in guaranteed range are always allowed, otherwise ask protocolConfig
         if (newInterestFee < GUARANTEED_INTEREST_FEE_MIN || newInterestFee > GUARANTEED_INTEREST_FEE_MAX) {
             if (!protocolConfig.isValidInterestFee(address(this), newInterestFee)) revert E_BadFee();
         }
 
-        _vaultStorage.interestFee = newInterestFee.toConfigAmount();
+        vs.interestFee = newInterestFee.toConfigAmount();
 
         emit GovSetInterestFee(newInterestFee);
     }

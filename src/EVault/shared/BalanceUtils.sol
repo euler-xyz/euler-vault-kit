@@ -21,13 +21,13 @@ abstract contract BalanceUtils is Base {
     ) internal {
         if (account == address(0)) revert E_BadSharesReceiver();
 
-        VaultData storage _vaultStorage = vaultStorage();
+        VaultData storage vs = vaultStorage();
         (Shares origBalance, bool balanceForwarderEnabled) =
-            _vaultStorage.users[account].getBalanceAndBalanceForwarder();
+            vs.users[account].getBalanceAndBalanceForwarder();
         Shares newBalance = origBalance + amount;
 
-        _vaultStorage.users[account].setBalance(newBalance);
-        _vaultStorage.totalShares = vaultCache.totalShares = vaultCache.totalShares + amount;
+        vs.users[account].setBalance(newBalance);
+        vs.totalShares = vaultCache.totalShares = vaultCache.totalShares + amount;
 
         if (balanceForwarderEnabled) {
             tryBalanceTrackerHook(account, newBalance.toUint(), false);
@@ -45,10 +45,10 @@ abstract contract BalanceUtils is Base {
         Shares amount,
         Assets assets
     ) internal {
-        VaultData storage _vaultStorage = vaultStorage();
+        VaultData storage vs = vaultStorage();
 
         (Shares origBalance, bool balanceForwarderEnabled) =
-            _vaultStorage.users[account].getBalanceAndBalanceForwarder();
+            vs.users[account].getBalanceAndBalanceForwarder();
         if (origBalance < amount) revert E_InsufficientBalance();
 
         Shares newBalance;
@@ -56,8 +56,8 @@ abstract contract BalanceUtils is Base {
             newBalance = origBalance - amount;
         }
 
-        _vaultStorage.users[account].setBalance(newBalance);
-        _vaultStorage.totalShares = vaultCache.totalShares = vaultCache.totalShares - amount;
+        vs.users[account].setBalance(newBalance);
+        vs.totalShares = vaultCache.totalShares = vaultCache.totalShares - amount;
 
         if (balanceForwarderEnabled) {
             tryBalanceTrackerHook(account, newBalance.toUint(), isControlCollateralInProgress());
@@ -68,14 +68,14 @@ abstract contract BalanceUtils is Base {
     }
 
     function transferBalance(address from, address to, Shares amount) internal {
-        VaultData storage _vaultStorage = vaultStorage();
+        VaultData storage vs = vaultStorage();
 
         if (!amount.isZero()) {
             (Shares origFromBalance, bool fromBalanceForwarderEnabled) =
-                _vaultStorage.users[from].getBalanceAndBalanceForwarder();
+                vs.users[from].getBalanceAndBalanceForwarder();
 
             (Shares origToBalance, bool toBalanceForwarderEnabled) =
-                _vaultStorage.users[to].getBalanceAndBalanceForwarder();
+                vs.users[to].getBalanceAndBalanceForwarder();
 
             if (origFromBalance < amount) revert E_InsufficientBalance();
 
@@ -85,8 +85,8 @@ abstract contract BalanceUtils is Base {
             }
             Shares newToBalance = origToBalance + amount;
 
-            _vaultStorage.users[from].setBalance(newFromBalance);
-            _vaultStorage.users[to].setBalance(newToBalance);
+            vs.users[from].setBalance(newFromBalance);
+            vs.users[to].setBalance(newToBalance);
 
             if (fromBalanceForwarderEnabled) {
                 tryBalanceTrackerHook(from, newFromBalance.toUint(), isControlCollateralInProgress());
@@ -111,15 +111,15 @@ abstract contract BalanceUtils is Base {
 
     function decreaseAllowance(address owner, address spender, Shares amount) internal {
         if (amount.isZero()) return;
-        VaultData storage _vaultStorage = vaultStorage();
+        VaultData storage vs = vaultStorage();
 
-        uint256 allowance = _vaultStorage.users[owner].eTokenAllowance[spender];
+        uint256 allowance = vs.users[owner].eTokenAllowance[spender];
         if (owner != spender && allowance != type(uint256).max) {
             if (allowance < amount.toUint()) revert E_InsufficientAllowance();
             unchecked {
                 allowance -= amount.toUint();
             }
-            _vaultStorage.users[owner].eTokenAllowance[spender] = allowance;
+            vs.users[owner].eTokenAllowance[spender] = allowance;
             emit Approval(owner, spender, allowance);
         }
     }

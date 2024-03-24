@@ -18,14 +18,14 @@ contract Cache is VaultStorage, Errors {
     // If different from VaultStorage, updates VaultStorage
     function updateVault() internal returns (VaultCache memory vaultCache) {
         if (initVaultCache(vaultCache)) {
-            VaultData storage _vaultStorage = vaultStorage();
-            _vaultStorage.lastInterestAccumulatorUpdate = vaultCache.lastInterestAccumulatorUpdate;
-            _vaultStorage.accumulatedFees = vaultCache.accumulatedFees;
+            VaultData storage vs = vaultStorage();
+            vs.lastInterestAccumulatorUpdate = vaultCache.lastInterestAccumulatorUpdate;
+            vs.accumulatedFees = vaultCache.accumulatedFees;
 
-            _vaultStorage.totalShares = vaultCache.totalShares;
-            _vaultStorage.totalBorrows = vaultCache.totalBorrows;
+            vs.totalShares = vaultCache.totalShares;
+            vs.totalBorrows = vaultCache.totalBorrows;
 
-            _vaultStorage.interestAccumulator = vaultCache.interestAccumulator;
+            vs.interestAccumulator = vaultCache.interestAccumulator;
         }
     }
 
@@ -45,21 +45,21 @@ contract Cache is VaultStorage, Errors {
         (vaultCache.asset, vaultCache.oracle, vaultCache.unitOfAccount) = ProxyUtils.metadata();
 
         // Storage loads
-        VaultData storage _vaultStorage = vaultStorage();
-        vaultCache.lastInterestAccumulatorUpdate = _vaultStorage.lastInterestAccumulatorUpdate;
-        vaultCache.cash = _vaultStorage.cash;
-        vaultCache.supplyCap = _vaultStorage.supplyCap.toUint();
-        vaultCache.borrowCap = _vaultStorage.borrowCap.toUint();
-        vaultCache.disabledOps = _vaultStorage.disabledOps;
-        vaultCache.snapshotInitialized = _vaultStorage.snapshotInitialized;
+        VaultData storage vs = vaultStorage();
+        vaultCache.lastInterestAccumulatorUpdate = vs.lastInterestAccumulatorUpdate;
+        vaultCache.cash = vs.cash;
+        vaultCache.supplyCap = vs.supplyCap.toUint();
+        vaultCache.borrowCap = vs.borrowCap.toUint();
+        vaultCache.disabledOps = vs.disabledOps;
+        vaultCache.snapshotInitialized = vs.snapshotInitialized;
 
-        vaultCache.totalShares = _vaultStorage.totalShares;
-        vaultCache.totalBorrows = _vaultStorage.totalBorrows;
+        vaultCache.totalShares = vs.totalShares;
+        vaultCache.totalBorrows = vs.totalBorrows;
 
-        vaultCache.accumulatedFees = _vaultStorage.accumulatedFees;
-        vaultCache.configFlags = _vaultStorage.configFlags;
+        vaultCache.accumulatedFees = vs.accumulatedFees;
+        vaultCache.configFlags = vs.configFlags;
 
-        vaultCache.interestAccumulator = _vaultStorage.interestAccumulator;
+        vaultCache.interestAccumulator = vs.interestAccumulator;
 
         // Update interest accumulator and fees balance
         uint256 deltaT = block.timestamp - vaultCache.lastInterestAccumulatorUpdate;
@@ -74,8 +74,8 @@ contract Cache is VaultStorage, Errors {
 
             // Compute new values. Use full precision for intermediate results.
 
-            ConfigAmount interestFee = _vaultStorage.interestFee;
-            uint256 interestRate = _vaultStorage.interestRate;
+            ConfigAmount interestFee = vs.interestFee;
+            uint256 interestRate = vs.interestRate;
 
             uint256 newInterestAccumulator = vaultCache.interestAccumulator;
 

@@ -27,12 +27,12 @@ abstract contract BorrowUtils is Base {
         private
         returns (Owed newOwed, Owed prevOwed)
     {
-        VaultData storage _vaultStorage = vaultStorage();
-        prevOwed = _vaultStorage.users[account].getOwed();
+        VaultData storage vs = vaultStorage();
+        prevOwed = vs.users[account].getOwed();
         newOwed = getCurrentOwed(vaultCache, account, prevOwed);
 
-        _vaultStorage.users[account].setOwed(newOwed);
-        _vaultStorage.users[account].interestAccumulator = vaultCache.interestAccumulator;
+        vs.users[account].setOwed(newOwed);
+        vs.users[account].interestAccumulator = vaultCache.interestAccumulator;
     }
 
     function increaseBorrow(VaultCache memory vaultCache, address account, Assets assets) internal {
@@ -41,9 +41,9 @@ abstract contract BorrowUtils is Base {
         Owed amount = assets.toOwed();
         owed = owed + amount;
 
-        VaultData storage _vaultStorage = vaultStorage();
-        _vaultStorage.users[account].setOwed(owed);
-        _vaultStorage.totalBorrows = vaultCache.totalBorrows = vaultCache.totalBorrows + amount;
+        VaultData storage vs = vaultStorage();
+        vs.users[account].setOwed(owed);
+        vs.totalBorrows = vaultCache.totalBorrows = vaultCache.totalBorrows + amount;
 
         logBorrowChange(account, prevOwed, owed);
     }
@@ -59,9 +59,9 @@ abstract contract BorrowUtils is Base {
             owedRemaining = (owed - amount).toOwed();
         }
 
-        VaultData storage _vaultStorage = vaultStorage();
-        _vaultStorage.users[account].setOwed(owedRemaining);
-        _vaultStorage.totalBorrows = vaultCache.totalBorrows =
+        VaultData storage vs = vaultStorage();
+        vs.users[account].setOwed(owedRemaining);
+        vs.totalBorrows = vaultCache.totalBorrows =
             vaultCache.totalBorrows > owedExact ? vaultCache.totalBorrows - owedExact + owedRemaining : owedRemaining;
 
         logBorrowChange(account, prevOwed, owedRemaining);
@@ -87,9 +87,9 @@ abstract contract BorrowUtils is Base {
 
         toOwed = toOwed + amount;
 
-        VaultData storage _vaultStorage = vaultStorage();
-        _vaultStorage.users[from].setOwed(fromOwed);
-        _vaultStorage.users[to].setOwed(toOwed);
+        VaultData storage vs = vaultStorage();
+        vs.users[from].setOwed(fromOwed);
+        vs.users[to].setOwed(toOwed);
 
         logBorrowChange(from, fromOwedPrev, fromOwed);
         logBorrowChange(to, toOwedPrev, toOwed);
@@ -97,9 +97,9 @@ abstract contract BorrowUtils is Base {
 
     function computeInterestRate(VaultCache memory vaultCache) internal virtual returns (uint256) {
         // single sload
-        VaultData storage _vaultStorage = vaultStorage();
-        address irm = _vaultStorage.interestRateModel;
-        uint256 newInterestRate = _vaultStorage.interestRate;
+        VaultData storage vs = vaultStorage();
+        address irm = vs.interestRateModel;
+        uint256 newInterestRate = vs.interestRate;
 
         if (irm != address(0)) {
             (bool success, bytes memory data) = irm.call(
@@ -121,9 +121,9 @@ abstract contract BorrowUtils is Base {
 
     function computeInterestRateView(VaultCache memory vaultCache) internal view virtual returns (uint256) {
         // single sload
-        VaultData storage _vaultStorage = vaultStorage();
-        address irm = _vaultStorage.interestRateModel;
-        uint256 newInterestRate = _vaultStorage.interestRate;
+        VaultData storage vs = vaultStorage();
+        address irm = vs.interestRateModel;
+        uint256 newInterestRate = vs.interestRate;
 
         if (irm != address(0) && isVaultStatusCheckDeferred()) {
             (bool success, bytes memory data) = irm.staticcall(
