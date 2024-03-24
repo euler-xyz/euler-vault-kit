@@ -34,7 +34,7 @@ abstract contract LiquidationModule is ILiquidation, Base, BalanceUtils, Liquidi
         returns (uint256 maxRepay, uint256 maxYield)
     {
         LiquidationCache memory liqCache =
-            calculateLiquidation(loadMarket(), liquidator, violator, collateral, type(uint256).max);
+            calculateLiquidation(loadVault(), liquidator, violator, collateral, type(uint256).max);
 
         maxRepay = liqCache.repay.toUint();
         maxYield = liqCache.yieldBalance;
@@ -199,7 +199,7 @@ abstract contract LiquidationModule is ILiquidation, Base, BalanceUtils, Liquidi
         // Handle debt socialization
 
         if (
-            marketCache.configFlags.isNotSet(CFG_DONT_SOCIALIZE_DEBT) && liqCache.owed > liqCache.repay
+            vaultCache.configFlags.isNotSet(CFG_DONT_SOCIALIZE_DEBT) && liqCache.owed > liqCache.repay
                 && checkNoCollateral(liqCache.violator, liqCache.collaterals)
         ) {
             Assets owedRemaining = liqCache.owed - liqCache.repay;

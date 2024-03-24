@@ -23,25 +23,25 @@ abstract contract VaultModule is IVault, Base, AssetTransfers, BalanceUtils {
 
     /// @inheritdoc IERC4626
     function totalAssets() public view virtual nonReentrantView returns (uint256) {
-        VaultCache memory vaultCache = loadMarket();
+        VaultCache memory vaultCache = loadVault();
         return totalAssetsInternal(vaultCache);
     }
 
     /// @inheritdoc IERC4626
     function convertToAssets(uint256 shares) public view virtual nonReentrantView returns (uint256) {
-        VaultCache memory vaultCache = loadMarket();
+        VaultCache memory vaultCache = loadVault();
         return shares.toShares().toAssetsDown(vaultCache).toUint();
     }
 
     /// @inheritdoc IERC4626
     function convertToShares(uint256 assets) public view virtual nonReentrantView returns (uint256) {
-        VaultCache memory vaultCache = loadMarket();
+        VaultCache memory vaultCache = loadVault();
         return assets.toAssets().toSharesDown(vaultCache).toUint();
     }
 
     /// @inheritdoc IERC4626
     function maxDeposit(address account) public view virtual nonReentrantView returns (uint256) {
-        VaultCache memory vaultCache = loadMarket();
+        VaultCache memory vaultCache = loadVault();
         if (vaultCache.disabledOps.isSet(OP_DEPOSIT)) return 0;
 
         return maxDepositInternal(vaultCache, account);
@@ -54,7 +54,7 @@ abstract contract VaultModule is IVault, Base, AssetTransfers, BalanceUtils {
 
     /// @inheritdoc IERC4626
     function maxMint(address account) public view virtual nonReentrantView returns (uint256) {
-        VaultCache memory vaultCache = loadMarket();
+        VaultCache memory vaultCache = loadVault();
 
         if (vaultCache.disabledOps.isSet(OP_MINT)) return 0;
         return maxDepositInternal(vaultCache, account).toAssets().toSharesDown(vaultCache).toUint();
@@ -62,13 +62,13 @@ abstract contract VaultModule is IVault, Base, AssetTransfers, BalanceUtils {
 
     /// @inheritdoc IERC4626
     function previewMint(uint256 shares) public view virtual nonReentrantView returns (uint256) {
-        VaultCache memory vaultCache = loadMarket();
+        VaultCache memory vaultCache = loadVault();
         return shares.toShares().toAssetsUp(vaultCache).toUint();
     }
 
     /// @inheritdoc IERC4626
     function maxWithdraw(address owner) public view virtual nonReentrantView returns (uint256) {
-        VaultCache memory vaultCache = loadMarket();
+        VaultCache memory vaultCache = loadVault();
         if (vaultCache.disabledOps.isSet(OP_WITHDRAW)) return 0;
 
         return maxRedeemInternal(owner).toAssetsDown(vaultCache).toUint();
@@ -76,13 +76,13 @@ abstract contract VaultModule is IVault, Base, AssetTransfers, BalanceUtils {
 
     /// @inheritdoc IERC4626
     function previewWithdraw(uint256 assets) public view virtual nonReentrantView returns (uint256) {
-        VaultCache memory vaultCache = loadMarket();
+        VaultCache memory vaultCache = loadVault();
         return assets.toAssets().toSharesUp(vaultCache).toUint();
     }
 
     /// @inheritdoc IERC4626
     function maxRedeem(address owner) public view virtual nonReentrantView returns (uint256) {
-        VaultCache memory vaultCache = loadMarket();
+        VaultCache memory vaultCache = loadVault();
         if (vaultCache.disabledOps.isSet(OP_REDEEM)) return 0;
 
         return maxRedeemInternal(owner).toUint();
@@ -95,12 +95,12 @@ abstract contract VaultModule is IVault, Base, AssetTransfers, BalanceUtils {
 
     /// @inheritdoc IVault
     function accumulatedFees() public view virtual nonReentrantView returns (uint256) {
-        return loadMarket().accumulatedFees.toUint();
+        return loadVault().accumulatedFees.toUint();
     }
 
     /// @inheritdoc IVault
     function accumulatedFeesAssets() public view virtual nonReentrantView returns (uint256) {
-        VaultCache memory vaultCache = loadMarket();
+        VaultCache memory vaultCache = loadVault();
 
         return vaultCache.accumulatedFees.toAssetsDown(vaultCache).toUint();
     }
@@ -250,7 +250,7 @@ abstract contract VaultModule is IVault, Base, AssetTransfers, BalanceUtils {
             }
         }
 
-        VaultCache memory vaultCache = loadMarket();
+        VaultCache memory vaultCache = loadVault();
 
         Shares cash = vaultCache.cash.toSharesDown(vaultCache);
         max = max > cash ? cash : max;

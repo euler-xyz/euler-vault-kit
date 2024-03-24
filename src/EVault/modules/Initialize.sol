@@ -59,7 +59,7 @@ abstract contract InitializeModule is IInitialize, Base, BorrowUtils {
         // Emit logs
 
         emit EVaultCreated(proxyCreator, address(asset), dToken);
-        logMarketStatus(loadMarket(), 0);
+        logVaultStatus(loadVault(), 0);
     }
 
     // prevent initialization of the implementation contract

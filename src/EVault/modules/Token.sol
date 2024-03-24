@@ -31,7 +31,7 @@ abstract contract TokenModule is IToken, Base, BalanceUtils {
 
     /// @inheritdoc IERC20
     function totalSupply() public view virtual nonReentrantView returns (uint256) {
-        return loadMarket().totalShares.toUint();
+        return loadVault().totalShares.toUint();
     }
 
     /// @inheritdoc IERC20

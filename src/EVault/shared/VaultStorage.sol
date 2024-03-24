@@ -12,7 +12,7 @@ abstract contract VaultStorage {
     /// VaultStorageStruct is wrapping VaultData under the same slot for ERC7201 annotation.
     /// @custom:storage-location erc7201:euler.evault.storage.Vault
     struct VaultStorageStruct {
-        VaultData market;
+        VaultData vault;
     }
 
     function vaultStorage() internal pure returns (VaultData storage data) {

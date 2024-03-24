@@ -19,7 +19,7 @@ abstract contract RiskManagerModule is IRiskManager, Base, LiquidityUtils {
         nonReentrantView
         returns (uint256 collateralValue, uint256 liabilityValue)
     {
-        VaultCache memory vaultCache = loadMarket();
+        VaultCache memory vaultCache = loadVault();
 
         verifyController(account);
         address[] memory collaterals = getCollaterals(account);
@@ -36,7 +36,7 @@ abstract contract RiskManagerModule is IRiskManager, Base, LiquidityUtils {
         nonReentrantView
         returns (address[] memory collaterals, uint256[] memory collateralValues, uint256 liabilityValue)
     {
-        VaultCache memory vaultCache = loadMarket();
+        VaultCache memory vaultCache = loadVault();
 
         verifyController(account);
         validateOracle(vaultCache);
@@ -73,7 +73,7 @@ abstract contract RiskManagerModule is IRiskManager, Base, LiquidityUtils {
         onlyEVCChecks
         returns (bytes4 magicValue)
     {
-        checkLiquidity(loadMarket(), account, collaterals);
+        checkLiquidity(loadVault(), account, collaterals);
 
         magicValue = IEVCVault.checkAccountStatus.selector;
     }
@@ -82,10 +82,10 @@ abstract contract RiskManagerModule is IRiskManager, Base, LiquidityUtils {
     /// @dev See comment about re-entrancy for `checkAccountStatus`
     function checkVaultStatus() public virtual reentrantOK onlyEVCChecks returns (bytes4 magicValue) {
         // Use the updating variant to make sure interest is accrued in storage before the interest rate update
-        VaultCache memory vaultCache = updateMarket();
+        VaultCache memory vaultCache = updateVault();
         uint256 newInterestRate = computeInterestRate(vaultCache);
 
-        logMarketStatus(vaultCache, newInterestRate);
+        logVaultStatus(vaultCache, newInterestRate);
 
         // We use the snapshot to check if the borrows or supply grew, and if so then we check the borrow and supply caps.
         // If snapshot is initialized, then caps are configured.

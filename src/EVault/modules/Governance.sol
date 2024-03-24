@@ -255,7 +255,7 @@ abstract contract GovernanceModule is IGovernance, Base, BalanceUtils, BorrowUti
 
     /// @inheritdoc IGovernance
     function setInterestRateModel(address newModel) public virtual nonReentrant governorOnly {
-        VaultCache memory vaultCache = updateMarket();
+        VaultCache memory vaultCache = updateVault();
 
         VaultData storage _vaultStorage = vaultStorage();
         _vaultStorage.interestRateModel = newModel;
@@ -263,7 +263,7 @@ abstract contract GovernanceModule is IGovernance, Base, BalanceUtils, BorrowUti
 
         uint256 newInterestRate = computeInterestRate(vaultCache);
 
-        logMarketStatus(vaultCache, newInterestRate);
+        logVaultStatus(vaultCache, newInterestRate);
 
         emit GovSetInterestRateModel(newModel);
     }
@@ -276,11 +276,11 @@ abstract contract GovernanceModule is IGovernance, Base, BalanceUtils, BorrowUti
         newDisabledOps = (newDisabledOps & ~_vaultStorage.lockedOps.toUint32())
             | (_vaultStorage.disabledOps.toUint32() & _vaultStorage.lockedOps.toUint32());
 
-        // market is updated because:
+        // vault is updated because:
         // if disabling interest accrual - the pending interest should be accrued
         // if re-enabling interest - last updated timestamp needs to be reset to skip the disabled period
-        VaultCache memory vaultCache = updateMarket();
-        logMarketStatus(vaultCache, _vaultStorage.interestRate);
+        VaultCache memory vaultCache = updateVault();
+        logVaultStatus(vaultCache, _vaultStorage.interestRate);
 
         _vaultStorage.disabledOps = Flags.wrap(newDisabledOps);
         emit GovSetDisabledOps(newDisabledOps);
@@ -300,26 +300,26 @@ abstract contract GovernanceModule is IGovernance, Base, BalanceUtils, BorrowUti
 
     /// @inheritdoc IGovernance
     function setCaps(uint16 supplyCap, uint16 borrowCap) public virtual nonReentrant governorOnly {
-        AmountCap _supplyCap = AmountCap.wrap(supplyCap);
+        AmountCap newSupplyCap = AmountCap.wrap(supplyCap);
         // Max total assets is a sum of max pool size and max total debt, both Assets type
-        if (supplyCap > 0 && _supplyCap.toUint() > 2 * MAX_SANE_AMOUNT) revert E_BadSupplyCap();
+        if (supplyCap > 0 && newSupplyCap.toUint() > 2 * MAX_SANE_AMOUNT) revert E_BadSupplyCap();
 
-        AmountCap _borrowCap = AmountCap.wrap(borrowCap);
-        if (borrowCap > 0 && _borrowCap.toUint() > MAX_SANE_AMOUNT) revert E_BadBorrowCap();
+        AmountCap newBorrowCap = AmountCap.wrap(borrowCap);
+        if (borrowCap > 0 && newBorrowCap.toUint() > MAX_SANE_AMOUNT) revert E_BadBorrowCap();
 
         VaultData storage _vaultStorage = vaultStorage();
-        _vaultStorage.supplyCap = _supplyCap;
-        _vaultStorage.borrowCap = _borrowCap;
+        _vaultStorage.supplyCap = newSupplyCap;
+        _vaultStorage.borrowCap = newBorrowCap;
 
         emit GovSetCaps(supplyCap, borrowCap);
     }
 
     /// @inheritdoc IGovernance
     function setInterestFee(uint16 newInterestFee) public virtual nonReentrant governorOnly {
-        // Update market to apply the current interest fee to the pending interest
-        VaultCache memory vaultCache = updateMarket();
+        // Update vault to apply the current interest fee to the pending interest
+        VaultCache memory vaultCache = updateVault();
         VaultData storage _vaultStorage = vaultStorage();
-        logMarketStatus(vaultCache, _vaultStorage.interestRate);
+        logVaultStatus(vaultCache, _vaultStorage.interestRate);
 
         // Interest fees in guaranteed range are always allowed, otherwise ask protocolConfig
         if (newInterestFee < GUARANTEED_INTEREST_FEE_MIN || newInterestFee > GUARANTEED_INTEREST_FEE_MAX) {

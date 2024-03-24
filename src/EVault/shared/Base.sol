@@ -47,7 +47,7 @@ abstract contract Base is EVCClient, Cache, SnapshotStorage {
         _;
     }
 
-    // Generate a market snapshot and store it.
+    // Generate a vault snapshot and store it.
     // Queue vault and maybe account checks in the EVC (caller, current, onBehalfOf or none).
     // If needed, revert if this contract is not the controller of the authenticated account.
     // Returns the VaultCache and active account.
@@ -55,7 +55,7 @@ abstract contract Base is EVCClient, Cache, SnapshotStorage {
         internal
         returns (VaultCache memory vaultCache, address account)
     {
-        vaultCache = updateMarket();
+        vaultCache = updateVault();
 
         if (vaultCache.disabledOps.isSet(operation)) {
             revert E_OperationDisabled();
@@ -77,13 +77,13 @@ abstract contract Base is EVCClient, Cache, SnapshotStorage {
         EVCRequireStatusChecks(accountToCheck == CHECKACCOUNT_CALLER ? account : accountToCheck);
     }
 
-    function logMarketStatus(VaultCache memory a, uint256 interestRate) internal {
-        emit MarketStatus(
-            a.totalShares.toUint(),
-            a.totalBorrows.toAssetsUp().toUint(),
-            a.accumulatedFees.toUint(),
-            a.cash.toUint(),
-            a.interestAccumulator,
+    function logVaultStatus(VaultCache memory c, uint256 interestRate) internal {
+        emit VaultStatus(
+            c.totalShares.toUint(),
+            c.totalBorrows.toAssetsUp().toUint(),
+            c.accumulatedFees.toUint(),
+            c.cash.toUint(),
+            c.interestAccumulator,
             interestRate,
             block.timestamp
         );

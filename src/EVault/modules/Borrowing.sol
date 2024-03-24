@@ -23,12 +23,12 @@ abstract contract BorrowingModule is IBorrowing, Base, AssetTransfers, BalanceUt
 
     /// @inheritdoc IBorrowing
     function totalBorrows() public view virtual nonReentrantView returns (uint256) {
-        return loadMarket().totalBorrows.toAssetsUp().toUint();
+        return loadVault().totalBorrows.toAssetsUp().toUint();
     }
 
     /// @inheritdoc IBorrowing
     function totalBorrowsExact() public view virtual nonReentrantView returns (uint256) {
-        return loadMarket().totalBorrows.toUint();
+        return loadVault().totalBorrows.toUint();
     }
 
     /// @inheritdoc IBorrowing
@@ -38,22 +38,22 @@ abstract contract BorrowingModule is IBorrowing, Base, AssetTransfers, BalanceUt
 
     /// @inheritdoc IBorrowing
     function debtOf(address account) public view virtual nonReentrantView returns (uint256) {
-        return getCurrentOwed(loadMarket(), account).toAssetsUp().toUint();
+        return getCurrentOwed(loadVault(), account).toAssetsUp().toUint();
     }
 
     /// @inheritdoc IBorrowing
     function debtOfExact(address account) public view virtual nonReentrantView returns (uint256) {
-        return getCurrentOwed(loadMarket(), account).toUint();
+        return getCurrentOwed(loadVault(), account).toUint();
     }
 
     /// @inheritdoc IBorrowing
     function interestRate() public view virtual nonReentrantView returns (uint256) {
-        return computeInterestRateView(loadMarket());
+        return computeInterestRateView(loadVault());
     }
 
     /// @inheritdoc IBorrowing
     function interestAccumulator() public view virtual nonReentrantView returns (uint256) {
-        return loadMarket().interestAccumulator;
+        return loadVault().interestAccumulator;
     }
 
     /// @inheritdoc IBorrowing
@@ -70,7 +70,7 @@ abstract contract BorrowingModule is IBorrowing, Base, AssetTransfers, BalanceUt
         if (!isCollateralEnabled(account, collateral)) return 0;
 
         address[] memory collaterals = getCollaterals(account);
-        VaultCache memory vaultCache = loadMarket();
+        VaultCache memory vaultCache = loadVault();
         (uint256 totalCollateralValueRiskAdjusted, uint256 liabilityValue) =
             calculateLiquidity(vaultCache, account, collaterals, LTVType.BORROWING);
 

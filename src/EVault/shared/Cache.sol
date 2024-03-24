@@ -16,8 +16,8 @@ contract Cache is VaultStorage, Errors {
 
     // Returns an updated VaultCache
     // If different from VaultStorage, updates VaultStorage
-    function updateMarket() internal returns (VaultCache memory vaultCache) {
-        if (initMarketCache(vaultCache)) {
+    function updateVault() internal returns (VaultCache memory vaultCache) {
+        if (initVaultCache(vaultCache)) {
             VaultData storage _vaultStorage = vaultStorage();
             _vaultStorage.lastInterestAccumulatorUpdate = vaultCache.lastInterestAccumulatorUpdate;
             _vaultStorage.accumulatedFees = vaultCache.accumulatedFees;
@@ -30,14 +30,14 @@ contract Cache is VaultStorage, Errors {
     }
 
     // Returns an updated VaultCache
-    function loadMarket() internal view returns (VaultCache memory vaultCache) {
-        initMarketCache(vaultCache);
+    function loadVault() internal view returns (VaultCache memory vaultCache) {
+        initVaultCache(vaultCache);
     }
 
     // Takes a VaultCache struct, overwrites it with VaultStorage data and, if time has passed since MarkeStorage
     // was last updated, updates MarkeStorage.
     // Returns a VaultCache updated to this block.
-    function initMarketCache(VaultCache memory vaultCache) private view returns (bool dirty) {
+    function initVaultCache(VaultCache memory vaultCache) private view returns (bool dirty) {
         dirty = false;
 
         // Proxy metadata
