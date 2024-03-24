@@ -86,6 +86,22 @@ abstract contract Base is EVCClient, Cache {
         if (!success) RevertBytes.revertBytes(data);
     }
 
+    // Checks whether the operation is hookable and if so, calls the hook target and returns the result.
+    // It assumes that the hook target returns a uint256.
+    // If the hook target is not a contract, the operation is considered disabled by returning 0.
+    function validateAndCallHookView(Flags hookedOps, uint32 operation) internal view returns (uint256) {
+        if (hookedOps.isNotSet(operation)) return type(uint256).max;
+
+        address hookTarget = vaultStorage.hookTarget;
+
+        if (hookTarget.code.length == 0) return 0;
+
+        (bool success, bytes memory data) = hookTarget.staticcall(msg.data);
+
+        if (!success) RevertBytes.revertBytes(data);
+        else return abi.decode(data, (uint256));
+    }
+
     function logVaultStatus(VaultCache memory a, uint256 interestRate) internal {
         emit VaultStatus(
             a.totalShares.toUint(),
