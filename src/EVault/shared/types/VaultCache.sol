@@ -7,7 +7,7 @@ import {IPriceOracle} from "../../../interfaces/IPriceOracle.sol";
 
 import {Assets, Owed, Shares, Flags} from "./Types.sol";
 
-struct MarketCache {
+struct VaultCache {
     IERC20 asset;
     IPriceOracle oracle;
     address unitOfAccount;

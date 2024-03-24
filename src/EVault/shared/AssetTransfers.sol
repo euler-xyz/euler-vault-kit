@@ -11,23 +11,23 @@ abstract contract AssetTransfers is Base {
     using TypesLib for uint256;
     using SafeERC20Lib for IERC20;
 
-    function pullAssets(MarketCache memory marketCache, address from, Assets amount) internal {
-        marketCache.asset.safeTransferFrom(from, address(this), amount.toUint(), permit2);
-        marketStorage.cash = marketCache.cash = marketCache.cash + amount;
+    function pullAssets(VaultCache memory vaultCache, address from, Assets amount) internal {
+        vaultCache.asset.safeTransferFrom(from, address(this), amount.toUint(), permit2);
+        vaultStorage.cash = vaultCache.cash = vaultCache.cash + amount;
     }
 
-    function pushAssets(MarketCache memory marketCache, address to, Assets amount) internal {
+    function pushAssets(VaultCache memory vaultCache, address to, Assets amount) internal {
         if (
             to == address(0)
             // If the underlying asset is not EVC-compatible, do not transfer assets to any
             // address that the EVC knows to be a sub-account. Non-EVC-compatible tokens do
             // not know about sub-accounts, so the funds would be lost.
-            || (marketCache.configFlags.isNotSet(CFG_EVC_COMPATIBLE_ASSET) && isKnownSubaccount(to))
+            || (vaultCache.configFlags.isNotSet(CFG_EVC_COMPATIBLE_ASSET) && isKnownSubaccount(to))
         ) {
             revert E_BadAssetReceiver();
         }
 
-        marketStorage.cash = marketCache.cash = marketCache.cash - amount;
-        marketCache.asset.safeTransfer(to, amount.toUint());
+        vaultStorage.cash = vaultCache.cash = vaultCache.cash - amount;
+        vaultCache.asset.safeTransfer(to, amount.toUint());
     }
 }

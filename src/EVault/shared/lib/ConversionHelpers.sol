@@ -2,21 +2,21 @@
 
 pragma solidity ^0.8.0;
 
-import {MarketCache} from "../types/MarketCache.sol";
+import {VaultCache} from "../types/VaultCache.sol";
 
 library ConversionHelpers {
     // virtual deposit used in conversions between shares and assets, serving as exchange rate manipulation mitigation
     uint256 constant VIRTUAL_DEPOSIT_AMOUNT = 1e6;
 
-    function conversionTotals(MarketCache memory marketCache)
+    function conversionTotals(VaultCache memory vaultCache)
         internal
         pure
         returns (uint256 totalAssets, uint256 totalShares)
     {
         unchecked {
             totalAssets =
-                marketCache.cash.toUint() + marketCache.totalBorrows.toAssetsUp().toUint() + VIRTUAL_DEPOSIT_AMOUNT;
-            totalShares = marketCache.totalShares.toUint() + VIRTUAL_DEPOSIT_AMOUNT;
+                vaultCache.cash.toUint() + vaultCache.totalBorrows.toAssetsUp().toUint() + VIRTUAL_DEPOSIT_AMOUNT;
+            totalShares = vaultCache.totalShares.toUint() + VIRTUAL_DEPOSIT_AMOUNT;
         }
     }
 }
