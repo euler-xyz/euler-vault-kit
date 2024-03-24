@@ -27,7 +27,7 @@ abstract contract GovernanceModule is IGovernance, Base, BalanceUtils, BorrowUti
     event GovSetLTV(
         address indexed collateral, uint48 targetTimestamp, uint16 targetLTV, uint32 rampDuration, uint16 originalLTV
     );
-    event GovSetIRM(address interestRateModel);
+    event GovSetInterestRateModel(address interestRateModel);
     event GovSetHookConfig(address indexed newHookTarget, uint32 newHookedOps);
     event GovSetConfigFlags(uint32 newConfigFlags);
     event GovSetCaps(uint16 newSupplyCap, uint16 newBorrowCap);
