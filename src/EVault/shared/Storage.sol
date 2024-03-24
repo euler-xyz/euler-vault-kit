@@ -7,8 +7,7 @@ import {VaultStorage, Snapshot} from "./types/Types.sol";
 abstract contract Storage {
     bool initialized;
 
-    VaultStorage vaultStorage;
-
-    // Transient data
     Snapshot snapshot;
+
+    VaultStorage vaultStorage;
 }
