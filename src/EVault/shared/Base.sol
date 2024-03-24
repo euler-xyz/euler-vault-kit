@@ -33,29 +33,29 @@ abstract contract Base is EVCClient, Cache {
     } // documentation only
 
     modifier nonReentrant() {
-        if (marketStorage.reentrancyLocked) revert E_Reentrancy();
+        if (vaultStorage.reentrancyLocked) revert E_Reentrancy();
 
-        marketStorage.reentrancyLocked = true;
+        vaultStorage.reentrancyLocked = true;
         _;
-        marketStorage.reentrancyLocked = false;
+        vaultStorage.reentrancyLocked = false;
     }
 
     modifier nonReentrantView() {
-        if (marketStorage.reentrancyLocked) revert E_Reentrancy();
+        if (vaultStorage.reentrancyLocked) revert E_Reentrancy();
         _;
     }
 
-    // Generate a market snapshot and store it.
+    // Generate a vault snapshot and store it.
     // Queue vault and maybe account checks in the EVC (caller, current, onBehalfOf or none).
     // If needed, revert if this contract is not the controller of the authenticated account.
-    // Returns the MarketCache and active account.
+    // Returns the VaultCache and active account.
     function initOperation(uint32 operation, address accountToCheck)
         internal
-        returns (MarketCache memory marketCache, address account)
+        returns (VaultCache memory vaultCache, address account)
     {
-        marketCache = updateMarket();
+        vaultCache = updateVault();
 
-        if (marketCache.disabledOps.isSet(operation)) {
+        if (vaultCache.disabledOps.isSet(operation)) {
             revert E_OperationDisabled();
         }
 
@@ -63,11 +63,11 @@ abstract contract Base is EVCClient, Cache {
         // increased when checking the borrowing cap. Caps are not checked when the capped variables decrease (become safer).
         // For this reason, the snapshot is disabled if both caps are disabled.
         if (
-            !marketCache.snapshotInitialized
-                && (marketCache.supplyCap < type(uint256).max || marketCache.borrowCap < type(uint256).max)
+            !vaultCache.snapshotInitialized
+                && (vaultCache.supplyCap < type(uint256).max || vaultCache.borrowCap < type(uint256).max)
         ) {
-            marketStorage.snapshotInitialized = marketCache.snapshotInitialized = true;
-            snapshot.set(marketCache.cash, marketCache.totalBorrows.toAssetsUp());
+            vaultStorage.snapshotInitialized = vaultCache.snapshotInitialized = true;
+            snapshot.set(vaultCache.cash, vaultCache.totalBorrows.toAssetsUp());
         }
 
         account = EVCAuthenticateDeferred(~CONTROLLER_REQUIRED_OPS & operation == 0);
@@ -75,8 +75,8 @@ abstract contract Base is EVCClient, Cache {
         EVCRequireStatusChecks(accountToCheck == CHECKACCOUNT_CALLER ? account : accountToCheck);
     }
 
-    function logMarketStatus(MarketCache memory a, uint256 interestRate) internal {
-        emit MarketStatus(
+    function logVaultStatus(VaultCache memory a, uint256 interestRate) internal {
+        emit VaultStatus(
             a.totalShares.toUint(),
             a.totalBorrows.toAssetsUp().toUint(),
             a.accumulatedFees.toUint(),

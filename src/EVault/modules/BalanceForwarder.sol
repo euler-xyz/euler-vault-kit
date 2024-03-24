@@ -13,7 +13,7 @@ abstract contract BalanceForwarderModule is IBalanceForwarder, Base {
 
     /// @inheritdoc IBalanceForwarder
     function balanceForwarderEnabled(address account) public view virtual reentrantOK returns (bool) {
-        return marketStorage.users[account].getBalanceForwarderEnabled();
+        return vaultStorage.users[account].getBalanceForwarderEnabled();
     }
 
     /// @inheritdoc IBalanceForwarder
@@ -21,10 +21,10 @@ abstract contract BalanceForwarderModule is IBalanceForwarder, Base {
         if (address(balanceTracker) == address(0)) revert E_BalanceForwarderUnsupported();
 
         address account = EVCAuthenticate();
-        bool wasBalanceForwarderEnabled = marketStorage.users[account].getBalanceForwarderEnabled();
+        bool wasBalanceForwarderEnabled = vaultStorage.users[account].getBalanceForwarderEnabled();
 
-        marketStorage.users[account].setBalanceForwarder(true);
-        balanceTracker.balanceTrackerHook(account, marketStorage.users[account].getBalance().toUint(), false);
+        vaultStorage.users[account].setBalanceForwarder(true);
+        balanceTracker.balanceTrackerHook(account, vaultStorage.users[account].getBalance().toUint(), false);
 
         if (!wasBalanceForwarderEnabled) emit BalanceForwarderStatus(account, true);
     }
@@ -34,9 +34,9 @@ abstract contract BalanceForwarderModule is IBalanceForwarder, Base {
         if (address(balanceTracker) == address(0)) revert E_BalanceForwarderUnsupported();
 
         address account = EVCAuthenticate();
-        bool wasBalanceForwarderEnabled = marketStorage.users[account].getBalanceForwarderEnabled();
+        bool wasBalanceForwarderEnabled = vaultStorage.users[account].getBalanceForwarderEnabled();
 
-        marketStorage.users[account].setBalanceForwarder(false);
+        vaultStorage.users[account].setBalanceForwarder(false);
         balanceTracker.balanceTrackerHook(account, 0, false);
 
         if (wasBalanceForwarderEnabled) emit BalanceForwarderStatus(account, false);

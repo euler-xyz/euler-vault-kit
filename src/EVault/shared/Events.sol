@@ -28,7 +28,7 @@ abstract contract Events {
         uint256 governorShares
     );
 
-    event MarketStatus(
+    event VaultStatus(
         uint256 totalShares,
         uint256 totalBorrows,
         uint256 accumulatedFees,

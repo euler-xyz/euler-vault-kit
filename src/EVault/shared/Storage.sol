@@ -2,12 +2,12 @@
 
 pragma solidity ^0.8.0;
 
-import {MarketStorage, Snapshot} from "./types/Types.sol";
+import {VaultStorage, Snapshot} from "./types/Types.sol";
 
 abstract contract Storage {
     bool initialized;
 
-    MarketStorage marketStorage;
+    VaultStorage vaultStorage;
 
     // Transient data
     Snapshot snapshot;

@@ -23,37 +23,37 @@ abstract contract BorrowingModule is IBorrowing, Base, AssetTransfers, BalanceUt
 
     /// @inheritdoc IBorrowing
     function totalBorrows() public view virtual nonReentrantView returns (uint256) {
-        return loadMarket().totalBorrows.toAssetsUp().toUint();
+        return loadVault().totalBorrows.toAssetsUp().toUint();
     }
 
     /// @inheritdoc IBorrowing
     function totalBorrowsExact() public view virtual nonReentrantView returns (uint256) {
-        return loadMarket().totalBorrows.toUint();
+        return loadVault().totalBorrows.toUint();
     }
 
     /// @inheritdoc IBorrowing
     function cash() public view virtual nonReentrantView returns (uint256) {
-        return marketStorage.cash.toUint();
+        return vaultStorage.cash.toUint();
     }
 
     /// @inheritdoc IBorrowing
     function debtOf(address account) public view virtual nonReentrantView returns (uint256) {
-        return getCurrentOwed(loadMarket(), account).toAssetsUp().toUint();
+        return getCurrentOwed(loadVault(), account).toAssetsUp().toUint();
     }
 
     /// @inheritdoc IBorrowing
     function debtOfExact(address account) public view virtual nonReentrantView returns (uint256) {
-        return getCurrentOwed(loadMarket(), account).toUint();
+        return getCurrentOwed(loadVault(), account).toUint();
     }
 
     /// @inheritdoc IBorrowing
     function interestRate() public view virtual nonReentrantView returns (uint256) {
-        return computeInterestRateView(loadMarket());
+        return computeInterestRateView(loadVault());
     }
 
     /// @inheritdoc IBorrowing
     function interestAccumulator() public view virtual nonReentrantView returns (uint256) {
-        return loadMarket().interestAccumulator;
+        return loadVault().interestAccumulator;
     }
 
     /// @inheritdoc IBorrowing
@@ -70,9 +70,9 @@ abstract contract BorrowingModule is IBorrowing, Base, AssetTransfers, BalanceUt
         if (!isCollateralEnabled(account, collateral)) return 0;
 
         address[] memory collaterals = getCollaterals(account);
-        MarketCache memory marketCache = loadMarket();
+        VaultCache memory vaultCache = loadVault();
         (uint256 totalCollateralValueRiskAdjusted, uint256 liabilityValue) =
-            calculateLiquidity(marketCache, account, collaterals, LTVType.BORROWING);
+            calculateLiquidity(vaultCache, account, collaterals, LTVType.BORROWING);
 
         // if there is no liability or it has no value, collateral will not be locked
         if (liabilityValue == 0) return 0;
@@ -92,7 +92,7 @@ abstract contract BorrowingModule is IBorrowing, Base, AssetTransfers, BalanceUt
         uint256 extraCollateralValue = ltv.mulInv(totalCollateralValueRiskAdjusted - liabilityValue);
 
         // convert back to collateral balance (bid)
-        (uint256 collateralPrice,) = marketCache.oracle.getQuotes(1e18, collateral, marketCache.unitOfAccount);
+        (uint256 collateralPrice,) = vaultCache.oracle.getQuotes(1e18, collateral, vaultCache.unitOfAccount);
         if (collateralPrice == 0) return 0; // worthless / unpriced collateral is not locked
         uint256 extraCollateralBalance = extraCollateralValue * 1e18 / collateralPrice;
 
@@ -108,105 +108,105 @@ abstract contract BorrowingModule is IBorrowing, Base, AssetTransfers, BalanceUt
 
     /// @inheritdoc IBorrowing
     function borrow(uint256 amount, address receiver) public virtual nonReentrant returns (uint256) {
-        (MarketCache memory marketCache, address account) = initOperation(OP_BORROW, CHECKACCOUNT_CALLER);
+        (VaultCache memory vaultCache, address account) = initOperation(OP_BORROW, CHECKACCOUNT_CALLER);
 
-        Assets assets = amount == type(uint256).max ? marketCache.cash : amount.toAssets();
+        Assets assets = amount == type(uint256).max ? vaultCache.cash : amount.toAssets();
         if (assets.isZero()) return 0;
 
-        if (assets > marketCache.cash) revert E_InsufficientCash();
+        if (assets > vaultCache.cash) revert E_InsufficientCash();
 
-        increaseBorrow(marketCache, account, assets);
+        increaseBorrow(vaultCache, account, assets);
 
-        pushAssets(marketCache, receiver, assets);
+        pushAssets(vaultCache, receiver, assets);
 
         return assets.toUint();
     }
 
     /// @inheritdoc IBorrowing
     function repay(uint256 amount, address receiver) public virtual nonReentrant returns (uint256) {
-        (MarketCache memory marketCache, address account) = initOperation(OP_REPAY, CHECKACCOUNT_NONE);
+        (VaultCache memory vaultCache, address account) = initOperation(OP_REPAY, CHECKACCOUNT_NONE);
 
-        uint256 owed = getCurrentOwed(marketCache, receiver).toAssetsUp().toUint();
+        uint256 owed = getCurrentOwed(vaultCache, receiver).toAssetsUp().toUint();
 
         Assets assets = (amount == type(uint256).max ? owed : amount).toAssets();
         if (assets.isZero()) return 0;
 
-        pullAssets(marketCache, account, assets);
+        pullAssets(vaultCache, account, assets);
 
-        decreaseBorrow(marketCache, receiver, assets);
+        decreaseBorrow(vaultCache, receiver, assets);
 
         return assets.toUint();
     }
 
     /// @inheritdoc IBorrowing
     function loop(uint256 amount, address sharesReceiver) public virtual nonReentrant returns (uint256) {
-        (MarketCache memory marketCache, address account) = initOperation(OP_LOOP, CHECKACCOUNT_CALLER);
+        (VaultCache memory vaultCache, address account) = initOperation(OP_LOOP, CHECKACCOUNT_CALLER);
 
         Assets assets = amount.toAssets();
         if (assets.isZero()) return 0;
-        Shares shares = assets.toSharesUp(marketCache);
-        assets = shares.toAssetsUp(marketCache);
+        Shares shares = assets.toSharesUp(vaultCache);
+        assets = shares.toAssetsUp(vaultCache);
 
         // Mint DTokens
-        increaseBorrow(marketCache, account, assets);
+        increaseBorrow(vaultCache, account, assets);
 
         // Mint ETokens
-        increaseBalance(marketCache, sharesReceiver, account, shares, assets);
+        increaseBalance(vaultCache, sharesReceiver, account, shares, assets);
 
         return shares.toUint();
     }
 
     /// @inheritdoc IBorrowing
     function deloop(uint256 amount, address debtFrom) public virtual nonReentrant returns (uint256) {
-        (MarketCache memory marketCache, address account) = initOperation(OP_DELOOP, CHECKACCOUNT_NONE);
+        (VaultCache memory vaultCache, address account) = initOperation(OP_DELOOP, CHECKACCOUNT_NONE);
 
-        Assets owed = getCurrentOwed(marketCache, debtFrom).toAssetsUp();
+        Assets owed = getCurrentOwed(vaultCache, debtFrom).toAssetsUp();
         if (owed.isZero()) return 0;
 
         Assets assets;
         Shares shares;
 
         if (amount == type(uint256).max) {
-            shares = marketStorage.users[account].getBalance();
-            assets = shares.toAssetsDown(marketCache);
+            shares = vaultStorage.users[account].getBalance();
+            assets = shares.toAssetsDown(vaultCache);
         } else {
             assets = amount.toAssets();
-            shares = assets.toSharesUp(marketCache);
+            shares = assets.toSharesUp(vaultCache);
         }
 
         if (assets.isZero()) return 0;
 
         if (assets > owed) {
             assets = owed;
-            shares = assets.toSharesUp(marketCache);
+            shares = assets.toSharesUp(vaultCache);
         }
 
         // Burn ETokens
-        decreaseBalance(marketCache, account, account, account, shares, assets);
+        decreaseBalance(vaultCache, account, account, account, shares, assets);
 
         // Burn DTokens
-        decreaseBorrow(marketCache, debtFrom, assets);
+        decreaseBorrow(vaultCache, debtFrom, assets);
 
         return shares.toUint();
     }
 
     /// @inheritdoc IBorrowing
     function pullDebt(uint256 amount, address from) public virtual nonReentrant returns (uint256) {
-        (MarketCache memory marketCache, address account) = initOperation(OP_PULL_DEBT, CHECKACCOUNT_CALLER);
+        (VaultCache memory vaultCache, address account) = initOperation(OP_PULL_DEBT, CHECKACCOUNT_CALLER);
 
         if (from == account) revert E_SelfTransfer();
 
-        Assets assets = amount == type(uint256).max ? getCurrentOwed(marketCache, from).toAssetsUp() : amount.toAssets();
+        Assets assets = amount == type(uint256).max ? getCurrentOwed(vaultCache, from).toAssetsUp() : amount.toAssets();
 
         if (assets.isZero()) return 0;
-        transferBorrow(marketCache, from, account, assets);
+        transferBorrow(vaultCache, from, account, assets);
 
         return assets.toUint();
     }
 
     /// @inheritdoc IBorrowing
     function flashLoan(uint256 amount, bytes calldata data) public virtual nonReentrant {
-        if (marketStorage.disabledOps.isSet(OP_FLASHLOAN)) {
+        if (vaultStorage.disabledOps.isSet(OP_FLASHLOAN)) {
             revert E_OperationDisabled();
         }
 

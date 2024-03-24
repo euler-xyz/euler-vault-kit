@@ -217,7 +217,7 @@ interface IBorrowing {
     /// @param data Passed through to the onFlashLoan() callback, so contracts don't need to store transient data in storage
     function flashLoan(uint256 amount, bytes calldata data) external;
 
-    /// @notice Updates interest accumulator and totalBorrows, credits reserves, re-targets interest rate, and logs market status
+    /// @notice Updates interest accumulator and totalBorrows, credits reserves, re-targets interest rate, and logs vault status
     function touch() external;
 }
 
