@@ -179,7 +179,7 @@ contract EVault is Dispatch {
 
     function interestRateModel() public override virtual useView(MODULE_GOVERNANCE) view returns (address) {}
 
-    function hookedOps() public override virtual useView(MODULE_GOVERNANCE) view returns (uint32) {}
+    function hookConfig() public override virtual useView(MODULE_GOVERNANCE) view returns (address, uint32) {}
 
     function configFlags() public override virtual useView(MODULE_GOVERNANCE) view returns (uint32) {}
 
@@ -195,8 +195,6 @@ contract EVault is Dispatch {
 
     function oracle() public override virtual useView(MODULE_GOVERNANCE) view returns (address) {}
 
-    function hookTarget() public override virtual useView(MODULE_GOVERNANCE) view returns (address) {}
-
 
     function convertFees() public override virtual callThroughEVC use(MODULE_GOVERNANCE) {}
 
@@ -208,15 +206,13 @@ contract EVault is Dispatch {
 
     function setFeeReceiver(address newFeeReceiver) public override virtual use(MODULE_GOVERNANCE) {}
 
-    function setHookTarget(address newHookTarget) public override virtual use(MODULE_GOVERNANCE) {}
+    function setHookConfig(address newHookTarget, uint32 newHookedOps) public override virtual use(MODULE_GOVERNANCE) {}
 
     function setLTV(address collateral, uint16 ltv, uint32 rampDuration) public override virtual use(MODULE_GOVERNANCE) {}
 
     function clearLTV(address collateral) public override virtual use(MODULE_GOVERNANCE) {}
 
     function setInterestRateModel(address newModel) public override virtual use(MODULE_GOVERNANCE) {}
-
-    function setHookedOps(uint32 newHookedOps) public override virtual use(MODULE_GOVERNANCE) {}
 
     function setConfigFlags(uint32 newConfigFlags) public override virtual use(MODULE_GOVERNANCE) {}
 

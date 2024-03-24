@@ -121,6 +121,7 @@ contract EVaultTestBase is AssertionsCustomTypes, Test, DeployPermit2 {
         eTST.setInterestRateModel(address(new IRMTestDefault()));
     }
 
+    address internal SYNTH_VAULT_HOOK_TARGET = address(new MockHook());
     uint32 internal constant SYNTH_VAULT_HOOKED_OPS = OP_DEPOSIT | OP_MINT | OP_REDEEM | OP_SKIM | OP_LOOP | OP_DELOOP;
 
     function createSynthEVault(address asset) internal returns (IEVault) {
@@ -129,8 +130,7 @@ contract EVaultTestBase is AssertionsCustomTypes, Test, DeployPermit2 {
 
         v.setInterestFee(1e4);
 
-        v.setHookedOps(SYNTH_VAULT_HOOKED_OPS);
-        v.setHookTarget(address(new MockHook()));
+        v.setHookConfig(SYNTH_VAULT_HOOK_TARGET, SYNTH_VAULT_HOOKED_OPS);
 
         return v;
     }
@@ -145,6 +145,10 @@ contract MockHook {
         address asset = IEVault(msg.sender).asset();
 
         if (asset != caller()) revert E_OnlyAssetCanDeposit();
+    }
+
+    function maxDeposit(address) public view virtual returns (uint256) {
+        return type(uint256).max;
     }
 
     // all the other hooked ops are disabled

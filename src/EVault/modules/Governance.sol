@@ -24,12 +24,11 @@ abstract contract GovernanceModule is IGovernance, Base, BalanceUtils, BorrowUti
     event GovSetSymbol(string newSymbol);
     event GovSetGovernorAdmin(address indexed newGovernorAdmin);
     event GovSetFeeReceiver(address indexed newFeeReceiver);
-    event GovSetHookTarget(address indexed newHookTarget);
     event GovSetLTV(
         address indexed collateral, uint48 targetTimestamp, uint16 targetLTV, uint32 rampDuration, uint16 originalLTV
     );
     event GovSetIRM(address interestRateModel);
-    event GovSetHookedOps(uint32 newHookeddOps);
+    event GovSetHookConfig(address indexed newHookTarget, uint32 newHookedOps);
     event GovSetConfigFlags(uint32 newConfigFlags);
     event GovSetCaps(uint16 newSupplyCap, uint16 newBorrowCap);
     event GovSetInterestFee(uint16 newFee);
@@ -93,8 +92,8 @@ abstract contract GovernanceModule is IGovernance, Base, BalanceUtils, BorrowUti
     }
 
     /// @inheritdoc IGovernance
-    function hookedOps() public view virtual reentrantOK returns (uint32) {
-        return (vaultStorage.hookedOps.toUint32());
+    function hookConfig() public view virtual reentrantOK returns (address, uint32) {
+        return (vaultStorage.hookTarget, vaultStorage.hookedOps.toUint32());
     }
 
     /// @inheritdoc IGovernance
@@ -110,11 +109,6 @@ abstract contract GovernanceModule is IGovernance, Base, BalanceUtils, BorrowUti
     /// @inheritdoc IGovernance
     function feeReceiver() public view virtual reentrantOK returns (address) {
         return vaultStorage.feeReceiver;
-    }
-
-    /// @inheritdoc IGovernance
-    function hookTarget() public view virtual reentrantOK returns (address) {
-        return vaultStorage.hookTarget;
     }
 
     /// @inheritdoc IGovernance
@@ -199,12 +193,6 @@ abstract contract GovernanceModule is IGovernance, Base, BalanceUtils, BorrowUti
     }
 
     /// @inheritdoc IGovernance
-    function setHookTarget(address newHookTarget) public virtual nonReentrant governorOnly {
-        vaultStorage.hookTarget = newHookTarget;
-        emit GovSetHookTarget(newHookTarget);
-    }
-
-    /// @inheritdoc IGovernance
     function setLTV(address collateral, uint16 ltv, uint32 rampDuration) public virtual nonReentrant governorOnly {
         // self-collateralization is not allowed
         if (collateral == address(this)) revert E_InvalidLTVAsset();
@@ -253,9 +241,10 @@ abstract contract GovernanceModule is IGovernance, Base, BalanceUtils, BorrowUti
     }
 
     /// @inheritdoc IGovernance
-    function setHookedOps(uint32 newHookedOps) public virtual nonReentrant governorOnly {
+    function setHookConfig(address newHookTarget, uint32 newHookedOps) public virtual nonReentrant governorOnly {
+        vaultStorage.hookTarget = newHookTarget;
         vaultStorage.hookedOps = Flags.wrap(newHookedOps);
-        emit GovSetHookedOps(newHookedOps);
+        emit GovSetHookConfig(newHookTarget, newHookedOps);
     }
 
     /// @inheritdoc IGovernance

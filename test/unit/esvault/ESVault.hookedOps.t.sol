@@ -11,12 +11,14 @@ contract ESVaultTestHookedOps is ESVaultTestBase {
     }
 
     function test_hooked_ops_after_init() public view {
-        uint32 hookedOps = eTST.hookedOps();
+        (address hookTarget, uint32 hookedOps) = eTST.hookConfig();
+        assertEq(hookTarget, SYNTH_VAULT_HOOK_TARGET);
         assertEq(hookedOps, SYNTH_VAULT_HOOKED_OPS);
     }
 
     function test_hooked_ops_disabled_if_no_hook_target() public {
-        eTST.setHookTarget(address(0));
+        (, uint32 hookedOps) = eTST.hookConfig();
+        eTST.setHookConfig(address(0), hookedOps);
 
         vm.expectRevert(Errors.E_OperationDisabled.selector);
         eTST.deposit(100, address(this));

@@ -340,8 +340,8 @@ interface IGovernance {
     /// @return Address of the interest rate contract or address zero to indicate 0% interest
     function interestRateModel() external view returns (address);
 
-    /// @notice Retrieves a bitmask indicating which operations call hook target.
-    function hookedOps() external view returns (uint32);
+    /// @notice Retrieves a hook target and a bitmask indicating which operations call the hook target.
+    function hookConfig() external view returns (address, uint32);
 
     /// @notice Retrieves a bitmask indicating enabled config flags.
     function configFlags() external view returns (uint32);
@@ -364,9 +364,6 @@ interface IGovernance {
     /// @notice Retrieves the address of the oracle contract
     function oracle() external view returns (address);
 
-    /// @notice Retrieves the address of the hook target
-    function hookTarget() external view returns (address);
-
     /// @notice Splits accrued fees balance according to protocol fee share and transfers shares to the governor fee receiver and protocol fee receiver
     function convertFees() external;
 
@@ -382,9 +379,6 @@ interface IGovernance {
     /// @notice Set a new governor fee receiver address
     function setFeeReceiver(address newFeeReceiver) external;
 
-    /// @notice Set a new hook target address
-    function setHookTarget(address newHookTarget) external;
-
     /// @notice Set a new LTV config
     /// @param collateral Address of collateral to set LTV for
     /// @param ltv New LTV in 1e4 scale
@@ -399,8 +393,8 @@ interface IGovernance {
     /// @param newModel Address of the contract
     function setInterestRateModel(address newModel) external;
 
-    /// @notice Set new bitmap indicating which operations should call the hook target. Operations are defined in Constants.sol
-    function setHookedOps(uint32 newHookedOps) external;
+    /// @notice Set a new hook target and a new bitmap indicating which operations should call the hook target. Operations are defined in Constants.sol
+    function setHookConfig(address newHookTarget, uint32 newHookedOps) external;
 
     /// @notice Set new bitmap indicating which config flags should be enabled. Flags are defined in Constants.sol
     function setConfigFlags(uint32 newConfigFlags) external;

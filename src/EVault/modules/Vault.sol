@@ -42,9 +42,8 @@ abstract contract VaultModule is IVault, Base, AssetTransfers, BalanceUtils {
     /// @inheritdoc IERC4626
     function maxDeposit(address account) public view virtual nonReentrantView returns (uint256) {
         VaultCache memory vaultCache = loadVault();
-        if (validateAndCallHookView(vaultCache.hookedOps, OP_DEPOSIT) == 0) return 0;
 
-        return maxDepositInternal(vaultCache, account);
+        return validateAndCallHookView(vaultCache.hookedOps, OP_DEPOSIT) ? maxDepositInternal(vaultCache, account) : 0;
     }
 
     /// @inheritdoc IERC4626
@@ -55,9 +54,10 @@ abstract contract VaultModule is IVault, Base, AssetTransfers, BalanceUtils {
     /// @inheritdoc IERC4626
     function maxMint(address account) public view virtual nonReentrantView returns (uint256) {
         VaultCache memory vaultCache = loadVault();
-        if (validateAndCallHookView(vaultCache.hookedOps, OP_MINT) == 0) return 0;
 
-        return maxDepositInternal(vaultCache, account).toAssets().toSharesDown(vaultCache).toUint();
+        return validateAndCallHookView(vaultCache.hookedOps, OP_MINT)
+            ? maxDepositInternal(vaultCache, account).toAssets().toSharesDown(vaultCache).toUint()
+            : 0;
     }
 
     /// @inheritdoc IERC4626
@@ -69,9 +69,10 @@ abstract contract VaultModule is IVault, Base, AssetTransfers, BalanceUtils {
     /// @inheritdoc IERC4626
     function maxWithdraw(address owner) public view virtual nonReentrantView returns (uint256) {
         VaultCache memory vaultCache = loadVault();
-        if (validateAndCallHookView(vaultCache.hookedOps, OP_WITHDRAW) == 0) return 0;
 
-        return maxRedeemInternal(owner).toAssetsDown(vaultCache).toUint();
+        return validateAndCallHookView(vaultCache.hookedOps, OP_WITHDRAW)
+            ? maxRedeemInternal(owner).toAssetsDown(vaultCache).toUint()
+            : 0;
     }
 
     /// @inheritdoc IERC4626
@@ -82,10 +83,7 @@ abstract contract VaultModule is IVault, Base, AssetTransfers, BalanceUtils {
 
     /// @inheritdoc IERC4626
     function maxRedeem(address owner) public view virtual nonReentrantView returns (uint256) {
-        VaultCache memory vaultCache = loadVault();
-        if (validateAndCallHookView(vaultCache.hookedOps, OP_REDEEM) == 0) return 0;
-
-        return maxRedeemInternal(owner).toUint();
+        return validateAndCallHookView(vaultStorage.hookedOps, OP_REDEEM) ? maxRedeemInternal(owner).toUint() : 0;
     }
 
     /// @inheritdoc IERC4626
