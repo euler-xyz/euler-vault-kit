@@ -106,17 +106,17 @@ contract EVaultTestBase is AssertionsCustomTypes, Test, DeployPermit2 {
         assetTST2 = new TestERC20("Test Token 2", "TST2", 18, false);
 
         eTST = IEVault(factory.createProxy(true, abi.encodePacked(address(assetTST), address(oracle), unitOfAccount)));
-        eTST.setIRM(address(new IRMTestDefault()));
+        eTST.setInterestRateModel(address(new IRMTestDefault()));
 
         eTST2 = IEVault(factory.createProxy(true, abi.encodePacked(address(assetTST2), address(oracle), unitOfAccount)));
-        eTST2.setIRM(address(new IRMTestDefault()));
+        eTST2.setInterestRateModel(address(new IRMTestDefault()));
     }
 
     uint32 internal constant SYNTH_VAULT_DISABLED_OPS = OP_MINT | OP_REDEEM | OP_SKIM | OP_LOOP | OP_DELOOP;
 
     function createSynthEVault(address asset) internal returns (IEVault) {
         IEVault v = IEVault(factory.createProxy(true, abi.encodePacked(address(asset), address(oracle), unitOfAccount)));
-        v.setIRM(address(new IRMTestDefault()));
+        v.setInterestRateModel(address(new IRMTestDefault()));
 
         v.setDisabledOps(SYNTH_VAULT_DISABLED_OPS);
         v.setLockedOps(SYNTH_VAULT_DISABLED_OPS);

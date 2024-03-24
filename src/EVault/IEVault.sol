@@ -400,7 +400,7 @@ interface IGovernance {
 
     /// @notice Set a new interest rate model contract
     /// @param newModel Address of the contract
-    function setIRM(address newModel) external;
+    function setInterestRateModel(address newModel) external;
 
     /// @notice Set new bitmap indicating which operations should be disabled. Operations are defined in Constants.sol
     function setDisabledOps(uint32 newDisabledOps) external;

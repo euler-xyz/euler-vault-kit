@@ -28,7 +28,7 @@ abstract contract GovernanceModule is IGovernance, Base, BalanceUtils, BorrowUti
     event GovSetLTV(
         address indexed collateral, uint48 targetTimestamp, uint16 targetLTV, uint32 rampDuration, uint16 originalLTV
     );
-    event GovSetIRM(address interestRateModel);
+    event GovSetInterestRateModel(address interestRateModel);
     event GovSetDisabledOps(uint32 newDisabledOps);
     event GovSetConfigFlags(uint32 newConfigFlags);
     event GovSetLockedOps(uint32 newLockedOps);
@@ -252,7 +252,7 @@ abstract contract GovernanceModule is IGovernance, Base, BalanceUtils, BorrowUti
     }
 
     /// @inheritdoc IGovernance
-    function setIRM(address newModel) public virtual nonReentrant governorOnly {
+    function setInterestRateModel(address newModel) public virtual nonReentrant governorOnly {
         MarketCache memory marketCache = updateMarket();
 
         marketStorage.interestRateModel = newModel;
@@ -262,7 +262,7 @@ abstract contract GovernanceModule is IGovernance, Base, BalanceUtils, BorrowUti
 
         logMarketStatus(marketCache, newInterestRate);
 
-        emit GovSetIRM(newModel);
+        emit GovSetInterestRateModel(newModel);
     }
 
     /// @inheritdoc IGovernance

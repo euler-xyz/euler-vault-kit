@@ -216,7 +216,7 @@ contract EVault is Dispatch {
 
     function clearLTV(address collateral) public override virtual use(MODULE_GOVERNANCE) {}
 
-    function setIRM(address newModel) public override virtual use(MODULE_GOVERNANCE) {}
+    function setInterestRateModel(address newModel) public override virtual use(MODULE_GOVERNANCE) {}
 
     function setDisabledOps(uint32 newDisabledOps) public override virtual use(MODULE_GOVERNANCE) {}
 

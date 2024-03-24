@@ -45,7 +45,7 @@ contract GovernanceTest is EVaultTestBase {
         eTST.borrow(5e18, borrower);
     }
 
-    function test_Governance_setIRM_setAddressZero() public {
+    function test_Governance_setInterestRateModel_setAddressZero() public {
         assertEq(eTST.totalAssets(), 100e18);
 
         skip(1 days);
@@ -57,7 +57,7 @@ contract GovernanceTest is EVaultTestBase {
 
         vm.stopPrank();
         address previousIRM = eTST.interestRateModel();
-        eTST.setIRM(address(0));
+        eTST.setInterestRateModel(address(0));
 
         // the previous interest accrued is recorded in the accumulator
         assertEq(beforePause, eTST.totalAssets());
@@ -68,7 +68,7 @@ contract GovernanceTest is EVaultTestBase {
         assertEq(beforePause, eTST.totalAssets());
 
         // set the previous IRM back
-        eTST.setIRM(previousIRM);
+        eTST.setInterestRateModel(previousIRM);
         // no change yet
         assertEq(beforePause, eTST.totalAssets());
 
