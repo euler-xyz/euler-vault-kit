@@ -57,7 +57,7 @@ abstract contract Base is EVCClient, Cache {
         vaultCache = updateVault();
         account = EVCAuthenticateDeferred(CONTROLLER_NEUTRAL_OPS & operation == 0);
 
-        validateOperation(vaultCache, operation, account);
+        validateAndCallHook(vaultCache.hookedOps, operation, account);
         EVCRequireStatusChecks(accountToCheck == CHECKACCOUNT_CALLER ? account : accountToCheck);
 
         // The snapshot is used only to verify that supply increased when checking the supply cap, and to verify that the borrows
@@ -73,19 +73,17 @@ abstract contract Base is EVCClient, Cache {
     }
 
     // Checks whether the operation is hookable and if so, calls the hook target.
-    function validateOperation(VaultCache memory vaultCache, uint32 operation, address caller) internal {
-        if (vaultCache.hookedOps.isNotSet(operation)) return;
+    // If the hook target is not a contract, the operation is considered disabled.
+    function validateAndCallHook(Flags hookedOps, uint32 operation, address caller) internal {
+        if (hookedOps.isNotSet(operation)) return;
 
         address hookTarget = vaultStorage.hookTarget;
+
+        if (hookTarget.code.length == 0) revert E_OperationDisabled();
+
         (bool success, bytes memory data) = hookTarget.call(abi.encodePacked(msg.data, caller));
 
-        if (!success) {
-            RevertBytes.revertBytes(data);
-        }
-
-        if (hookTarget.code.length == 0) {
-            revert E_OperationDisabled();
-        }
+        if (!success) RevertBytes.revertBytes(data);
     }
 
     function logVaultStatus(VaultCache memory a, uint256 interestRate) internal {

@@ -206,15 +206,18 @@ abstract contract BorrowingModule is IBorrowing, Base, AssetTransfers, BalanceUt
 
     /// @inheritdoc IBorrowing
     function flashLoan(uint256 amount, bytes calldata data) public virtual nonReentrant {
-        (MarketCache memory marketCache, address account) = initOperation(OP_FLASHLOAN, CHECKACCOUNT_NONE);
+        validateAndCallHook(marketStorage.hookedOps, OP_FLASHLOAN, CHECKACCOUNT_NONE);
 
-        uint256 origBalance = marketCache.asset.balanceOf(address(this));
+        (IERC20 asset,,) = ProxyUtils.metadata();
+        address account = EVCAuthenticate();
 
-        marketCache.asset.safeTransfer(account, amount);
+        uint256 origBalance = asset.balanceOf(address(this));
+
+        asset.safeTransfer(account, amount);
 
         IFlashLoan(account).onFlashLoan(data);
 
-        if (marketCache.asset.balanceOf(address(this)) < origBalance) revert E_FlashLoanNotRepaid();
+        if (asset.balanceOf(address(this)) < origBalance) revert E_FlashLoanNotRepaid();
     }
 
     /// @inheritdoc IBorrowing
