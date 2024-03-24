@@ -38,7 +38,7 @@ contract Core is BaseProductLine {
         governorOnly
         returns (address)
     {
-        IEVault vault = makeNewVaultInternal(asset, UPGRADEABLE, oracle, unitOfAccount);
+        IEVault vault = makeNewVaultInternal(UPGRADEABLE, asset, oracle, unitOfAccount);
 
         vault.setName(string.concat("Core vault: ", getTokenName(asset)));
         vault.setSymbol(string.concat("e", getTokenSymbol(asset)));

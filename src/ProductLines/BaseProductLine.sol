@@ -54,7 +54,7 @@ abstract contract BaseProductLine {
         emit Genesis();
     }
 
-    function makeNewVaultInternal(address asset, bool upgradeable, address oracle, address unitOfAccount)
+    function makeNewVaultInternal(bool upgradeable, address asset, address oracle, address unitOfAccount)
         internal
         returns (IEVault)
     {

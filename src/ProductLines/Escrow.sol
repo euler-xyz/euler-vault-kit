@@ -27,7 +27,7 @@ contract Escrow is BaseProductLine {
     function createVault(address asset) external returns (address) {
         if (assetLookup[asset] != address(0)) revert E_AlreadyCreated();
 
-        IEVault vault = makeNewVaultInternal(asset, UPGRADEABLE, address(0), address(0));
+        IEVault vault = makeNewVaultInternal(UPGRADEABLE, asset, address(0), address(0));
 
         assetLookup[asset] = address(vault);
 
