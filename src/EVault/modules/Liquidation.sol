@@ -163,11 +163,9 @@ abstract contract LiquidationModule is ILiquidation, Base, BalanceUtils, Liquidi
         return liqCache;
     }
 
-    function executeLiquidation(
-        VaultCache memory vaultCache,
-        LiquidationCache memory liqCache,
-        uint256 minYieldBalance
-    ) private {
+    function executeLiquidation(VaultCache memory vaultCache, LiquidationCache memory liqCache, uint256 minYieldBalance)
+        private
+    {
         // Check minimum yield.
 
         if (minYieldBalance > liqCache.yieldBalance) revert E_MinYield();

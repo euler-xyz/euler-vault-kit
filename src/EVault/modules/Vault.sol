@@ -114,8 +114,7 @@ abstract contract VaultModule is IVault, Base, AssetTransfers, BalanceUtils {
     function deposit(uint256 amount, address receiver) public virtual nonReentrant returns (uint256) {
         (VaultCache memory vaultCache, address account) = initOperation(OP_DEPOSIT, CHECKACCOUNT_NONE);
 
-        Assets assets =
-            amount == type(uint256).max ? vaultCache.asset.balanceOf(account).toAssets() : amount.toAssets();
+        Assets assets = amount == type(uint256).max ? vaultCache.asset.balanceOf(account).toAssets() : amount.toAssets();
         if (assets.isZero()) return 0;
 
         Shares shares = assets.toSharesDown(vaultCache);

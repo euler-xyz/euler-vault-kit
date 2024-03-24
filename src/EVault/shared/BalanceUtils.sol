@@ -21,8 +21,7 @@ abstract contract BalanceUtils is Base {
     ) internal {
         if (account == address(0)) revert E_BadSharesReceiver();
 
-        (Shares origBalance, bool balanceForwarderEnabled) =
-            vaultStorage.users[account].getBalanceAndBalanceForwarder();
+        (Shares origBalance, bool balanceForwarderEnabled) = vaultStorage.users[account].getBalanceAndBalanceForwarder();
         Shares newBalance = origBalance + amount;
 
         vaultStorage.users[account].setBalance(newBalance);
@@ -44,8 +43,7 @@ abstract contract BalanceUtils is Base {
         Shares amount,
         Assets assets
     ) internal {
-        (Shares origBalance, bool balanceForwarderEnabled) =
-            vaultStorage.users[account].getBalanceAndBalanceForwarder();
+        (Shares origBalance, bool balanceForwarderEnabled) = vaultStorage.users[account].getBalanceAndBalanceForwarder();
         if (origBalance < amount) revert E_InsufficientBalance();
 
         Shares newBalance;
