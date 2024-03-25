@@ -24,6 +24,9 @@ import {IEVault, IERC20} from "src/EVault/IEVault.sol";
 import {TypesLib} from "src/EVault/shared/types/Types.sol";
 import {Base} from "src/EVault/shared/Base.sol";
 
+import {Core} from "src/ProductLines/Core.sol";
+import {Escrow} from "src/ProductLines/Escrow.sol";
+
 import {EthereumVaultConnector} from "ethereum-vault-connector/EthereumVaultConnector.sol";
 
 import {TestERC20} from "../../mocks/TestERC20.sol";
@@ -45,6 +48,9 @@ contract EVaultTestBase is AssertionsCustomTypes, Test, DeployPermit2 {
     address unitOfAccount;
     address permit2;
     GenericFactory public factory;
+
+    Core public coreProductLine;
+    Escrow public escrowProductLine;
 
     Base.Integrations integrations;
     Dispatch.DeployedModules modules;
@@ -102,14 +108,17 @@ contract EVaultTestBase is AssertionsCustomTypes, Test, DeployPermit2 {
         vm.prank(admin);
         factory.setImplementation(evaultImpl);
 
+        coreProductLine = new Core(address(factory), address(evc), address(this), feeReceiver);
+        escrowProductLine = new Escrow(address(factory), address(evc));
+
         assetTST = new TestERC20("Test Token", "TST", 18, false);
         assetTST2 = new TestERC20("Test Token 2", "TST2", 18, false);
 
-        eTST = IEVault(factory.createProxy(true, abi.encodePacked(address(assetTST), address(oracle), unitOfAccount)));
+        eTST = IEVault(coreProductLine.createVault(address(assetTST), address(oracle), unitOfAccount));
         eTST.setInterestRateModel(address(new IRMTestDefault()));
 
-        eTST2 = IEVault(factory.createProxy(true, abi.encodePacked(address(assetTST2), address(oracle), unitOfAccount)));
-        eTST2.setInterestRateModel(address(new IRMTestDefault()));
+        eTST2 = IEVault(coreProductLine.createVault(address(assetTST2), address(oracle), unitOfAccount));
+        eTST.setInterestRateModel(address(new IRMTestDefault()));
     }
 
     uint32 internal constant SYNTH_VAULT_DISABLED_OPS = OP_MINT | OP_REDEEM | OP_SKIM | OP_LOOP | OP_DELOOP;
