@@ -7,7 +7,7 @@ import "../evault/EVaultTestBase.t.sol";
 
 contract ProductLine_Escrow is EVaultTestBase {
     uint32 constant ESCROW_DISABLED_OPS = OP_BORROW | OP_REPAY | OP_LOOP | OP_DELOOP | OP_PULL_DEBT | OP_CONVERT_FEES
-        | OP_LIQUIDATE | OP_TOUCH | OP_ACCRUE_INTEREST;
+        | OP_LIQUIDATE | OP_TOUCH;
 
     function test_ProductLine_Escrow_basicViews() public {
         IEVault escrowTST = IEVault(escrowProductLine.createVault(address(assetTST)));
@@ -18,7 +18,10 @@ contract ProductLine_Escrow is EVaultTestBase {
         assertEq(escrowTST.symbol(), "eTST");
         assertEq(escrowTST.unitOfAccount(), address(0));
         assertEq(escrowTST.oracle(), address(0));
-        assertEq(escrowTST.disabledOps(), ESCROW_DISABLED_OPS);
+
+        (address hookTarget, uint32 hookedOps) = escrowTST.hookConfig();
+        assertEq(hookTarget, address(0));
+        assertEq(hookedOps, ESCROW_DISABLED_OPS);
     }
 
     function test_ProductLine_Escrow_RevertWhenAlreadyCreated() public {
