@@ -153,7 +153,6 @@ contract Governance_PauseOps is EVaultTestBase {
 
     function testFuzz_borrowingDisabledOpsShouldFailAfterDisabled(uint256 amount, address receiver) public {
         setDisabledOps(eTST, OP_BORROW);
-        (, uint32 disabledOps) = eTST.hookConfig();
         evc.enableController(address(this), address(eTST));
         vm.expectRevert(Errors.E_OperationDisabled.selector);
         eTST.borrow(amount, receiver);
@@ -261,7 +260,7 @@ contract Governance_PauseOps is EVaultTestBase {
     }
 
     // TODO: socialize debt is a little bit different
-    function testFuzz_socializeDebtDisabledOpsShouldFailAfterDisabled(uint256 amount, address receiver) public {
+    function testFuzz_socializeDebtDisabledOpsShouldFailAfterDisabled() public {
         eTST.setConfigFlags(CFG_DONT_SOCIALIZE_DEBT);
         // we need this in order to reset the borrower state as its before liquidation
         // the disabled OP only disables socialize debt and not the liquidation itself
@@ -344,9 +343,6 @@ contract Governance_PauseOps is EVaultTestBase {
         vm.stopPrank();
 
         oracle.setPrice(address(eTST2), unitOfAccount, 0.5e17);
-
-        // check liquidation
-        (uint256 maxRepay, uint256 maxYield) = eTST.checkLiquidation(address(this), borrower, address(eTST2));
 
         vm.startPrank(liquidator);
         evc.enableCollateral(liquidator, address(eTST2));
