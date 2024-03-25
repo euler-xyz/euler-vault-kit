@@ -8,7 +8,6 @@ import "src/EVault/shared/Constants.sol";
 import "src/EVault/shared/types/Types.sol";
 import "src/EVault/shared/Events.sol";
 import "forge-std/Vm.sol";
-import "forge-std/console2.sol";
 
 // If this address is installed, it should be able to set disabled ops
 // Use a different address than the governor
@@ -122,6 +121,7 @@ contract Governance_PauseAndOps is EVaultTestBase {
         public
     {
         setDisabledOps(eTST, OP_REDEEM);
+        vm.assume(receiver != address(this));
         vm.expectRevert(Errors.E_OperationDisabled.selector);
         eTST.redeem(amount, receiver, owner);
 
@@ -266,66 +266,64 @@ contract Governance_PauseAndOps is EVaultTestBase {
         eTST.touch();
     }
 
-    // // TODO: socialize debt is a little bit different
-    // function testFuzz_socializeDebtDisabledOpsShouldFailAfterDisabled(uint256 amount, address receiver) public {
-    //     eTST.setDisabledOps(OP_SOCIALIZE_DEBT);
-    //     // we need this in order to reset the borrower state as its before liquidation
-    //     // the disabled OP only disables socialize debt and not the liquidation itself
-    //     uint256 snapshotBeforeFirstLiquidation = vm.snapshot();
-    //     vm.recordLogs();
-    //     liquidateSetup(liquidator1);
-    //     Vm.Log[] memory entries = vm.getRecordedLogs();
-    //     for (uint256 i = 0; i < entries.length; i++) {
-    //         console2.logBytes32(entries[i].topics[0]);
-    //         bytes32 topic = entries[i].topics[0];
-    //         assertNotEq(topic, Events.DebtSocialized.selector);
-    //     }
+    // TODO: socialize debt is a little bit different
+    function testFuzz_socializeDebtDisabledOpsShouldFailAfterDisabled(uint256 amount, address receiver) public {
+        eTST.setConfigFlags(CFG_DONT_SOCIALIZE_DEBT);
+        // we need this in order to reset the borrower state as its before liquidation
+        // the disabled OP only disables socialize debt and not the liquidation itself
+        uint256 snapshotBeforeFirstLiquidation = vm.snapshot();
+        vm.recordLogs();
+        liquidateSetup(liquidator1);
+        Vm.Log[] memory entries = vm.getRecordedLogs();
+        for (uint256 i = 0; i < entries.length; i++) {
+            bytes32 topic = entries[i].topics[0];
+            assertNotEq(topic, Events.DebtSocialized.selector);
+        }
 
-    //     // re-enable
-    //     vm.revertTo(snapshotBeforeFirstLiquidation);
-    //     eTST.setDisabledOps(0);
-    //     vm.recordLogs();
-    //     liquidateSetup(liquidator2);
-    //     Vm.Log[] memory entriesReEnabled = vm.getRecordedLogs();
-    //     bool foundLog = false;
-    //     for (uint256 i = 0; i < entriesReEnabled.length; i++) {
-    //         console2.logBytes32(entriesReEnabled[i].topics[0]);
-    //         bytes32 topic = entriesReEnabled[i].topics[0];
-    //         if (topic == Events.DebtSocialized.selector) {
-    //             foundLog = true;
-    //             break;
-    //         }
-    //     }
-    //     assertTrue(foundLog);
-    // }
+        // re-enable
+        vm.revertTo(snapshotBeforeFirstLiquidation);
+        eTST.setConfigFlags(0);
+        vm.recordLogs();
+        liquidateSetup(liquidator2);
+        Vm.Log[] memory entriesReEnabled = vm.getRecordedLogs();
+        bool foundLog = false;
+        for (uint256 i = 0; i < entriesReEnabled.length; i++) {
+            bytes32 topic = entriesReEnabled[i].topics[0];
+            if (topic == Events.DebtSocialized.selector) {
+                foundLog = true;
+                break;
+            }
+        }
+        assertTrue(foundLog);
+    }
 
-    // function testFuzz_validateAssetsReceiverDisabledShouldFailBorrowAfterDisabled(uint256 amount, address receiver)
-    //     public
-    // {
-    //     amount = bound(amount, 1, MINT_AMOUNT / 2);
-    //     vm.assume(receiver != address(0));
+    function testFuzz_validateAssetsReceiverDisabledShouldFailBorrowAfterDisabled(uint256 amount, address receiver)
+        public
+    {
+        amount = bound(amount, 1, MINT_AMOUNT / 2);
+        vm.assume(receiver != address(0));
 
-    //     address subacc = address(uint160(borrower) >> 8 << 8);
+        address subacc = address(uint160(borrower) >> 8 << 8);
 
-    //     vm.startPrank(borrower);
-    //     evc.enableCollateral(borrower, address(eTST2));
-    //     evc.enableController(borrower, address(eTST));
-    //     vm.expectRevert(Errors.E_BadAssetReceiver.selector); //! note this is a different error
-    //     eTST.borrow(amount, subacc);
-    //     vm.stopPrank();
+        vm.startPrank(borrower);
+        evc.enableCollateral(borrower, address(eTST2));
+        evc.enableController(borrower, address(eTST));
+        vm.expectRevert(Errors.E_BadAssetReceiver.selector); //! note this is a different error
+        eTST.borrow(amount, subacc);
+        vm.stopPrank();
 
-    //     eTST.setDisabledOps(OP_VALIDATE_ASSET_RECEIVER);
+        eTST.setConfigFlags(CFG_EVC_COMPATIBLE_ASSET);
 
-    //     vm.startPrank(borrower);
-    //     eTST.borrow(amount, subacc);
-    //     vm.stopPrank();
+        vm.startPrank(borrower);
+        eTST.borrow(amount, subacc);
+        vm.stopPrank();
 
-    //     eTST.setDisabledOps(0);
-    //     vm.startPrank(borrower);
-    //     // should be disabled again
-    //     vm.expectRevert(Errors.E_BadAssetReceiver.selector); //! note this is a different error
-    //     eTST.borrow(amount, subacc);
-    // }
+        eTST.setConfigFlags(0);
+        vm.startPrank(borrower);
+        // should be disabled again
+        vm.expectRevert(Errors.E_BadAssetReceiver.selector); //! note this is a different error
+        eTST.borrow(amount, subacc);
+    }
 
     // helpers
     function setDisabledOps(IEVault vault, uint32 ops) internal {
