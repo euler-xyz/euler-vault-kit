@@ -8,18 +8,35 @@ import "../../src/EVault/modules/Liquidation.sol";
 contract LiquidationHarness is Liquidation {
     constructor(Integrations memory integrations) Liquidation(integrations) {}
 
-    // function calculateLiquidationExternal(
-    //     MarketCache memory marketCache,
-    //     address liquidator,
-    //     address violator,
-    //     address collateral,
-    //     uint256 desiredRepay
-    // ) public view returns (LiquidationCache memory liqCache) {
-    //     return  calculateLiquidation(
-    //         marketCache,
-    //         liquidator,
-    //         violator,
-    //         collateral,
-    //         desiredRepay);
-    // }
+    function calculateLiquidityExternal(
+        address account
+    ) public view returns (uint256 collateralValue, uint256 liabilityValue) {
+        MarketCache memory marketCache; // uninitialized
+        return calculateLiquidity(marketCache, account, getCollaterals(account), LTVType.LIQUIDATION);
+    }
+
+    function initOperationExternal(uint32 operation, address accountToCheck)
+        public 
+        returns (MarketCache memory marketCache, address account)
+    {
+        return initOperation(operation, accountToCheck);
+    }
+
+    function getNumCollaterals(address account) public view returns (uint256) {
+        return getCollaterals(account).length;
+    }
+
+    function isRecognizedCollateralExt(address collateral) external view virtual returns (bool) {
+        return isRecognizedCollateral(collateral);
+    }
+
+    function isCollateralEnabledExt(address account, address market) external view returns (bool) {
+        return isCollateralEnabled(account, market);
+    }
+
+    function isAccountStatusCheckDeferredExt(address account) external view returns (bool) {
+        return isAccountStatusCheckDeferred(account);
+    }
+
+
 }

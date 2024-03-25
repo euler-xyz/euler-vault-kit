@@ -26,22 +26,68 @@ checkLiquidation must revert if:
  - price oracle is not configured
 */
 
+methods {
+    // This is defined in IPriceOracle which is in another codebase
+    function _.getQuote(uint256 amount, address base, address quote) external => NONDET;
+    function Cache.loadMarket() internal returns (Liquidation.MarketCache memory) => UninitMarket();
+    function isRecognizedCollateralExt(address collateral) external returns (bool) envfree;
+
+    function isCollateralEnabledExt(address account, address market) external returns (bool) envfree;
+
+    function isAccountStatusCheckDeferredExt(address account) external returns (bool) envfree;
+}
+
+function UninitMarket() returns Liquidation.MarketCache {
+    Liquidation.MarketCache mk;
+    return mk;
+}
+
 rule checkLiquidation_healthy() {
     env e;
     address liquidator;
     address violator; 
     address collateral;
-    MarketCache.MarketCache marketCache;
     uint256 maxRepay;
     uint256 maxYield;
     uint256 liquidityCollateralValue; 
     uint256 liquidityLiabilityValue;
-    address[] collaterals;
-    // (MarketCache memory marketCache, address liquidator) = initOperation(OP_LIQUIDATE, CHECKACCOUNT_CALLER);
+
+    (liquidityCollateralValue, liquidityLiabilityValue) =
+         calculateLiquidityExternal(e, violator);
+
     // (maxRepay, maxYield) = checkLiquidation(e, liquidator, violator, collateral);
-    // (liquidityCollateralValue, liquidityLiabilityValue) =
-    //        calculateLiquidity(e, violator, collaterals);
-    require liquidityCollateralValue >= liquidityLiabilityValue;
-    assert maxRepay == 0;
-    assert maxYield == 0;
+
+    // bool checkReverted = lastReverted;
+
+    // Assume healthy 
+    // require liquidityCollateralValue >= liquidityLiabilityValue;
+    // assert checkReverted;
+    // satisfy !checkReverted;
+    
+    // require liquidityCollateralValue >= liquidityLiabilityValue;
+    // assert maxRepay == 0;
+    // assert maxYield == 0;
+    assert false;
 } 
+
+rule checkLiquidation_mustRevert {
+    env e;
+    address liquidator;
+    address violator;
+    address collateral;
+    uint256 maxRepay;
+    uint256 maxYield;
+    (maxRepay, maxYield) = checkLiquidation@withrevert(e, liquidator, violator, collateral);
+    bool reverted = lastReverted;
+
+    bool selfLiquidate = liquidator == violator;
+    bool badCollateral = !isRecognizedCollateralExt(collateral);
+    bool notEnabledCollateral = !isCollateralEnabledExt(violator, collateral);
+    bool violatorStatusCheckDeferred = isAccountStatusCheckDeferredExt(violator);
+
+    assert selfLiquidate || 
+        badCollateral || 
+        notEnabledCollateral ||
+        violatorStatusCheckDeferred => reverted;
+
+}
