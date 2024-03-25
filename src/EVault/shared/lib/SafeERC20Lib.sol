@@ -31,7 +31,7 @@ library SafeERC20Lib {
             if (value > type(uint160).max) {
                 revert E_TransferFromFailed(tryData, abi.encodeWithSelector(E_Permit2AmountOverflow.selector));
             }
-
+            // it's now safe to down-cast value to uint160
             (success, fallbackData) =
                 permit2.call(abi.encodeCall(IPermit2.transferFrom, (from, to, uint160(value), address(token))));
         }
