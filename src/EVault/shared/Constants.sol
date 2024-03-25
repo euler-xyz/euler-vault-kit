@@ -50,5 +50,6 @@ uint32 constant CFG_ONLY_ASSET_CAN_DEPOSIT = 1 << 2;
 
 // EVC authentication
 
-// in order to perform these operations, the account must have the vault installed as a controller
-uint32 constant CONTROLLER_REQUIRED_OPS = OP_BORROW | OP_LOOP | OP_PULL_DEBT | OP_LIQUIDATE;
+// in order to perform these operations, the account doesn't need to have the vault installed as a controller
+uint32 constant CONTROLLER_NEUTRAL_OPS = OP_DEPOSIT | OP_MINT | OP_WITHDRAW | OP_REDEEM | OP_TRANSFER | OP_SKIM
+    | OP_REPAY | OP_DELOOP | OP_CONVERT_FEES | OP_FLASHLOAN | OP_TOUCH | OP_ACCRUE_INTEREST;
