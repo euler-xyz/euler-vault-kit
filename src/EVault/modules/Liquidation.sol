@@ -7,6 +7,8 @@ import {Base} from "../shared/Base.sol";
 import {BalanceUtils} from "../shared/BalanceUtils.sol";
 import {LiquidityUtils} from "../shared/LiquidityUtils.sol";
 
+import "forge-std/console2.sol";
+
 import "../shared/types/Types.sol";
 
 abstract contract LiquidationModule is ILiquidation, Base, BalanceUtils, LiquidityUtils {
@@ -97,6 +99,7 @@ abstract contract LiquidationModule is ILiquidation, Base, BalanceUtils, Liquidi
 
         if (desiredRepay != type(uint256).max) {
             uint256 maxRepay = liqCache.repay.toUint();
+            console2.log("maxRepay", maxRepay);
             if (desiredRepay > maxRepay) revert E_ExcessiveRepayAmount();
 
             if (maxRepay > 0) {
@@ -115,7 +118,8 @@ abstract contract LiquidationModule is ILiquidation, Base, BalanceUtils, Liquidi
 
         (uint256 liquidityCollateralValue, uint256 liquidityLiabilityValue) =
             calculateLiquidity(marketCache, liqCache.violator, liqCache.collaterals, LTVType.LIQUIDATION);
-
+        console2.log("liquidityCollateralValue", liquidityCollateralValue);
+        console2.log("liquidityLiabilityValue", liquidityLiabilityValue);
         // no violation
         if (liquidityCollateralValue >= liquidityLiabilityValue) return liqCache;
 
@@ -132,7 +136,7 @@ abstract contract LiquidationModule is ILiquidation, Base, BalanceUtils, Liquidi
         uint256 collateralBalance = IERC20(liqCache.collateral).balanceOf(liqCache.violator);
         uint256 collateralValue =
             marketCache.oracle.getQuote(collateralBalance, liqCache.collateral, marketCache.unitOfAccount);
-
+        console2.log("collateralValue", collateralValue);
         if (collateralValue == 0) {
             // worthless collateral can be claimed with no repay
             liqCache.yieldBalance = collateralBalance;
@@ -145,6 +149,8 @@ abstract contract LiquidationModule is ILiquidation, Base, BalanceUtils, Liquidi
             liabilityValue =
                 marketCache.oracle.getQuote(liabilityValue, address(marketCache.asset), marketCache.unitOfAccount);
         }
+
+        console2.log("liabilityValue", liabilityValue);
 
         uint256 maxRepayValue = liabilityValue;
         uint256 maxYieldValue = maxRepayValue * 1e18 / discountFactor;

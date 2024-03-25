@@ -21,6 +21,8 @@ contract Governance_PauseAndOps is EVaultTestBase {
     address notGovernor;
     address borrower;
     address depositor;
+    address liquidator1;
+    address liquidator2;
     uint256 constant MINT_AMOUNT = 100e18;
 
     function setUp() public override {
@@ -28,6 +30,8 @@ contract Governance_PauseAndOps is EVaultTestBase {
         notGovernor = makeAddr("notGovernor");
         borrower = makeAddr("borrower");
         depositor = makeAddr("depositor");
+        liquidator1 = makeAddr("liquidator1");
+        liquidator2 = makeAddr("liquidator2");
         // ----------------- Setup depositor -----------------
         vm.startPrank(depositor);
         assetTST.mint(depositor, type(uint256).max);
@@ -235,7 +239,7 @@ contract Governance_PauseAndOps is EVaultTestBase {
 
         // re-enable
         eTST.setDisabledOps(0);
-        liquidateSetup();
+        liquidateSetup(address(this));
     }
 
     function testFuzz_flashLoanDisabledOpsShouldFailAfterDisabled(uint256 amount, bytes calldata data) public {
@@ -279,8 +283,11 @@ contract Governance_PauseAndOps is EVaultTestBase {
     // TODO: socialize debt is a little bit different
     function testFuzz_socializeDebtDisabledOpsShouldFailAfterDisabled(uint256 amount, address receiver) public {
         eTST.setDisabledOps(OP_SOCIALIZE_DEBT);
+        // we need this in order to reset the borrower state as its before liquidation
+        // the disabled OP only disables socialize debt and not the liquidation itself
+        uint256 snapshotBeforeFirstLiquidation = vm.snapshot();
         vm.recordLogs();
-        liquidateSetup();
+        liquidateSetup(liquidator1);
         Vm.Log[] memory entries = vm.getRecordedLogs();
         for (uint256 i = 0; i < entries.length; i++) {
             console2.logBytes32(entries[i].topics[0]);
@@ -289,12 +296,10 @@ contract Governance_PauseAndOps is EVaultTestBase {
         }
 
         // re-enable
+        vm.revertTo(snapshotBeforeFirstLiquidation);
         eTST.setDisabledOps(0);
         vm.recordLogs();
-        assetTST2.mint(address(this), type(uint256).max);
-        assetTST2.approve(address(eTST2), type(uint256).max);
-        eTST2.deposit(MINT_AMOUNT, address(this));
-        liquidateSetup();
+        liquidateSetup(liquidator2);
         Vm.Log[] memory entriesReEnabled = vm.getRecordedLogs();
         bool foundLog = false;
         for (uint256 i = 0; i < entriesReEnabled.length; i++) {
@@ -337,6 +342,8 @@ contract Governance_PauseAndOps is EVaultTestBase {
     }
 
     // helpers
+
+    // handles the on flashloan receiving and transfers back the funds so the fl can pass
     function onFlashLoan(bytes calldata data) external {
         // decode data as amount and address
         (uint256 amount, address eTSTAddr) = abi.decode(data, (uint256, address));
@@ -344,26 +351,29 @@ contract Governance_PauseAndOps is EVaultTestBase {
         IERC20(eTSTAddr).transfer(address(eTST), amount);
     }
 
-    function liquidateSetup() internal {
+    function liquidateSetup(address liquidator) internal {
         eTST.setLTV(address(eTST2), 1e4, 0);
-        oracle.setPrice(address(assetTST), unitOfAccount, 1e4);
-        oracle.setPrice(address(eTST2), unitOfAccount, 1.1e4);
+        oracle.setPrice(address(assetTST), unitOfAccount, 1e18);
+        oracle.setPrice(address(eTST2), unitOfAccount, 1e18);
 
         vm.startPrank(borrower);
         evc.enableController(borrower, address(eTST));
         evc.enableCollateral(borrower, address(eTST2));
         eTST.borrow(type(uint256).max, borrower);
         vm.stopPrank();
-        skip(1 weeks);
-        oracle.setPrice(address(assetTST), unitOfAccount, 10e4);
-        oracle.setPrice(address(eTST2), unitOfAccount, 0.5e4);
+        // skip(1 weeks);
+        // oracle.setPrice(address(assetTST), unitOfAccount, 0.5e17);
+        oracle.setPrice(address(eTST2), unitOfAccount, 0.5e17);
 
         // check liquidation
         (uint256 maxRepay, uint256 maxYield) = eTST.checkLiquidation(address(this), borrower, address(eTST2));
         console2.log("maxRepay", maxRepay);
         console2.log("maxYield", maxYield);
 
-        evc.enableController(address(this), address(eTST));
-        eTST.liquidate(borrower, address(eTST2), maxRepay / 2, 0);
+        vm.startPrank(liquidator);
+        evc.enableCollateral(liquidator, address(eTST2));
+        evc.enableController(liquidator, address(eTST));
+        eTST.liquidate(borrower, address(eTST2), type(uint256).max, 0);
+        vm.stopPrank();
     }
 }
