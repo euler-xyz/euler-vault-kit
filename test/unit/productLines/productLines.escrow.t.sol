@@ -6,8 +6,8 @@ import "src/ProductLines/Escrow.sol";
 import "../evault/EVaultTestBase.t.sol";
 
 contract ProductLine_Escrow is EVaultTestBase {
-    uint32 constant ESCROW_DISABLED_OPS = OP_BORROW | OP_REPAY | OP_LOOP | OP_DELOOP | OP_PULL_DEBT | OP_CONVERT_FEES
-        | OP_LIQUIDATE | OP_TOUCH;
+    uint32 constant ESCROW_DISABLED_OPS =
+        OP_BORROW | OP_REPAY | OP_LOOP | OP_DELOOP | OP_PULL_DEBT | OP_CONVERT_FEES | OP_LIQUIDATE | OP_TOUCH;
 
     function test_ProductLine_Escrow_basicViews() public {
         IEVault escrowTST = IEVault(escrowProductLine.createVault(address(assetTST)));
