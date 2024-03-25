@@ -134,6 +134,7 @@ contract Governance_PauseAndOps is EVaultTestBase {
 
     function testFuzz_disablingTransferOpsShouldFailAfterDisabled(address to, uint256 amount) public {
         setDisabledOps(eTST, OP_TRANSFER);
+        vm.assume(to != address(this));
         vm.expectRevert(Errors.E_OperationDisabled.selector);
         eTST.transfer(to, amount);
 
@@ -158,6 +159,8 @@ contract Governance_PauseAndOps is EVaultTestBase {
 
     function testFuzz_borrowingDisabledOpsShouldFailAfterDisabled(uint256 amount, address receiver) public {
         setDisabledOps(eTST, OP_BORROW);
+        (, uint32 disabledOps) = eTST.hookConfig();
+        evc.enableController(address(this), address(eTST));
         vm.expectRevert(Errors.E_OperationDisabled.selector);
         eTST.borrow(amount, receiver);
 
@@ -183,6 +186,7 @@ contract Governance_PauseAndOps is EVaultTestBase {
 
     function testFuzz_loopingDisabledOpsShouldFailAfterDisabled(uint256 amount, address sharesReceiver) public {
         setDisabledOps(eTST, OP_LOOP);
+        evc.enableController(address(this), address(eTST));
         vm.expectRevert(Errors.E_OperationDisabled.selector);
         eTST.loop(amount, sharesReceiver);
 
@@ -208,6 +212,7 @@ contract Governance_PauseAndOps is EVaultTestBase {
 
     function testFuzz_pullingDebtDisabledOpsShouldFailAfterDisabled(uint256 amount, address from) public {
         setDisabledOps(eTST, OP_PULL_DEBT);
+        evc.enableController(address(this), address(eTST));
         vm.expectRevert(Errors.E_OperationDisabled.selector);
         eTST.pullDebt(amount, from);
 
@@ -235,6 +240,7 @@ contract Governance_PauseAndOps is EVaultTestBase {
         uint256 minYieldBalance
     ) public {
         setDisabledOps(eTST, OP_LIQUIDATE);
+        evc.enableController(address(this), address(eTST));
         vm.expectRevert(Errors.E_OperationDisabled.selector);
         eTST.liquidate(violator, collateral, repayAssets, minYieldBalance);
 
@@ -350,8 +356,6 @@ contract Governance_PauseAndOps is EVaultTestBase {
 
         // check liquidation
         (uint256 maxRepay, uint256 maxYield) = eTST.checkLiquidation(address(this), borrower, address(eTST2));
-        console2.log("maxRepay", maxRepay);
-        console2.log("maxYield", maxYield);
 
         vm.startPrank(liquidator);
         evc.enableCollateral(liquidator, address(eTST2));
