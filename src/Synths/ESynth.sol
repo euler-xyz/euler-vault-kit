@@ -44,11 +44,14 @@ contract ESynth is ERC20Collateral, Ownable {
         address sender = _msgSender();
         MinterData storage minterCache = minters[sender];
 
-        if (minterCache.capacity < uint256(minterCache.minted) + amount) {
+        if (
+            amount > type(uint128).max - minterCache.minted
+                || minterCache.capacity < uint256(minterCache.minted) + amount
+        ) {
             revert E_CapacityReached();
         }
 
-        minterCache.minted += uint128(amount);
+        minterCache.minted += uint128(amount); // safe to down-cast because amount <= capacity <= max uint128
         minters[sender] = minterCache;
 
         _mint(account, amount);
@@ -61,12 +64,13 @@ contract ESynth is ERC20Collateral, Ownable {
         address sender = _msgSender();
         MinterData storage minterCache = minters[sender];
 
-        if (account != sender && sender != owner()) {
+        // The allowance check should be performed if the spender is not the account with the exception of the owner burning from this contract.
+        if (account != sender && !(account == address(this) && sender == owner())) {
             _spendAllowance(account, sender, amount);
         }
 
         // If burning more than minted, reset minted to 0
-        minterCache.minted = minterCache.minted > amount ? minterCache.minted - uint128(amount) : 0;
+        minterCache.minted = minterCache.minted > amount ? minterCache.minted - uint128(amount) : 0; // down-casting is safe because amount < minted <= max uint128
         minters[sender] = minterCache;
 
         _burn(account, amount);

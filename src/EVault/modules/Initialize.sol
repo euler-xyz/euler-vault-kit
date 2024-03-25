@@ -7,8 +7,7 @@ import {Base} from "../shared/Base.sol";
 import {BorrowUtils} from "../shared/BorrowUtils.sol";
 import {DToken} from "../DToken.sol";
 import {ProxyUtils} from "../shared/lib/ProxyUtils.sol";
-import {RevertBytes} from "../shared/lib/RevertBytes.sol";
-import {MarketCache} from "../shared/types/MarketCache.sol";
+import {VaultCache} from "../shared/types/VaultCache.sol";
 
 import "../shared/Constants.sol";
 import "../shared/types/Types.sol";
@@ -39,17 +38,17 @@ abstract contract InitializeModule is IInitialize, Base, BorrowUtils {
 
         // Initialize storage
 
-        marketStorage.lastInterestAccumulatorUpdate = uint48(block.timestamp);
-        marketStorage.interestAccumulator = INITIAL_INTEREST_ACCUMULATOR;
-        marketStorage.interestFee = DEFAULT_INTEREST_FEE.toConfigAmount();
-        marketStorage.creator = marketStorage.governorAdmin = marketStorage.pauseGuardian = proxyCreator;
+        vaultStorage.lastInterestAccumulatorUpdate = uint48(block.timestamp);
+        vaultStorage.interestAccumulator = INITIAL_INTEREST_ACCUMULATOR;
+        vaultStorage.interestFee = DEFAULT_INTEREST_FEE.toConfigAmount();
+        vaultStorage.creator = vaultStorage.governorAdmin = proxyCreator;
 
         snapshot.reset();
 
         // Emit logs
 
         emit EVaultCreated(proxyCreator, address(asset), dToken);
-        logMarketStatus(loadMarket(), 0);
+        logVaultStatus(loadVault(), 0);
     }
 
     // prevent initialization of the implementation contract

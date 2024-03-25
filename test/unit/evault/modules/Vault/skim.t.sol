@@ -2,12 +2,11 @@
 
 pragma solidity ^0.8.0;
 
-import {console2} from "forge-std/Test.sol";
 import {EVaultTestBase} from "../../EVaultTestBase.t.sol";
 
 import "src/EVault/shared/types/Types.sol";
 
-contract ERC4626Test_Skim is EVaultTestBase {
+contract VaultTest_Skim is EVaultTestBase {
     using TypesLib for uint256;
 
     address user;

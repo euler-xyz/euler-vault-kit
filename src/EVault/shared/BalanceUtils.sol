@@ -13,7 +13,7 @@ abstract contract BalanceUtils is Base {
     // Balances
 
     function increaseBalance(
-        MarketCache memory marketCache,
+        VaultCache memory vaultCache,
         address account,
         address sender,
         Shares amount,
@@ -21,12 +21,11 @@ abstract contract BalanceUtils is Base {
     ) internal {
         if (account == address(0)) revert E_BadSharesReceiver();
 
-        (Shares origBalance, bool balanceForwarderEnabled) =
-            marketStorage.users[account].getBalanceAndBalanceForwarder();
+        (Shares origBalance, bool balanceForwarderEnabled) = vaultStorage.users[account].getBalanceAndBalanceForwarder();
         Shares newBalance = origBalance + amount;
 
-        marketStorage.users[account].setBalance(newBalance);
-        marketStorage.totalShares = marketCache.totalShares = marketCache.totalShares + amount;
+        vaultStorage.users[account].setBalance(newBalance);
+        vaultStorage.totalShares = vaultCache.totalShares = vaultCache.totalShares + amount;
 
         if (balanceForwarderEnabled) {
             tryBalanceTrackerHook(account, newBalance.toUint(), false);
@@ -37,15 +36,14 @@ abstract contract BalanceUtils is Base {
     }
 
     function decreaseBalance(
-        MarketCache memory marketCache,
+        VaultCache memory vaultCache,
         address account,
         address sender,
         address receiver,
         Shares amount,
         Assets assets
     ) internal {
-        (Shares origBalance, bool balanceForwarderEnabled) =
-            marketStorage.users[account].getBalanceAndBalanceForwarder();
+        (Shares origBalance, bool balanceForwarderEnabled) = vaultStorage.users[account].getBalanceAndBalanceForwarder();
         if (origBalance < amount) revert E_InsufficientBalance();
 
         Shares newBalance;
@@ -53,8 +51,8 @@ abstract contract BalanceUtils is Base {
             newBalance = origBalance - amount;
         }
 
-        marketStorage.users[account].setBalance(newBalance);
-        marketStorage.totalShares = marketCache.totalShares = marketCache.totalShares - amount;
+        vaultStorage.users[account].setBalance(newBalance);
+        vaultStorage.totalShares = vaultCache.totalShares = vaultCache.totalShares - amount;
 
         if (balanceForwarderEnabled) {
             tryBalanceTrackerHook(account, newBalance.toUint(), isControlCollateralInProgress());
@@ -67,10 +65,10 @@ abstract contract BalanceUtils is Base {
     function transferBalance(address from, address to, Shares amount) internal {
         if (!amount.isZero()) {
             (Shares origFromBalance, bool fromBalanceForwarderEnabled) =
-                marketStorage.users[from].getBalanceAndBalanceForwarder();
+                vaultStorage.users[from].getBalanceAndBalanceForwarder();
 
             (Shares origToBalance, bool toBalanceForwarderEnabled) =
-                marketStorage.users[to].getBalanceAndBalanceForwarder();
+                vaultStorage.users[to].getBalanceAndBalanceForwarder();
 
             if (origFromBalance < amount) revert E_InsufficientBalance();
 
@@ -80,8 +78,8 @@ abstract contract BalanceUtils is Base {
             }
             Shares newToBalance = origToBalance + amount;
 
-            marketStorage.users[from].setBalance(newFromBalance);
-            marketStorage.users[to].setBalance(newToBalance);
+            vaultStorage.users[from].setBalance(newFromBalance);
+            vaultStorage.users[to].setBalance(newToBalance);
 
             if (fromBalanceForwarderEnabled) {
                 tryBalanceTrackerHook(from, newFromBalance.toUint(), isControlCollateralInProgress());
@@ -100,20 +98,20 @@ abstract contract BalanceUtils is Base {
     function setAllowance(address owner, address spender, uint256 amount) internal {
         if (spender == owner) revert E_SelfApproval();
 
-        marketStorage.users[owner].eTokenAllowance[spender] = amount;
+        vaultStorage.users[owner].eTokenAllowance[spender] = amount;
         emit Approval(owner, spender, amount);
     }
 
     function decreaseAllowance(address owner, address spender, Shares amount) internal {
         if (amount.isZero()) return;
 
-        uint256 allowance = marketStorage.users[owner].eTokenAllowance[spender];
+        uint256 allowance = vaultStorage.users[owner].eTokenAllowance[spender];
         if (owner != spender && allowance != type(uint256).max) {
             if (allowance < amount.toUint()) revert E_InsufficientAllowance();
             unchecked {
                 allowance -= amount.toUint();
             }
-            marketStorage.users[owner].eTokenAllowance[spender] = allowance;
+            vaultStorage.users[owner].eTokenAllowance[spender] = allowance;
             emit Approval(owner, spender, allowance);
         }
     }

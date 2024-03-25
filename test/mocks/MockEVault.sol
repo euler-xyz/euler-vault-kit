@@ -11,15 +11,15 @@ contract MockEVault {
         return "TRANSPARENT";
     }
 
-    function UNPACK() internal pure returns (address marketAsset) {
+    function UNPACK() internal pure returns (address vaultAsset) {
         assembly {
-            marketAsset := shr(96, calldataload(sub(calldatasize(), 20)))
+            vaultAsset := shr(96, calldataload(sub(calldatasize(), 20)))
         }
     }
 
     function arbitraryFunction(string calldata arg) external view returns (string memory, address, address) {
-        (address marketAsset) = UNPACK();
-        return (arg, msg.sender, marketAsset);
+        (address vaultAsset) = UNPACK();
+        return (arg, msg.sender, vaultAsset);
     }
 
     function testExcludeFromCoverage() public pure {

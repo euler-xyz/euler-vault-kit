@@ -5,9 +5,9 @@ pragma solidity ^0.8.0;
 import {IERC20} from "../../IEVault.sol";
 import {IPriceOracle} from "../../../interfaces/IPriceOracle.sol";
 
-import {Assets, Owed, Shares, Operations} from "./Types.sol";
+import {Assets, Owed, Shares, Flags} from "./Types.sol";
 
-struct MarketCache {
+struct VaultCache {
     IERC20 asset;
     IPriceOracle oracle;
     address unitOfAccount;
@@ -21,6 +21,7 @@ struct MarketCache {
 
     uint256 supplyCap;
     uint256 borrowCap;
-    Operations disabledOps;
+    Flags hookedOps;
+    Flags configFlags;
     bool snapshotInitialized;
 }

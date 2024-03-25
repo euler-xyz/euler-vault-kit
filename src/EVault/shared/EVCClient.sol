@@ -84,8 +84,8 @@ abstract contract EVCClient is Storage, Events, Errors {
         return evc.getCollaterals(account);
     }
 
-    function isCollateralEnabled(address account, address market) internal view returns (bool) {
-        return evc.isCollateralEnabled(account, market);
+    function isCollateralEnabled(address account, address collateral) internal view returns (bool) {
+        return evc.isCollateralEnabled(account, collateral);
     }
 
     function isAccountStatusCheckDeferred(address account) internal view returns (bool) {
@@ -100,7 +100,7 @@ abstract contract EVCClient is Storage, Events, Errors {
         return evc.isControlCollateralInProgress();
     }
 
-    function verifyController(address account) internal view {
+    function validateController(address account) internal view {
         address[] memory controllers = IEVC(evc).getControllers(account);
 
         if (controllers.length > 1) revert E_TransientState();

@@ -7,7 +7,7 @@ import {Errors} from "src/EVault/shared/Errors.sol";
 import {GovernanceModule} from "src/EVault/modules/Governance.sol";
 import "src/EVault/shared/types/Types.sol";
 
-contract ERC4626Test_Caps is EVaultTestBase {
+contract VaultTest_Caps is EVaultTestBase {
     using TypesLib for uint256;
 
     address user = makeAddr("user");

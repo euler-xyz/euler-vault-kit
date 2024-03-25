@@ -2,18 +2,18 @@
 
 pragma solidity ^0.8.0;
 
-import {Base} from "../shared/Base.sol";
+import {Base} from "./shared/Base.sol";
 
-import {TokenModule} from "./Token.sol";
-import {VaultModule} from "./Vault.sol";
-import {BorrowingModule} from "./Borrowing.sol";
-import {LiquidationModule} from "./Liquidation.sol";
-import {InitializeModule} from "./Initialize.sol";
-import {BalanceForwarderModule} from "./BalanceForwarder.sol";
-import {GovernanceModule} from "./Governance.sol";
-import {RiskManagerModule} from "./RiskManager.sol";
+import {TokenModule} from "./modules/Token.sol";
+import {VaultModule} from "./modules/Vault.sol";
+import {BorrowingModule} from "./modules/Borrowing.sol";
+import {LiquidationModule} from "./modules/Liquidation.sol";
+import {InitializeModule} from "./modules/Initialize.sol";
+import {BalanceForwarderModule} from "./modules/BalanceForwarder.sol";
+import {GovernanceModule} from "./modules/Governance.sol";
+import {RiskManagerModule} from "./modules/RiskManager.sol";
 
-import "../shared/Constants.sol";
+import "./shared/Constants.sol";
 
 abstract contract Dispatch is
     Base,
@@ -26,14 +26,14 @@ abstract contract Dispatch is
     BalanceForwarderModule,
     GovernanceModule
 {
-    address immutable MODULE_INITIALIZE;
-    address immutable MODULE_TOKEN;
-    address immutable MODULE_VAULT;
-    address immutable MODULE_BORROWING;
-    address immutable MODULE_LIQUIDATION;
-    address immutable MODULE_RISKMANAGER;
-    address immutable MODULE_BALANCE_FORWARDER;
-    address immutable MODULE_GOVERNANCE;
+    address public immutable MODULE_INITIALIZE;
+    address public immutable MODULE_TOKEN;
+    address public immutable MODULE_VAULT;
+    address public immutable MODULE_BORROWING;
+    address public immutable MODULE_LIQUIDATION;
+    address public immutable MODULE_RISKMANAGER;
+    address public immutable MODULE_BALANCE_FORWARDER;
+    address public immutable MODULE_GOVERNANCE;
 
     struct DeployedModules {
         address initialize;
