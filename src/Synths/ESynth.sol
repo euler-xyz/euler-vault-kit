@@ -45,7 +45,7 @@ contract ESynth is ERC20Collateral, Ownable {
         MinterData storage minterCache = minters[sender];
 
         if (
-            amount > type(uint256).max - minterCache.minted
+            amount > type(uint128).max - minterCache.minted
                 || minterCache.capacity < uint256(minterCache.minted) + amount
         ) {
             revert E_CapacityReached();
