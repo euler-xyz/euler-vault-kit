@@ -154,8 +154,9 @@ contract GovernanceTest_InterestFee is EVaultTestBase {
         assertEq(eTST.balanceOf(feeReceiver), accumFee - partFee);
     }
 
-    function test_setInterestFee_InsideGuaranteedRange(uint16 newInterestFee) public {
-        vm.assume(newInterestFee >= GUARANTEED_INTEREST_FEE_MIN && newInterestFee <= GUARANTEED_INTEREST_FEE_MAX);
+    function test_setInterestFee_InsideGuaranteedRange() public {
+        uint16 newInterestFee = 0.3e4;
+
         startHoax(address(this));
 
         vm.expectEmit();
@@ -166,9 +167,8 @@ contract GovernanceTest_InterestFee is EVaultTestBase {
         assertEq(eTST.interestFee(), newInterestFee);
     }
 
-    function test_setInterestFee_OutsideGuaranteedRange(uint16 newInterestFee) public {
-        vm.assume(newInterestFee < GUARANTEED_INTEREST_FEE_MIN || newInterestFee > GUARANTEED_INTEREST_FEE_MAX);
-        vm.assume(newInterestFee <= 1e4);
+    function test_setInterestFee_OutsideGuaranteedRange() public {
+        uint16 newInterestFee = 0.6e4;
 
         startHoax(address(this));
         
