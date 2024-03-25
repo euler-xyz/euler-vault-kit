@@ -15,3 +15,8 @@ lcov.info
 # Coverage directory
 coverage/
 *.info
+
+#hardhat dependencies & files
+node_modules
+artifacts/
+cache_hardhat/
