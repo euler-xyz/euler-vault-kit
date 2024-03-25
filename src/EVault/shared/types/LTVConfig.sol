@@ -33,9 +33,10 @@ library LTVConfigLib {
         unchecked {
             uint256 timeElapsed = self.rampDuration - (self.targetTimestamp - block.timestamp);
 
+            // targetLTV < originalLTV and timeElapsed < rampDuration
             ltv = ltv - ((ltv - self.targetLTV.toUint16()) * timeElapsed / self.rampDuration);
         }
-
+        // because ramping happens only when LTV decreases, it's safe to down-cast the new value
         return ConfigAmount.wrap(uint16(ltv));
     }
 
