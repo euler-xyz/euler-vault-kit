@@ -9,13 +9,7 @@ import "src/EVault/shared/types/Types.sol";
 import "src/EVault/shared/Events.sol";
 import "forge-std/Vm.sol";
 
-// If this address is installed, it should be able to set disabled ops
-// Use a different address than the governor
-// The pauseGuardian() accessor should return the currently installed pause guardian
-// After pausing, trying to invoke the disabled ops should fail
-// The pause guardian should be able to re-enable the ops (unpause)
-// After re-enabling, the ops should start working again
-contract Governance_PauseAndOps is EVaultTestBase {
+contract Governance_PauseOps is EVaultTestBase {
     address notGovernor;
     address borrower;
     address depositor;
@@ -61,12 +55,12 @@ contract Governance_PauseAndOps is EVaultTestBase {
         setDisabledOps(eTST, newDisabledOps);
     }
 
-    function testFuzz_pauseGuardianShouldBeAbleToSetPauseGuardian(address newGovernor) public {
+    function testFuzz_onlyGovernorShouldBeAbleToSetGovernor(address newGovernor) public {
         eTST.setGovernorAdmin(newGovernor);
         assertEq(eTST.governorAdmin(), newGovernor);
     }
 
-    function testFuzz_pauseGuardianShouldBeAbleToSetDisabledOps(uint32 newDisabledOps) public {
+    function testFuzz_onlyGovernorShouldBeAbleToSetDisabledOps(uint32 newDisabledOps) public {
         // eTST.setHookConfig(address(0), newDisabledOps);
         setDisabledOps(eTST, newDisabledOps);
         (, uint32 disabledOps) = eTST.hookConfig();
@@ -348,8 +342,7 @@ contract Governance_PauseAndOps is EVaultTestBase {
         evc.enableCollateral(borrower, address(eTST2));
         eTST.borrow(type(uint256).max, borrower);
         vm.stopPrank();
-        // skip(1 weeks);
-        // oracle.setPrice(address(assetTST), unitOfAccount, 0.5e17);
+
         oracle.setPrice(address(eTST2), unitOfAccount, 0.5e17);
 
         // check liquidation
