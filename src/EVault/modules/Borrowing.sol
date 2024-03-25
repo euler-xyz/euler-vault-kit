@@ -64,7 +64,7 @@ abstract contract BorrowingModule is IBorrowing, Base, AssetTransfers, BalanceUt
         nonReentrantView
         returns (uint256)
     {
-        verifyController(account);
+        validateController(account);
 
         // if collateral is not enabled, it will not be locked
         if (!isCollateralEnabled(account, collateral)) return 0;
@@ -206,9 +206,7 @@ abstract contract BorrowingModule is IBorrowing, Base, AssetTransfers, BalanceUt
 
     /// @inheritdoc IBorrowing
     function flashLoan(uint256 amount, bytes calldata data) public virtual nonReentrant {
-        if (vaultStorage.disabledOps.isSet(OP_FLASHLOAN)) {
-            revert E_OperationDisabled();
-        }
+        validateAndCallHook(vaultStorage.hookedOps, OP_FLASHLOAN, CHECKACCOUNT_NONE);
 
         (IERC20 asset,,) = ProxyUtils.metadata();
         address account = EVCAuthenticate();

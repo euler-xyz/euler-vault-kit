@@ -48,5 +48,4 @@ contract Errors {
     error E_BadAssetReceiver();
     error E_BadSharesReceiver();
     error E_LTVRamp();
-    error E_OnlyAssetCanDeposit();
 }

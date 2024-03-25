@@ -100,7 +100,7 @@ abstract contract EVCClient is Storage, Events, Errors {
         return evc.isControlCollateralInProgress();
     }
 
-    function verifyController(address account) internal view {
+    function validateController(address account) internal view {
         address[] memory controllers = IEVC(evc).getControllers(account);
 
         if (controllers.length > 1) revert E_TransientState();

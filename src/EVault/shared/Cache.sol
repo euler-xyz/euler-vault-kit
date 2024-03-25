@@ -49,7 +49,7 @@ contract Cache is Storage, Errors {
         vaultCache.cash = vaultStorage.cash;
         vaultCache.supplyCap = vaultStorage.supplyCap.toUint();
         vaultCache.borrowCap = vaultStorage.borrowCap.toUint();
-        vaultCache.disabledOps = vaultStorage.disabledOps;
+        vaultCache.hookedOps = vaultStorage.hookedOps;
         vaultCache.snapshotInitialized = vaultStorage.snapshotInitialized;
 
         vaultCache.totalShares = vaultStorage.totalShares;
@@ -65,11 +65,6 @@ contract Cache is Storage, Errors {
 
         if (deltaT > 0) {
             dirty = true;
-
-            if (vaultCache.disabledOps.isSet(OP_ACCRUE_INTEREST)) {
-                vaultCache.lastInterestAccumulatorUpdate = uint48(block.timestamp);
-                return dirty;
-            }
 
             // Compute new values. Use full precision for intermediate results.
 

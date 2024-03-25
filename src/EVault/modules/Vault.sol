@@ -42,9 +42,8 @@ abstract contract VaultModule is IVault, Base, AssetTransfers, BalanceUtils {
     /// @inheritdoc IERC4626
     function maxDeposit(address account) public view virtual nonReentrantView returns (uint256) {
         VaultCache memory vaultCache = loadVault();
-        if (vaultCache.disabledOps.isSet(OP_DEPOSIT)) return 0;
 
-        return maxDepositInternal(vaultCache, account);
+        return validateAndCallHookView(vaultCache.hookedOps, OP_DEPOSIT) ? maxDepositInternal(vaultCache, account) : 0;
     }
 
     /// @inheritdoc IERC4626
@@ -56,8 +55,9 @@ abstract contract VaultModule is IVault, Base, AssetTransfers, BalanceUtils {
     function maxMint(address account) public view virtual nonReentrantView returns (uint256) {
         VaultCache memory vaultCache = loadVault();
 
-        if (vaultCache.disabledOps.isSet(OP_MINT)) return 0;
-        return maxDepositInternal(vaultCache, account).toAssets().toSharesDown(vaultCache).toUint();
+        return validateAndCallHookView(vaultCache.hookedOps, OP_MINT)
+            ? maxDepositInternal(vaultCache, account).toAssets().toSharesDown(vaultCache).toUint()
+            : 0;
     }
 
     /// @inheritdoc IERC4626
@@ -69,9 +69,10 @@ abstract contract VaultModule is IVault, Base, AssetTransfers, BalanceUtils {
     /// @inheritdoc IERC4626
     function maxWithdraw(address owner) public view virtual nonReentrantView returns (uint256) {
         VaultCache memory vaultCache = loadVault();
-        if (vaultCache.disabledOps.isSet(OP_WITHDRAW)) return 0;
 
-        return maxRedeemInternal(owner).toAssetsDown(vaultCache).toUint();
+        return validateAndCallHookView(vaultCache.hookedOps, OP_WITHDRAW)
+            ? maxRedeemInternal(owner).toAssetsDown(vaultCache).toUint()
+            : 0;
     }
 
     /// @inheritdoc IERC4626
@@ -82,10 +83,7 @@ abstract contract VaultModule is IVault, Base, AssetTransfers, BalanceUtils {
 
     /// @inheritdoc IERC4626
     function maxRedeem(address owner) public view virtual nonReentrantView returns (uint256) {
-        VaultCache memory vaultCache = loadVault();
-        if (vaultCache.disabledOps.isSet(OP_REDEEM)) return 0;
-
-        return maxRedeemInternal(owner).toUint();
+        return validateAndCallHookView(vaultStorage.hookedOps, OP_REDEEM) ? maxRedeemInternal(owner).toUint() : 0;
     }
 
     /// @inheritdoc IERC4626
@@ -187,10 +185,6 @@ abstract contract VaultModule is IVault, Base, AssetTransfers, BalanceUtils {
         Shares shares = assets.toSharesDown(vaultCache);
         if (shares.isZero()) revert E_ZeroShares();
 
-        if (vaultCache.configFlags.isSet(CFG_ONLY_ASSET_CAN_DEPOSIT) && receiver != asset()) {
-            revert E_OnlyAssetCanDeposit();
-        }
-
         increaseBalance(vaultCache, receiver, account, shares, assets);
         vaultStorage.cash = vaultCache.cash = vaultCache.cash + assets;
 
@@ -204,10 +198,6 @@ abstract contract VaultModule is IVault, Base, AssetTransfers, BalanceUtils {
         address sender,
         address receiver
     ) private {
-        if (vaultCache.configFlags.isSet(CFG_ONLY_ASSET_CAN_DEPOSIT) && sender != asset()) {
-            revert E_OnlyAssetCanDeposit();
-        }
-
         pullAssets(vaultCache, sender, assets);
 
         increaseBalance(vaultCache, receiver, sender, shares, assets);

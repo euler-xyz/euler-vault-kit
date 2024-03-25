@@ -121,19 +121,44 @@ contract EVaultTestBase is AssertionsCustomTypes, Test, DeployPermit2 {
         eTST.setInterestRateModel(address(new IRMTestDefault()));
     }
 
-    uint32 internal constant SYNTH_VAULT_DISABLED_OPS = OP_MINT | OP_REDEEM | OP_SKIM | OP_LOOP | OP_DELOOP;
+    address internal SYNTH_VAULT_HOOK_TARGET = address(new MockHook());
+    uint32 internal constant SYNTH_VAULT_HOOKED_OPS = OP_DEPOSIT | OP_MINT | OP_REDEEM | OP_SKIM | OP_LOOP | OP_DELOOP;
 
     function createSynthEVault(address asset) internal returns (IEVault) {
         IEVault v = IEVault(factory.createProxy(true, abi.encodePacked(address(asset), address(oracle), unitOfAccount)));
         v.setInterestRateModel(address(new IRMTestDefault()));
 
-        v.setDisabledOps(SYNTH_VAULT_DISABLED_OPS);
-        v.setLockedOps(SYNTH_VAULT_DISABLED_OPS);
-
         v.setInterestFee(1e4);
 
-        v.setConfigFlags(v.configFlags() | CFG_ONLY_ASSET_CAN_DEPOSIT);
+        v.setHookConfig(SYNTH_VAULT_HOOK_TARGET, SYNTH_VAULT_HOOKED_OPS);
 
         return v;
+    }
+}
+
+contract MockHook {
+    error E_OnlyAssetCanDeposit();
+    error E_OperationDisabled();
+
+    // deposit is only allowed for the asset
+    function deposit(uint256, address) external view {
+        address asset = IEVault(msg.sender).asset();
+
+        if (asset != caller()) revert E_OnlyAssetCanDeposit();
+    }
+
+    function maxDeposit(address) public view virtual returns (uint256) {
+        return type(uint256).max;
+    }
+
+    // all the other hooked ops are disabled
+    fallback() external {
+        revert E_OperationDisabled();
+    }
+
+    function caller() internal pure returns (address _caller) {
+        assembly {
+            _caller := shr(96, calldataload(sub(calldatasize(), 20)))
+        }
     }
 }

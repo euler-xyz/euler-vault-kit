@@ -300,9 +300,6 @@ interface IGovernance {
     /// @notice Retrieves the address of the governor
     function governorAdmin() external view returns (address);
 
-    /// @notice Retrieves the address of the pause guardian - an account which can disable or enable operations
-    function pauseGuardian() external view returns (address);
-
     /// @notice Retrieves the interest fee in effect for the vault
     /// @return Amount of interest that is redirected as a fee, as a fraction scaled by 1e4
     function interestFee() external view returns (uint16);
@@ -343,11 +340,8 @@ interface IGovernance {
     /// @return Address of the interest rate contract or address zero to indicate 0% interest
     function interestRateModel() external view returns (address);
 
-    /// @notice Retrieves a bitmask indicating which operations are disabled.
-    function disabledOps() external view returns (uint32);
-
-    /// @notice Retrieves a bitmask indicating which operations are locked.
-    function lockedOps() external view returns (uint32);
+    /// @notice Retrieves a hook target and a bitmask indicating which operations call the hook target.
+    function hookConfig() external view returns (address, uint32);
 
     /// @notice Retrieves a bitmask indicating enabled config flags.
     function configFlags() external view returns (uint32);
@@ -382,9 +376,6 @@ interface IGovernance {
     /// @notice Set a new governor address
     function setGovernorAdmin(address newGovernorAdmin) external;
 
-    /// @notice Set a new pause guardian address
-    function setPauseGuardian(address newPauseGuardian) external;
-
     /// @notice Set a new governor fee receiver address
     function setFeeReceiver(address newFeeReceiver) external;
 
@@ -402,11 +393,8 @@ interface IGovernance {
     /// @param newModel Address of the contract
     function setInterestRateModel(address newModel) external;
 
-    /// @notice Set new bitmap indicating which operations should be disabled. Operations are defined in Constants.sol
-    function setDisabledOps(uint32 newDisabledOps) external;
-
-    /// @notice Set new bitmap indicating which operations should be locked. Operations are defined in Constants.sol
-    function setLockedOps(uint32 newLockedOps) external;
+    /// @notice Set a new hook target and a new bitmap indicating which operations should call the hook target. Operations are defined in Constants.sol
+    function setHookConfig(address newHookTarget, uint32 newHookedOps) external;
 
     /// @notice Set new bitmap indicating which config flags should be enabled. Flags are defined in Constants.sol
     function setConfigFlags(uint32 newConfigFlags) external;

@@ -3,7 +3,7 @@
 pragma solidity ^0.8.0;
 
 import {ESVaultTestBase, ESynth} from "./ESVaultTestBase.t.sol";
-import {Errors} from "../../../src/EVault/shared/Errors.sol";
+import {MockHook} from "../evault/EVaultTestBase.t.sol";
 
 contract ESVaultTestAllocate is ESVaultTestBase {
     function setUp() public override {
@@ -13,19 +13,20 @@ contract ESVaultTestAllocate is ESVaultTestBase {
     }
 
     function test_allocate_from_non_synth() public {
-        // enable all the ops to show that when only asset is configured to deposit, mint and skim will fail
-        eTST.setLockedOps(0);
-        eTST.setDisabledOps(0);
-
-        vm.expectRevert(Errors.E_OnlyAssetCanDeposit.selector);
+        vm.expectRevert(MockHook.E_OnlyAssetCanDeposit.selector);
         eTST.deposit(100, address(this));
 
-        vm.expectRevert(Errors.E_OnlyAssetCanDeposit.selector);
+        vm.expectRevert(MockHook.E_OperationDisabled.selector);
         eTST.mint(100, address(this));
 
-        assetTSTAsSynth.mint(address(eTST), 100);
-        vm.expectRevert(Errors.E_OnlyAssetCanDeposit.selector);
+        vm.expectRevert(MockHook.E_OperationDisabled.selector);
         eTST.skim(100, address(this));
+
+        assertEq(eTST.maxDeposit(address(this)), type(uint112).max - eTST.cash());
+
+        assertEq(eTST.maxMint(address(this)), 0);
+
+        assertEq(eTST.maxRedeem(address(this)), 0);
     }
 
     function test_allocate_from_synth() public {

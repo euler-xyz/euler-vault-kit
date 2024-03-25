@@ -78,40 +78,4 @@ contract GovernanceTest is EVaultTestBase {
         assertGt(eTST.totalAssets(), beforePause);
         assertApproxEqRel(eTST.totalAssets(), beforePause, 0.0000000001e18);
     }
-
-    function test_Governance_disableInterestAccrual() public {
-        assertEq(eTST.totalAssets(), 100e18);
-
-        skip(1 days);
-
-        uint256 beforePause = eTST.totalAssets();
-
-        // some interest accrued
-        assertGt(beforePause, 100e18);
-
-        vm.stopPrank();
-
-        // disable interest accrual
-        eTST.setDisabledOps(OP_ACCRUE_INTEREST);
-
-        // the previous interest accrued is recorded in the accumulator
-        assertEq(beforePause, eTST.totalAssets());
-
-        skip(10 days);
-
-        // no change
-        assertEq(beforePause, eTST.totalAssets());
-
-        // no change yet
-        assertEq(beforePause, eTST.totalAssets());
-
-        // re-enable interest accrual
-        eTST.setDisabledOps(0);
-
-        skip(1);
-
-        // interest starts accruing again
-        assertGt(eTST.totalAssets(), beforePause);
-        assertApproxEqRel(eTST.totalAssets(), beforePause, 0.0000000001e18);
-    }
 }

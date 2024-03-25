@@ -79,7 +79,7 @@ abstract contract LiquidationModule is ILiquidation, Base, BalanceUtils, Liquidi
         // Only liquidate trusted collaterals to make sure yield transfer has no side effects.
         if (!isRecognizedCollateral(liqCache.collateral)) revert E_BadCollateral();
         // Verify this vault is the controller for the violator
-        verifyController(liqCache.violator);
+        validateController(liqCache.violator);
         // Violator must have enabled the collateral to be transferred to the liquidator
         if (!isCollateralEnabled(liqCache.violator, liqCache.collateral)) revert E_CollateralDisabled();
         // Violator's health check must not be deferred, meaning no prior operations on violator's account
