@@ -11,13 +11,48 @@ require("@nomicfoundation/hardhat-foundry");
 
 /** @type import('hardhat/config').HardhatUserConfig */
 module.exports = {
-  solidity: "0.8.24",
-  paths: {
-    sources: "./src",
-    tests: "./legacyTest",
-    cache: "./cache",
-    artifacts: "./artifacts"
-  },
+    networks: {
+        hardhat: {
+            hardfork: 'shanghai',
+            chainId: 1,
+            allowUnlimitedContractSize: true,
+        },
+        localhost: {
+            chainId: 1,
+            url: "http://127.0.0.1:8545",
+            timeout: 5 * 60 * 1000, 
+        },
+    },
+    solidity: {
+        compilers: [
+            {
+                version: "0.8.23",
+                settings: {
+                    optimizer: {
+                    enabled: true,
+                        runs: 1000000,
+                    },
+                },
+            },
+        ],
+    },
+    paths: {
+        sources: "./src/",
+        tests: "./legacy_test/",
+        cache: "./cache",
+        artifacts: "./artifacts"
+    },
+    gasReporter: {
+        enabled: !!process.env.REPORT_GAS,
+    },
+
+    contractSizer: {
+        runOnCompile: !!process.env.SIZER,
+    },
+
+    mocha: {
+        timeout: 100000
+    }
 };
 
 let doSkipFork;
