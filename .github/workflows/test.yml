@@ -49,7 +49,11 @@ jobs:
             - uses: foundry-rs/foundry-toolchain@v1
               with:
                   version: nightly
-
+            - uses: actions/setup-node@v3
+              with:
+                  node-version: '18.x'
+                  cache: 'npm'
+                  
             - name: Run foundry build
               run: |
                   forge --version
