@@ -8,7 +8,7 @@ import {Events} from "src/EVault/shared/Events.sol";
 import "src/EVault/shared/types/Types.sol";
 import "src/EVault/shared/Constants.sol";
 
-contract ERC4626Test_LTV is EVaultTestBase {
+contract VaultTest_LTV is EVaultTestBase {
     using TypesLib for uint256;
 
     address depositor;
@@ -50,52 +50,50 @@ contract ERC4626Test_LTV is EVaultTestBase {
     }
 
     function test_rampUp() public {
+        // ramping up is not allowed
+        vm.expectRevert(Errors.E_LTVRamp.selector);
         eTST.setLTV(address(eTST2), 0.8e4, 1000);
 
-        assertEq(eTST.borrowingLTV(address(eTST2)), 0.8e4);
-        assertEq(eTST.liquidationLTV(address(eTST2)), 0.0e4);
+        eTST.setLTV(address(eTST2), 0.8e4, 0);
 
-        skip(250);
-
-        assertEq(eTST.borrowingLTV(address(eTST2)), 0.8e4);
-        assertEq(eTST.liquidationLTV(address(eTST2)), 0.2e4);
-
-        skip(500);
-
-        assertEq(eTST.borrowingLTV(address(eTST2)), 0.8e4);
-        assertEq(eTST.liquidationLTV(address(eTST2)), 0.6e4);
-
-        skip(5000);
-
-        assertEq(eTST.borrowingLTV(address(eTST2)), 0.8e4);
-        assertEq(eTST.liquidationLTV(address(eTST2)), 0.8e4);
-    }
-
-    function test_rampRetarget() public {
+        // ramping to stay the same is not allowed
+        vm.expectRevert(Errors.E_LTVRamp.selector);
         eTST.setLTV(address(eTST2), 0.8e4, 1000);
-
-        assertEq(eTST.borrowingLTV(address(eTST2)), 0.8e4);
-        assertEq(eTST.liquidationLTV(address(eTST2)), 0.0e4);
-
-        skip(250);
-
-        assertEq(eTST.borrowingLTV(address(eTST2)), 0.8e4);
-        assertEq(eTST.liquidationLTV(address(eTST2)), 0.2e4);
 
         eTST.setLTV(address(eTST2), 0.1e4, 1000);
 
-        assertEq(eTST.borrowingLTV(address(eTST2)), 0.1e4);
-        assertEq(eTST.liquidationLTV(address(eTST2)), 0.2e4);
-
-        skip(500);
+        skip(250);
 
         assertEq(eTST.borrowingLTV(address(eTST2)), 0.1e4);
-        assertEq(eTST.liquidationLTV(address(eTST2)), 0.15e4);
+        assertEq(eTST.liquidationLTV(address(eTST2)), 0.625e4);
 
-        skip(600);
+        // ramp up on a way down is not allowed
+        vm.expectRevert(Errors.E_LTVRamp.selector);
+        eTST.setLTV(address(eTST2), 0.65e4, 1000);
 
-        assertEq(eTST.borrowingLTV(address(eTST2)), 0.1e4);
-        assertEq(eTST.liquidationLTV(address(eTST2)), 0.1e4);
+        // can jump immediatelly
+        eTST.setLTV(address(eTST2), 0.65e4, 0);
+
+        // ramp down again
+        eTST.setLTV(address(eTST2), 0.1e4, 1000);
+
+        skip(250);
+
+        assertEq(eTST.liquidationLTV(address(eTST2)), 0.5125e4);
+
+        // can retarget - set a lower LTV with a new ramp
+        eTST.setLTV(address(eTST2), 0.5e4, 100);
+
+        skip(50);
+
+        assertEq(eTST.borrowingLTV(address(eTST2)), 0.5e4);
+        assertEq(eTST.liquidationLTV(address(eTST2)), 0.5063e4);
+
+        skip(50);
+
+        // on new target
+        assertEq(eTST.borrowingLTV(address(eTST2)), 0.5e4);
+        assertEq(eTST.liquidationLTV(address(eTST2)), 0.5e4);
     }
 
     function test_ltvRange() public {

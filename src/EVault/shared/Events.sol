@@ -23,12 +23,12 @@ abstract contract Events {
     event ConvertFees(
         address indexed sender,
         address indexed protocolReceiver,
-        address indexed feeReceiver,
-        uint256 protocolAssets,
-        uint256 feeAssets
+        address indexed governorReceiver,
+        uint256 protocolShares,
+        uint256 governorShares
     );
 
-    event MarketStatus(
+    event VaultStatus(
         uint256 totalShares,
         uint256 totalBorrows,
         uint256 accumulatedFees,

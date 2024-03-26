@@ -217,7 +217,7 @@ interface IBorrowing {
     /// @param data Passed through to the onFlashLoan() callback, so contracts don't need to store transient data in storage
     function flashLoan(uint256 amount, bytes calldata data) external;
 
-    /// @notice Updates interest accumulator and totalBorrows, credits reserves, re-targets interest rate, and logs market status
+    /// @notice Updates interest accumulator and totalBorrows, credits reserves, re-targets interest rate, and logs vault status
     function touch() external;
 }
 
@@ -300,9 +300,6 @@ interface IGovernance {
     /// @notice Retrieves the address of the governor
     function governorAdmin() external view returns (address);
 
-    /// @notice Retrieves the address of the pause guardian - an account which can disable or enable operations
-    function pauseGuardian() external view returns (address);
-
     /// @notice Retrieves the interest fee in effect for the vault
     /// @return Amount of interest that is redirected as a fee, as a fraction scaled by 1e4
     function interestFee() external view returns (uint16);
@@ -343,8 +340,11 @@ interface IGovernance {
     /// @return Address of the interest rate contract or address zero to indicate 0% interest
     function interestRateModel() external view returns (address);
 
-    /// @notice Retrieves a bitmask indicating which operations are disabled.
-    function disabledOps() external view returns (uint32);
+    /// @notice Retrieves a hook target and a bitmask indicating which operations call the hook target.
+    function hookConfig() external view returns (address, uint32);
+
+    /// @notice Retrieves a bitmask indicating enabled config flags.
+    function configFlags() external view returns (uint32);
 
     /// @notice Retrieves supply and borrow caps in AmountCap format
     function caps() external view returns (uint16 supplyCap, uint16 borrowCap);
@@ -376,9 +376,6 @@ interface IGovernance {
     /// @notice Set a new governor address
     function setGovernorAdmin(address newGovernorAdmin) external;
 
-    /// @notice Set a new pause guardian address
-    function setPauseGuardian(address newPauseGuardian) external;
-
     /// @notice Set a new governor fee receiver address
     function setFeeReceiver(address newFeeReceiver) external;
 
@@ -394,10 +391,13 @@ interface IGovernance {
 
     /// @notice Set a new interest rate model contract
     /// @param newModel Address of the contract
-    function setIRM(address newModel) external;
+    function setInterestRateModel(address newModel) external;
 
-    /// @notice Set new bitmap indicating which operations should be disabled. Operations are defined in Constants contract
-    function setDisabledOps(uint32 newDisabledOps) external;
+    /// @notice Set a new hook target and a new bitmap indicating which operations should call the hook target. Operations are defined in Constants.sol
+    function setHookConfig(address newHookTarget, uint32 newHookedOps) external;
+
+    /// @notice Set new bitmap indicating which config flags should be enabled. Flags are defined in Constants.sol
+    function setConfigFlags(uint32 newConfigFlags) external;
 
     /// @notice Set new supply and borrow caps in AmountCap format
     function setCaps(uint16 supplyCap, uint16 borrowCap) external;
@@ -415,4 +415,21 @@ interface IEVault is
     IRiskManager,
     IBalanceForwarder,
     IGovernance
-{}
+{
+    /// @notice Fetch address of the `Initialize` module
+    function MODULE_INITIALIZE() external view returns (address);
+    /// @notice Fetch address of the `Token` module
+    function MODULE_TOKEN() external view returns (address);
+    /// @notice Fetch address of the `Vault` module
+    function MODULE_VAULT() external view returns (address);
+    /// @notice Fetch address of the `Borrowing` module
+    function MODULE_BORROWING() external view returns (address);
+    /// @notice Fetch address of the `Liquidation` module
+    function MODULE_LIQUIDATION() external view returns (address);
+    /// @notice Fetch address of the `RiskManager` module
+    function MODULE_RISKMANAGER() external view returns (address);
+    /// @notice Fetch address of the `BalanceForwarder` module
+    function MODULE_BALANCE_FORWARDER() external view returns (address);
+    /// @notice Fetch address of the `Governance` module
+    function MODULE_GOVERNANCE() external view returns (address);
+}

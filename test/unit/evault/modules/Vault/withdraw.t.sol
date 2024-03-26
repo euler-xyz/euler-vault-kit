@@ -2,7 +2,6 @@
 
 pragma solidity ^0.8.0;
 
-import {console2} from "forge-std/Test.sol";
 import {EVaultTestBase} from "../../EVaultTestBase.t.sol";
 import {Events} from "src/EVault/shared/Events.sol";
 import {SafeERC20Lib} from "src/EVault/shared/lib/SafeERC20Lib.sol";
@@ -47,6 +46,8 @@ contract VaultTest_withdraw is EVaultTestBase {
         assetTST2.mint(borrower, type(uint256).max);
         assetTST2.approve(address(eTST2), type(uint256).max);
         eTST2.deposit(10e18, borrower);
+
+        vm.stopPrank();
     }
 
     function test_basicMaxWithdraw() public {
@@ -118,8 +119,11 @@ contract VaultTest_withdraw is EVaultTestBase {
     }
 
     function test_Withdraw_RevertsWhen_ReceiverIsSubaccount() public {
+        // Configure vault as non-EVC compatible: protections on
+        eTST.setConfigFlags(eTST.configFlags() & ~CFG_EVC_COMPATIBLE_ASSET);
+
         startHoax(depositor);
-        address subacc = address(uint160(depositor) >> 8 << 8);
+        address subacc = address(uint160(depositor) ^ 42);
 
         // depositor is not known to EVC yet
         eTST.withdraw(1, subacc, depositor);
@@ -132,21 +136,15 @@ contract VaultTest_withdraw is EVaultTestBase {
         vm.expectRevert(Errors.E_BadAssetReceiver.selector);
         eTST.withdraw(1, subacc, depositor);
 
-        vm.expectRevert(Errors.E_BadAssetReceiver.selector);
-        eTST.withdraw(1, address(uint160(subacc) + 255), depositor);
-
         // address outside of sub-accounts range are accepted
-        address otherAccount = address(uint160(subacc) - 1);
-        eTST.withdraw(1, otherAccount, depositor);
-        assertEq(assetTST.balanceOf(otherAccount), 1);
-
-        otherAccount = address(uint160(subacc) + 256);
+        address otherAccount = address(uint160(depositor) ^ 256);
         eTST.withdraw(1, otherAccount, depositor);
         assertEq(assetTST.balanceOf(otherAccount), 1);
 
         vm.stopPrank();
+
         // governance switches the protections off
-        eTST.setDisabledOps(OP_VALIDATE_ASSET_RECEIVER);
+        eTST.setConfigFlags(eTST.configFlags() | CFG_EVC_COMPATIBLE_ASSET);
 
         startHoax(depositor);
         // withdrawal is allowed again
@@ -155,8 +153,11 @@ contract VaultTest_withdraw is EVaultTestBase {
     }
 
     function test_Redeem_RevertsWhen_ReceiverIsSubaccount() public {
+        // Configure vault as non-EVC compatible: protections on
+        eTST.setConfigFlags(eTST.configFlags() & ~CFG_EVC_COMPATIBLE_ASSET);
+
         startHoax(depositor);
-        address subacc = address(uint160(depositor) >> 8 << 8);
+        address subacc = address(uint160(depositor) ^ 42);
 
         // depositor is not known to EVC yet
         eTST.redeem(1, subacc, depositor);
@@ -169,21 +170,15 @@ contract VaultTest_withdraw is EVaultTestBase {
         vm.expectRevert(Errors.E_BadAssetReceiver.selector);
         eTST.redeem(1, subacc, depositor);
 
-        vm.expectRevert(Errors.E_BadAssetReceiver.selector);
-        eTST.redeem(1, address(uint160(subacc) + 255), depositor);
-
         // address outside of sub-accounts range are accepted
-        address otherAccount = address(uint160(subacc) - 1);
-        eTST.redeem(1, otherAccount, depositor);
-        assertEq(assetTST.balanceOf(otherAccount), 1);
-
-        otherAccount = address(uint160(subacc) + 256);
+        address otherAccount = address(uint160(depositor) ^ 256);
         eTST.redeem(1, otherAccount, depositor);
         assertEq(assetTST.balanceOf(otherAccount), 1);
 
         vm.stopPrank();
+
         // governance switches the protections off
-        eTST.setDisabledOps(OP_VALIDATE_ASSET_RECEIVER);
+        eTST.setConfigFlags(eTST.configFlags() | CFG_EVC_COMPATIBLE_ASSET);
 
         startHoax(depositor);
         // redeem is allowed again
