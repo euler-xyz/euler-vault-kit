@@ -151,10 +151,10 @@ abstract contract GovernanceModule is IGovernance, Base, BalanceUtils, BorrowUti
         Shares governorShares = vaultCache.accumulatedFees.mulDiv(1e4 - protocolFee, 1e4);
         Shares protocolShares = vaultCache.accumulatedFees - governorShares;
 
-        vaultStorage.accumulatedFees = vaultCache.accumulatedFees = Shares.wrap(0);
-
         // Decrease totalShares because increaseBalance will increase it by that total amount
         vaultStorage.totalShares = vaultCache.totalShares = vaultCache.totalShares - vaultCache.accumulatedFees;
+
+        vaultStorage.accumulatedFees = vaultCache.accumulatedFees = Shares.wrap(0);
 
         // For the Deposit events in increaseBalance the assets amount is zero - the shares are covered with the accrued interest
         if (!governorShares.isZero()) {
