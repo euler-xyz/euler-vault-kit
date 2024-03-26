@@ -37,10 +37,6 @@ contract LiquidationHarness is Liquidation {
         return getCollaterals(account);
     }
 
-    function getNumCollaterals(address account) public view returns (uint256) {
-        return getCollaterals(account).length;
-    }
-
     function isRecognizedCollateralExt(address collateral) external view virtual returns (bool) {
         return isRecognizedCollateral(collateral);
     }
@@ -51,6 +47,10 @@ contract LiquidationHarness is Liquidation {
 
     function isAccountStatusCheckDeferredExt(address account) external view returns (bool) {
         return isAccountStatusCheckDeferred(account);
+    }
+
+    function marketCacheOracleConfigured() external returns (bool) {
+        return address(loadMarket().oracle) != address(0);
     }
 
 
