@@ -60,6 +60,11 @@ jobs:
             - uses: foundry-rs/foundry-toolchain@v1
               with:
                   version: nightly
+            - uses: actions/setup-node@v3
+              with:
+                  node-version: '18.x'
+                  cache: 'npm'
+    
             - name: Run foundry tests
               # --ast tests enables inline configs to work https://github.com/foundry-rs/foundry/issues/7310#issuecomment-1978088200
               run: |
