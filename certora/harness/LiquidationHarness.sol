@@ -11,8 +11,19 @@ contract LiquidationHarness is Liquidation {
     function calculateLiquidityExternal(
         address account
     ) public view returns (uint256 collateralValue, uint256 liabilityValue) {
-        MarketCache memory marketCache; // uninitialized
-        return calculateLiquidity(marketCache, account, getCollaterals(account), LTVType.LIQUIDATION);
+        return calculateLiquidity(loadMarket(), account, getCollaterals(account), LTVType.LIQUIDATION);
+    }
+
+    function getLiquidityValue(address account, MarketCache memory marketCache, address[] memory collaterals) public view returns (uint256 collateralValue) {
+        (collateralValue, ) = calculateLiquidity(marketCache, account, collaterals, LTVType.LIQUIDATION);
+    }
+    
+    function getLiabilityValue(address account, MarketCache memory marketCache, address[] memory collaterals) public view returns (uint256 liabilityValue) {
+        (,liabilityValue) = calculateLiquidity(marketCache, account, collaterals, LTVType.LIQUIDATION);
+    }
+
+    function loadMarketExt() public returns (MarketCache memory marketCache) {
+        return loadMarket();
     }
 
     function initOperationExternal(uint32 operation, address accountToCheck)
@@ -20,6 +31,10 @@ contract LiquidationHarness is Liquidation {
         returns (MarketCache memory marketCache, address account)
     {
         return initOperation(operation, accountToCheck);
+    }
+
+    function getCollateralsExt(address account) public view returns (address[] memory) {
+        return getCollaterals(account);
     }
 
     function getNumCollaterals(address account) public view returns (uint256) {
