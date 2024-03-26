@@ -29,17 +29,12 @@ checkLiquidation must revert if:
 methods {
     // This is defined in IPriceOracle which is in another codebase
     function _.getQuote(uint256 amount, address base, address quote) external => NONDET;
-    function Cache.loadMarket() internal returns (Liquidation.MarketCache memory) => UninitMarket();
+    function _.getQuotes(uint256 amount, address base, address quote) external => NONDET;
     function isRecognizedCollateralExt(address collateral) external returns (bool) envfree;
 
     function isCollateralEnabledExt(address account, address market) external returns (bool) envfree;
 
     function isAccountStatusCheckDeferredExt(address account) external returns (bool) envfree;
-}
-
-function UninitMarket() returns Liquidation.MarketCache {
-    Liquidation.MarketCache mk;
-    return mk;
 }
 
 rule checkLiquidation_healthy() {
@@ -49,27 +44,23 @@ rule checkLiquidation_healthy() {
     address collateral;
     uint256 maxRepay;
     uint256 maxYield;
-    uint256 liquidityCollateralValue; 
-    uint256 liquidityLiabilityValue;
 
-    (liquidityCollateralValue, liquidityLiabilityValue) =
-         calculateLiquidityExternal(e, violator);
+    Liquidation.MarketCache marketCache;
+    require marketCache.oracle!= 0;
 
-    // (maxRepay, maxYield) = checkLiquidation(e, liquidator, violator, collateral);
+    address[] collaterals = getCollateralsExt(e, violator);
 
-    // bool checkReverted = lastReverted;
+    uint256 liquidityCollateralValue = getLiquidityValue(e, violator, marketCache, collaterals);
+    uint256 liquidityLiabilityValue = getLiabilityValue(e, violator, marketCache, collaterals);
 
-    // Assume healthy 
-    // require liquidityCollateralValue >= liquidityLiabilityValue;
-    // assert checkReverted;
-    // satisfy !checkReverted;
-    
-    // require liquidityCollateralValue >= liquidityLiabilityValue;
-    // assert maxRepay == 0;
-    // assert maxYield == 0;
-    assert false;
+    (maxRepay, maxYield) = checkLiquidation(e, liquidator, violator, collateral);
+
+    require liquidityCollateralValue >= liquidityLiabilityValue;
+    assert maxRepay == 0;
+    assert maxYield == 0;
 } 
 
+/*
 rule checkLiquidation_mustRevert {
     env e;
     address liquidator;
@@ -91,3 +82,4 @@ rule checkLiquidation_mustRevert {
         violatorStatusCheckDeferred => reverted;
 
 }
+*/
