@@ -132,10 +132,11 @@ contract EulerSavingsRate is EVCUtil, ERC4626 {
         uint256 assetBalance = IERC20(asset()).balanceOf(address(this));
         uint256 toGulp = assetBalance - totalAssetsDeposited - esrSlotCache.interestLeft;
 
+        uint256 maxGulp = type(uint168).max - esrSlotCache.interestLeft;
+        if (toGulp > maxGulp) toGulp = maxGulp; // cap interest, allowing the vault to function
+
         esrSlotCache.interestSmearEnd = uint40(block.timestamp + INTEREST_SMEAR);
-        esrSlotCache.interestLeft = toGulp > type(uint168).max - esrSlotCache.interestLeft
-            ? type(uint168).max // cap interest, but allow the vault to function
-            : esrSlotCache.interestLeft + uint168(toGulp);
+        esrSlotCache.interestLeft += uint168(toGulp); // toGulp <= maxGulp <= max uint168
 
         // write esrSlotCache back to storage in a single SSTORE
         esrSlot = esrSlotCache;
