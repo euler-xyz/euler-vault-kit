@@ -25,10 +25,10 @@ jobs:
 
             # Cache Node.js dependencies
             - name: Cache Node.js dependencies
-                uses: actions/cache@v2
-                with:
-                path: node_modules
-                key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+              uses: actions/cache@v2
+              with:
+                  path: node_modules
+                  key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
 
     build:
         runs-on: ubuntu-latest
