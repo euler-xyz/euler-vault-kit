@@ -58,9 +58,33 @@ rule checkLiquidation_healthy() {
     require liquidityCollateralValue >= liquidityLiabilityValue;
     assert maxRepay == 0;
     assert maxYield == 0;
-} 
+}
 
-/*
+rule checkLiquidation_maxYieldGreater {
+    env e;
+    address liquidator;
+    address violator; 
+    address collateral;
+    uint256 maxRepay;
+    uint256 maxYield;
+
+    Liquidation.MarketCache marketCache;
+    require marketCache.oracle!= 0;
+
+    address[] collaterals = getCollateralsExt(e, violator);
+
+    uint256 liquidityCollateralValue = getLiquidityValue(e, violator, marketCache, collaterals);
+    uint256 liquidityLiabilityValue = getLiabilityValue(e, violator, marketCache, collaterals);
+
+    (maxRepay, maxYield) = checkLiquidation(e, liquidator, violator, collateral);
+
+    require maxYield > 0;
+    require maxRepay > 0;
+
+    require liquidityCollateralValue < liquidityLiabilityValue;
+    assert maxYield > maxRepay;
+}
+
 rule checkLiquidation_mustRevert {
     env e;
     address liquidator;
@@ -82,4 +106,3 @@ rule checkLiquidation_mustRevert {
         violatorStatusCheckDeferred => reverted;
 
 }
-*/
