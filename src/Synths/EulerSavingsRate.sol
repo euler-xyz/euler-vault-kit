@@ -29,7 +29,6 @@ contract EulerSavingsRate is EVCUtil, ERC4626 {
     uint256 totalAssetsDeposited;
 
     error Reentrancy();
-    error E_GulpTooMuch();
 
     /// @notice Modifier to require an account status check on the EVC.
     /// @dev Calls `requireAccountStatusCheck` function from EVC for the specified account after the function body.
@@ -133,10 +132,11 @@ contract EulerSavingsRate is EVCUtil, ERC4626 {
         uint256 assetBalance = IERC20(asset()).balanceOf(address(this));
         uint256 toGulp = assetBalance - totalAssetsDeposited - esrSlotCache.interestLeft;
 
-        if (toGulp > type(uint168).max - esrSlotCache.interestLeft) revert E_GulpTooMuch();
-
         esrSlotCache.interestSmearEnd = uint40(block.timestamp + INTEREST_SMEAR);
-        esrSlotCache.interestLeft += uint168(toGulp);
+        esrSlotCache.interestLeft = toGulp > type(uint168).max - esrSlotCache.interestLeft
+            ? type(uint168).max // cap interest, but allow the vault to function
+            : esrSlotCache.interestLeft + uint168(toGulp);
+
         // write esrSlotCache back to storage in a single SSTORE
         esrSlot = esrSlotCache;
     }
