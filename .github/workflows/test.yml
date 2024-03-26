@@ -78,16 +78,16 @@ jobs:
         steps:
             - uses: actions/checkout@v3
               with:
-                submodules: recursive
+                  submodules: recursive
             - name: Install foundry
-             uses: foundry-rs/foundry-toolchain@v1
-             with:
-                 version: nightly
+              uses: foundry-rs/foundry-toolchain@v1
+              with:
+                  version: nightly
             - name: Install packages
-             uses: actions/setup-node@v3
-             with:
-                 node-version: '18.x'
-                 cache: 'npm'
+              uses: actions/setup-node@v3
+              with:
+                  node-version: '18.x'
+                  cache: 'npm'
             - name: Install NPM packages
               run: npm ci
 
@@ -102,14 +102,14 @@ jobs:
               with:
                 submodules: recursive
             - name: Install foundry
-             uses: foundry-rs/foundry-toolchain@v1
-             with:
+              uses: foundry-rs/foundry-toolchain@v1
+              with:
                  version: nightly
             - name: Install packages
-             uses: actions/setup-node@v3
-             with:
-                 node-version: '18.x'
-                 cache: 'npm'
+              uses: actions/setup-node@v3
+              with:
+                  node-version: '18.x'
+                  cache: 'npm'
             - name: Install NPM packages
               run: npm ci
 
