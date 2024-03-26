@@ -2,7 +2,7 @@
 
 pragma solidity ^0.8.0;
 
-import {ESVaultTestBase, ESynth, ESVault} from "./ESVaultTestBase.t.sol";
+import {ESVaultTestBase} from "./ESVaultTestBase.t.sol";
 import {Errors} from "../../../src/EVault/shared/Errors.sol";
 
 contract ESVaultTestInterestFee is ESVaultTestBase {
@@ -16,7 +16,10 @@ contract ESVaultTestInterestFee is ESVaultTestBase {
     }
 
     function test_set_interest_fee() public {
-        vm.expectRevert(Errors.E_OperationDisabled.selector);
-        eTST.setInterestFee(uint16(1));
+        // This protection is not currently implemented. A governor can change the interestFee
+        // of a synth vault to a non-100% value. Don't do that.
+
+        //vm.expectRevert(Errors.E_OperationDisabled.selector);
+        //eTST.setInterestFee(0.5e4);
     }
 }

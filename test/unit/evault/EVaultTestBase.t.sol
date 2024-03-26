@@ -24,6 +24,9 @@ import {IEVault, IERC20} from "src/EVault/IEVault.sol";
 import {TypesLib} from "src/EVault/shared/types/Types.sol";
 import {Base} from "src/EVault/shared/Base.sol";
 
+import {Core} from "src/ProductLines/Core.sol";
+import {Escrow} from "src/ProductLines/Escrow.sol";
+
 import {EthereumVaultConnector} from "ethereum-vault-connector/EthereumVaultConnector.sol";
 
 import {TestERC20} from "../../mocks/TestERC20.sol";
@@ -45,6 +48,9 @@ contract EVaultTestBase is AssertionsCustomTypes, Test, DeployPermit2 {
     address unitOfAccount;
     address permit2;
     GenericFactory public factory;
+
+    Core public coreProductLine;
+    Escrow public escrowProductLine;
 
     Base.Integrations integrations;
     Dispatch.DeployedModules modules;
@@ -102,13 +108,57 @@ contract EVaultTestBase is AssertionsCustomTypes, Test, DeployPermit2 {
         vm.prank(admin);
         factory.setImplementation(evaultImpl);
 
+        coreProductLine = new Core(address(factory), address(evc), address(this), feeReceiver);
+        escrowProductLine = new Escrow(address(factory), address(evc));
+
         assetTST = new TestERC20("Test Token", "TST", 18, false);
         assetTST2 = new TestERC20("Test Token 2", "TST2", 18, false);
 
-        eTST = IEVault(factory.createProxy(true, abi.encodePacked(address(assetTST), address(oracle), unitOfAccount)));
-        eTST.setIRM(address(new IRMTestDefault()));
+        eTST = IEVault(coreProductLine.createVault(address(assetTST), address(oracle), unitOfAccount));
+        eTST.setInterestRateModel(address(new IRMTestDefault()));
 
-        eTST2 = IEVault(factory.createProxy(true, abi.encodePacked(address(assetTST2), address(oracle), unitOfAccount)));
-        eTST2.setIRM(address(new IRMTestDefault()));
+        eTST2 = IEVault(coreProductLine.createVault(address(assetTST2), address(oracle), unitOfAccount));
+        eTST.setInterestRateModel(address(new IRMTestDefault()));
+    }
+
+    address internal SYNTH_VAULT_HOOK_TARGET = address(new MockHook());
+    uint32 internal constant SYNTH_VAULT_HOOKED_OPS = OP_DEPOSIT | OP_MINT | OP_REDEEM | OP_SKIM | OP_LOOP | OP_DELOOP;
+
+    function createSynthEVault(address asset) internal returns (IEVault) {
+        IEVault v = IEVault(factory.createProxy(true, abi.encodePacked(address(asset), address(oracle), unitOfAccount)));
+        v.setInterestRateModel(address(new IRMTestDefault()));
+
+        v.setInterestFee(1e4);
+
+        v.setHookConfig(SYNTH_VAULT_HOOK_TARGET, SYNTH_VAULT_HOOKED_OPS);
+
+        return v;
+    }
+}
+
+contract MockHook {
+    error E_OnlyAssetCanDeposit();
+    error E_OperationDisabled();
+
+    // deposit is only allowed for the asset
+    function deposit(uint256, address) external view {
+        address asset = IEVault(msg.sender).asset();
+
+        if (asset != caller()) revert E_OnlyAssetCanDeposit();
+    }
+
+    function maxDeposit(address) public view virtual returns (uint256) {
+        return type(uint256).max;
+    }
+
+    // all the other hooked ops are disabled
+    fallback() external {
+        revert E_OperationDisabled();
+    }
+
+    function caller() internal pure returns (address _caller) {
+        assembly {
+            _caller := shr(96, calldataload(sub(calldatasize(), 20)))
+        }
     }
 }

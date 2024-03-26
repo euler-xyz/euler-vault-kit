@@ -40,11 +40,14 @@ uint32 constant OP_CONVERT_FEES = 1 << 11;
 uint32 constant OP_LIQUIDATE = 1 << 12;
 uint32 constant OP_FLASHLOAN = 1 << 13;
 uint32 constant OP_TOUCH = 1 << 14;
-uint32 constant OP_ACCRUE_INTEREST = 1 << 15;
-uint32 constant OP_SOCIALIZE_DEBT = 1 << 16;
-uint32 constant OP_VALIDATE_ASSET_RECEIVER = 1 << 17;
+
+// Config Flags
+
+uint32 constant CFG_DONT_SOCIALIZE_DEBT = 1 << 0;
+uint32 constant CFG_EVC_COMPATIBLE_ASSET = 1 << 1;
 
 // EVC authentication
 
-// in order to perform these operations, the account must have the vault installed as a controller
-uint32 constant CONTROLLER_REQUIRED_OPS = OP_BORROW | OP_LOOP | OP_PULL_DEBT | OP_LIQUIDATE;
+// in order to perform these operations, the account doesn't need to have the vault installed as a controller
+uint32 constant CONTROLLER_NEUTRAL_OPS = OP_DEPOSIT | OP_MINT | OP_WITHDRAW | OP_REDEEM | OP_TRANSFER | OP_SKIM
+    | OP_REPAY | OP_DELOOP | OP_CONVERT_FEES | OP_FLASHLOAN | OP_TOUCH;

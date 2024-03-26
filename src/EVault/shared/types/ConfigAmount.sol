@@ -44,20 +44,6 @@ library ConfigAmountLib {
     }
 }
 
-// note assuming arithmetic checks are already performed
-function addConfigAmount(ConfigAmount a, ConfigAmount b) pure returns (ConfigAmount) {
-    unchecked {
-        return ConfigAmount.wrap(a.toUint16() + b.toUint16());
-    }
-}
-
-// note assuming arithmetic checks are already performed
-function subConfigAmount(ConfigAmount a, ConfigAmount b) pure returns (ConfigAmount) {
-    unchecked {
-        return ConfigAmount.wrap(a.toUint16() - b.toUint16());
-    }
-}
-
 function gtConfigAmount(ConfigAmount a, ConfigAmount b) pure returns (bool) {
     unchecked {
         return a.toUint16() > b.toUint16();

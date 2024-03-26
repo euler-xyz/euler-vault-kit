@@ -4,6 +4,7 @@ pragma solidity ^0.8.0;
 
 import {EVCClient} from "./EVCClient.sol";
 import {Cache} from "./Cache.sol";
+import {RevertBytes} from "./lib/RevertBytes.sol";
 
 import {IProtocolConfig} from "../../ProtocolConfig/IProtocolConfig.sol";
 import {IBalanceTracker} from "../../interfaces/IBalanceTracker.sol";
@@ -33,51 +34,72 @@ abstract contract Base is EVCClient, Cache {
     } // documentation only
 
     modifier nonReentrant() {
-        if (marketStorage.reentrancyLocked) revert E_Reentrancy();
+        if (vaultStorage.reentrancyLocked) revert E_Reentrancy();
 
-        marketStorage.reentrancyLocked = true;
+        vaultStorage.reentrancyLocked = true;
         _;
-        marketStorage.reentrancyLocked = false;
+        vaultStorage.reentrancyLocked = false;
     }
 
     modifier nonReentrantView() {
-        if (marketStorage.reentrancyLocked) revert E_Reentrancy();
+        if (vaultStorage.reentrancyLocked) revert E_Reentrancy();
         _;
     }
 
-    // Generate a market snapshot and store it.
+    // Generate a vault snapshot and store it.
     // Queue vault and maybe account checks in the EVC (caller, current, onBehalfOf or none).
     // If needed, revert if this contract is not the controller of the authenticated account.
-    // Returns the MarketCache and active account.
+    // Returns the VaultCache and active account.
     function initOperation(uint32 operation, address accountToCheck)
         internal
-        returns (MarketCache memory marketCache, address account)
+        returns (VaultCache memory vaultCache, address account)
     {
-        marketCache = updateMarket();
+        vaultCache = updateVault();
+        account = EVCAuthenticateDeferred(CONTROLLER_NEUTRAL_OPS & operation == 0);
 
-        if (marketCache.disabledOps.check(operation)) {
-            revert E_OperationDisabled();
-        }
+        validateAndCallHook(vaultCache.hookedOps, operation, account);
+        EVCRequireStatusChecks(accountToCheck == CHECKACCOUNT_CALLER ? account : accountToCheck);
 
         // The snapshot is used only to verify that supply increased when checking the supply cap, and to verify that the borrows
         // increased when checking the borrowing cap. Caps are not checked when the capped variables decrease (become safer).
         // For this reason, the snapshot is disabled if both caps are disabled.
         if (
-            !marketCache.snapshotInitialized
-                && (marketCache.supplyCap < type(uint256).max || marketCache.borrowCap < type(uint256).max)
+            !vaultCache.snapshotInitialized
+                && (vaultCache.supplyCap < type(uint256).max || vaultCache.borrowCap < type(uint256).max)
         ) {
-            marketStorage.snapshotInitialized = marketCache.snapshotInitialized = true;
-            snapshot.set(marketCache.cash, marketCache.totalBorrows.toAssetsUp());
+            vaultStorage.snapshotInitialized = vaultCache.snapshotInitialized = true;
+            snapshot.set(vaultCache.cash, vaultCache.totalBorrows.toAssetsUp());
         }
-
-        account =
-            EVCAuthenticateDeferred(!Operations.wrap(type(uint32).max & ~CONTROLLER_REQUIRED_OPS).check(operation));
-
-        EVCRequireStatusChecks(accountToCheck == CHECKACCOUNT_CALLER ? account : accountToCheck);
     }
 
-    function logMarketStatus(MarketCache memory a, uint256 interestRate) internal {
-        emit MarketStatus(
+    // Checks whether the operation is hookable and if so, calls the hook target.
+    // If the hook target is not a contract, the operation is considered disabled.
+    function validateAndCallHook(Flags hookedOps, uint32 operation, address caller) internal {
+        if (hookedOps.isNotSet(operation)) return;
+
+        address hookTarget = vaultStorage.hookTarget;
+
+        if (hookTarget.code.length == 0) revert E_OperationDisabled();
+
+        (bool success, bytes memory data) = hookTarget.call(abi.encodePacked(msg.data, caller));
+
+        if (!success) RevertBytes.revertBytes(data);
+    }
+
+    // Checks whether the operation is hookable and if so, calls the hook target.
+    // If the hook target is not a contract or the hook target call is reverting,
+    // the operation is considered disabled.
+    function validateAndCallHookView(Flags hookedOps, uint32 operation) internal view returns (bool) {
+        if (hookedOps.isNotSet(operation)) return true;
+
+        address hookTarget = vaultStorage.hookTarget;
+        (bool success,) = hookTarget.staticcall(msg.data);
+
+        return success && hookTarget.code.length != 0;
+    }
+
+    function logVaultStatus(VaultCache memory a, uint256 interestRate) internal {
+        emit VaultStatus(
             a.totalShares.toUint(),
             a.totalBorrows.toAssetsUp().toUint(),
             a.accumulatedFees.toUint(),

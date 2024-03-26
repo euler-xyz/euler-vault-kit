@@ -3,8 +3,8 @@
 pragma solidity ^0.8.0;
 
 import {Shares, Assets, TypesLib} from "./Types.sol";
-import {MarketCache} from "./MarketCache.sol";
-import "./ConversionHelpers.sol";
+import {VaultCache} from "./VaultCache.sol";
+import {ConversionHelpers} from "../lib/ConversionHelpers.sol";
 
 library SharesLib {
     function toUint(Shares self) internal pure returns (uint256) {
@@ -15,17 +15,17 @@ library SharesLib {
         return Shares.unwrap(self) == 0;
     }
 
-    function toAssetsDown(Shares amount, MarketCache memory marketCache) internal pure returns (Assets) {
-        (uint256 totalAssets, uint256 totalShares) = conversionTotals(marketCache);
+    function toAssetsDown(Shares amount, VaultCache memory vaultCache) internal pure returns (Assets) {
+        (uint256 totalAssets, uint256 totalShares) = ConversionHelpers.conversionTotals(vaultCache);
         unchecked {
             return TypesLib.toAssets(amount.toUint() * totalAssets / totalShares);
         }
     }
 
-    function toAssetsUp(Shares amount, MarketCache memory marketCache) internal pure returns (Assets) {
-        (uint256 totalAssets, uint256 totalShares) = conversionTotals(marketCache);
+    function toAssetsUp(Shares amount, VaultCache memory vaultCache) internal pure returns (Assets) {
+        (uint256 totalAssets, uint256 totalShares) = ConversionHelpers.conversionTotals(vaultCache);
         unchecked {
-            return TypesLib.toAssets((amount.toUint() * totalAssets + (totalShares - 1)) / totalShares);
+            return TypesLib.toAssets((amount.toUint() * totalAssets + (totalShares - 1)) / totalShares); // totalShares >= VIRTUAL_DEPOSIT_AMOUNT > 1
         }
     }
 

@@ -7,10 +7,10 @@ import "./types/Types.sol";
 
 abstract contract LTVUtils is Storage {
     function getLTV(address collateral, LTVType ltvType) internal view virtual returns (ConfigAmount) {
-        return marketStorage.ltvLookup[collateral].getLTV(ltvType);
+        return vaultStorage.ltvLookup[collateral].getLTV(ltvType);
     }
 
     function isRecognizedCollateral(address collateral) internal view virtual returns (bool) {
-        return marketStorage.ltvLookup[collateral].isRecognizedCollateral();
+        return vaultStorage.ltvLookup[collateral].isRecognizedCollateral();
     }
 }
