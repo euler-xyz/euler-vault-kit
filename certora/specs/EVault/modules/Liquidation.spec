@@ -45,13 +45,13 @@ rule checkLiquidation_healthy() {
     uint256 maxRepay;
     uint256 maxYield;
 
-    Liquidation.MarketCache marketCache;
-    require marketCache.oracle!= 0;
+    Liquidation.VaultCache vaultCache;
+    require vaultCache.oracle!= 0;
 
     address[] collaterals = getCollateralsExt(e, violator);
 
-    uint256 liquidityCollateralValue = getLiquidityValue(e, violator, marketCache, collaterals);
-    uint256 liquidityLiabilityValue = getLiabilityValue(e, violator, marketCache, collaterals);
+    uint256 liquidityCollateralValue = getLiquidityValue(e, violator, vaultCache, collaterals);
+    uint256 liquidityLiabilityValue = getLiabilityValue(e, violator, vaultCache, collaterals);
 
     (maxRepay, maxYield) = checkLiquidation(e, liquidator, violator, collateral);
 
@@ -68,13 +68,13 @@ rule checkLiquidation_maxYieldGreater {
     uint256 maxRepay;
     uint256 maxYield;
 
-    Liquidation.MarketCache marketCache;
-    require marketCache.oracle!= 0;
+    Liquidation.VaultCache vaultCache;
+    require vaultCache.oracle!= 0;
 
     address[] collaterals = getCollateralsExt(e, violator);
 
-    uint256 liquidityCollateralValue = getLiquidityValue(e, violator, marketCache, collaterals);
-    uint256 liquidityLiabilityValue = getLiabilityValue(e, violator, marketCache, collaterals);
+    uint256 liquidityCollateralValue = getLiquidityValue(e, violator, vaultCache, collaterals);
+    uint256 liquidityLiabilityValue = getLiabilityValue(e, violator, vaultCache, collaterals);
 
     (maxRepay, maxYield) = checkLiquidation(e, liquidator, violator, collateral);
 
