@@ -19,16 +19,25 @@ jobs:
               with:
                   version: nightly
 
-            - name: Install Node.js dependencies
-              run: npm install
+            # - name: Install Node.js dependencies
+            #   run: npm install
 
+            - name: Setup Node 18
+              uses: actions/setup-node@v3
+              with:
+                  node-version: '18.x'
+                  cache: 'npm'
+
+            - name: Install Node dependencies
+              run: |
+                  npm ci
 
             # Cache Node.js dependencies
-            - name: Cache Node.js dependencies
-              uses: actions/cache@v2
-              with:
-                  path: node_modules
-                  key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+            # - name: Cache Node.js dependencies
+            #   uses: actions/cache@v2
+            #   with:
+            #       path: node_modules
+            #       key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
 
     build:
         runs-on: ubuntu-latest
