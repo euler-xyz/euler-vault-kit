@@ -76,7 +76,7 @@ contract Deployment is Script {
             address oracle = address(new MockPriceOracle());
 
             // deploy a default interest rate model
-            address irm = address(new IRMTestDefault());
+            address interestRateModel = address(new IRMTestDefault());
 
             address[] memory assets = new address[](vaults.length);
             for (uint256 i = 0; i < vaults.length; ++i) {
@@ -104,11 +104,11 @@ contract Deployment is Script {
             // no need to further set up vault[0] because it is an escrow vault
 
             // set up vault[1]
-            EVault(vaults[1]).setIRM(irm);
+            EVault(vaults[1]).setInterestRateModel(interestRateModel);
             EVault(vaults[1]).setLTV(vaults[0], 1e4 / 2, 0); // 50% LTV
 
             // set up vault[2]
-            EVault(vaults[2]).setIRM(irm);
+            EVault(vaults[2]).setInterestRateModel(interestRateModel);
             EVault(vaults[2]).setLTV(vaults[0], 1e4 * 5 / 10, 0); // 50% LTV
             EVault(vaults[2]).setLTV(vaults[1], 1e4 * 8 / 10, 0); // 80% LTV
 

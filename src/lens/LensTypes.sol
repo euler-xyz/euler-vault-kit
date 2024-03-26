@@ -83,22 +83,30 @@ struct VaultInfo {
     uint256 borrowInterestRateAPY;
     uint256 supplyInterestRateSPY;
     uint256 supplyInterestRateAPY;
-    uint256 disabledOperations;
+    uint256 hookedOperations;
     uint256 supplyCap;
     uint256 borrowCap;
     address dToken;
     address unitOfAccount;
     address oracle;
     address interestRateModel;
+    address hookTarget;
     address evc;
     address protocolConfig;
     address balanceTracker;
     address permit2;
     address creator;
     address governorAdmin;
-    address pauseGuardian;
+    LiabilityPriceInfo liabilityPriceInfo;
     LTVInfo[] collateralLTVInfo;
-    PriceInfo[] collateralPriceInfo;
+    CollateralPriceInfo[] collateralPriceInfo;
+}
+
+struct LiabilityPriceInfo {
+    address liability;
+    address unitOfAccount;
+    uint256 amountIn;
+    uint256 amountOut;
 }
 
 struct LTVInfo {
@@ -110,7 +118,7 @@ struct LTVInfo {
     uint256 rampDuration;
 }
 
-struct PriceInfo {
+struct CollateralPriceInfo {
     address collateral;
     address unitOfAccount;
     uint256 amountIn;
@@ -171,13 +179,15 @@ struct APYInfo {
     uint256 supplyInterestRateAPY;
 }
 
-struct VaultAssetPriceInfo {
+struct ControllerAssetPriceInfo {
     uint256 timestamp;
     uint256 blockNumber;
-    address vault;
+    address controller;
     address oracle;
     address asset;
     address unitOfAccount;
     uint256 amountIn;
-    uint256 amountOut;
+    uint256 amountOutMid;
+    uint256 amountOutBid;
+    uint256 amountOutAsk;
 }

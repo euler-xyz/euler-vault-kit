@@ -149,7 +149,7 @@ contract EVaultLens {
         (result.supplyInterestRateSPY, result.borrowInterestRateAPY, result.supplyInterestRateAPY) =
         computeInterestRates(result.borrowInterestRateSPY, result.totalCash, result.totalBorrowed, result.interestFee);
 
-        result.disabledOperations = IEVault(vault).disabledOps();
+        (result.hookTarget, result.hookedOperations) = IEVault(vault).hookConfig();
 
         (result.supplyCap, result.borrowCap) = IEVault(vault).caps();
         result.supplyCap = AmountCapLib.toUint(AmountCap.wrap(uint16(result.supplyCap)));
@@ -167,7 +167,6 @@ contract EVaultLens {
 
         result.creator = IEVault(vault).creator();
         result.governorAdmin = IEVault(vault).governorAdmin();
-        result.pauseGuardian = IEVault(vault).pauseGuardian();
 
         address[] memory collaterals = IEVault(vault).LTVList();
         LTVInfo[] memory collateralLTVInfo = new LTVInfo[](collaterals.length);
@@ -198,20 +197,26 @@ contract EVaultLens {
         }
 
         if (result.oracle != address(0)) {
-            result.collateralPriceInfo = new PriceInfo[](numberOfRecognizedCollaterals);
+            ControllerAssetPriceInfo memory priceInfo = getControllerAssetPriceInfo(vault, result.asset);
+
+            result.liabilityPriceInfo.liability = priceInfo.asset;
+            result.liabilityPriceInfo.unitOfAccount = priceInfo.unitOfAccount;
+            result.liabilityPriceInfo.amountIn = priceInfo.amountIn;
+            result.liabilityPriceInfo.amountOut = priceInfo.amountOutAsk;
+
+            result.collateralPriceInfo = new CollateralPriceInfo[](numberOfRecognizedCollaterals);
 
             for (uint256 i = 0; i < result.collateralLTVInfo.length; ++i) {
-                VaultAssetPriceInfo memory priceInfo =
-                    getVaultAssetPriceInfo(vault, result.collateralLTVInfo[i].collateral);
+                priceInfo = getControllerAssetPriceInfo(vault, result.collateralLTVInfo[i].collateral);
 
                 result.collateralPriceInfo[i].collateral = priceInfo.asset;
                 result.collateralPriceInfo[i].unitOfAccount = priceInfo.unitOfAccount;
                 result.collateralPriceInfo[i].amountIn = priceInfo.amountIn;
-                result.collateralPriceInfo[i].amountOutNotAdjusted = priceInfo.amountOut;
+                result.collateralPriceInfo[i].amountOutNotAdjusted = priceInfo.amountOutBid;
                 result.collateralPriceInfo[i].amountOutBorrowing =
-                    priceInfo.amountOut * result.collateralLTVInfo[i].borrowingLTV / CONFIG_SCALE;
+                    priceInfo.amountOutBid * result.collateralLTVInfo[i].borrowingLTV / CONFIG_SCALE;
                 result.collateralPriceInfo[i].amountOutLiquidation =
-                    priceInfo.amountOut * result.collateralLTVInfo[i].liquidationLTV / CONFIG_SCALE;
+                    priceInfo.amountOutBid * result.collateralLTVInfo[i].liquidationLTV / CONFIG_SCALE;
             }
         }
 
@@ -365,21 +370,27 @@ contract EVaultLens {
         return getVaultInterestRateModelInfo(vault, cash, borrows);
     }
 
-    function getVaultAssetPriceInfo(address vault, address asset) public view returns (VaultAssetPriceInfo memory) {
-        VaultAssetPriceInfo memory result;
+    function getControllerAssetPriceInfo(address controller, address asset)
+        public
+        view
+        returns (ControllerAssetPriceInfo memory)
+    {
+        ControllerAssetPriceInfo memory result;
 
         result.timestamp = block.timestamp;
         result.blockNumber = block.number;
 
-        result.vault = vault;
-        result.oracle = IEVault(vault).oracle();
+        result.controller = controller;
+        result.oracle = IEVault(controller).oracle();
         result.asset = asset;
-        result.unitOfAccount = IEVault(vault).unitOfAccount();
+        result.unitOfAccount = IEVault(controller).unitOfAccount();
 
         if (result.oracle == address(0)) return result;
 
-        result.amountIn = 10 ** IEVault(result.asset).decimals();
-        result.amountOut = IPriceOracle(result.oracle).getQuote(result.amountIn, result.asset, result.unitOfAccount);
+        result.amountIn = 10 ** IEVault(asset).decimals();
+        result.amountOutMid = IPriceOracle(result.oracle).getQuote(result.amountIn, asset, result.unitOfAccount);
+        (result.amountOutBid, result.amountOutAsk) =
+            IPriceOracle(result.oracle).getQuotes(result.amountIn, asset, result.unitOfAccount);
 
         return result;
     }
