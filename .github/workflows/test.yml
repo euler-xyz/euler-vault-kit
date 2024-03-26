@@ -23,6 +23,8 @@ jobs:
               uses: actions/setup-node@v3
               with:
                   node-version: '18.x'
+
+            - name: Install NPM packages
               run: npm i
 
             - name: Run foundry build
