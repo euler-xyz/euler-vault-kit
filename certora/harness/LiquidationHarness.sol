@@ -11,24 +11,24 @@ contract LiquidationHarness is Liquidation {
     function calculateLiquidityExternal(
         address account
     ) public view returns (uint256 collateralValue, uint256 liabilityValue) {
-        return calculateLiquidity(loadMarket(), account, getCollaterals(account), LTVType.LIQUIDATION);
+        return calculateLiquidity(loadVault(), account, getCollaterals(account), LTVType.LIQUIDATION);
     }
 
-    function getLiquidityValue(address account, MarketCache memory marketCache, address[] memory collaterals) public view returns (uint256 collateralValue) {
-        (collateralValue, ) = calculateLiquidity(marketCache, account, collaterals, LTVType.LIQUIDATION);
+    function getLiquidityValue(address account, VaultCache memory vaultCache, address[] memory collaterals) public view returns (uint256 collateralValue) {
+        (collateralValue, ) = calculateLiquidity(vaultCache, account, collaterals, LTVType.LIQUIDATION);
     }
     
-    function getLiabilityValue(address account, MarketCache memory marketCache, address[] memory collaterals) public view returns (uint256 liabilityValue) {
-        (,liabilityValue) = calculateLiquidity(marketCache, account, collaterals, LTVType.LIQUIDATION);
+    function getLiabilityValue(address account, VaultCache memory vaultCache, address[] memory collaterals) public view returns (uint256 liabilityValue) {
+        (,liabilityValue) = calculateLiquidity(vaultCache, account, collaterals, LTVType.LIQUIDATION);
     }
 
-    function loadMarketExt() public returns (MarketCache memory marketCache) {
-        return loadMarket();
+    function loadVaultExt() public returns (VaultCache memory vaultCache) {
+        return loadVault();
     }
 
     function initOperationExternal(uint32 operation, address accountToCheck)
         public 
-        returns (MarketCache memory marketCache, address account)
+        returns (VaultCache memory vaultCache, address account)
     {
         return initOperation(operation, accountToCheck);
     }
@@ -49,8 +49,8 @@ contract LiquidationHarness is Liquidation {
         return isAccountStatusCheckDeferred(account);
     }
 
-    function marketCacheOracleConfigured() external returns (bool) {
-        return address(loadMarket().oracle) != address(0);
+    function vaultCacheOracleConfigured() external returns (bool) {
+        return address(loadVault().oracle) != address(0);
     }
 
 
