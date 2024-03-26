@@ -14,10 +14,10 @@ interface ISwapHandler {
     struct SwapParams {
         address underlyingIn;
         address underlyingOut;
-        uint mode;                  // 0=exactIn  1=exactOut
-        uint amountIn;              // mode 0: exact,    mode 1: maximum
-        uint amountOut;             // mode 0: minimum,  mode 1: exact
-        uint exactOutTolerance;     // mode 0: ignored,  mode 1: downward tolerance on amountOut (fee-on-transfer etc.)
+        uint256 mode; // 0=exactIn  1=exactOut
+        uint256 amountIn; // mode 0: exact,    mode 1: maximum
+        uint256 amountOut; // mode 0: minimum,  mode 1: exact
+        uint256 exactOutTolerance; // mode 0: ignored,  mode 1: downward tolerance on amountOut (fee-on-transfer etc.)
         bytes payload;
     }
 

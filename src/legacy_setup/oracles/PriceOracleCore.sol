@@ -110,6 +110,7 @@ contract PriceOracleCore is IPriceOracle {
         bool set;
         uint256 out;
     }
+
     mapping(address base => mapping(address quote => PriceOverride price)) priceOverride;
 
     constructor(address _governorAdmin, address _vaultFactory, OracleSettings memory settings) {
@@ -131,9 +132,9 @@ contract PriceOracleCore is IPriceOracle {
         AssetConfig memory config = resolveAssetConfig(base);
         if (config.pricingType == PRICINGTYPE__UNINITIALIZED) revert PO_BaseUnsupported();
         uint256 twap;
-        if (priceOverride[base][quote].set) twap =  priceOverride[base][quote].out;
+        if (priceOverride[base][quote].set) twap = priceOverride[base][quote].out;
         else (twap,) = getPriceInternal(base, config);
-        
+
         return twap * amount * (10 ** (18 - config.decimals)) / 1e18;
     }
 

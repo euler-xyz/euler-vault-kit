@@ -11,9 +11,7 @@ import "hardhat/console.sol";
 contract EVaultHarness is EVault {
     using TypesLib for uint256;
 
-    constructor(Integrations memory integrations, DeployedModules memory modules)
-        EVault(integrations, modules)
-    {}
+    constructor(Integrations memory integrations, DeployedModules memory modules) EVault(integrations, modules) {}
 
     function harness_setZeroInterestFee() external {
         vaultStorage.interestFee = ConfigAmount.wrap(0);

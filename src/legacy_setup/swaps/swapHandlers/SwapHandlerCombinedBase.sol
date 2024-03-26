@@ -8,8 +8,8 @@ import "../../vendor/ISwapRouterV2.sol";
 
 /// @notice Base contract for swap handlers which execute a secondary swap on Uniswap V2 or V3 for exact output
 abstract contract SwapHandlerCombinedBase is SwapHandlerBase {
-    address immutable public uniSwapRouterV2;
-    address immutable public uniSwapRouterV3;
+    address public immutable uniSwapRouterV2;
+    address public immutable uniSwapRouterV3;
 
     constructor(address uniSwapRouterV2_, address uniSwapRouterV3_) {
         uniSwapRouterV2 = uniSwapRouterV2_;
@@ -26,7 +26,7 @@ abstract contract SwapHandlerCombinedBase is SwapHandlerBase {
             bytes memory path;
             (params.payload, path) = abi.decode(params.payload, (bytes, bytes));
 
-            uint primaryAmountOut = swapPrimary(params);
+            uint256 primaryAmountOut = swapPrimary(params);
 
             if (primaryAmountOut < params.amountOut) {
                 // The path param is reused for UniV2 and UniV3 swaps. The protocol to use is determined by the path length.
@@ -34,10 +34,14 @@ abstract contract SwapHandlerCombinedBase is SwapHandlerBase {
                 // The length of valid UniV3 paths is given as 20 + n * 23 for n > 0, because of an additional 3 bytes for the pool fee.
                 // The max path length must be lower than the first path length which is valid for both protocols (and is therefore ambiguous)
                 // This value is at 20 UniV3 hops, which corresponds to 24 UniV2 hops.
-                require(path.length >= 40 && path.length < 20 + (20 * 23), "SwapHandlerPayloadBase: secondary path format");
+                require(
+                    path.length >= 40 && path.length < 20 + (20 * 23), "SwapHandlerPayloadBase: secondary path format"
+                );
 
-                uint remainder;
-                unchecked { remainder = params.amountOut - primaryAmountOut; }
+                uint256 remainder;
+                unchecked {
+                    remainder = params.amountOut - primaryAmountOut;
+                }
 
                 swapExactOutDirect(params, remainder, path);
             }
@@ -46,15 +50,17 @@ abstract contract SwapHandlerCombinedBase is SwapHandlerBase {
         transferBack(params.underlyingIn);
     }
 
-    function swapPrimary(SwapParams memory params) internal virtual returns (uint amountOut);
+    function swapPrimary(SwapParams memory params) internal virtual returns (uint256 amountOut);
 
-    function swapExactOutDirect(SwapParams memory params, uint amountOut, bytes memory path) private {
+    function swapExactOutDirect(SwapParams memory params, uint256 amountOut, bytes memory path) private {
         (bool isUniV2, address[] memory uniV2Path) = detectAndDecodeUniV2Path(path);
 
         if (isUniV2) {
             setMaxAllowance(params.underlyingIn, params.amountIn, uniSwapRouterV2);
 
-            ISwapRouterV2(uniSwapRouterV2).swapTokensForExactTokens(amountOut, type(uint).max, uniV2Path, msg.sender, block.timestamp);
+            ISwapRouterV2(uniSwapRouterV2).swapTokensForExactTokens(
+                amountOut, type(uint256).max, uniV2Path, msg.sender, block.timestamp
+            );
         } else {
             setMaxAllowance(params.underlyingIn, params.amountIn, uniSwapRouterV3);
 
@@ -63,7 +69,7 @@ abstract contract SwapHandlerCombinedBase is SwapHandlerBase {
                     path: path,
                     recipient: msg.sender,
                     amountOut: amountOut,
-                    amountInMaximum: type(uint).max,
+                    amountInMaximum: type(uint256).max,
                     deadline: block.timestamp
                 })
             );
@@ -75,11 +81,11 @@ abstract contract SwapHandlerCombinedBase is SwapHandlerBase {
         address[] memory addressPath;
 
         if (isUniV2) {
-            uint addressPathSize = path.length / 20;
+            uint256 addressPathSize = path.length / 20;
             addressPath = new address[](addressPathSize);
 
             unchecked {
-                for(uint i = 0; i < addressPathSize; ++i) {
+                for (uint256 i = 0; i < addressPathSize; ++i) {
                     addressPath[i] = toAddress(path, i * 20);
                 }
             }
@@ -88,7 +94,7 @@ abstract contract SwapHandlerCombinedBase is SwapHandlerBase {
         return (isUniV2, addressPath);
     }
 
-    function toAddress(bytes memory data, uint start) private pure returns (address result) {
+    function toAddress(bytes memory data, uint256 start) private pure returns (address result) {
         // assuming data length is already validated
         assembly {
             // borrowed from BytesLib https://github.com/GNSPS/solidity-bytes-utils/blob/master/contracts/BytesLib.sol

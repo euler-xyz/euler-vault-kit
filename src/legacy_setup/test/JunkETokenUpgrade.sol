@@ -8,16 +8,7 @@ contract JunkEVaultUpgrade is EVault {
     constructor()
         EVault(
             Integrations(address(0), address(0), address(0), address(0)),
-            DeployedModules(
-                address(0),
-                address(0),
-                address(0),
-                address(0),
-                address(0),
-                address(0),
-                address(0),
-                address(0)
-            )
+            DeployedModules(address(0), address(0), address(0), address(0), address(0), address(0), address(0), address(0))
         )
     {}
 

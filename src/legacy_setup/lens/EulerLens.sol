@@ -136,10 +136,7 @@ contract EulerLens {
         }
     }
 
-    function populateResponseMarket(Query memory q, ResponseMarket memory m)
-        private
-        view
-    {
+    function populateResponseMarket(Query memory q, ResponseMarket memory m) private view {
         m.name = getStringOrBytes32(m.underlying, IERC20.name.selector);
         m.symbol = getStringOrBytes32(m.underlying, IERC20.symbol.selector);
 
@@ -201,7 +198,7 @@ contract EulerLens {
         returns (uint256 borrowAPY, uint256 supplyAPY)
     {
         (borrowAPY,) = RPow.rpow(borrowSPY + 1e27, SECONDS_PER_YEAR, 10 ** 27);
-        borrowAPY =  borrowAPY - 1e27;
+        borrowAPY = borrowAPY - 1e27;
 
         uint256 supplySPY = totalBalancesUnderlying == 0 ? 0 : borrowSPY * totalBorrows / totalBalancesUnderlying;
         supplySPY = supplySPY * (FEE_SCALE - reserveFee) / FEE_SCALE;

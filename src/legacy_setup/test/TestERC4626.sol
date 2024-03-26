@@ -9,7 +9,6 @@ import {IERC20} from "../../EVault/IEVault.sol";
 /**
  * @notice Vault behaviours can be set by calling configure()
  */
-
 contract TestERC4626 is TestERC20 {
     using FixedPointMathLib for uint256;
 

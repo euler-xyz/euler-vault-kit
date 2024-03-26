@@ -2,8 +2,7 @@
 pragma solidity >=0.7.5;
 pragma abicoder v2;
 
-import './IUniswapV3SwapCallback.sol';
-
+import "./IUniswapV3SwapCallback.sol";
 
 /// @title Router token swapping functionality
 /// @notice Functions for swapping tokens via Uniswap V2
@@ -16,12 +15,10 @@ interface IV2SwapRouter {
     /// @param path The ordered list of tokens to swap through
     /// @param to The recipient address
     /// @return amountOut The amount of the received token
-    function swapExactTokensForTokens(
-        uint256 amountIn,
-        uint256 amountOutMin,
-        address[] calldata path,
-        address to
-    ) external payable returns (uint256 amountOut);
+    function swapExactTokensForTokens(uint256 amountIn, uint256 amountOutMin, address[] calldata path, address to)
+        external
+        payable
+        returns (uint256 amountOut);
 
     /// @notice Swaps as little as possible of one token for an exact amount of another token
     /// @param amountOut The amount of token to swap for
@@ -29,14 +26,11 @@ interface IV2SwapRouter {
     /// @param path The ordered list of tokens to swap through
     /// @param to The recipient address
     /// @return amountIn The amount of token to pay
-    function swapTokensForExactTokens(
-        uint256 amountOut,
-        uint256 amountInMax,
-        address[] calldata path,
-        address to
-    ) external payable returns (uint256 amountIn);
+    function swapTokensForExactTokens(uint256 amountOut, uint256 amountInMax, address[] calldata path, address to)
+        external
+        payable
+        returns (uint256 amountIn);
 }
-
 
 /// @title Router token swapping functionality
 /// @notice Functions for swapping tokens via Uniswap V3
@@ -103,6 +97,4 @@ interface IV3SwapRouter is IUniswapV3SwapCallback {
 }
 
 /// @title Router token swapping functionality
-interface ISwapRouter02 is IV2SwapRouter, IV3SwapRouter {
-
-}
+interface ISwapRouter02 is IV2SwapRouter, IV3SwapRouter {}

@@ -4,7 +4,6 @@ pragma solidity ^0.8.0;
 
 import "../../InterestRateModels/IIRM.sol";
 
-
 contract IRMZero is IIRM {
     function computeInterestRate(address, uint256, uint256) public pure returns (uint256) {
         return 0;
