@@ -63,7 +63,8 @@ abstract contract LiquidationModule is ILiquidation, Base, BalanceUtils, Liquidi
         address violator,
         address collateral,
         uint256 desiredRepay
-    ) private view returns (LiquidationCache memory liqCache) {
+    // Munged to internal by certora
+    ) internal view returns (LiquidationCache memory liqCache) {
         // Init cache
 
         liqCache.liquidator = liquidator;
