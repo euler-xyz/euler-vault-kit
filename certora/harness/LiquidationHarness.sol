@@ -6,6 +6,9 @@ import "../../src/EVault/modules/Liquidation.sol";
 
 
 contract LiquidationHarness is Liquidation {
+    // VaultCache vaultCache_;
+    // LiquidationCache liqCache_;
+
     constructor(Integrations memory integrations) Liquidation(integrations) {}
 
     function calculateLiquidityExternal(
@@ -51,6 +54,20 @@ contract LiquidationHarness is Liquidation {
 
     function vaultCacheOracleConfigured() external returns (bool) {
         return address(loadVault().oracle) != address(0);
+    }
+
+    function getLiquidator() external returns (address liquidator) {
+        (, liquidator) = initOperation(OP_LIQUIDATE, CHECKACCOUNT_CALLER);
+    }
+
+    function calculateLiquidationExt(
+        VaultCache memory vaultCache,
+        address liquidator,
+        address violator,
+        address collateral,
+        uint256 desiredRepay
+    ) external view returns (LiquidationCache memory liqCache) {
+        return calculateLiquidation(vaultCache, liquidator, violator, collateral, desiredRepay);
     }
 
 
