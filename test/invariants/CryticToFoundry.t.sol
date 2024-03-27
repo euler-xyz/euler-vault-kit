@@ -48,7 +48,6 @@ contract CryticToFoundry is Invariants, Setup {
         assetTST.burn(address(actor), assetTST.balanceOf(address(actor)));
         //this.borrowTo(1,476485543921707036124785589083935854038465196552);
 
-
         for (uint256 i = 0; i < 90; i++) {
             console.log("BORROW ################################################");
             vm.prank(address(actor));
@@ -64,13 +63,12 @@ contract CryticToFoundry is Invariants, Setup {
 
             console.log("WITHDRAW ################################################");
 
-
         }
         //this.borrowTo(1,476485543921707036124785589083935854038465196552);
 
 
         console.log("Total debt: ", eTST.totalBorrows());
-        //echidna_BM_INVARIANT();
+        echidna_BM_INVARIANT();
     }
 
     function test_TM_INVARIANT_A() public {//PASS
@@ -223,13 +221,80 @@ contract CryticToFoundry is Invariants, Setup {
         console.log("Debt of borrower: ", eTST.debtOf(actorAddresses[0]));
         console.log("Inerest Accumulator: ", eTST.interestAccumulator());
         console.log("Interest Accumulator per user: ", eTST.getUserInterestAccumulator(actorAddresses[0]));
- 
 
         echidna_BM_INVARIANT();
     }
 
+    function test_BM_INVARIANT_G() public {// PASS
+        this.assert_BM_INVARIANT_G();
+    }
+
+    function test_assert_BM_INVARIANT_N() public{// PASS
+        this.enableController(1353974430231330282141559749);
+        this.setPrice (0,1);
+        this.loop(1,27285321264845944093387872171310745136030);
+        _delay(1);
+        this.assert_BM_INVARIANT_N(1);
+    }
+
     function test_BASE_INVARIANT() public {// PASS
         assert_BASE_INVARIANT_B();
+    }
+
+    function test_TM_INVARIANT_B() public {// PASS
+        _setUpBlockAndActor(23863, USER2);
+        this.mintToActor(3, 2517);
+        _setUpBlockAndActor(77040, USER1);
+        this.enableController(115792089237316195423570985008687907853269984665640564039457584007913129639932);
+        _setUpBlockAndActor(115661, USER1);
+        this.assert_BM_INVARIANT_G();
+        echidna_TM_INVARIANT();
+    }
+
+    function test_TM_INVARIANT_A2() public {// PASS
+        _setUpBlockAndActor(24293, USER1);
+        this.depositToActor(464, 95416406916653671687163906321353417359071456765389709042486010813678577176823);
+        _setUpBlockAndActor(47163, USER2);
+        this.enableController(115792089237316195423570889601861022891927484329094684320502060868636724166656);
+        _setUpBlockAndActor(47163, USER2);
+        this.assert_BM_INVARIANT_G();
+        echidna_TM_INVARIANT();
+    }
+
+    function test_TM_INVARIANT_B2() public {// PASS
+        _setUpBlockAndActor(31532, USER3);
+        this.mintToActor(134, 38950093316855029701707435728471143612397649181229202547446285813971152397387);
+        _setUpBlockAndActor(31532, USER2);
+        this.deloop(129, 208);
+        echidna_TM_INVARIANT();
+    }
+
+    function test_TM_INVARIANT2() public {
+        _setUpBlockAndActor(15941, USER2);
+        this.enableController(65987143226213886175183319384713235742055287956171498516718399508227226907932);
+        this.setPrice(536074487209797201035050856521703277098472151229817426108599925962560785369, 4);
+        _setUpBlockAndActor(25252, USER2);
+        this.loop(19050045013, 115792089237316195423570985008687907853269984665640564039457584007913129634936);
+        _setUpBlockAndActor(56461, USER2);
+        this.setDebtSocialization(true);
+        _setUpBlockAndActor(56461, USER3);
+        this.convertFees();
+        echidna_TM_INVARIANT();
+    }
+
+    function test_VM_INVARIANT1() public {//@audit check
+        _setUpBlockAndActor(15941, USER2);
+        this.enableController(65987143226213886175183319384713235742055287956171498516718399508227226907932);
+        this.setPrice(536074487209797201035050856521703277098472151229817426108599925962560785369, 4);
+        _setUpBlockAndActor(60909, USER2);
+        this.loop(17, 129);
+        _setUpBlockAndActor(76974, USER2);
+        this.assert_BM_INVARIANT_P();
+        _setUpBlockAndActor(83000, USER1);
+        this.enableCollateral(115792089237316195423570985008687907853269984665640564039457584007913129639917);
+        _setUpBlockAndActor(83200, USER1);
+        this.assert_BM_INVARIANT_G();
+        echidna_VM_INVARIANT();
     }
 
     function _setUpBlockAndActor(uint256 _block, address _user) internal {

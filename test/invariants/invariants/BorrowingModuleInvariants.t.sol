@@ -74,7 +74,6 @@ abstract contract BorrowingModuleInvariants is HandlerAggregator {
     }
 
     function assert_BM_INVARIANT_O(address _actor) internal {
-        console.log("Actor: ", _actor);
         assertTrue(
             eTST.debtOf(_actor) != 0
                 ? eTST.balanceOf(_actor) != 0

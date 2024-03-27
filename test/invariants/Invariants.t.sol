@@ -39,10 +39,10 @@ abstract contract Invariants is
 
         uint256 _sumBalanceOf;
         for (uint256 i; i < NUMBER_OF_ACTORS; i++) {
-            asset_TM_INVARIANT_B(actorAddresses[i]); //@audit failing, where?
+            asset_TM_INVARIANT_B(actorAddresses[i]);
             _sumBalanceOf += eTST.balanceOf(actorAddresses[i]);
         }
-        //assert_TM_INVARIANT_C(_sumBalanceOf); // @audit-issue failing
+        assert_TM_INVARIANT_C(_sumBalanceOf); // @audit-issue violated
         return true;
     }
 
@@ -67,7 +67,7 @@ abstract contract Invariants is
     function echidna_ERC4626_ACTIONS_INVARIANT() public monotonicTimestamp returns (bool) {
         for (uint256 i; i < NUMBER_OF_ACTORS; i++) {
             assert_ERC4626_DEPOSIT_INVARIANT_A(actorAddresses[i]);
-            //assert_ERC4626_MINT_INVARIANT_A(actorAddresses[i]);
+            assert_ERC4626_MINT_INVARIANT_A(actorAddresses[i]);
             assert_ERC4626_WITHDRAW_INVARIANT_A(actorAddresses[i]);
             assert_ERC4626_REDEEM_INVARIANT_A(actorAddresses[i]);
         }
@@ -82,7 +82,7 @@ abstract contract Invariants is
         for (uint256 i; i < NUMBER_OF_ACTORS; i++) {
             assert_BM_INVARIANT_A(actorAddresses[i]);
             assert_BM_INVARIANT_J(actorAddresses[i]);
-            //assert_BM_INVARIANT_O(actorAddresses[i]);// @audit violated
+            assert_BM_INVARIANT_O(actorAddresses[i]);// @audit violated
         }
         assert_BM_INVARIANT_B();
         return true;

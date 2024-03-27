@@ -24,7 +24,6 @@ abstract contract TokenModuleInvariants is HandlerAggregator {
     }
 
     function assert_TM_INVARIANT_C(uint256 _sumBalances) internal {
-        console.log("SumBalances: ", _sumBalances);
         uint256 extrabalance = eTST.balanceOf(eTST.feeReceiver()) + eTST.balanceOf(eTST.protocolFeeReceiver());
         assertEq(eTST.totalSupply(), _sumBalances + eTST.accumulatedFees() + extrabalance, TM_INVARIANT_C);
     } 

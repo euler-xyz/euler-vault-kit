@@ -111,7 +111,8 @@ contract BorrowingModuleHandler is BaseHandler {
             actor.proxy(target, abi.encodeWithSelector(IBorrowing.deloop.selector, amount, receiver));
 
         if (success) {
-            _decreaseGhostShares(amount, address(actor));
+            uint256 shares = abi.decode(returnData, (uint256));
+            _decreaseGhostShares(shares, address(actor));
         }
     }
 
@@ -149,14 +150,14 @@ contract BorrowingModuleHandler is BaseHandler {
     //                                     ROUNDTRIP PROPERTIES                                  //
     ///////////////////////////////////////////////////////////////////////////////////////////////
 
-    function aasert_BM_INVARIANT_G() external setup {
+    function assert_BM_INVARIANT_G() external setup {
         bool success;
         bytes memory returnData;
 
-        if (eTST.debtOf(address(actor)) == 0) {
+        if (eTST.totalBorrows() == 0) {
             uint256 balanceBefore = eTST.balanceOf(address(actor));
-            (success, returnData) = actor.proxy(address(eTST), abi.encodeWithSelector(IERC4626.withdraw.selector, balanceBefore, address(actor)));
-            
+            (success, returnData) = actor.proxy(address(eTST), abi.encodeWithSelector(IERC4626.redeem.selector, balanceBefore, address(actor), address(actor)));
+            _decreaseGhostShares(balanceBefore, address(actor));
             assertTrue(success, BM_INVARIANT_G);
         }
     }
@@ -195,8 +196,8 @@ contract BorrowingModuleHandler is BaseHandler {
             uint256 debtAfter = eTST.debtOf(address(actor));
             uint256 balanceAfter = eTST.balanceOf(address(actor));
 
-            assertEq(debtBefore, debtAfter, BM_INVARIANT_N);
-            assertEq(balanceBefore, balanceAfter, BM_INVARIANT_N);
+            assertGe(balanceBefore, balanceAfter, BM_INVARIANT_N1);
+            assertLe(debtBefore, debtAfter, BM_INVARIANT_N2);
         }
  }
 

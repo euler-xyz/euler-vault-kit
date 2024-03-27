@@ -120,7 +120,9 @@ abstract contract InvariantsSpec {
 
     string constant BM_INVARIANT_M = "BM_INVARIANT_M: Loop should get to the same state as depositing and borrowing in loop"; //TODO
 
-    string constant BM_INVARIANT_N = "BM_INVARIANT_N: loop(x) => deloop(x) users shouldn't gain any asset nor decrease debt ";
+    string constant BM_INVARIANT_N1 = "BM_INVARIANT_N1: loop(x) => deloop(x) users shouldn't gain any asset";
+
+    string constant BM_INVARIANT_N2 = "BM_INVARIANT_N2: loop(x) => deloop(x) users debt shouldn't decrease";
 
     string constant BM_INVARIANT_O = "BM_INVARIANT_O: debt(user) != 0 => vault.balanceOf(user) != 0";
 
