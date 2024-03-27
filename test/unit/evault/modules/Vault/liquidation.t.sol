@@ -65,24 +65,50 @@ contract VaultTest_Liquidation is EVaultTestBase {
 
         startHoax(liquidator);
 
-        // deposit into eTST2 to cover the liability from liquidation
-        // assetTST2.approve(address(eTST2), type(uint256).max);
-        // eTST2.deposit(10e18, liquidator);
-
         (uint256 maxRepay, uint256 yield) = eTST.checkLiquidation(liquidator, borrower, address(eTST2));
-
-        console.log("maxRepay", maxRepay);
-        console.log("yield", yield);
+        assertEq(maxRepay, 0);
+        assertEq(yield, 0);
 
         oracle.setPrice(address(eTST2), unitOfAccount, 5e17);
 
         (maxRepay, yield) = eTST.checkLiquidation(liquidator, borrower, address(eTST2));
 
-        console.log("maxRepay", maxRepay);
-        console.log("yield", yield);
-
         evc.enableCollateral(liquidator, address(eTST2));
         evc.enableController(liquidator, address(eTST));
         eTST.liquidate(borrower, address(eTST2), type(uint256).max, 0);
+
+        assertEq(eTST.debtOf(liquidator), maxRepay);
+        assertEq(eTST2.balanceOf(liquidator), yield);
+        assertEq(eTST.debtOf(borrower), 0);
+        assertEq(eTST2.balanceOf(borrower), 0);
+    }
+
+    function test_liquidation_gt_maxRepay() public {
+        startHoax(borrower);
+
+        eTST2.deposit(10e18, borrower);
+
+        evc.enableCollateral(borrower, address(eTST2));
+        evc.enableController(borrower, address(eTST));
+
+        eTST.borrow(5e18, borrower);
+        assertEq(assetTST.balanceOf(borrower), 5e18);
+        vm.stopPrank();
+
+        startHoax(liquidator);
+
+        (uint256 maxRepay, uint256 yield) = eTST.checkLiquidation(liquidator, borrower, address(eTST2));
+        assertEq(maxRepay, 0);
+        assertEq(yield, 0);
+
+        oracle.setPrice(address(eTST2), unitOfAccount, 5e17);
+
+        (maxRepay, yield) = eTST.checkLiquidation(liquidator, borrower, address(eTST2));
+
+        evc.enableCollateral(liquidator, address(eTST2));
+        evc.enableController(liquidator, address(eTST));
+
+        vm.expectRevert(Errors.E_ExcessiveRepayAmount.selector);
+        eTST.liquidate(borrower, address(eTST2), maxRepay*2, 0);
     }
 }
