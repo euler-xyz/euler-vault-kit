@@ -40,6 +40,7 @@ abstract contract VaultModule is IVault, Base, AssetTransfers, BalanceUtils {
     }
 
     /// @inheritdoc IERC4626
+    /// @dev Because `nonReentrantView` can revert, the function might be considered not fully compliant with ERC4626
     function maxDeposit(address account) public view virtual nonReentrantView returns (uint256) {
         VaultCache memory vaultCache = loadVault();
 
@@ -52,12 +53,17 @@ abstract contract VaultModule is IVault, Base, AssetTransfers, BalanceUtils {
     }
 
     /// @inheritdoc IERC4626
+    /// @dev If the hook on `mint` allows only certain amounts, maxMint function might not be fully compliant with ERC4626
+    /// @dev Because `nonReentrantView` can revert, the function might be considered not fully compliant with ERC4626
     function maxMint(address account) public view virtual nonReentrantView returns (uint256) {
         VaultCache memory vaultCache = loadVault();
 
-        return validateAndCallHookView(vaultCache.hookedOps, OP_MINT)
-            ? maxDepositInternal(vaultCache, account).toAssets().toSharesDown(vaultCache).toUint()
-            : 0;
+        if (!validateAndCallHookView(vaultCache.hookedOps, OP_MINT)) return 0;
+
+        // make sure to not revert on conversion
+        uint256 shares = maxDepositInternal(vaultCache, account).toAssets().toUint256SharesDown(vaultCache);
+
+        return shares < MAX_SANE_AMOUNT ? shares : MAX_SANE_AMOUNT;
     }
 
     /// @inheritdoc IERC4626
@@ -67,6 +73,7 @@ abstract contract VaultModule is IVault, Base, AssetTransfers, BalanceUtils {
     }
 
     /// @inheritdoc IERC4626
+    /// @dev Because `nonReentrantView` can revert, the function might be considered not fully compliant with ERC4626
     function maxWithdraw(address owner) public view virtual nonReentrantView returns (uint256) {
         VaultCache memory vaultCache = loadVault();
 
@@ -82,6 +89,7 @@ abstract contract VaultModule is IVault, Base, AssetTransfers, BalanceUtils {
     }
 
     /// @inheritdoc IERC4626
+    /// @dev Because `nonReentrantView` can revert, the function might be considered not fully compliant with ERC4626
     function maxRedeem(address owner) public view virtual nonReentrantView returns (uint256) {
         return validateAndCallHookView(vaultStorage.hookedOps, OP_REDEEM) ? maxRedeemInternal(owner).toUint() : 0;
     }
