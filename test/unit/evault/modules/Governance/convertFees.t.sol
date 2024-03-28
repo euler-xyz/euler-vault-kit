@@ -4,7 +4,7 @@ pragma solidity ^0.8.0;
 
 import "../../EVaultTestBase.t.sol";
 
-contract Governance_InterestRates is EVaultTestBase {
+contract Governance_ConvertFees is EVaultTestBase {
     using TypesLib for uint256;
 
     address depositor;
@@ -45,37 +45,17 @@ contract Governance_InterestRates is EVaultTestBase {
         eTST.borrow(5e18, borrower);
     }
 
-    function test_Governance_setInterestRateModel_setAddressZero() public {
-        assertEq(eTST.totalAssets(), 100e18);
+    function test_Governance_convertFees() public {
+        skip(1000 days);
 
-        skip(1 days);
+        uint256 fees = eTST.accumulatedFees();
+        assertApproxEqAbs(fees, 0.03e18, 0.001e18);
 
-        uint256 beforePause = eTST.totalAssets();
+        uint256 totalSupplyBefore = eTST.totalSupply();
 
-        // some interest accrued
-        assertGt(beforePause, 100e18);
+        eTST.convertFees();
 
-        vm.stopPrank();
-        address previousIRM = eTST.interestRateModel();
-        eTST.setInterestRateModel(address(0));
-
-        // the previous interest accrued is recorded in the accumulator
-        assertEq(beforePause, eTST.totalAssets());
-
-        skip(10 days);
-
-        // no change
-        assertEq(beforePause, eTST.totalAssets());
-
-        // set the previous IRM back
-        eTST.setInterestRateModel(previousIRM);
-        // no change yet
-        assertEq(beforePause, eTST.totalAssets());
-
-        skip(1);
-
-        // interest starts accruing again
-        assertGt(eTST.totalAssets(), beforePause);
-        assertApproxEqRel(eTST.totalAssets(), beforePause, 0.0000000001e18);
+        assertEq(eTST.totalSupply(), totalSupplyBefore);
+        assertEq(eTST.balanceOf(feeReceiver) + eTST.balanceOf(protocolFeeReceiver), fees);
     }
 }

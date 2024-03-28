@@ -161,13 +161,19 @@ contract EVault is Dispatch {
 
     function governorAdmin() public view virtual override useView(MODULE_GOVERNANCE) returns (address) {}
 
+    function feeReceiver() public view virtual override useView(MODULE_GOVERNANCE) returns (address) {}
+
     function interestFee() public view virtual override useView(MODULE_GOVERNANCE) returns (uint16) {}
+
+    function interestRateModel() public view virtual override useView(MODULE_GOVERNANCE) returns (address) {}
 
     function protocolConfigAddress() public view virtual override useView(MODULE_GOVERNANCE) returns (address) {}
 
     function protocolFeeShare() public view virtual override useView(MODULE_GOVERNANCE) returns (uint256) {}
 
     function protocolFeeReceiver() public view virtual override useView(MODULE_GOVERNANCE) returns (address) {}
+
+    function caps() public view virtual override useView(MODULE_GOVERNANCE) returns (uint16 supplyCap, uint16 borrowCap) {}
 
     function borrowingLTV(address collateral) public view virtual override useView(MODULE_GOVERNANCE) returns (uint16) {}
 
@@ -177,23 +183,18 @@ contract EVault is Dispatch {
 
     function LTVList() public view virtual override useView(MODULE_GOVERNANCE) returns (address[] memory) {}
 
-    function interestRateModel() public view virtual override useView(MODULE_GOVERNANCE) returns (address) {}
-
     function hookConfig() public view virtual override useView(MODULE_GOVERNANCE) returns (address, uint32) {}
 
     function configFlags() public view virtual override useView(MODULE_GOVERNANCE) returns (uint32) {}
 
-    function caps() public view virtual override useView(MODULE_GOVERNANCE) returns (uint16 supplyCap, uint16 borrowCap) {}
-
-    function feeReceiver() public view virtual override useView(MODULE_GOVERNANCE) returns (address) {}
-
     function EVC() public view virtual override useView(MODULE_GOVERNANCE) returns (address) {}
-
-    function permit2Address() public view virtual override useView(MODULE_GOVERNANCE) returns (address) {}
 
     function unitOfAccount() public view virtual override useView(MODULE_GOVERNANCE) returns (address) {}
 
     function oracle() public view virtual override useView(MODULE_GOVERNANCE) returns (address) {}
+
+    function permit2Address() public view virtual override useView(MODULE_GOVERNANCE) returns (address) {}
+
 
     function convertFees() public virtual override callThroughEVC use(MODULE_GOVERNANCE) {}
 
