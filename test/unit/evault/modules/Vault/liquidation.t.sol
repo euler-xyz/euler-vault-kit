@@ -111,4 +111,66 @@ contract VaultTest_Liquidation is EVaultTestBase {
         vm.expectRevert(Errors.E_ExcessiveRepayAmount.selector);
         eTST.liquidate(borrower, address(eTST2), maxRepay*2, 0);
     }
+
+    function test_liquidation_minYeild_gt_yield() public {
+        startHoax(borrower);
+
+        eTST2.deposit(10e18, borrower);
+
+        evc.enableCollateral(borrower, address(eTST2));
+        evc.enableController(borrower, address(eTST));
+
+        eTST.borrow(5e18, borrower);
+        assertEq(assetTST.balanceOf(borrower), 5e18);
+        vm.stopPrank();
+
+        startHoax(liquidator);
+
+        (uint256 maxRepay, uint256 yield) = eTST.checkLiquidation(liquidator, borrower, address(eTST2));
+        assertEq(maxRepay, 0);
+        assertEq(yield, 0);
+
+        oracle.setPrice(address(eTST2), unitOfAccount, 5e17);
+
+        (maxRepay, yield) = eTST.checkLiquidation(liquidator, borrower, address(eTST2));
+
+        evc.enableCollateral(liquidator, address(eTST2));
+        evc.enableController(liquidator, address(eTST));
+
+        vm.expectRevert(Errors.E_MinYield.selector);
+        eTST.liquidate(borrower, address(eTST2), maxRepay, yield*2);
+    }
+
+    function test_basicLiquidation_worthless_collateral() public {
+        startHoax(borrower);
+
+        eTST2.deposit(10e18, borrower);
+
+        evc.enableCollateral(borrower, address(eTST2));
+        evc.enableController(borrower, address(eTST));
+
+        eTST.borrow(5e18, borrower);
+        assertEq(assetTST.balanceOf(borrower), 5e18);
+        vm.stopPrank();
+
+        startHoax(liquidator);
+
+        (uint256 maxRepay, uint256 yield) = eTST.checkLiquidation(liquidator, borrower, address(eTST2));
+        assertEq(maxRepay, 0);
+        assertEq(yield, 0);
+
+        oracle.setPrice(address(eTST2), unitOfAccount, 0);
+
+        (maxRepay, yield) = eTST.checkLiquidation(liquidator, borrower, address(eTST2));
+        assertEq(maxRepay, 0);
+
+        evc.enableCollateral(liquidator, address(eTST2));
+        evc.enableController(liquidator, address(eTST));
+        eTST.liquidate(borrower, address(eTST2), type(uint256).max, 0);
+
+        assertEq(eTST.debtOf(liquidator), maxRepay);
+        assertEq(eTST2.balanceOf(liquidator), yield);
+        assertEq(eTST.debtOf(borrower), 0);
+        assertEq(eTST2.balanceOf(borrower), 0);
+    }
 }
