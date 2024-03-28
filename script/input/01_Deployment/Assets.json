@@ -1,0 +1,18 @@
+{
+    "assets": [
+        {
+            "name": "Test Asset 1",
+            "symbol": "TA1",
+            "decimals": 18,
+            "secureMode": false
+        },
+        {
+            "name": "Test Asset 2",
+            "symbol": "TA2",
+            "decimals": 6,
+            "secureMode": false
+        }
+    ],
+    "mintTo": "0x0000000000000000000000000000000000000000",
+    "mintAmount": 1000000
+}

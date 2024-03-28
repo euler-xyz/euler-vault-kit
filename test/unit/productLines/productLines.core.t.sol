@@ -5,13 +5,15 @@ pragma solidity ^0.8.0;
 import "../evault/EVaultTestBase.t.sol";
 
 contract ProductLine_Core is EVaultTestBase {
-    function test_ProductLine_Core_basicViews() public view {
-        assertEq(factory.getProxyConfig(address(eTST)).upgradeable, true);
+    function test_ProductLine_Core_basicViews() public {
+        IEVault vault = IEVault(coreProductLine.createVault(address(assetTST), address(oracle), unitOfAccount));
+        
+        assertEq(factory.getProxyConfig(address(vault)).upgradeable, true);
 
-        assertEq(eTST.unitOfAccount(), unitOfAccount);
-        assertEq(eTST.oracle(), address(oracle));
-        assertEq(eTST.feeReceiver(), feeReceiver);
-        assertEq(eTST.governorAdmin(), address(this));
+        assertEq(vault.unitOfAccount(), unitOfAccount);
+        assertEq(vault.oracle(), address(oracle));
+        assertEq(vault.feeReceiver(), feeReceiver);
+        assertEq(vault.governorAdmin(), address(this));
     }
 
     function test_ProductLine_Core_EVCCompatibility() public {

@@ -1,0 +1,14 @@
+{
+    "vaults": [
+        {
+            "asset": "0x721e950AE833D93fb748D61342B4D676B650c4E7",
+            "oracle": "0x0000000000000000000000000000000000000000",
+            "unitOfAccount": "0x0000000000000000000000000000000000000000",
+            "interestRateModel": "0x0000000000000000000000000000000000000000",
+            "name": "Vault Asset 1",
+            "symbol": "VA1",
+            "upgradable": true
+        }
+    ],
+    "factory": "0xB96429eE9ea8729611b168C5e28eA3b782952fAC"
+}

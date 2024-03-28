@@ -2,6 +2,7 @@
 pragma solidity ^0.8.13;
 
 import {Test, console2, stdError} from "forge-std/Test.sol";
+import {DeploymentAll} from "../../../script/02_DeploymentAll.s.sol";
 import {DeployPermit2} from "permit2/test/utils/DeployPermit2.sol";
 
 import {GenericFactory} from "src/GenericFactory/GenericFactory.sol";
@@ -39,27 +40,18 @@ import {AssertionsCustomTypes} from "../../helpers/AssertionsCustomTypes.sol";
 import "src/EVault/shared/Constants.sol";
 
 contract EVaultTestBase is AssertionsCustomTypes, Test, DeployPermit2 {
-    EthereumVaultConnector public evc;
+    DeploymentAll internal deployer;
+
     address admin;
     address feeReceiver;
+
+    EthereumVaultConnector public evc;
     ProtocolConfig protocolConfig;
     address balanceTracker;
-    MockPriceOracle oracle;
-    address unitOfAccount;
     address permit2;
+    MockPriceOracle oracle;
+    IRMTestDefault irm;
     GenericFactory public factory;
-
-    Core public coreProductLine;
-    Escrow public escrowProductLine;
-
-    Base.Integrations integrations;
-    Dispatch.DeployedModules modules;
-
-    TestERC20 assetTST;
-    TestERC20 assetTST2;
-
-    IEVault public eTST;
-    IEVault public eTST2;
 
     address initializeModule;
     address tokenModule;
@@ -70,55 +62,61 @@ contract EVaultTestBase is AssertionsCustomTypes, Test, DeployPermit2 {
     address balanceForwarderModule;
     address governanceModule;
 
+    address unitOfAccount;
+
+    TestERC20 assetTST;
+    TestERC20 assetTST2;
+    TestERC20 assetTST3;
+
+    IEVault public eTST;
+    IEVault public eTST2;
+    IEVault public eTST3;
+
+    Core public coreProductLine;
+    Escrow public escrowProductLine;
+
     function setUp() public virtual {
         admin = vm.addr(1000);
         feeReceiver = makeAddr("feeReceiver");
-        factory = new GenericFactory(admin);
 
-        evc = new EthereumVaultConnector();
-        protocolConfig = new ProtocolConfig(admin, feeReceiver);
-        balanceTracker = address(new MockBalanceTracker());
-        oracle = new MockPriceOracle();
-        unitOfAccount = address(1);
-        permit2 = deployPermit2();
-        integrations = Base.Integrations(address(evc), address(protocolConfig), balanceTracker, permit2);
+        deployer = new DeploymentAll();
+        DeploymentAll.DeploymentAllResult memory result = deployer.deploy(admin, feeReceiver);
 
-        initializeModule = address(new Initialize(integrations));
-        tokenModule = address(new Token(integrations));
-        vaultModule = address(new Vault(integrations));
-        borrowingModule = address(new Borrowing(integrations));
-        liquidationModule = address(new Liquidation(integrations));
-        riskManagerModule = address(new RiskManager(integrations));
-        balanceForwarderModule = address(new BalanceForwarder(integrations));
-        governanceModule = address(new Governance(integrations));
+        evc = EthereumVaultConnector(payable(result.integrations.evc));
+        protocolConfig = ProtocolConfig(result.integrations.protocolConfig);
+        balanceTracker = result.integrations.balanceTracker;
+        permit2 = result.integrations.permit2;
+        oracle = MockPriceOracle(result.oracle);
+        irm = IRMTestDefault(result.interestRateModel);
+        factory = GenericFactory(result.factory);
 
-        modules = Dispatch.DeployedModules({
-            initialize: initializeModule,
-            token: tokenModule,
-            vault: vaultModule,
-            borrowing: borrowingModule,
-            liquidation: liquidationModule,
-            riskManager: riskManagerModule,
-            balanceForwarder: balanceForwarderModule,
-            governance: governanceModule
-        });
+        initializeModule = result.modules.initialize;
+        tokenModule = result.modules.token;
+        vaultModule = result.modules.vault;
+        borrowingModule = result.modules.borrowing;
+        liquidationModule = result.modules.liquidation;
+        riskManagerModule = result.modules.riskManager;
+        balanceForwarderModule = result.modules.balanceForwarder;
+        governanceModule = result.modules.governance;
 
-        address evaultImpl = address(new EVault(integrations, modules));
+        unitOfAccount = result.assets[0];
 
-        vm.prank(admin);
-        factory.setImplementation(evaultImpl);
+        assetTST = TestERC20(result.assets[0]);
+        assetTST2 = TestERC20(result.assets[1]);
+        assetTST3 = TestERC20(result.assets[2]);
+
+        eTST = IEVault(result.vaults[0]);
+        eTST2 = IEVault(result.vaults[1]);
+        eTST3 = IEVault(result.vaults[2]);
+
+        vm.startPrank(admin);
+        for (uint256 i = 0; i < result.vaults.length; i++) {
+            IEVault(result.vaults[i]).setGovernorAdmin(address(this));
+        }
+        vm.stopPrank();
 
         coreProductLine = new Core(address(factory), address(evc), address(this), feeReceiver);
         escrowProductLine = new Escrow(address(factory), address(evc));
-
-        assetTST = new TestERC20("Test Token", "TST", 18, false);
-        assetTST2 = new TestERC20("Test Token 2", "TST2", 18, false);
-
-        eTST = IEVault(coreProductLine.createVault(address(assetTST), address(oracle), unitOfAccount));
-        eTST.setInterestRateModel(address(new IRMTestDefault()));
-
-        eTST2 = IEVault(coreProductLine.createVault(address(assetTST2), address(oracle), unitOfAccount));
-        eTST.setInterestRateModel(address(new IRMTestDefault()));
     }
 
     address internal SYNTH_VAULT_HOOK_TARGET = address(new MockHook());
