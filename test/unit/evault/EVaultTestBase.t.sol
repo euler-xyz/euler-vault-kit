@@ -42,6 +42,7 @@ contract EVaultTestBase is AssertionsCustomTypes, Test, DeployPermit2 {
     EthereumVaultConnector public evc;
     address admin;
     address feeReceiver;
+    address protocolFeeReceiver;
     ProtocolConfig protocolConfig;
     address balanceTracker;
     MockPriceOracle oracle;
@@ -73,10 +74,11 @@ contract EVaultTestBase is AssertionsCustomTypes, Test, DeployPermit2 {
     function setUp() public virtual {
         admin = vm.addr(1000);
         feeReceiver = makeAddr("feeReceiver");
+        protocolFeeReceiver = makeAddr("protocolFeeReceiver");
         factory = new GenericFactory(admin);
 
         evc = new EthereumVaultConnector();
-        protocolConfig = new ProtocolConfig(admin, feeReceiver);
+        protocolConfig = new ProtocolConfig(admin, protocolFeeReceiver);
         balanceTracker = address(new MockBalanceTracker());
         oracle = new MockPriceOracle();
         unitOfAccount = address(1);
