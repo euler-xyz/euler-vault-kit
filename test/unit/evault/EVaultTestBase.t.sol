@@ -3,25 +3,10 @@ pragma solidity ^0.8.13;
 
 import {Test, console2, stdError} from "forge-std/Test.sol";
 import {DeploymentAll} from "../../../script/02_DeploymentAll.s.sol";
-import {DeployPermit2} from "permit2/test/utils/DeployPermit2.sol";
-
 import {GenericFactory} from "src/GenericFactory/GenericFactory.sol";
-
 import {EVault} from "src/EVault/EVault.sol";
 import {ProtocolConfig} from "src/ProtocolConfig/ProtocolConfig.sol";
-
-import {Dispatch} from "src/EVault/Dispatch.sol";
-
-import {Initialize} from "src/EVault/modules/Initialize.sol";
-import {Token} from "src/EVault/modules/Token.sol";
-import {Vault} from "src/EVault/modules/Vault.sol";
-import {Borrowing} from "src/EVault/modules/Borrowing.sol";
-import {Liquidation} from "src/EVault/modules/Liquidation.sol";
-import {BalanceForwarder} from "src/EVault/modules/BalanceForwarder.sol";
-import {Governance} from "src/EVault/modules/Governance.sol";
-import {RiskManager} from "src/EVault/modules/RiskManager.sol";
-
-import {IEVault, IERC20} from "src/EVault/IEVault.sol";
+import {IEVault} from "src/EVault/IEVault.sol";
 import {TypesLib} from "src/EVault/shared/types/Types.sol";
 import {Base} from "src/EVault/shared/Base.sol";
 
@@ -39,11 +24,12 @@ import {AssertionsCustomTypes} from "../../helpers/AssertionsCustomTypes.sol";
 
 import "src/EVault/shared/Constants.sol";
 
-contract EVaultTestBase is AssertionsCustomTypes, Test, DeployPermit2 {
+contract EVaultTestBase is AssertionsCustomTypes, Test {
     DeploymentAll internal deployer;
 
     address admin;
     address feeReceiver;
+    address protocolFeeReceiver;
 
     EthereumVaultConnector public evc;
     ProtocolConfig protocolConfig;
@@ -62,8 +48,6 @@ contract EVaultTestBase is AssertionsCustomTypes, Test, DeployPermit2 {
     address balanceForwarderModule;
     address governanceModule;
 
-    address unitOfAccount;
-
     TestERC20 assetTST;
     TestERC20 assetTST2;
     TestERC20 assetTST3;
@@ -72,15 +56,18 @@ contract EVaultTestBase is AssertionsCustomTypes, Test, DeployPermit2 {
     IEVault public eTST2;
     IEVault public eTST3;
 
+    address unitOfAccount;
+
     Core public coreProductLine;
     Escrow public escrowProductLine;
 
     function setUp() public virtual {
         admin = vm.addr(1000);
         feeReceiver = makeAddr("feeReceiver");
+        protocolFeeReceiver = makeAddr("protocolFeeReceiver");
 
         deployer = new DeploymentAll();
-        DeploymentAll.DeploymentAllResult memory result = deployer.deploy(admin, feeReceiver);
+        DeploymentAll.DeploymentAllResult memory result = deployer.deploy(admin, protocolFeeReceiver);
 
         evc = EthereumVaultConnector(payable(result.integrations.evc));
         protocolConfig = ProtocolConfig(result.integrations.protocolConfig);
@@ -99,8 +86,6 @@ contract EVaultTestBase is AssertionsCustomTypes, Test, DeployPermit2 {
         balanceForwarderModule = result.modules.balanceForwarder;
         governanceModule = result.modules.governance;
 
-        unitOfAccount = result.assets[0];
-
         assetTST = TestERC20(result.assets[0]);
         assetTST2 = TestERC20(result.assets[1]);
         assetTST3 = TestERC20(result.assets[2]);
@@ -108,6 +93,8 @@ contract EVaultTestBase is AssertionsCustomTypes, Test, DeployPermit2 {
         eTST = IEVault(result.vaults[0]);
         eTST2 = IEVault(result.vaults[1]);
         eTST3 = IEVault(result.vaults[2]);
+
+        unitOfAccount = result.assets[3];
 
         vm.startPrank(admin);
         for (uint256 i = 0; i < result.vaults.length; i++) {

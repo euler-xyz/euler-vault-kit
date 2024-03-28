@@ -8,6 +8,7 @@ contract ProductLine_Base is EVaultTestBase {
     function test_ProductLine_Base_lookup() public {
         address vault1 = coreProductLine.createVault(address(assetTST), address(oracle), unitOfAccount);
         address vault2 = coreProductLine.createVault(address(assetTST2), address(oracle), unitOfAccount);
+
         assertEq(coreProductLine.vaultLookup(vault1), true);
         assertEq(coreProductLine.vaultLookup(vm.addr(100)), false);
         assertEq(coreProductLine.getVaultListLength(), 2);

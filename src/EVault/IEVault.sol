@@ -198,12 +198,14 @@ interface IBorrowing {
     /// @param amount In asset units
     /// @param sharesReceiver Account to receive the created shares
     /// @return Amount of shares created
+    /// @dev Equivalent to looping borrows and deposits
     function loop(uint256 amount, address sharesReceiver) external returns (uint256);
 
     /// @notice Pay off liability with shares ("self-repay")
     /// @param amount In asset units (use max uint256 to repay the debt in full or up to the available underlying balance)
     /// @param debtFrom Account to remove debt from by burning sender's shares
     /// @return Amount of shares burned
+    /// @dev Equivalent to withdrawing and repaying
     function deloop(uint256 amount, address debtFrom) external returns (uint256);
 
     /// @notice Take over debt from another account
@@ -300,9 +302,16 @@ interface IGovernance {
     /// @notice Retrieves the address of the governor
     function governorAdmin() external view returns (address);
 
+    /// @notice Retrieves address of the governance fee receiver
+    function feeReceiver() external view returns (address);
+
     /// @notice Retrieves the interest fee in effect for the vault
     /// @return Amount of interest that is redirected as a fee, as a fraction scaled by 1e4
     function interestFee() external view returns (uint16);
+
+    /// @notice Looks up an asset's currently configured interest rate model
+    /// @return Address of the interest rate contract or address zero to indicate 0% interest
+    function interestRateModel() external view returns (address);
 
     /// @notice Retrieves the ProtocolConfig address
     function protocolConfigAddress() external view returns (address);
@@ -313,6 +322,9 @@ interface IGovernance {
 
     /// @notice Retrieves the address which will receive protocol's fees
     function protocolFeeReceiver() external view returns (address);
+
+    /// @notice Retrieves supply and borrow caps in AmountCap format
+    function caps() external view returns (uint16 supplyCap, uint16 borrowCap);
 
     /// @notice Retrieves regular LTV, set for the collateral, which is used to determine the health of the account
     function borrowingLTV(address collateral) external view returns (uint16);
@@ -336,33 +348,23 @@ interface IGovernance {
     /// @dev The list can have duplicates. Returned assets could have the ltv disabled (set to zero)
     function LTVList() external view returns (address[] memory);
 
-    /// @notice Looks up an asset's currently configured interest rate model
-    /// @return Address of the interest rate contract or address zero to indicate 0% interest
-    function interestRateModel() external view returns (address);
-
     /// @notice Retrieves a hook target and a bitmask indicating which operations call the hook target.
     function hookConfig() external view returns (address, uint32);
 
     /// @notice Retrieves a bitmask indicating enabled config flags.
     function configFlags() external view returns (uint32);
 
-    /// @notice Retrieves supply and borrow caps in AmountCap format
-    function caps() external view returns (uint16 supplyCap, uint16 borrowCap);
-
-    /// @notice Retrieves address of the governance fee receiver
-    function feeReceiver() external view returns (address);
-
     /// @notice Address of EthereumVaultConnector contract
     function EVC() external view returns (address);
-
-    /// @notice Retrieves the Permit2 contract address
-    function permit2Address() external view returns (address);
 
     /// @notice Retrieves a reference asset used for liquidity calculations
     function unitOfAccount() external view returns (address);
 
     /// @notice Retrieves the address of the oracle contract
     function oracle() external view returns (address);
+
+    /// @notice Retrieves the Permit2 contract address
+    function permit2Address() external view returns (address);
 
     /// @notice Splits accrued fees balance according to protocol fee share and transfers shares to the governor fee receiver and protocol fee receiver
     function convertFees() external;

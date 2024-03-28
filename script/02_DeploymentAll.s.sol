@@ -5,7 +5,6 @@ pragma solidity ^0.8.19;
 import "forge-std/Script.sol";
 import {Utils} from "./Utils.s.sol";
 import "./01_Deployment.s.sol";
-import {Core} from "src/ProductLines/Core.sol";
 
 contract DeploymentAll is Utils {
     struct DeploymentAllDeployers {
@@ -131,24 +130,24 @@ contract DeploymentAll is Utils {
             result.assets = deployers.deploymentAssets.deploy(configAssets, admin, 1e6);
 
             configVaults[0].asset = result.assets[0];
-            configVaults[0].unitOfAccount = result.assets[0];
+            configVaults[0].unitOfAccount = result.assets[3];
             configVaults[0].oracle = result.oracle;
             configVaults[0].interestRateModel = result.interestRateModel;
 
             configVaults[1].asset = result.assets[1];
-            configVaults[1].unitOfAccount = result.assets[0];
+            configVaults[1].unitOfAccount = result.assets[3];
             configVaults[1].oracle = result.oracle;
             configVaults[1].interestRateModel = result.interestRateModel;
 
             configVaults[2].asset = result.assets[2];
-            configVaults[2].unitOfAccount = result.assets[0];
+            configVaults[2].unitOfAccount = result.assets[3];
             configVaults[2].oracle = result.oracle;
             configVaults[2].interestRateModel = result.interestRateModel;
 
             result.vaults = deployers.deploymentVaults.deploy(configVaults, result.factory);
 
             if (configureLTVAndOracle) {
-                startBroadcast();  
+                startBroadcast();
                 // no need to set up vaults[0] (escrow vault)
 
                 // set up vaults[1]
@@ -159,9 +158,9 @@ contract DeploymentAll is Utils {
                 EVault(result.vaults[2]).setLTV(result.vaults[1], 1e4 * 8 / 10, 0); // 80% LTV
 
                 // set up the price oracle
-                MockPriceOracle(result.oracle).setPrice(configVaults[0].asset, configVaults[0].asset, 1e18); // 1 A1 = 1 A1
-                MockPriceOracle(result.oracle).setPrice(configVaults[1].asset, configVaults[0].asset, 1e16); // 1 A2 = 0.01 A1
-                MockPriceOracle(result.oracle).setPrice(configVaults[2].asset, configVaults[0].asset, 1e18); // 1 A3 = 1 A1
+                MockPriceOracle(result.oracle).setPrice(configVaults[0].asset, configVaults[0].unitOfAccount, 1e18); // 1 A1 = 1 A1
+                MockPriceOracle(result.oracle).setPrice(configVaults[1].asset, configVaults[1].unitOfAccount, 1e16); // 1 A2 = 0.01 A1
+                MockPriceOracle(result.oracle).setPrice(configVaults[2].asset, configVaults[2].unitOfAccount, 1e18); // 1 A3 = 1 A1
                 MockPriceOracle(result.oracle).setResolvedVault(result.vaults[0], true);
                 MockPriceOracle(result.oracle).setResolvedVault(result.vaults[1], true);
                 MockPriceOracle(result.oracle).setResolvedVault(result.vaults[2], true);
@@ -182,12 +181,13 @@ contract DeploymentAll is Utils {
     }
 
     function getTestSetup() internal pure returns (ConfigAsset[] memory, ConfigVault[] memory) {
-        ConfigAsset[] memory configAssets = new ConfigAsset[](3);
+        ConfigAsset[] memory configAssets = new ConfigAsset[](4);
         ConfigVault[] memory configVaults = new ConfigVault[](3);
 
         configAssets[0] = ConfigAsset({name: "Test Token", symbol: "TST", decimals: 18, secureMode: false});
         configAssets[1] = ConfigAsset({name: "Test Token 2", symbol: "TST2", decimals: 18, secureMode: false});
         configAssets[2] = ConfigAsset({name: "Test Token 3", symbol: "TST3", decimals: 6, secureMode: false});
+        configAssets[3] = ConfigAsset({name: "Unit Of Account", symbol: "UOA", decimals: 18, secureMode: false});
 
         configVaults[0].name = "Test Vault";
         configVaults[0].symbol = "TV";

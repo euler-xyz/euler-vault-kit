@@ -7,7 +7,7 @@ import "../evault/EVaultTestBase.t.sol";
 contract ProductLine_Core is EVaultTestBase {
     function test_ProductLine_Core_basicViews() public {
         IEVault vault = IEVault(coreProductLine.createVault(address(assetTST), address(oracle), unitOfAccount));
-        
+
         assertEq(factory.getProxyConfig(address(vault)).upgradeable, true);
 
         assertEq(vault.unitOfAccount(), unitOfAccount);
