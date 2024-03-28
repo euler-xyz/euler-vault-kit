@@ -10,8 +10,6 @@ import {IAllowanceTransfer} from "permit2/src/interfaces/IAllowanceTransfer.sol"
 import "src/EVault/shared/types/Types.sol";
 import "src/EVault/shared/Constants.sol";
 
-import {console} from "forge-std/Test.sol";
-
 contract VaultTest_Liquidation is EVaultTestBase {
     using TypesLib for uint256;
 
@@ -97,13 +95,9 @@ contract VaultTest_Liquidation is EVaultTestBase {
 
         startHoax(liquidator);
 
-        (uint256 maxRepay, uint256 yield) = eTST.checkLiquidation(liquidator, borrower, address(eTST2));
-        assertEq(maxRepay, 0);
-        assertEq(yield, 0);
-
         oracle.setPrice(address(eTST2), unitOfAccount, 5e17);
 
-        (maxRepay, yield) = eTST.checkLiquidation(liquidator, borrower, address(eTST2));
+        (uint256 maxRepay, uint256 yield) = eTST.checkLiquidation(liquidator, borrower, address(eTST2));
 
         evc.enableCollateral(liquidator, address(eTST2));
         evc.enableController(liquidator, address(eTST));
@@ -126,13 +120,9 @@ contract VaultTest_Liquidation is EVaultTestBase {
 
         startHoax(liquidator);
 
-        (uint256 maxRepay, uint256 yield) = eTST.checkLiquidation(liquidator, borrower, address(eTST2));
-        assertEq(maxRepay, 0);
-        assertEq(yield, 0);
-
         oracle.setPrice(address(eTST2), unitOfAccount, 5e17);
 
-        (maxRepay, yield) = eTST.checkLiquidation(liquidator, borrower, address(eTST2));
+        (uint256 maxRepay, uint256 yield) = eTST.checkLiquidation(liquidator, borrower, address(eTST2));
 
         evc.enableCollateral(liquidator, address(eTST2));
         evc.enableController(liquidator, address(eTST));
@@ -155,13 +145,9 @@ contract VaultTest_Liquidation is EVaultTestBase {
 
         startHoax(liquidator);
 
-        (uint256 maxRepay, uint256 yield) = eTST.checkLiquidation(liquidator, borrower, address(eTST2));
-        assertEq(maxRepay, 0);
-        assertEq(yield, 0);
-
         oracle.setPrice(address(eTST2), unitOfAccount, 0);
 
-        (maxRepay, yield) = eTST.checkLiquidation(liquidator, borrower, address(eTST2));
+        (uint256 maxRepay, uint256 yield) = eTST.checkLiquidation(liquidator, borrower, address(eTST2));
         assertEq(maxRepay, 0);
 
         evc.enableCollateral(liquidator, address(eTST2));

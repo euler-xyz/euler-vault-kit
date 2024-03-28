@@ -9,8 +9,6 @@ import {LiquidityUtils} from "../shared/LiquidityUtils.sol";
 
 import "../shared/types/Types.sol";
 
-import {console} from "forge-std/Test.sol";
-
 abstract contract LiquidationModule is ILiquidation, Base, BalanceUtils, LiquidityUtils {
     using TypesLib for uint256;
 
@@ -118,9 +116,6 @@ abstract contract LiquidationModule is ILiquidation, Base, BalanceUtils, Liquidi
         (uint256 liquidityCollateralValue, uint256 liquidityLiabilityValue) =
             calculateLiquidity(vaultCache, liqCache.violator, liqCache.collaterals, LTVType.LIQUIDATION);
 
-        console.log("liquidityCollateralValue", liquidityCollateralValue);
-        console.log("liquidityLiabilityValue", liquidityLiabilityValue);
-
         // no violation
         if (liquidityCollateralValue >= liquidityLiabilityValue) return liqCache;
 
@@ -135,7 +130,6 @@ abstract contract LiquidationModule is ILiquidation, Base, BalanceUtils, Liquidi
         // Compute maximum yield
 
         uint256 collateralBalance = IERC20(liqCache.collateral).balanceOf(liqCache.violator);
-        console.log("collateralBalance", collateralBalance);
         uint256 collateralValue =
             vaultCache.oracle.getQuote(collateralBalance, liqCache.collateral, vaultCache.unitOfAccount);
 
