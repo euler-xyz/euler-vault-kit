@@ -132,9 +132,7 @@ contract MockHook {
         if (asset != caller()) revert E_OnlyAssetCanDeposit();
     }
 
-    function maxDeposit(address) public view virtual returns (uint256) {
-        return type(uint256).max;
-    }
+    function maxDeposit(address) public view virtual returns (uint256 max) {}
 
     // all the other hooked ops are disabled
     fallback() external {
