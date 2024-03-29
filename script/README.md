@@ -135,7 +135,7 @@ Outputs:
 
 ## Lens
 
-This script uses lens contract to look up a vault and, if needed, an account info.
+This script uses lens contract to look up the vault and, if needed, the account info.
 
 Inputs:
 `script/input/03_Lens/Lens.json`
