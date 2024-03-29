@@ -74,9 +74,6 @@ abstract contract BorrowingModule is IBorrowing, Base, AssetTransfers, BalanceUt
         (uint256 totalCollateralValueRiskAdjusted, uint256 liabilityValue) =
             calculateLiquidity(vaultCache, account, collaterals, LTVType.BORROWING);
 
-        // if there is no liability or it has no value, collateral will not be locked
-        if (liabilityValue == 0) return 0;
-
         uint256 collateralBalance = IERC20(collateral).balanceOf(account);
 
         // if account is not healthy, all of the collateral will be locked
@@ -90,6 +87,13 @@ abstract contract BorrowingModule is IBorrowing, Base, AssetTransfers, BalanceUt
 
         // calculate extra collateral value in terms of requested collateral balance, by dividing by LTV
         uint256 extraCollateralValue = ltv.mulInv(totalCollateralValueRiskAdjusted - liabilityValue);
+
+        if (extraCollateralValue != 0) {
+            // adjust due to health score definition which is collateral value > liability value
+            unchecked {
+                extraCollateralValue -= 1;
+            }
+        }
 
         // convert back to collateral balance (bid)
         (uint256 collateralPrice,) = vaultCache.oracle.getQuotes(1e18, collateral, vaultCache.unitOfAccount);

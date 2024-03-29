@@ -122,7 +122,7 @@ abstract contract Dispatch is
 
     // Modifier ensures, that the body of the function is always executed from the EVC call.
     // It is accomplished by intercepting calls incoming directly to the vault and passing them
-    // to the EVC.call function. EVC calls the vault back with original calldata. As a result, the account 
+    // to the EVC.call function. EVC calls the vault back with original calldata. As a result, the account
     // and vault status checks are always executed in the checks deferral frame, at the end of the call,
     // outside of the vault's re-entrancy protections.
     // The modifier is applied to all functions which schedule account or vault status checks.
