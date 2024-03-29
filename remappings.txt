@@ -6,4 +6,3 @@ forge-gas-snapshot/=lib/permit2/lib/forge-gas-snapshot/src/
 forge-std/=lib/forge-std/src/
 openzeppelin-contracts/=lib/openzeppelin-contracts/contracts/
 solmate/=lib/permit2/lib/solmate/
-reward-streams/=lib/reward-streams/src/
