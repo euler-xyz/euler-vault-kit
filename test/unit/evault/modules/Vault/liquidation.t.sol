@@ -103,7 +103,7 @@ contract VaultTest_Liquidation is EVaultTestBase {
         evc.enableController(liquidator, address(eTST));
 
         vm.expectRevert(Errors.E_ExcessiveRepayAmount.selector);
-        eTST.liquidate(borrower, address(eTST2), maxRepay*2, 0);
+        eTST.liquidate(borrower, address(eTST2), maxRepay * 2, 0);
     }
 
     function test_liquidation_minYeild_gt_yield() public {
@@ -128,7 +128,7 @@ contract VaultTest_Liquidation is EVaultTestBase {
         evc.enableController(liquidator, address(eTST));
 
         vm.expectRevert(Errors.E_MinYield.selector);
-        eTST.liquidate(borrower, address(eTST2), maxRepay, yield*2);
+        eTST.liquidate(borrower, address(eTST2), maxRepay, yield * 2);
     }
 
     function test_basicLiquidation_worthless_collateral() public {
