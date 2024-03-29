@@ -4,7 +4,7 @@ pragma solidity ^0.8.0;
 
 /// @title Events
 /// @author Euler Labs (https://www.eulerlabs.com/)
-/// @notice This contract implements Evault's events
+/// @notice Contract implementing EVault's events
 abstract contract Events {
     // ERC20
 
@@ -42,9 +42,9 @@ abstract contract Events {
     // EVault
 
     /// @notice New EVault is initialized
-    /// @param creator The address calling the factory
+    /// @param creator Address designated as the vault's creator
     /// @param asset The underlying asset of the vault
-    /// @param dToken Address of the sidecar debt tracking token
+    /// @param dToken Address of the sidecar debt token
     event EVaultCreated(address indexed creator, address indexed asset, address dToken);
 
     /// @notice Log the current vault status
@@ -80,7 +80,7 @@ abstract contract Events {
     /// @param violator Address holding an unhealthy borrow
     /// @param collateral Address of the asset seized
     /// @param repayAssets Amount of debt in assets transfered from violator to liquidator
-    /// @param yieldBalance Amount of collateral asset's balance transfer from violator to liquidator
+    /// @param yieldBalance Amount of collateral asset's balance transfered from violator to liquidator
     event Liquidate(
         address indexed liquidator,
         address indexed violator,
@@ -96,8 +96,8 @@ abstract contract Events {
 
     /// @notice Split the accumulated fees between the governor and the protocol
     /// @param sender Address initializing the conversion
-    /// @param protocolReceiver Address receiving the protocol's share of fees
-    /// @param governorReceiver Address receiving the governor's share of fees
+    /// @param protocolReceiver Address receiving the protocol's share of the fees
+    /// @param governorReceiver Address receiving the governor's share of the fees
     /// @param protocolShares Amount of shares tranfered to the protocol receiver
     /// @param governorShares Amount of shares tranfered to the governor receiver
     event ConvertFees(

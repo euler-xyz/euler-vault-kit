@@ -7,7 +7,7 @@ import {LTVConfig} from "./LTVConfig.sol";
 import {UserStorage} from "./UserStorage.sol";
 
 /// @title VaultStorage
-/// @notice This struct is used to hold all of the vault storage
+/// @notice This struct is used to hold all of the vault's permanent storage
 /// @dev Note that snapshots are not a part of this struct, as they might be reimplemented as transient storage
 struct VaultStorage {
     // Packed slot 6 + 14 + 2 + 2 + 4 + 1 + 1 = 30
@@ -29,7 +29,7 @@ struct VaultStorage {
     // Packed slot 14 + 18 = 32
     // Sum of all user shares
     Shares totalShares;
-    // Current borrow cap in asset units
+    // Sum of all user debts
     Owed totalBorrows;
 
     // Packed slot 14 + 4 = 18
@@ -44,9 +44,9 @@ struct VaultStorage {
     // Packed slot 20 + 2 + 9 = 31
     // Address of the interest rate model contract. If not set, 0% interest is applied
     address interestRateModel;
-    // Percentage of interest accrued charged as fees
+    // Percentage of accrued interest that is directed to fees
     ConfigAmount interestFee;
-    // Current interest rate on borrows
+    // Current interest rate applied to outstanding borrows
     uint72 interestRate;
 
     // Name of the shares token (eToken)
@@ -54,17 +54,17 @@ struct VaultStorage {
     // Symbol of the shares token (eToken)
     string symbol;
 
-    // Address of the vault creator
+    // Address of the vault's creator
     address creator;
 
-    // Address of the vault admin
+    // Address of the vault's governor
     address governorAdmin;
     // Address which receives governor fees
     address feeReceiver;
     // Address which will be called for enabled hooks
     address hookTarget;
 
-    // User accounts data
+    // User accounts
     mapping(address account => UserStorage) users;
 
     // LTV configuration for collaterals

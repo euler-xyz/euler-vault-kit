@@ -14,11 +14,11 @@ struct UserStorage {
     PackedUserSlot data;
     // Snapshot of the interest accumulator from the last change to account's liability
     uint256 interestAccumulator;
-    // A mapping with allowances for the valt shares token
+    // A mapping with allowances for the vault shares token (eToken)
     mapping(address spender => uint256 allowance) eTokenAllowance;
 }
 
-/// @title SharesLib
+/// @title UserStorageLib
 /// @author Euler Labs (https://www.eulerlabs.com/)
 /// @notice Library for working with the UserStorage struct
 library UserStorageLib {

@@ -9,7 +9,7 @@ import "./types/Types.sol";
 
 /// @title BalanceUtils
 /// @author Euler Labs (https://www.eulerlabs.com/)
-/// @notice Utilities for tracking shares balances and allowances
+/// @notice Utilities for tracking share balances and allowances
 abstract contract BalanceUtils is Base {
     using TypesLib for uint256;
 

@@ -11,7 +11,7 @@ import {ProxyUtils} from "../shared/lib/ProxyUtils.sol";
 
 import "../shared/types/Types.sol";
 
-/// @title BalanceForwarderModule
+/// @title VaultModule
 /// @author Euler Labs (https://www.eulerlabs.com/)
 /// @notice An EVault module handling ERC4626 standard behaviour
 abstract contract VaultModule is IVault, Base, AssetTransfers, BalanceUtils {
