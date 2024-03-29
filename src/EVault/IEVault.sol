@@ -15,7 +15,7 @@ interface IInitialize {
 }
 
 /// @title IERC20
-/// @notice Interface of an ERC20 token
+/// @notice Interface of the EVault's Initialize module
 interface IERC20 {
     /// @notice Vault share token (eToken) name, ie "Euler Vault: DAI"
     function name() external view returns (string memory);
