@@ -23,5 +23,6 @@ struct VaultCache {
     uint256 borrowCap;
     Flags hookedOps;
     Flags configFlags;
+
     bool snapshotInitialized;
 }

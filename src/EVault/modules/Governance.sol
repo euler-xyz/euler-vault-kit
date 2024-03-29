@@ -44,8 +44,23 @@ abstract contract GovernanceModule is IGovernance, Base, BalanceUtils, BorrowUti
     }
 
     /// @inheritdoc IGovernance
+    function feeReceiver() public view virtual reentrantOK returns (address) {
+        return vaultStorage.feeReceiver;
+    }
+
+    /// @inheritdoc IGovernance
     function interestFee() public view virtual reentrantOK returns (uint16) {
         return vaultStorage.interestFee.toUint16();
+    }
+
+    /// @inheritdoc IGovernance
+    function interestRateModel() public view virtual reentrantOK returns (address) {
+        return vaultStorage.interestRateModel;
+    }
+
+    /// @inheritdoc IGovernance
+    function protocolConfigAddress() public view virtual reentrantOK returns (address) {
+        return address(protocolConfig);
     }
 
     /// @inheritdoc IGovernance
@@ -61,8 +76,8 @@ abstract contract GovernanceModule is IGovernance, Base, BalanceUtils, BorrowUti
     }
 
     /// @inheritdoc IGovernance
-    function protocolConfigAddress() public view virtual reentrantOK returns (address) {
-        return address(protocolConfig);
+    function caps() public view virtual reentrantOK returns (uint16, uint16) {
+        return (vaultStorage.supplyCap.toRawUint16(), vaultStorage.borrowCap.toRawUint16());
     }
 
     /// @inheritdoc IGovernance
@@ -87,11 +102,6 @@ abstract contract GovernanceModule is IGovernance, Base, BalanceUtils, BorrowUti
     }
 
     /// @inheritdoc IGovernance
-    function interestRateModel() public view virtual reentrantOK returns (address) {
-        return vaultStorage.interestRateModel;
-    }
-
-    /// @inheritdoc IGovernance
     function hookConfig() public view virtual reentrantOK returns (address, uint32) {
         return (vaultStorage.hookTarget, vaultStorage.hookedOps.toUint32());
     }
@@ -102,23 +112,8 @@ abstract contract GovernanceModule is IGovernance, Base, BalanceUtils, BorrowUti
     }
 
     /// @inheritdoc IGovernance
-    function caps() public view virtual reentrantOK returns (uint16, uint16) {
-        return (vaultStorage.supplyCap.toRawUint16(), vaultStorage.borrowCap.toRawUint16());
-    }
-
-    /// @inheritdoc IGovernance
-    function feeReceiver() public view virtual reentrantOK returns (address) {
-        return vaultStorage.feeReceiver;
-    }
-
-    /// @inheritdoc IGovernance
     function EVC() public view virtual reentrantOK returns (address) {
         return address(evc);
-    }
-
-    /// @inheritdoc IGovernance
-    function permit2Address() public view virtual reentrantOK returns (address) {
-        return permit2;
     }
 
     /// @inheritdoc IGovernance
@@ -131,6 +126,11 @@ abstract contract GovernanceModule is IGovernance, Base, BalanceUtils, BorrowUti
     function oracle() public view virtual reentrantOK returns (address) {
         (, IPriceOracle _oracle,) = ProxyUtils.metadata();
         return address(_oracle);
+    }
+
+    /// @inheritdoc IGovernance
+    function permit2Address() public view virtual reentrantOK returns (address) {
+        return permit2;
     }
 
     /// @inheritdoc IGovernance
@@ -151,10 +151,10 @@ abstract contract GovernanceModule is IGovernance, Base, BalanceUtils, BorrowUti
         Shares governorShares = vaultCache.accumulatedFees.mulDiv(1e4 - protocolFee, 1e4);
         Shares protocolShares = vaultCache.accumulatedFees - governorShares;
 
-        vaultStorage.accumulatedFees = vaultCache.accumulatedFees = Shares.wrap(0);
-
         // Decrease totalShares because increaseBalance will increase it by that total amount
         vaultStorage.totalShares = vaultCache.totalShares = vaultCache.totalShares - vaultCache.accumulatedFees;
+
+        vaultStorage.accumulatedFees = vaultCache.accumulatedFees = Shares.wrap(0);
 
         // For the Deposit events in increaseBalance the assets amount is zero - the shares are covered with the accrued interest
         if (!governorShares.isZero()) {
