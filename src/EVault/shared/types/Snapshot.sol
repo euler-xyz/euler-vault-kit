@@ -10,7 +10,7 @@ struct Snapshot {
     // Packed slot: 14 + 14 + 4 = 32
     // vault's cash holdings
     Assets cash;
-    // vault's total borrows in regular asset units precision
+    // vault's total borrows in assets, in regular precision
     Assets borrows;
     // stamp occupies the rest of the storage slot and makes sure the slot is non-zero for gas savings
     uint32 stamp;
