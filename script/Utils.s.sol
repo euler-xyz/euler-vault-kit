@@ -6,7 +6,8 @@ import "forge-std/Script.sol";
 
 contract Utils is Script {
     function startBroadcast() internal {
-        uint256 anvilPrivateKey = vm.deriveKey(vm.envString("ANVIL_MNEMONIC"), 0);
+        string memory defaultMnemonic = "test test test test test test test test test test test junk";
+        uint256 anvilPrivateKey = vm.deriveKey(vm.envOr("ANVIL_MNEMONIC", defaultMnemonic), 0);
         uint256 deployerPrivateKey = vm.envOr("DEPLOYER_KEY", uint256(1));
         address deployer = vm.addr(deployerPrivateKey);
 
