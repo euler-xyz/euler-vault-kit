@@ -116,7 +116,7 @@ abstract contract RiskManagerModule is IRiskManager, Base, LiquidityUtils {
     }
 }
 
-/// @dev Deployable contract
+/// @dev Deployable module contract
 contract RiskManager is RiskManagerModule {
     constructor(Integrations memory integrations) Base(integrations) {}
 }

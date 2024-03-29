@@ -270,7 +270,7 @@ abstract contract VaultModule is IVault, Base, AssetTransfers, BalanceUtils {
     }
 }
 
-/// @dev Deployable contract
+/// @dev Deployable module contract
 contract Vault is VaultModule {
     constructor(Integrations memory integrations) Base(integrations) {}
 }

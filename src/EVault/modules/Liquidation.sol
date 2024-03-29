@@ -219,7 +219,7 @@ abstract contract LiquidationModule is ILiquidation, Base, BalanceUtils, Liquidi
     }
 }
 
-/// @dev Deployable contract
+/// @dev Deployable module contract
 contract Liquidation is LiquidationModule {
     constructor(Integrations memory integrations) Base(integrations) {}
 }

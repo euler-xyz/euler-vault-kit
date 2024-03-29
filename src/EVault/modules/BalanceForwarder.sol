@@ -46,7 +46,7 @@ abstract contract BalanceForwarderModule is IBalanceForwarder, Base {
     }
 }
 
-/// @dev Deployable contract
+/// @dev Deployable module contract
 contract BalanceForwarder is BalanceForwarderModule {
     constructor(Integrations memory integrations) Base(integrations) {}
 }

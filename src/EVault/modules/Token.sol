@@ -82,7 +82,7 @@ abstract contract TokenModule is IToken, Base, BalanceUtils {
     }
 }
 
-/// @dev Deployable contract
+/// @dev Deployable module contract
 contract Token is TokenModule {
     constructor(Integrations memory integrations) Base(integrations) {}
 }

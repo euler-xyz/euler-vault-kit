@@ -288,7 +288,7 @@ abstract contract GovernanceModule is IGovernance, Base, BalanceUtils, BorrowUti
     }
 }
 
-/// @dev Deployable contract
+/// @dev Deployable module contract
 contract Governance is GovernanceModule {
     constructor(Integrations memory integrations) Base(integrations) {}
 }

@@ -60,7 +60,7 @@ abstract contract InitializeModule is IInitialize, Base, BorrowUtils {
     }
 }
 
-/// @dev Deployable contract
+/// @dev Deployable module contract
 contract Initialize is InitializeModule {
     constructor(Integrations memory integrations) Base(integrations) {}
 }

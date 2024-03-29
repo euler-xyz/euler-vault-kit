@@ -229,7 +229,7 @@ abstract contract BorrowingModule is IBorrowing, Base, AssetTransfers, BalanceUt
     }
 }
 
-/// @dev Deployable contract
+/// @dev Deployable module contract
 contract Borrowing is BorrowingModule {
     constructor(Integrations memory integrations) Base(integrations) {}
 }
