@@ -8,6 +8,9 @@ import {LiquidityUtils} from "../shared/LiquidityUtils.sol";
 
 import "../shared/types/Types.sol";
 
+/// @title RiskManagerModule
+/// @author Euler Labs (https://www.eulerlabs.com/)
+/// @notice An EVault module handling risk management, including vault and account health checks
 abstract contract RiskManagerModule is IRiskManager, Base, LiquidityUtils {
     using TypesLib for uint256;
 
@@ -113,6 +116,7 @@ abstract contract RiskManagerModule is IRiskManager, Base, LiquidityUtils {
     }
 }
 
+/// @dev Deployable contract
 contract RiskManager is RiskManagerModule {
     constructor(Integrations memory integrations) Base(integrations) {}
 }

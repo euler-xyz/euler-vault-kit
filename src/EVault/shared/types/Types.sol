@@ -15,7 +15,8 @@ import "./Owed.sol";
 import "./ConfigAmount.sol";
 import "./Flags.sol";
 import "./AmountCap.sol";
-import "./LTVType.sol";
+
+/// @notice In this file, custom types are defined and linked globally with their libraries and operators
 
 type Shares is uint112;
 
@@ -54,6 +55,8 @@ using {gtConfigAmount as >, ltConfigAmount as <} for ConfigAmount global;
 using AmountCapLib for AmountCap global;
 using FlagsLib for Flags global;
 
+/// @title TypesLib
+/// @notice Library for casting basic types' amounts into custom types
 library TypesLib {
     function toShares(uint256 amount) internal pure returns (Shares) {
         if (amount > MAX_SANE_AMOUNT) revert Errors.E_AmountTooLargeToEncode();

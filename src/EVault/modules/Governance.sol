@@ -12,6 +12,9 @@ import {ProxyUtils} from "../shared/lib/ProxyUtils.sol";
 
 import "../shared/types/Types.sol";
 
+/// @title GovernanceModule
+/// @author Euler Labs (https://www.eulerlabs.com/)
+/// @notice An EVault module handling governance, including configuration and fees
 abstract contract GovernanceModule is IGovernance, Base, BalanceUtils, BorrowUtils, LTVUtils {
     using TypesLib for uint16;
 
@@ -285,6 +288,7 @@ abstract contract GovernanceModule is IGovernance, Base, BalanceUtils, BorrowUti
     }
 }
 
+/// @dev Deployable contract
 contract Governance is GovernanceModule {
     constructor(Integrations memory integrations) Base(integrations) {}
 }

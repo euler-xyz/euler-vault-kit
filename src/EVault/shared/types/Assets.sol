@@ -7,6 +7,9 @@ import {VaultCache} from "./VaultCache.sol";
 import {ConversionHelpers} from "../lib/ConversionHelpers.sol";
 import "../Constants.sol";
 
+/// @title AssetsLib
+/// @author Euler Labs (https://www.eulerlabs.com/)
+/// @notice Custom type `Assets` represents amounts of the vault's underlying asset
 library AssetsLib {
     function toUint(Assets self) internal pure returns (uint256) {
         return Assets.unwrap(self);

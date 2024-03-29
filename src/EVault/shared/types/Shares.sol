@@ -6,6 +6,9 @@ import {Shares, Assets, TypesLib} from "./Types.sol";
 import {VaultCache} from "./VaultCache.sol";
 import {ConversionHelpers} from "../lib/ConversionHelpers.sol";
 
+/// @title SharesLib
+/// @author Euler Labs (https://www.eulerlabs.com/)
+/// @notice Library for `Shares` custom type, which is used to store vault's shares balances
 library SharesLib {
     function toUint(Shares self) internal pure returns (uint256) {
         return Shares.unwrap(self);

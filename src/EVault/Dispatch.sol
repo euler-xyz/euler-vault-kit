@@ -15,6 +15,9 @@ import {RiskManagerModule} from "./modules/RiskManager.sol";
 
 import "./shared/Constants.sol";
 
+/// @title Dispatch
+/// @author Euler Labs (https://www.eulerlabs.com/)
+/// @notice Contract which ties in the EVault modules and provides utilities for routing calls to modules and the EVC
 abstract contract Dispatch is
     Base,
     InitializeModule,
@@ -78,6 +81,8 @@ abstract contract Dispatch is
         }
     }
 
+    // External function which is only callable by the EVault itself. It's purpose is to be static called by `delegateToModuleView`
+    // which allows delegate-calling modules also for external view functions.
     function viewDelegate() external {
         if (msg.sender != address(this)) revert E_Unauthorized();
 
@@ -122,7 +127,7 @@ abstract contract Dispatch is
 
     // Modifier ensures, that the body of the function is always executed from the EVC call.
     // It is accomplished by intercepting calls incoming directly to the vault and passing them
-    // to the EVC.call function. EVC calls the vault back with original calldata. As a result, the account 
+    // to the EVC.call function. EVC calls the vault back with original calldata. As a result, the account
     // and vault status checks are always executed in the checks deferral frame, at the end of the call,
     // outside of the vault's re-entrancy protections.
     // The modifier is applied to all functions which schedule account or vault status checks.

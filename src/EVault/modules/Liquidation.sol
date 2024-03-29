@@ -9,6 +9,9 @@ import {LiquidityUtils} from "../shared/LiquidityUtils.sol";
 
 import "../shared/types/Types.sol";
 
+/// @title LiquidationModule
+/// @author Euler Labs (https://www.eulerlabs.com/)
+/// @notice An EVault module handling liquidations of unhealthy accounts
 abstract contract LiquidationModule is ILiquidation, Base, BalanceUtils, LiquidityUtils {
     using TypesLib for uint256;
 
@@ -216,6 +219,7 @@ abstract contract LiquidationModule is ILiquidation, Base, BalanceUtils, Liquidi
     }
 }
 
+/// @dev Deployable contract
 contract Liquidation is LiquidationModule {
     constructor(Integrations memory integrations) Base(integrations) {}
 }

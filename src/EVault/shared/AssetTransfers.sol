@@ -7,6 +7,9 @@ import {Base} from "./Base.sol";
 
 import "./types/Types.sol";
 
+/// @title AssetTransfers
+/// @author Euler Labs (https://www.eulerlabs.com/)
+/// @notice Transfer assets into and out of the vault
 abstract contract AssetTransfers is Base {
     using TypesLib for uint256;
     using SafeERC20Lib for IERC20;

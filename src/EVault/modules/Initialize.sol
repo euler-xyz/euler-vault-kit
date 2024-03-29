@@ -12,6 +12,9 @@ import {VaultCache} from "../shared/types/VaultCache.sol";
 import "../shared/Constants.sol";
 import "../shared/types/Types.sol";
 
+/// @title InitializeModule
+/// @author Euler Labs (https://www.eulerlabs.com/)
+/// @notice An EVault module implementing the initialization of the new vault contract
 abstract contract InitializeModule is IInitialize, Base, BorrowUtils {
     using TypesLib for uint16;
 
@@ -57,6 +60,7 @@ abstract contract InitializeModule is IInitialize, Base, BorrowUtils {
     }
 }
 
+/// @dev Deployable contract
 contract Initialize is InitializeModule {
     constructor(Integrations memory integrations) Base(integrations) {}
 }

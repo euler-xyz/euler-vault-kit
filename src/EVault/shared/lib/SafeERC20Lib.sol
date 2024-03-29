@@ -6,6 +6,9 @@ import {IERC20} from "../../IEVault.sol";
 import {RevertBytes} from "./RevertBytes.sol";
 import {IPermit2} from "../../../interfaces/IPermit2.sol";
 
+/// @title SafeERC20Lib Library
+/// @author Euler Labs (https://www.eulerlabs.com/)
+/// @notice The library provides helpers for ERC20 transfers, including Permit2 support
 library SafeERC20Lib {
     error E_TransferFromFailed(bytes errorTransferFrom, bytes errorPermit2);
     error E_Permit2AmountOverflow();

@@ -4,6 +4,9 @@ pragma solidity ^0.8.0;
 
 import {Flags} from "./Types.sol";
 
+/// @title FlagsLib
+/// @author Euler Labs (https://www.eulerlabs.com/)
+/// @notice Library for `Flags` custom type
 library FlagsLib {
     /// @dev Are *all* of the flags in bitMask set?
     function isSet(Flags self, uint32 bitMask) internal pure returns (bool) {

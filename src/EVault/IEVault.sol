@@ -6,12 +6,16 @@ import {IVault as IEVCVault} from "ethereum-vault-connector/interfaces/IVault.so
 
 // Full interface of EVault and all it's modules
 
+/// @title IInitialize
+/// @notice Interface of the initialization module of EVault
 interface IInitialize {
     /// @notice Initialization of the newly deployed proxy contract
     /// @param proxyCreator Account which created the proxy or should be the initial governor
     function initialize(address proxyCreator) external;
 }
 
+/// @title IERC20
+/// @notice Interface of an ERC20 token
 interface IERC20 {
     /// @notice Vault share token (eToken) name, ie "Euler Vault: DAI"
     function name() external view returns (string memory);
@@ -50,6 +54,8 @@ interface IERC20 {
     function approve(address spender, uint256 amount) external returns (bool);
 }
 
+/// @title IToken
+/// @notice Interface of the EVault's Token module
 interface IToken is IERC20 {
     /// @notice Transfer the full eToken balance of an address to another
     /// @param from This address must've approved the to address
@@ -57,6 +63,8 @@ interface IToken is IERC20 {
     function transferFromMax(address from, address to) external returns (bool);
 }
 
+/// @title IERC4626
+/// @notice Interface of an ERC4626 vault
 interface IERC4626 {
     /// @notice Vault underlying asset
     function asset() external view returns (address);
@@ -134,6 +142,8 @@ interface IERC4626 {
     function redeem(uint256 amount, address receiver, address owner) external returns (uint256);
 }
 
+/// @title IVault
+/// @notice Interface of the EVault's Vault module
 interface IVault is IERC4626 {
     /// @notice Balance of the fees accumulator, in eTokens
     function accumulatedFees() external view returns (uint256);
@@ -152,6 +162,8 @@ interface IVault is IERC4626 {
     function skim(uint256 amount, address receiver) external returns (uint256);
 }
 
+/// @title IBorrowing
+/// @notice Interface of the EVault's Borrowing module
 interface IBorrowing {
     /// @notice Sum of all outstanding debts, in underlying units (increases as interest is accrued)
     function totalBorrows() external view returns (uint256);
@@ -223,6 +235,8 @@ interface IBorrowing {
     function touch() external;
 }
 
+/// @title ILiquidation
+/// @notice Interface of the EVault's Liquidation module
 interface ILiquidation {
     /// @notice Checks to see if a liquidation would be profitable, without actually doing anything
     /// @param liquidator Address that will initiate the liquidation
@@ -243,6 +257,8 @@ interface ILiquidation {
     function liquidate(address violator, address collateral, uint256 repayAssets, uint256 minYieldBalance) external;
 }
 
+/// @title IRiskManager
+/// @notice Interface of the EVault's RiskManager module
 interface IRiskManager is IEVCVault {
     /// @notice Retrieve account's total liquidity
     /// @param account Account holding debt in this vault
@@ -280,6 +296,8 @@ interface IRiskManager is IEVCVault {
     function checkVaultStatus() external returns (bytes4);
 }
 
+/// @title IBalanceForwarder
+/// @notice Interface of the EVault's BalanceForwarder module
 interface IBalanceForwarder {
     /// @notice Retrieve the address of rewards contract, tracking changes in account's balances
     function balanceTrackerAddress() external view returns (address);
@@ -298,6 +316,8 @@ interface IBalanceForwarder {
     function disableBalanceForwarder() external;
 }
 
+/// @title IGovernance
+/// @notice Interface of the EVault's Governance module
 interface IGovernance {
     /// @notice Retrieves the address of the governor
     function governorAdmin() external view returns (address);
@@ -408,6 +428,8 @@ interface IGovernance {
     function setInterestFee(uint16 newFee) external;
 }
 
+/// @title IEVault
+/// @notice Interface of the EVault, an EVC enabled lending vault
 interface IEVault is
     IInitialize,
     IToken,

@@ -8,6 +8,9 @@ import {IIRM} from "../../InterestRateModels/IIRM.sol";
 
 import "./types/Types.sol";
 
+/// @title BorrowUtils
+/// @author Euler Labs (https://www.eulerlabs.com/)
+/// @notice Utilities for tracking debt and interest rates
 abstract contract BorrowUtils is Base {
     using TypesLib for uint256;
 

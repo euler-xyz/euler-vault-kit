@@ -7,6 +7,9 @@ import {LTVUtils} from "./LTVUtils.sol";
 
 import "./types/Types.sol";
 
+/// @title LiquidityUtils
+/// @author Euler Labs (https://www.eulerlabs.com/)
+/// @notice Utilities for calculating account liquidity and health status
 abstract contract LiquidityUtils is BorrowUtils, LTVUtils {
     using TypesLib for uint256;
 
