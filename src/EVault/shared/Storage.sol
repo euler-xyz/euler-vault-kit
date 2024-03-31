@@ -6,7 +6,7 @@ import {VaultStorage, Snapshot} from "./types/Types.sol";
 
 /// @title Storage
 /// @author Euler Labs (https://www.eulerlabs.com/)
-/// @notice Contract defines the EVault's data storage
+/// @notice Contract that defines the EVault's data storage
 abstract contract Storage {
     /// @notice Flag indicating if the vault has been initialized
     bool initialized;

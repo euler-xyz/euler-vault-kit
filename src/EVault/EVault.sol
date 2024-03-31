@@ -7,7 +7,6 @@ import {Dispatch} from "./Dispatch.sol";
 /// @title EVault
 /// @author Euler Labs (https://www.eulerlabs.com/)
 /// @notice This contract implements an EVC enabled lending vault
-/// @notice White paper: https://github.com/euler-xyz/euler-docusaurus/blob/main/docs/euler-vault-kit-white-paper/index.md
 /// @dev The responsibility of this contract is call routing. Select functions are embedded, while most are delegated to the modules.
 contract EVault is Dispatch {
     constructor(Integrations memory integrations, DeployedModules memory modules) Dispatch(integrations, modules) {}

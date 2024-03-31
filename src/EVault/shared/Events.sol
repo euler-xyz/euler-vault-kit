@@ -98,8 +98,8 @@ abstract contract Events {
     /// @param sender Address initializing the conversion
     /// @param protocolReceiver Address receiving the protocol's share of the fees
     /// @param governorReceiver Address receiving the governor's share of the fees
-    /// @param protocolShares Amount of shares tranfered to the protocol receiver
-    /// @param governorShares Amount of shares tranfered to the governor receiver
+    /// @param protocolShares Amount of shares transferred to the protocol receiver
+    /// @param governorShares Amount of shares transferred to the governor receiver
     event ConvertFees(
         address indexed sender,
         address indexed protocolReceiver,

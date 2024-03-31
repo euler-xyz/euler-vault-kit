@@ -12,7 +12,7 @@ import "./types/Types.sol";
 
 /// @title Cache
 /// @author Euler Labs (https://www.eulerlabs.com/)
-/// @notice Utilities for loading vault storage and updating it with interest accured
+/// @notice Utilities for loading vault storage and updating it with interest accrued
 contract Cache is Storage, Errors {
     using TypesLib for uint256;
     using SafeERC20Lib for IERC20;
