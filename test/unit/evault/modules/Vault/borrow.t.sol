@@ -248,7 +248,6 @@ contract VaultTest_Borrow is EVaultTestBase {
         }
     }
 
-
     function test_rpowOverflow() public {
         eTST.setInterestRateModel(address(new IRMMax()));
 
@@ -262,24 +261,24 @@ contract VaultTest_Borrow is EVaultTestBase {
         uint256 accum1 = eTST.interestAccumulator();
 
         // Skip forward to observe accumulator advancing
-        skip(365*2 days);
+        skip(365 * 2 days);
         eTST.touch();
         uint256 accum2 = eTST.interestAccumulator();
         assertTrue(accum2 > accum1);
 
         // Observe accumulator increasing, without writing it to storage:
-        skip(365*3 days);
+        skip(365 * 3 days);
         uint256 accum3 = eTST.interestAccumulator();
         assertTrue(accum3 > accum2);
 
         // Skip forward more, so that rpow() will overflow
-        skip(365*3 days);
+        skip(365 * 3 days);
         uint256 accum4 = eTST.interestAccumulator();
         assertTrue(accum4 == accum2); // Accumulator goes backwards
 
         // Withdrawing assets is still possible in this state
         startHoax(depositor);
-        uint prevBal = assetTST.balanceOf(depositor);
+        uint256 prevBal = assetTST.balanceOf(depositor);
         eTST.withdraw(90e18, depositor, depositor);
         assertEq(assetTST.balanceOf(depositor), prevBal + 90e18);
     }
@@ -297,8 +296,8 @@ contract VaultTest_Borrow is EVaultTestBase {
         uint256 accum1 = eTST.interestAccumulator();
 
         // Wait 5 years, touching pool each time so that rpow() will not overflow
-        for (uint i; i < 5; i++) {
-            skip(365*1 days);
+        for (uint256 i; i < 5; i++) {
+            skip(365 * 1 days);
             eTST.touch();
         }
 
@@ -306,19 +305,18 @@ contract VaultTest_Borrow is EVaultTestBase {
         assertTrue(accum2 > accum1);
 
         // After the 6th year, the accumulator would overflow so it stops growing
-        skip(365*1 days);
+        skip(365 * 1 days);
         eTST.touch();
         assertTrue(eTST.interestAccumulator() == accum2);
 
         // Withdrawing assets is still possible in this state
         startHoax(depositor);
-        uint prevBal = assetTST.balanceOf(depositor);
+        uint256 prevBal = assetTST.balanceOf(depositor);
         eTST.withdraw(90e18, depositor, depositor);
         assertEq(assetTST.balanceOf(depositor), prevBal + 90e18);
     }
 
-
-    uint tempInterestRate;
+    uint256 tempInterestRate;
 
     function myCallback() external {
         startHoax(borrower);
@@ -335,7 +333,7 @@ contract VaultTest_Borrow is EVaultTestBase {
         evc.enableCollateral(borrower, address(eTST2));
         evc.enableController(borrower, address(eTST));
 
-        uint origInterestRate = eTST.interestRate();
+        uint256 origInterestRate = eTST.interestRate();
         evc.call(address(this), borrower, 0, abi.encodeWithSelector(VaultTest_Borrow.myCallback.selector));
 
         assertTrue(tempInterestRate > origInterestRate);
