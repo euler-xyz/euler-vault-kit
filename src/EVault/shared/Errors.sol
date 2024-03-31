@@ -2,6 +2,9 @@
 
 pragma solidity ^0.8.0;
 
+/// @title Errors
+/// @author Euler Labs (https://www.eulerlabs.com/)
+/// @notice Contract implementing EVault's custom errors
 contract Errors {
     error E_Initialized();
     error E_ProxyMetadata();

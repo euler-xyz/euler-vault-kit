@@ -17,6 +17,9 @@ interface IFlashLoan {
     function onFlashLoan(bytes memory data) external;
 }
 
+/// @title BorrowingModule
+/// @author Euler Labs (https://www.eulerlabs.com/)
+/// @notice An EVault module handling borrowing and repaying of vault assets
 abstract contract BorrowingModule is IBorrowing, Base, AssetTransfers, BalanceUtils, LiquidityUtils {
     using TypesLib for uint256;
     using SafeERC20Lib for IERC20;
@@ -226,6 +229,7 @@ abstract contract BorrowingModule is IBorrowing, Base, AssetTransfers, BalanceUt
     }
 }
 
+/// @dev Deployable module contract
 contract Borrowing is BorrowingModule {
     constructor(Integrations memory integrations) Base(integrations) {}
 }

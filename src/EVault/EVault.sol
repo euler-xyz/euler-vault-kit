@@ -4,17 +4,25 @@ pragma solidity ^0.8.0;
 
 import {Dispatch} from "./Dispatch.sol";
 
+/// @title EVault
+/// @author Euler Labs (https://www.eulerlabs.com/)
+/// @notice This contract implements an EVC enabled lending vault
+/// @dev The responsibility of this contract is call routing. Select functions are embedded, while most are delegated to the modules.
 contract EVault is Dispatch {
     constructor(Integrations memory integrations, DeployedModules memory modules) Dispatch(integrations, modules) {}
 
 
-    // ------------ Initialization -------------
+    ///////////////////////////////////////////////////////////////////////////////////////////////
+    //                                     INITIALIZATION                                        //
+    ///////////////////////////////////////////////////////////////////////////////////////////////
 
     function initialize(address proxyCreator) public virtual override use(MODULE_INITIALIZE) {}
 
 
 
-    // ----------------- Token -----------------
+    ///////////////////////////////////////////////////////////////////////////////////////////////
+    //                                         TOKEN                                             //
+    ///////////////////////////////////////////////////////////////////////////////////////////////
 
     function name() public view virtual override useView(MODULE_TOKEN) returns (string memory) {}
 
@@ -39,7 +47,9 @@ contract EVault is Dispatch {
 
 
 
-    // ----------------- Vault -----------------
+    ///////////////////////////////////////////////////////////////////////////////////////////////
+    //                                         VAULT                                             //
+    ///////////////////////////////////////////////////////////////////////////////////////////////
 
     function asset() public view virtual override returns (address) { return super.asset(); }
 
@@ -84,7 +94,9 @@ contract EVault is Dispatch {
 
 
 
-    // ----------------- Borrowing -----------------
+    ///////////////////////////////////////////////////////////////////////////////////////////////
+    //                                        BORROWING                                          //
+    ///////////////////////////////////////////////////////////////////////////////////////////////
 
     function totalBorrows() public view virtual override useView(MODULE_BORROWING) returns (uint256) {}
 
@@ -121,7 +133,9 @@ contract EVault is Dispatch {
 
 
 
-    // ----------------- Liquidation -----------------
+    ///////////////////////////////////////////////////////////////////////////////////////////////
+    //                                     LIQUIDATION                                           //
+    ///////////////////////////////////////////////////////////////////////////////////////////////
 
     function checkLiquidation(address liquidator, address violator, address collateral) public view virtual override useView(MODULE_LIQUIDATION) returns (uint256 maxRepay, uint256 maxYield) {}
 
@@ -129,7 +143,9 @@ contract EVault is Dispatch {
 
 
 
-    // ----------------- RiskManager -----------------
+    ///////////////////////////////////////////////////////////////////////////////////////////////
+    //                                    RISK MANAGEMENT                                        //
+    ///////////////////////////////////////////////////////////////////////////////////////////////
 
     function accountLiquidity(address account, bool liquidation) public view virtual override useView(MODULE_RISKMANAGER) returns (uint256 collateralValue, uint256 liabilityValue) {}
 
@@ -144,7 +160,9 @@ contract EVault is Dispatch {
 
 
 
-    // ----------------- Balance Forwarder -----------------
+    ///////////////////////////////////////////////////////////////////////////////////////////////
+    //                                   BALANCE TRACKING                                        //
+    ///////////////////////////////////////////////////////////////////////////////////////////////
 
     function balanceTrackerAddress() public view virtual override useView(MODULE_BALANCE_FORWARDER) returns (address) {}
 
@@ -157,7 +175,9 @@ contract EVault is Dispatch {
 
 
 
-    // ----------------- Governance -----------------
+    ///////////////////////////////////////////////////////////////////////////////////////////////
+    //                                     GOVERNANCE                                            //
+    ///////////////////////////////////////////////////////////////////////////////////////////////
 
     function governorAdmin() public view virtual override useView(MODULE_GOVERNANCE) returns (address) {}
 

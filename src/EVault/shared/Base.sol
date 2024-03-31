@@ -11,6 +11,9 @@ import {IBalanceTracker} from "../../interfaces/IBalanceTracker.sol";
 
 import "./types/Types.sol";
 
+/// @title Base
+/// @author Euler Labs (https://www.eulerlabs.com/)
+/// @notice Base contract for EVault modules with top level modifiers and utilities
 abstract contract Base is EVCClient, Cache {
     IProtocolConfig immutable protocolConfig;
     IBalanceTracker immutable balanceTracker;
