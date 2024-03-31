@@ -316,4 +316,29 @@ contract VaultTest_Borrow is EVaultTestBase {
         eTST.withdraw(90e18, depositor, depositor);
         assertEq(assetTST.balanceOf(depositor), prevBal + 90e18);
     }
+
+
+    uint tempInterestRate;
+
+    function myCallback() external {
+        startHoax(borrower);
+        eTST.borrow(1e18, borrower);
+
+        // This interest rate is invoked by immediately calling computeInterestRateView() on the IRM,
+        // as opposed to using the stored value.
+        tempInterestRate = eTST.interestRate();
+    }
+
+    function test_interestRateViewMidBatch() public {
+        startHoax(borrower);
+
+        evc.enableCollateral(borrower, address(eTST2));
+        evc.enableController(borrower, address(eTST));
+
+        uint origInterestRate = eTST.interestRate();
+        evc.call(address(this), borrower, 0, abi.encodeWithSelector(VaultTest_Borrow.myCallback.selector));
+
+        assertTrue(tempInterestRate > origInterestRate);
+        assertEq(tempInterestRate, eTST.interestRate()); // Value computed at end of batch is identical
+    }
 }
