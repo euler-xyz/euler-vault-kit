@@ -20,9 +20,13 @@ library AssetsLib {
     }
 
     function toSharesDown(Assets amount, VaultCache memory vaultCache) internal pure returns (Shares) {
+        return TypesLib.toShares(toUint256SharesDown(amount, vaultCache));
+    }
+
+    function toUint256SharesDown(Assets amount, VaultCache memory vaultCache) internal pure returns (uint256) {
         (uint256 totalAssets, uint256 totalShares) = ConversionHelpers.conversionTotals(vaultCache);
         unchecked {
-            return TypesLib.toShares(amount.toUint() * totalShares / totalAssets);
+            return amount.toUint() * totalShares / totalAssets;
         }
     }
 
