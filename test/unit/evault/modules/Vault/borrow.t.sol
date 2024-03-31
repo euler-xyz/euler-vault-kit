@@ -6,6 +6,7 @@ import {EVaultTestBase} from "../../EVaultTestBase.t.sol";
 import {Events} from "src/EVault/shared/Events.sol";
 import {SafeERC20Lib} from "src/EVault/shared/lib/SafeERC20Lib.sol";
 import {IAllowanceTransfer} from "permit2/src/interfaces/IAllowanceTransfer.sol";
+import {IRMMax} from "../../../../mocks/IRMMax.sol";
 
 import "src/EVault/shared/types/Types.sol";
 import "src/EVault/shared/Constants.sol";
@@ -245,5 +246,74 @@ contract VaultTest_Borrow is EVaultTestBase {
             eTST.borrow(1, subacc);
             assertEq(assetTST.balanceOf(subacc), 1);
         }
+    }
+
+
+    function test_rpowOverflow() public {
+        eTST.setInterestRateModel(address(new IRMMax()));
+
+        startHoax(borrower);
+
+        evc.enableCollateral(borrower, address(eTST2));
+        evc.enableController(borrower, address(eTST));
+
+        eTST.borrow(1, borrower);
+
+        uint256 accum1 = eTST.interestAccumulator();
+
+        // Skip forward to observe accumulator advancing
+        skip(365*2 days);
+        eTST.touch();
+        uint256 accum2 = eTST.interestAccumulator();
+        assertTrue(accum2 > accum1);
+
+        // Observe accumulator increasing, without writing it to storage:
+        skip(365*3 days);
+        uint256 accum3 = eTST.interestAccumulator();
+        assertTrue(accum3 > accum2);
+
+        // Skip forward more, so that rpow() will overflow
+        skip(365*3 days);
+        uint256 accum4 = eTST.interestAccumulator();
+        assertTrue(accum4 == accum2); // Accumulator goes backwards
+
+        // Withdrawing assets is still possible in this state
+        startHoax(depositor);
+        uint prevBal = assetTST.balanceOf(depositor);
+        eTST.withdraw(90e18, depositor, depositor);
+        assertEq(assetTST.balanceOf(depositor), prevBal + 90e18);
+    }
+
+    function test_accumOverflow() public {
+        eTST.setInterestRateModel(address(new IRMMax()));
+
+        startHoax(borrower);
+
+        evc.enableCollateral(borrower, address(eTST2));
+        evc.enableController(borrower, address(eTST));
+
+        eTST.borrow(1, borrower);
+
+        uint256 accum1 = eTST.interestAccumulator();
+
+        // Wait 5 years, touching pool each time so that rpow() will not overflow
+        for (uint i; i < 5; i++) {
+            skip(365*1 days);
+            eTST.touch();
+        }
+
+        uint256 accum2 = eTST.interestAccumulator();
+        assertTrue(accum2 > accum1);
+
+        // After the 6th year, the accumulator would overflow so it stops growing
+        skip(365*1 days);
+        eTST.touch();
+        assertTrue(eTST.interestAccumulator() == accum2);
+
+        // Withdrawing assets is still possible in this state
+        startHoax(depositor);
+        uint prevBal = assetTST.balanceOf(depositor);
+        eTST.withdraw(90e18, depositor, depositor);
+        assertEq(assetTST.balanceOf(depositor), prevBal + 90e18);
     }
 }
