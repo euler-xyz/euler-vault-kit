@@ -6,9 +6,11 @@ import {ConfigAmount} from "./Types.sol";
 import {Errors} from "../Errors.sol";
 import "../Constants.sol";
 
-// ConfigAmounts are floating point values encoded in 16 bits with a 1e4 precision.
-// The type is used to store protocol configuration values.
-
+/// @title ConfigAmountLib
+/// @author Euler Labs (https://www.eulerlabs.com/)
+/// @notice Library for `ConfigAmount` custom type
+/// @dev ConfigAmounts are floating point values encoded in 16 bits with a 1e4 precision.
+/// @dev The type is used to store protocol configuration values.
 library ConfigAmountLib {
     // note assuming arithmetic checks are already performed
     function mulDiv(ConfigAmount self, uint256 multiplier, uint256 divisor) internal pure returns (uint256) {
@@ -41,20 +43,6 @@ library ConfigAmountLib {
 
     function validate(uint256 amount) internal pure {
         if (amount > 1e4) revert Errors.E_InvalidConfigAmount();
-    }
-}
-
-// note assuming arithmetic checks are already performed
-function addConfigAmount(ConfigAmount a, ConfigAmount b) pure returns (ConfigAmount) {
-    unchecked {
-        return ConfigAmount.wrap(a.toUint16() + b.toUint16());
-    }
-}
-
-// note assuming arithmetic checks are already performed
-function subConfigAmount(ConfigAmount a, ConfigAmount b) pure returns (ConfigAmount) {
-    unchecked {
-        return ConfigAmount.wrap(a.toUint16() - b.toUint16());
     }
 }
 

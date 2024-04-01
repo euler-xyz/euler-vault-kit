@@ -4,7 +4,7 @@ pragma solidity ^0.8.0;
 
 import "../../IEVault.sol";
 
-import "./MarketStorage.sol";
+import "./VaultStorage.sol";
 import "./Snapshot.sol";
 import "./UserStorage.sol";
 import "./LTVConfig.sol";
@@ -13,9 +13,10 @@ import "./Shares.sol";
 import "./Assets.sol";
 import "./Owed.sol";
 import "./ConfigAmount.sol";
-import "./Operations.sol";
+import "./Flags.sol";
 import "./AmountCap.sol";
-import "./LTVType.sol";
+
+/// @notice In this file, custom types are defined and linked globally with their libraries and operators
 
 type Shares is uint112;
 
@@ -27,7 +28,7 @@ type AmountCap is uint16;
 
 type ConfigAmount is uint16;
 
-type Operations is uint32;
+type Flags is uint32;
 
 using SharesLib for Shares global;
 using {
@@ -36,18 +37,26 @@ using {
 
 using AssetsLib for Assets global;
 using {
-    addAssets as +, subAssets as -, eqAssets as ==, neqAssets as !=, gtAssets as >, ltAssets as <, lteAssets as <=
+    addAssets as +,
+    subAssets as -,
+    eqAssets as ==,
+    neqAssets as !=,
+    gtAssets as >,
+    ltAssets as <,
+    lteAssets as <=
 } for Assets global;
 
 using OwedLib for Owed global;
 using {addOwed as +, subOwed as -, eqOwed as ==, neqOwed as !=, gtOwed as >, ltOwed as <} for Owed global;
 
 using ConfigAmountLib for ConfigAmount global;
-using {addConfigAmount as +, subConfigAmount as -, gtConfigAmount as >, ltConfigAmount as <} for ConfigAmount global; 
+using {gtConfigAmount as >, ltConfigAmount as <} for ConfigAmount global;
 
 using AmountCapLib for AmountCap global;
-using OperationsLib for Operations global;
+using FlagsLib for Flags global;
 
+/// @title TypesLib
+/// @notice Library for casting basic types' amounts into custom types
 library TypesLib {
     function toShares(uint256 amount) internal pure returns (Shares) {
         if (amount > MAX_SANE_AMOUNT) revert Errors.E_AmountTooLargeToEncode();

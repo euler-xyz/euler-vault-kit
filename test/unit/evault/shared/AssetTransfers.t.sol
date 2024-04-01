@@ -9,7 +9,8 @@ import "../EVaultTestBase.t.sol";
 
 contract AssetTransfersHarness is AssetTransfers {
     constructor() Base(Integrations(address(0), address(0), address(0), address(0))) {}
-    function exposed_pullAssets(MarketCache memory cache, address from, Assets amount) external {
+
+    function exposed_pullAssets(VaultCache memory cache, address from, Assets amount) external {
         pullAssets(cache, from, amount);
     }
 }
@@ -34,7 +35,7 @@ contract AssetTransfersTest is EVaultTestBase {
         cash = bound(cash, 0, MAX_SANE_AMOUNT);
         amount = bound(amount, 0, MAX_SANE_AMOUNT);
         vm.assume(cash + amount < MAX_SANE_AMOUNT);
-        MarketCache memory cache = initCache();
+        VaultCache memory cache = initCache();
 
         cache.cash = cash.toAssets();
         assetTST.setBalance(address(tc), cash);
@@ -50,7 +51,7 @@ contract AssetTransfersTest is EVaultTestBase {
     }
 
     function test_pullAssets_zeroIsNoop() public {
-        MarketCache memory cache = initCache();
+        VaultCache memory cache = initCache();
 
         tc.exposed_pullAssets(cache, from, Assets.wrap(0));
         uint256 cashAfter = assetTST.balanceOf(address(tc));
@@ -61,7 +62,7 @@ contract AssetTransfersTest is EVaultTestBase {
     }
 
     function test_pullAssets_deflationaryTransfer() public {
-        MarketCache memory cache = initCache();
+        VaultCache memory cache = initCache();
 
         assetTST.configure("transfer/deflationary", abi.encode(0.5e18));
 
@@ -74,7 +75,7 @@ contract AssetTransfersTest is EVaultTestBase {
     }
 
     function test_pullAssets_inflationaryTransfer() public {
-        MarketCache memory cache = initCache();
+        VaultCache memory cache = initCache();
 
         assetTST.configure("transfer/inflationary", abi.encode(0.5e18));
 
@@ -87,7 +88,7 @@ contract AssetTransfersTest is EVaultTestBase {
     }
 
     function test_RevertWhenCashAfterOverflows_pullAssets() public {
-        MarketCache memory cache = initCache();
+        VaultCache memory cache = initCache();
 
         cache.cash = MAX_ASSETS;
         assetTST.setBalance(address(tc), MAX_ASSETS.toUint());
@@ -102,7 +103,7 @@ contract AssetTransfersTest is EVaultTestBase {
         tc.exposed_pullAssets(cache, from, MAX_ASSETS);
     }
 
-    function initCache() internal view returns (MarketCache memory cache) {
+    function initCache() internal view returns (VaultCache memory cache) {
         cache.asset = IERC20(address(assetTST));
     }
 }

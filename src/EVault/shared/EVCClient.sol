@@ -11,6 +11,9 @@ import "./Constants.sol";
 import {IERC20} from "../IEVault.sol";
 import {IEVC} from "ethereum-vault-connector/interfaces/IEthereumVaultConnector.sol";
 
+/// @title EVCClient
+/// @author Euler Labs (https://www.eulerlabs.com/)
+/// @notice Utilities for interacting with the EVC (Ethereum Vault Connector)
 abstract contract EVCClient is Storage, Events, Errors {
     IEVC immutable evc;
 
@@ -64,9 +67,7 @@ abstract contract EVCClient is Storage, Events, Errors {
         }
     }
 
-    function enforceCollateralTransfer(address collateral, uint256 amount, address from, address receiver)
-        internal
-    {
+    function enforceCollateralTransfer(address collateral, uint256 amount, address from, address receiver) internal {
         evc.controlCollateral(collateral, from, 0, abi.encodeCall(IERC20.transfer, (receiver, amount)));
     }
 
@@ -86,8 +87,8 @@ abstract contract EVCClient is Storage, Events, Errors {
         return evc.getCollaterals(account);
     }
 
-    function isCollateralEnabled(address account, address market) internal view returns (bool) {
-        return evc.isCollateralEnabled(account, market);
+    function isCollateralEnabled(address account, address collateral) internal view returns (bool) {
+        return evc.isCollateralEnabled(account, collateral);
     }
 
     function isAccountStatusCheckDeferred(address account) internal view returns (bool) {
@@ -102,7 +103,7 @@ abstract contract EVCClient is Storage, Events, Errors {
         return evc.isControlCollateralInProgress();
     }
 
-    function verifyController(address account) internal view {
+    function validateController(address account) internal view {
         address[] memory controllers = IEVC(evc).getControllers(account);
 
         if (controllers.length > 1) revert E_TransientState();

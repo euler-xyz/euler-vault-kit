@@ -15,27 +15,27 @@ contract AssertionsCustomTypes is StdAssertions {
     Shares constant MAX_SHARES = Shares.wrap(uint112(MAX_SANE_AMOUNT));
     Owed constant MAX_OWED = Owed.wrap(uint144(MAX_SANE_DEBT_AMOUNT));
 
-    function assertEq(Assets a, Assets b) internal {
+    function assertEq(Assets a, Assets b) internal pure {
         assertEq(Assets.unwrap(a), Assets.unwrap(b));
     }
 
-    function assertEq(Assets a, Assets b, string memory err) internal {
+    function assertEq(Assets a, Assets b, string memory err) internal pure {
         assertEq(Assets.unwrap(a), Assets.unwrap(b), err);
     }
 
-    function assertEq(Shares a, Shares b) internal {
+    function assertEq(Shares a, Shares b) internal pure {
         assertEq(Shares.unwrap(a), Shares.unwrap(b));
     }
 
-    function assertEq(Shares a, Shares b, string memory err) internal {
+    function assertEq(Shares a, Shares b, string memory err) internal pure {
         assertEq(Shares.unwrap(a), Shares.unwrap(b), err);
     }
 
-    function assertEq(Owed a, Owed b) internal {
+    function assertEq(Owed a, Owed b) internal pure {
         assertEq(Owed.unwrap(a), Owed.unwrap(b));
     }
 
-    function assertEq(Owed a, Owed b, string memory err) internal {
+    function assertEq(Owed a, Owed b, string memory err) internal pure {
         assertEq(Owed.unwrap(a), Owed.unwrap(b), err);
     }
 

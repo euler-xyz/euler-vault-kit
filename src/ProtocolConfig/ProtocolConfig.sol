@@ -4,11 +4,12 @@ pragma solidity ^0.8.0;
 
 import "./IProtocolConfig.sol";
 
-contract ProtocolConfig is IProtocolConfig {   
+contract ProtocolConfig is IProtocolConfig {
     error E_OnlyAdmin();
     error E_InvalidVault();
     error E_InvalidReceiver();
     error E_InvalidConfigValue();
+    error E_InvalidAdmin();
 
     struct InterestFeeRange {
         bool exists;
@@ -44,6 +45,7 @@ contract ProtocolConfig is IProtocolConfig {
     event SetVaultInterestFeeRange(address indexed vault, bool exists, uint16 minInterestFee, uint16 maxInterestFee);
     event SetFeeConfigSetting(address indexed ault, bool exists, address indexed feeReceiver, uint16 protocolFeeShare);
     event SetProtocolFeeShare(uint16 protocolFeeShare, uint16 newProtocolFeeShare);
+    event SetAdmin(address indexed newAdmin);
 
     /**
      * @dev constructor
@@ -54,8 +56,8 @@ contract ProtocolConfig is IProtocolConfig {
         admin = admin_;
         feeReceiver = feeReceiver_;
 
-        minInterestFee = 0.01e4;
-        maxInterestFee = 0.5e4;
+        minInterestFee = 0.1e4;
+        maxInterestFee = 1e4;
         protocolFeeShare = 0.1e4;
     }
 
@@ -96,9 +98,21 @@ contract ProtocolConfig is IProtocolConfig {
 
     /// @dev modifier to check if sender is admin address
     modifier onlyAdmin() {
-        if(msg.sender != admin) revert E_OnlyAdmin();
+        if (msg.sender != admin) revert E_OnlyAdmin();
 
         _;
+    }
+
+    /**
+     * @notice set admin address
+     * @param newAdmin admin's address
+     */
+    function setAdmin(address newAdmin) external onlyAdmin {
+        if (newAdmin == address(0)) revert E_InvalidAdmin();
+
+        admin = newAdmin;
+
+        emit SetAdmin(newAdmin);
     }
 
     /**
@@ -107,11 +121,11 @@ contract ProtocolConfig is IProtocolConfig {
      * @param newReceiver new receiver address
      */
     function setFeeReceiver(address newReceiver) external onlyAdmin {
-        if(newReceiver == address(0)) revert E_InvalidReceiver();
+        if (newReceiver == address(0)) revert E_InvalidReceiver();
+
+        feeReceiver = newReceiver;
 
         emit SetFeeReceiver(newReceiver);
-        
-        feeReceiver = newReceiver;
     }
 
     /**
@@ -136,10 +150,10 @@ contract ProtocolConfig is IProtocolConfig {
     function setInterestFeeRange(uint16 minInterestFee_, uint16 maxInterestFee_) external onlyAdmin {
         if (maxInterestFee_ > 1e4 || minInterestFee_ > maxInterestFee_) revert E_InvalidConfigValue();
 
-        emit SetInterestFeeRange(minInterestFee_, maxInterestFee_);
-
         minInterestFee = minInterestFee_;
         maxInterestFee = maxInterestFee_;
+
+        emit SetInterestFeeRange(minInterestFee_, maxInterestFee_);
     }
 
     /**
@@ -150,15 +164,15 @@ contract ProtocolConfig is IProtocolConfig {
      * @param minInterestFee_ min interest fee
      * @param maxInterestFee_ max interest fee
      */
-    function setVaultInterestFeeRange(address vault, bool exists_, uint16 minInterestFee_, uint16 maxInterestFee_) external onlyAdmin {
+    function setVaultInterestFeeRange(address vault, bool exists_, uint16 minInterestFee_, uint16 maxInterestFee_)
+        external
+        onlyAdmin
+    {
         if (vault == address(0)) revert E_InvalidVault();
         if (maxInterestFee_ > 1e4 || minInterestFee_ > maxInterestFee_) revert E_InvalidConfigValue();
 
-        _interestFeeRanges[vault] = InterestFeeRange({
-            exists: exists_,
-            minInterestFee: minInterestFee_,
-            maxInterestFee: maxInterestFee_
-        });
+        _interestFeeRanges[vault] =
+            InterestFeeRange({exists: exists_, minInterestFee: minInterestFee_, maxInterestFee: maxInterestFee_});
 
         emit SetVaultInterestFeeRange(vault, exists_, minInterestFee_, maxInterestFee_);
     }
@@ -171,15 +185,15 @@ contract ProtocolConfig is IProtocolConfig {
      * @param feeReceiver_ fee receiver address
      * @param protocolFeeShare_ fee share
      */
-    function setVaultFeeConfig(address vault, bool exists_, address feeReceiver_, uint16 protocolFeeShare_) external onlyAdmin {
-        if(vault == address(0)) revert E_InvalidVault();
+    function setVaultFeeConfig(address vault, bool exists_, address feeReceiver_, uint16 protocolFeeShare_)
+        external
+        onlyAdmin
+    {
+        if (vault == address(0)) revert E_InvalidVault();
         if (protocolFeeShare_ > 1e4) revert E_InvalidConfigValue();
 
-        _protocolFeeConfig[vault] = ProtocolFeeConfig({
-            exists: exists_,
-            feeReceiver: feeReceiver_,
-            protocolFeeShare: protocolFeeShare_
-        });
+        _protocolFeeConfig[vault] =
+            ProtocolFeeConfig({exists: exists_, feeReceiver: feeReceiver_, protocolFeeShare: protocolFeeShare_});
 
         emit SetFeeConfigSetting(vault, exists_, feeReceiver_, protocolFeeShare_);
     }

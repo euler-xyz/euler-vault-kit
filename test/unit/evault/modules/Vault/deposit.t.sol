@@ -9,7 +9,7 @@ import {IAllowanceTransfer} from "permit2/src/interfaces/IAllowanceTransfer.sol"
 
 import "src/EVault/shared/types/Types.sol";
 
-contract ERC4626Test_Deposit is EVaultTestBase {
+contract VaultTest_Deposit is EVaultTestBase {
     using TypesLib for uint256;
 
     address user;
@@ -120,7 +120,7 @@ contract ERC4626Test_Deposit is EVaultTestBase {
     }
 
     function test_directTransfer() public {
-        uint amount = 1e18;
+        uint256 amount = 1e18;
 
         vm.startPrank(user);
         assetTST.transfer(address(eTST), amount);
@@ -132,14 +132,14 @@ contract ERC4626Test_Deposit is EVaultTestBase {
 
         eTST.deposit(amount, user);
 
-        assertEq(assetTST.balanceOf(address(eTST)), amount*2);
+        assertEq(assetTST.balanceOf(address(eTST)), amount * 2);
         assertEq(eTST.balanceOf(user), amount);
         assertEq(eTST.totalSupply(), amount);
         assertEq(eTST.totalAssets(), amount);
     }
 
     function test_depositWithPermit2() public {
-        uint amount = 1e18;
+        uint256 amount = 1e18;
 
         // cancel the approval to the vault
         assetTST.approve(address(eTST), 0);
@@ -147,8 +147,8 @@ contract ERC4626Test_Deposit is EVaultTestBase {
         // deposit won't succeed without any approval
         vm.expectRevert(
             abi.encodeWithSelector(
-                SafeERC20Lib.E_TransferFromFailed.selector, 
-                abi.encodeWithSignature("Error(string)", "ERC20: transfer amount exceeds allowance"), 
+                SafeERC20Lib.E_TransferFromFailed.selector,
+                abi.encodeWithSignature("Error(string)", "ERC20: transfer amount exceeds allowance"),
                 abi.encodeWithSelector(IAllowanceTransfer.AllowanceExpired.selector, 0)
             )
         );

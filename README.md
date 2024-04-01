@@ -1,66 +1,65 @@
-## Foundry
+# Euler Vault Kit
 
-**Foundry is a blazing fast, portable and modular toolkit for Ethereum application development written in Rust.**
+The Euler Vault Kit is a system for constructing credit vaults. Credit vaults are ERC-4626 vaults with added borrowing functionality. Unlike typical ERC-4626 vaults which earn yield by actively investing deposited funds, credit vaults are passive lending pools. See the [whitepaper](https://docs.euler.finance/euler-vault-kit-white-paper/) for more details.
 
-Foundry consists of:
+## Install
 
--   **Forge**: Ethereum testing framework (like Truffle, Hardhat and DappTools).
--   **Cast**: Swiss army knife for interacting with EVM smart contracts, sending transactions and getting chain data.
--   **Anvil**: Local Ethereum node, akin to Ganache, Hardhat Network.
--   **Chisel**: Fast, utilitarian, and verbose solidity REPL.
+To install Euler Vault Kit in a [Foundry](https://github.com/foundry-rs/foundry) project:
 
-## Documentation
-
-https://book.getfoundry.sh/
+```sh
+forge install euler-xyz/euler-vault-kit
+```
 
 ## Usage
 
-### Build
+To install Foundry:
 
-```shell
-$ forge build
+```sh
+curl -L https://foundry.paradigm.xyz | bash
 ```
 
-### Test
+This will download foundryup. To start Foundry, run:
 
-```shell
-$ forge test
+```sh
+foundryup
 ```
 
-### Format
+To clone the repo:
 
-```shell
-$ forge fmt
+```sh
+git clone https://github.com/euler-xyz/euler-vault-kit.git && cd euler-vault-kit
 ```
 
-### Gas Snapshots
+## Testing
 
-```shell
-$ forge snapshot
+### in `default` mode
+
+To run the tests in a `default` mode:
+
+```sh
+forge test
 ```
 
-### Anvil
+### in `coverage` mode
 
-```shell
-$ anvil
+```sh
+forge coverage
 ```
 
-### Deploy
+## Safety
 
-```shell
-$ forge script script/Counter.s.sol:CounterScript --rpc-url <your_rpc_url> --private-key <your_private_key>
-```
+This software is **experimental** and is provided "as is" and "as available".
 
-### Cast
+**No warranties are provided** and **no liability will be accepted for any loss** incurred through the use of this codebase.
 
-```shell
-$ cast <subcommand>
-```
+Always include thorough tests when using the Euler Vault Kit to ensure it interacts correctly with your code.
 
-### Help
+The Euler Vault Kit is currently undergoing security audits and should not be used in production.
 
-```shell
-$ forge --help
-$ anvil --help
-$ cast --help
-```
+## Known limitations
+
+Refer to the [whitepaper](https://docs.euler.finance/euler-vault-kit-white-paper/) for a list of known limitations and security considerations.
+
+## License
+
+(C) Euler Labs. All rights reserved.

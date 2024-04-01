@@ -8,45 +8,58 @@ import {LiquidityUtils} from "../shared/LiquidityUtils.sol";
 
 import "../shared/types/Types.sol";
 
+/// @title RiskManagerModule
+/// @author Euler Labs (https://www.eulerlabs.com/)
+/// @notice An EVault module handling risk management, including vault and account health checks
 abstract contract RiskManagerModule is IRiskManager, Base, LiquidityUtils {
     using TypesLib for uint256;
 
     /// @inheritdoc IRiskManager
-    function accountLiquidity(address account, bool liquidation) public view virtual nonReentrantView returns (uint256 collateralValue, uint256 liabilityValue) {
-        MarketCache memory marketCache = loadMarket();
+    function accountLiquidity(address account, bool liquidation)
+        public
+        view
+        virtual
+        nonReentrantView
+        returns (uint256 collateralValue, uint256 liabilityValue)
+    {
+        VaultCache memory vaultCache = loadVault();
 
-        verifyController(account);
+        validateController(account);
         address[] memory collaterals = getCollaterals(account);
 
-        return calculateLiquidity(
-            marketCache,
-            account,
-            collaterals,
-            liquidation ? LTVType.LIQUIDATION : LTVType.BORROWING
-        );
+        return
+            calculateLiquidity(vaultCache, account, collaterals, liquidation ? LTVType.LIQUIDATION : LTVType.BORROWING);
     }
 
     /// @inheritdoc IRiskManager
-    function accountLiquidityFull(address account, bool liquidation) public view virtual nonReentrantView returns (address[] memory collaterals, uint256[] memory collateralValues, uint256 liabilityValue) {
-        MarketCache memory marketCache = loadMarket();
+    function accountLiquidityFull(address account, bool liquidation)
+        public
+        view
+        virtual
+        nonReentrantView
+        returns (address[] memory collaterals, uint256[] memory collateralValues, uint256 liabilityValue)
+    {
+        VaultCache memory vaultCache = loadVault();
 
-        verifyController(account);
-        validateOracle(marketCache);
+        validateController(account);
+        validateOracle(vaultCache);
         collaterals = getCollaterals(account);
         collateralValues = new uint256[](collaterals.length);
 
         for (uint256 i; i < collaterals.length; ++i) {
-            collateralValues[i] = getCollateralValue(marketCache, account, collaterals[i], liquidation ? LTVType.LIQUIDATION : LTVType.BORROWING);
+            collateralValues[i] = getCollateralValue(
+                vaultCache, account, collaterals[i], liquidation ? LTVType.LIQUIDATION : LTVType.BORROWING
+            );
         }
 
-        liabilityValue = getLiabilityValue(marketCache, account, marketStorage.users[account].getOwed());
+        liabilityValue = getLiabilityValue(vaultCache, account, vaultStorage.users[account].getOwed());
     }
 
     /// @inheritdoc IRiskManager
     function disableController() public virtual nonReentrant {
         address account = EVCAuthenticate();
 
-        if (!marketStorage.users[account].getOwed().isZero()) revert E_OutstandingDebt();
+        if (!vaultStorage.users[account].getOwed().isZero()) revert E_OutstandingDebt();
 
         disableControllerInternal(account);
     }
@@ -63,7 +76,7 @@ abstract contract RiskManagerModule is IRiskManager, Base, LiquidityUtils {
         onlyEVCChecks
         returns (bytes4 magicValue)
     {
-        checkLiquidity(loadMarket(), account, collaterals);
+        checkLiquidity(loadVault(), account, collaterals);
 
         magicValue = IEVCVault.checkAccountStatus.selector;
     }
@@ -72,29 +85,29 @@ abstract contract RiskManagerModule is IRiskManager, Base, LiquidityUtils {
     /// @dev See comment about re-entrancy for `checkAccountStatus`
     function checkVaultStatus() public virtual reentrantOK onlyEVCChecks returns (bytes4 magicValue) {
         // Use the updating variant to make sure interest is accrued in storage before the interest rate update
-        MarketCache memory marketCache = updateMarket();
-        uint256 newInterestRate = computeInterestRate(marketCache);
+        VaultCache memory vaultCache = updateVault();
+        uint256 newInterestRate = computeInterestRate(vaultCache);
 
-        logMarketStatus(marketCache, newInterestRate);
+        logVaultStatus(vaultCache, newInterestRate);
 
         // We use the snapshot to check if the borrows or supply grew, and if so then we check the borrow and supply caps.
         // If snapshot is initialized, then caps are configured.
         // If caps are set in the middle of a batch, then snapshots represent the state of the vault at that time.
-        if (marketCache.snapshotInitialized) {
-            marketStorage.snapshotInitialized = marketCache.snapshotInitialized = false;
+        if (vaultCache.snapshotInitialized) {
+            vaultStorage.snapshotInitialized = vaultCache.snapshotInitialized = false;
 
             Assets snapshotCash = snapshot.cash;
             Assets snapshotBorrows = snapshot.borrows;
 
             uint256 prevBorrows = snapshotBorrows.toUint();
-            uint256 borrows = marketCache.totalBorrows.toAssetsUp().toUint();
+            uint256 borrows = vaultCache.totalBorrows.toAssetsUp().toUint();
 
-            if (borrows > marketCache.borrowCap && borrows > prevBorrows) revert E_BorrowCapExceeded();
+            if (borrows > vaultCache.borrowCap && borrows > prevBorrows) revert E_BorrowCapExceeded();
 
             uint256 prevSupply = snapshotCash.toUint() + prevBorrows;
-            uint256 supply = totalAssetsInternal(marketCache);
+            uint256 supply = totalAssetsInternal(vaultCache);
 
-            if (supply > marketCache.supplyCap && supply > prevSupply) revert E_SupplyCapExceeded();
+            if (supply > vaultCache.supplyCap && supply > prevSupply) revert E_SupplyCapExceeded();
 
             snapshot.reset();
         }
@@ -103,6 +116,7 @@ abstract contract RiskManagerModule is IRiskManager, Base, LiquidityUtils {
     }
 }
 
+/// @dev Deployable module contract
 contract RiskManager is RiskManagerModule {
     constructor(Integrations memory integrations) Base(integrations) {}
 }

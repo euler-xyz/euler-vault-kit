@@ -6,12 +6,16 @@ import {IVault as IEVCVault} from "ethereum-vault-connector/interfaces/IVault.so
 
 // Full interface of EVault and all it's modules
 
+/// @title IInitialize
+/// @notice Interface of the initialization module of EVault
 interface IInitialize {
     /// @notice Initialization of the newly deployed proxy contract
     /// @param proxyCreator Account which created the proxy or should be the initial governor
     function initialize(address proxyCreator) external;
 }
 
+/// @title IERC20
+/// @notice Interface of the EVault's Initialize module
 interface IERC20 {
     /// @notice Vault share token (eToken) name, ie "Euler Vault: DAI"
     function name() external view returns (string memory);
@@ -50,6 +54,8 @@ interface IERC20 {
     function approve(address spender, uint256 amount) external returns (bool);
 }
 
+/// @title IToken
+/// @notice Interface of the EVault's Token module
 interface IToken is IERC20 {
     /// @notice Transfer the full eToken balance of an address to another
     /// @param from This address must've approved the to address
@@ -57,6 +63,8 @@ interface IToken is IERC20 {
     function transferFromMax(address from, address to) external returns (bool);
 }
 
+/// @title IERC4626
+/// @notice Interface of an ERC4626 vault
 interface IERC4626 {
     /// @notice Vault underlying asset
     function asset() external view returns (address);
@@ -134,6 +142,8 @@ interface IERC4626 {
     function redeem(uint256 amount, address receiver, address owner) external returns (uint256);
 }
 
+/// @title IVault
+/// @notice Interface of the EVault's Vault module
 interface IVault is IERC4626 {
     /// @notice Balance of the fees accumulator, in eTokens
     function accumulatedFees() external view returns (uint256);
@@ -152,6 +162,8 @@ interface IVault is IERC4626 {
     function skim(uint256 amount, address receiver) external returns (uint256);
 }
 
+/// @title IBorrowing
+/// @notice Interface of the EVault's Borrowing module
 interface IBorrowing {
     /// @notice Sum of all outstanding debts, in underlying units (increases as interest is accrued)
     function totalBorrows() external view returns (uint256);
@@ -177,14 +189,10 @@ interface IBorrowing {
     function interestAccumulator() external view returns (uint256);
 
     /// @notice Retrieves amount of the collateral that is being actively used to support the debt of the account.
-    function collateralUsed(address collateral, address account)
-        external
-        view
-        returns (uint256);
+    function collateralUsed(address collateral, address account) external view returns (uint256);
 
     /// @notice Address of the sidecar DToken
     function dToken() external view returns (address);
-
 
     /// @notice Transfer underlying tokens from the vault to the sender, and increase sender's debt
     /// @param amount Amount of assets to borrow (use max uint256 for all available tokens)
@@ -202,12 +210,14 @@ interface IBorrowing {
     /// @param amount In asset units
     /// @param sharesReceiver Account to receive the created shares
     /// @return Amount of shares created
+    /// @dev Equivalent to looping borrows and deposits
     function loop(uint256 amount, address sharesReceiver) external returns (uint256);
 
     /// @notice Pay off liability with shares ("self-repay")
     /// @param amount In asset units (use max uint256 to repay the debt in full or up to the available underlying balance)
     /// @param debtFrom Account to remove debt from by burning sender's shares
     /// @return Amount of shares burned
+    /// @dev Equivalent to withdrawing and repaying
     function deloop(uint256 amount, address debtFrom) external returns (uint256);
 
     /// @notice Take over debt from another account
@@ -221,10 +231,12 @@ interface IBorrowing {
     /// @param data Passed through to the onFlashLoan() callback, so contracts don't need to store transient data in storage
     function flashLoan(uint256 amount, bytes calldata data) external;
 
-    /// @notice Updates interest accumulator and totalBorrows, credits reserves, re-targets interest rate, and logs market status
+    /// @notice Updates interest accumulator and totalBorrows, credits reserves, re-targets interest rate, and logs vault status
     function touch() external;
 }
 
+/// @title ILiquidation
+/// @notice Interface of the EVault's Liquidation module
 interface ILiquidation {
     /// @notice Checks to see if a liquidation would be profitable, without actually doing anything
     /// @param liquidator Address that will initiate the liquidation
@@ -242,17 +254,21 @@ interface ILiquidation {
     /// @param collateral Collateral which is to be seized
     /// @param repayAssets The amount of underlying debt to be transferred from violator to sender, in asset units (use max uint256 to repay the maximum possible amount).
     /// @param minYieldBalance The minimum acceptable amount of collateral to be transferred from violator to sender, in collateral balance units (shares for vaults)
-    function liquidate(address violator, address collateral, uint256 repayAssets, uint256 minYieldBalance)
-        external;
+    function liquidate(address violator, address collateral, uint256 repayAssets, uint256 minYieldBalance) external;
 }
 
+/// @title IRiskManager
+/// @notice Interface of the EVault's RiskManager module
 interface IRiskManager is IEVCVault {
     /// @notice Retrieve account's total liquidity
     /// @param account Account holding debt in this vault
     /// @param liquidation Flag to indicate if the calculation should be performed in liquidation vs account status check mode, where different LTV values might apply.
     /// @return collateralValue Total risk adjusted value of all collaterals in unit of account
     /// @return liabilityValue Value of debt in unit of account
-    function accountLiquidity(address account, bool liquidation) external view returns (uint256 collateralValue, uint256 liabilityValue);
+    function accountLiquidity(address account, bool liquidation)
+        external
+        view
+        returns (uint256 collateralValue, uint256 liabilityValue);
 
     /// @notice Retrieve account's liquidity per collateral
     /// @param account Account holding debt in this vault
@@ -260,7 +276,10 @@ interface IRiskManager is IEVCVault {
     /// @return collaterals Array of collaterals enabled
     /// @return collateralValues Array of risk adjusted collateral values corresponding to items in collaterals array. In unit of account
     /// @return liabilityValue Value of debt in unit of account
-    function accountLiquidityFull(address account, bool liquidation) external view returns (address[] memory collaterals, uint256[] memory collateralValues, uint256 liabilityValue);
+    function accountLiquidityFull(address account, bool liquidation)
+        external
+        view
+        returns (address[] memory collaterals, uint256[] memory collateralValues, uint256 liabilityValue);
 
     /// @notice Release control of the account on EVC if no outstanding debt is present
     function disableController() external;
@@ -277,6 +296,8 @@ interface IRiskManager is IEVCVault {
     function checkVaultStatus() external returns (bytes4);
 }
 
+/// @title IBalanceForwarder
+/// @notice Interface of the EVault's BalanceForwarder module
 interface IBalanceForwarder {
     /// @notice Retrieve the address of rewards contract, tracking changes in account's balances
     function balanceTrackerAddress() external view returns (address);
@@ -295,16 +316,22 @@ interface IBalanceForwarder {
     function disableBalanceForwarder() external;
 }
 
+/// @title IGovernance
+/// @notice Interface of the EVault's Governance module
 interface IGovernance {
     /// @notice Retrieves the address of the governor
     function governorAdmin() external view returns (address);
 
-    /// @notice Retrieves the address of the pause guardian - an account which can disable or enable operations
-    function pauseGuardian() external view returns (address);
+    /// @notice Retrieves address of the governance fee receiver
+    function feeReceiver() external view returns (address);
 
     /// @notice Retrieves the interest fee in effect for the vault
     /// @return Amount of interest that is redirected as a fee, as a fraction scaled by 1e4
     function interestFee() external view returns (uint16);
+
+    /// @notice Looks up an asset's currently configured interest rate model
+    /// @return Address of the interest rate contract or address zero to indicate 0% interest
+    function interestRateModel() external view returns (address);
 
     /// @notice Retrieves the ProtocolConfig address
     function protocolConfigAddress() external view returns (address);
@@ -315,6 +342,9 @@ interface IGovernance {
 
     /// @notice Retrieves the address which will receive protocol's fees
     function protocolFeeReceiver() external view returns (address);
+
+    /// @notice Retrieves supply and borrow caps in AmountCap format
+    function caps() external view returns (uint16 supplyCap, uint16 borrowCap);
 
     /// @notice Retrieves regular LTV, set for the collateral, which is used to determine the health of the account
     function borrowingLTV(address collateral) external view returns (uint16);
@@ -328,31 +358,24 @@ interface IGovernance {
     /// @return targetLTV current regular LTV or target LTV that the ramped LTV will reach after ramp is over
     /// @return rampDuration ramp duration in seconds
     /// @return originalLTV previous LTV value, where the ramp starts
-    function LTVFull(address collateral) external view returns (uint48 targetTimestamp, uint16 targetLTV, uint32 rampDuration, uint16 originalLTV);
+    function LTVFull(address collateral)
+        external
+        view
+        returns (uint48 targetTimestamp, uint16 targetLTV, uint32 rampDuration, uint16 originalLTV);
 
     /// @notice Retrieves a list of collaterals with configured LTVs
     /// @return List of asset collaterals
     /// @dev The list can have duplicates. Returned assets could have the ltv disabled (set to zero)
     function LTVList() external view returns (address[] memory);
 
-    /// @notice Looks up an asset's currently configured interest rate model
-    /// @return Address of the interest rate contract or address zero to indicate 0% interest
-    function interestRateModel() external view returns (address);
+    /// @notice Retrieves a hook target and a bitmask indicating which operations call the hook target.
+    function hookConfig() external view returns (address, uint32);
 
-    /// @notice Retrieves a bitmask indicating which operations are disabled.
-    function disabledOps() external view returns (uint32);
-
-    /// @notice Retrieves supply and borrow caps in AmountCap format
-    function caps() external view returns (uint16 supplyCap, uint16 borrowCap);
-
-    /// @notice Retrieves address of the governance fee receiver
-    function feeReceiver() external view returns (address);
+    /// @notice Retrieves a bitmask indicating enabled config flags.
+    function configFlags() external view returns (uint32);
 
     /// @notice Address of EthereumVaultConnector contract
     function EVC() external view returns (address);
-
-    /// @notice Retrieves the Permit2 contract address
-    function permit2Address() external view returns (address);
 
     /// @notice Retrieves a reference asset used for liquidity calculations
     function unitOfAccount() external view returns (address);
@@ -360,6 +383,8 @@ interface IGovernance {
     /// @notice Retrieves the address of the oracle contract
     function oracle() external view returns (address);
 
+    /// @notice Retrieves the Permit2 contract address
+    function permit2Address() external view returns (address);
 
     /// @notice Splits accrued fees balance according to protocol fee share and transfers shares to the governor fee receiver and protocol fee receiver
     function convertFees() external;
@@ -372,9 +397,6 @@ interface IGovernance {
 
     /// @notice Set a new governor address
     function setGovernorAdmin(address newGovernorAdmin) external;
-
-    /// @notice Set a new pause guardian address
-    function setPauseGuardian(address newPauseGuardian) external;
 
     /// @notice Set a new governor fee receiver address
     function setFeeReceiver(address newFeeReceiver) external;
@@ -391,10 +413,13 @@ interface IGovernance {
 
     /// @notice Set a new interest rate model contract
     /// @param newModel Address of the contract
-    function setIRM(address newModel) external;
+    function setInterestRateModel(address newModel) external;
 
-    /// @notice Set new bitmap indicating which operations should be disabled. Operations are defined in Constants contract
-    function setDisabledOps(uint32 newDisabledOps) external;
+    /// @notice Set a new hook target and a new bitmap indicating which operations should call the hook target. Operations are defined in Constants.sol
+    function setHookConfig(address newHookTarget, uint32 newHookedOps) external;
+
+    /// @notice Set new bitmap indicating which config flags should be enabled. Flags are defined in Constants.sol
+    function setConfigFlags(uint32 newConfigFlags) external;
 
     /// @notice Set new supply and borrow caps in AmountCap format
     function setCaps(uint16 supplyCap, uint16 borrowCap) external;
@@ -403,4 +428,32 @@ interface IGovernance {
     function setInterestFee(uint16 newFee) external;
 }
 
-interface IEVault is IInitialize, IToken, IVault, IBorrowing, ILiquidation, IRiskManager, IBalanceForwarder, IGovernance {}
+/// @title IEVault
+/// @notice Interface of the EVault, an EVC enabled lending vault
+interface IEVault is
+    IInitialize,
+    IToken,
+    IVault,
+    IBorrowing,
+    ILiquidation,
+    IRiskManager,
+    IBalanceForwarder,
+    IGovernance
+{
+    /// @notice Fetch address of the `Initialize` module
+    function MODULE_INITIALIZE() external view returns (address);
+    /// @notice Fetch address of the `Token` module
+    function MODULE_TOKEN() external view returns (address);
+    /// @notice Fetch address of the `Vault` module
+    function MODULE_VAULT() external view returns (address);
+    /// @notice Fetch address of the `Borrowing` module
+    function MODULE_BORROWING() external view returns (address);
+    /// @notice Fetch address of the `Liquidation` module
+    function MODULE_LIQUIDATION() external view returns (address);
+    /// @notice Fetch address of the `RiskManager` module
+    function MODULE_RISKMANAGER() external view returns (address);
+    /// @notice Fetch address of the `BalanceForwarder` module
+    function MODULE_BALANCE_FORWARDER() external view returns (address);
+    /// @notice Fetch address of the `Governance` module
+    function MODULE_GOVERNANCE() external view returns (address);
+}

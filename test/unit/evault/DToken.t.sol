@@ -27,16 +27,16 @@ contract DTokenTest is EVaultTestBase {
         dToken = DToken(eTST.dToken());
     }
 
-    function test_EVaultAddress() public {
+    function test_EVaultAddress() public view {
         assertEq(dToken.eVault(), address(eTST));
     }
 
-    function test_StringMetadata() public {
+    function test_StringMetadata() public view {
         assertNotEq(dToken.symbol(), "");
         assertNotEq(dToken.name(), "");
     }
 
-    function test_Decimals_MirrorsEVault() public {
+    function test_Decimals_MirrorsEVault() public view {
         assertEq(dToken.decimals(), eTST.decimals());
     }
 
@@ -58,7 +58,7 @@ contract DTokenTest is EVaultTestBase {
         dToken.transferFrom(from, to, amount);
     }
 
-    function test_Allowance_AlwaysZero(address from, address to) public {
+    function test_Allowance_AlwaysZero(address from, address to) public view {
         assertEq(dToken.allowance(from, to), 0);
     }
 

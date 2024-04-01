@@ -1,20 +1,20 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 pragma solidity ^0.8.0;
 
-// TODO merge with IRM updates
-uint256 constant SECONDS_PER_YEAR = 365.2425 * 86400; // Gregorian calendar
-uint256 constant MAX_ALLOWED_INTEREST_RATE = 291867236321699131285; // 1,000,000% APY: ln(1 + (1000000 / 100)) * 1e27 / (365.2425 * 86400)
-
 // Implementation internals
 
 // asset amounts are shifted left by this number of bits for increased precision of debt tracking.
 uint256 constant INTERNAL_DEBT_PRECISION = 31;
 // max amount for Assets and Shares custom types based on a uint112.
-uint256 constant MAX_SANE_AMOUNT = type(uint112).max; 
+uint256 constant MAX_SANE_AMOUNT = type(uint112).max;
 // max debt amount fits in uint144 (112 + 31 bits). Last 31 bits are zeros to enusure max debt rounded up equals max sane amount.
 uint256 constant MAX_SANE_DEBT_AMOUNT = uint256(MAX_SANE_AMOUNT) << INTERNAL_DEBT_PRECISION;
 // proxy trailing calldata length in bytes. Three addresses, 20 bytes each: vault underlying asset, oracle and unit of account.
 uint256 constant PROXY_METADATA_LENGTH = 60;
+// gregorian calendar
+uint256 constant SECONDS_PER_YEAR = 365.2425 * 86400;
+// max interest rate accepted from interest rate model contract. 1,000,000% APY: ln(1 + (1000000 / 100)) * 1e27 / (365.2425 * 86400)
+uint256 constant MAX_ALLOWED_INTEREST_RATE = 291867236321699131285;
 
 // Account status checks special values
 
@@ -22,11 +22,6 @@ uint256 constant PROXY_METADATA_LENGTH = 60;
 address constant CHECKACCOUNT_NONE = address(0);
 // account status check should be scheduled for the authenticated account
 address constant CHECKACCOUNT_CALLER = address(1);
-
-// EVC authentication
-
-// indicate which operations should check if this contract is the controller of the authenticated account
-uint32 constant CONTROLLER_ONLY_OPERATIONS = OP_BORROW | OP_LOOP | OP_PULL_DEBT | OP_LIQUIDATE;
 
 // Operations
 
@@ -45,6 +40,14 @@ uint32 constant OP_CONVERT_FEES = 1 << 11;
 uint32 constant OP_LIQUIDATE = 1 << 12;
 uint32 constant OP_FLASHLOAN = 1 << 13;
 uint32 constant OP_TOUCH = 1 << 14;
-uint32 constant OP_ACCRUE_INTEREST = 1 << 15;
-uint32 constant OP_SOCIALIZE_DEBT = 1 << 16;
-uint32 constant OP_VALIDATE_ASSET_RECEIVER = 1 << 17;
+
+// Config Flags
+
+uint32 constant CFG_DONT_SOCIALIZE_DEBT = 1 << 0;
+uint32 constant CFG_EVC_COMPATIBLE_ASSET = 1 << 1;
+
+// EVC authentication
+
+// in order to perform these operations, the account doesn't need to have the vault installed as a controller
+uint32 constant CONTROLLER_NEUTRAL_OPS = OP_DEPOSIT | OP_MINT | OP_WITHDRAW | OP_REDEEM | OP_TRANSFER | OP_SKIM
+    | OP_REPAY | OP_DELOOP | OP_CONVERT_FEES | OP_FLASHLOAN | OP_TOUCH;
