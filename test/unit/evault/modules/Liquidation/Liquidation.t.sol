@@ -49,7 +49,7 @@ contract VaultTest_Liquidation is EVaultTestBase {
         assetTST2.approve(address(eTST2), type(uint256).max);
     }
 
-    function test_basicLiquidation() public {
+    function test_basicLiquidation_all_collateral() public {
         startHoax(borrower);
 
         eTST2.deposit(10e18, borrower);
