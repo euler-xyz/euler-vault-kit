@@ -6,8 +6,7 @@ import {EVaultTestBase} from "../../EVaultTestBase.t.sol";
 
 import {Events} from "src/EVault/shared/Events.sol";
 import {Errors} from "src/EVault/shared/Errors.sol";
-import {EVault} from "src/EVault/EVault.sol";
-import {IEVault, IERC20} from "src/EVault/IEVault.sol";
+import {IEVault} from "src/EVault/IEVault.sol";
 import {IEVC} from "ethereum-vault-connector/interfaces/IEthereumVaultConnector.sol";
 import {TestERC20} from "../../../../mocks/TestERC20.sol";
 import {IRMTestFixed} from "../../../../mocks/IRMTestFixed.sol";
@@ -25,7 +24,7 @@ contract VaultLiquidation_Test is EVaultTestBase {
 
     IEVault public eWETH;
     IEVault public eTST3;
-    IEVault public eTST9;
+    IEVault public eTST4;
 
     function setUp() public override {
         super.setUp();
@@ -49,8 +48,8 @@ contract VaultLiquidation_Test is EVaultTestBase {
         eTST3 = IEVault(factory.createProxy(true, abi.encodePacked(address(assetTST3), address(oracle), unitOfAccount)));
         eTST3.setInterestRateModel(address(new IRMTestZero()));
 
-        eTST9 = IEVault(factory.createProxy(true, abi.encodePacked(address(assetTST4), address(oracle), unitOfAccount)));
-        eTST9.setInterestRateModel(address(new IRMTestZero()));
+        eTST4 = IEVault(factory.createProxy(true, abi.encodePacked(address(assetTST4), address(oracle), unitOfAccount)));
+        eTST4.setInterestRateModel(address(new IRMTestZero()));
 
         eTST.setLTV(address(eWETH), 0.3e4, 0);
         eTST.setLTV(address(eTST2), 0.3e4, 0);
@@ -466,35 +465,35 @@ contract VaultLiquidation_Test is EVaultTestBase {
         eTST.checkLiquidation(lender, borrower, address(eTST2));
     }
 
-    // wallet4 will be violator, using TST9 (6 decimals) as collateral
+    // borrower2 will be violator, using TST4 (6 decimals) as collateral
 
     function test_non18DecimalCollateral() public {
         // set up liquidator to support the debt
         startHoax(lender);
         evc.enableController(lender, address(eTST));
         evc.enableCollateral(lender, address(eTST3));
-        evc.enableCollateral(lender, address(eTST9));
+        evc.enableCollateral(lender, address(eTST4));
 
         startHoax(address(this));
         eTST.setLTV(address(eTST3), 0.95e4, 0);
-        eTST.setLTV(address(eTST9), 0.28e4, 0);
+        eTST.setLTV(address(eTST4), 0.28e4, 0);
 
-        oracle.setPrice(address(eTST9), unitOfAccount, 17e30);
+        oracle.setPrice(address(eTST4), unitOfAccount, 17e30);
 
         assetTST4.mint(borrower2, 100e6);
         startHoax(borrower2);
-        assetTST4.approve(address(eTST9), type(uint256).max);
+        assetTST4.approve(address(eTST4), type(uint256).max);
 
-        eTST9.deposit(10e6, borrower2);
-        evc.enableCollateral(borrower2, address(eTST9));
+        eTST4.deposit(10e6, borrower2);
+        evc.enableCollateral(borrower2, address(eTST4));
         evc.enableController(borrower2, address(eTST));
         eTST.borrow(20e18, borrower2);
 
         (uint256 collateralValue, uint256 liabilityValue) = eTST.accountLiquidity(borrower2, false);
         assertApproxEqAbs(collateralValue * 1e18 / liabilityValue, 1.08e18, 0.01e18);
 
-        oracle.setPrice(address(eTST9), unitOfAccount, 15.5e30);
-        (uint256 maxRepay, uint256 maxYield) = eTST.checkLiquidation(lender, borrower2, address(eTST9));
+        oracle.setPrice(address(eTST4), unitOfAccount, 15.5e30);
+        (uint256 maxRepay, uint256 maxYield) = eTST.checkLiquidation(lender, borrower2, address(eTST4));
 
         uint256 maxRepayStash = maxRepay;
         uint256 maxYieldStash = maxYield;
@@ -507,58 +506,58 @@ contract VaultLiquidation_Test is EVaultTestBase {
         assertEq(eTST.debtOf(borrower2), 20e18);
 
         startHoax(lender);
-        eTST.liquidate(borrower2, address(eTST9), maxRepayStash, 0);
+        eTST.liquidate(borrower2, address(eTST4), maxRepayStash, 0);
 
         // liquidator:
         assertEq(eTST.debtOf(lender), maxRepayStash);
-        assertEq(eTST9.balanceOf(lender), maxYieldStash);
+        assertEq(eTST4.balanceOf(lender), maxYieldStash);
 
         // reserves:
         uint256 reservesStash = eTST.accumulatedFeesAssets();
 
         // violator:
         assertEq(eTST.debtOf(borrower2), 20e18 - maxRepayStash + reservesStash);
-        assertEq(eTST9.balanceOf(borrower2), 10e6 - maxYieldStash);
+        assertEq(eTST4.balanceOf(borrower2), 10e6 - maxYieldStash);
     }
 
     //liquidation with high collateral exchange rate
     function test_highExchangeRateCollateral() public {
-        // // set up liquidator to support the debt
-        // startHoax(lender);
-        // evc.enableController(lender, address(eTST));
-        // evc.enableCollateral(lender, address(eTST3));
-        // evc.enableCollateral(lender, address(eTST2));
+        // set up liquidator to support the debt
+        startHoax(lender);
+        evc.enableController(lender, address(eTST));
+        evc.enableCollateral(lender, address(eTST3));
+        evc.enableCollateral(lender, address(eTST2));
 
-        // startHoax(borrower);
-        // evc.enableController(borrower, address(eTST));
-        // eTST.borrow(5e18, borrower);
+        startHoax(borrower);
+        evc.enableController(borrower, address(eTST));
+        eTST.borrow(5e18, borrower);
 
-        // startHoax(address(this));
-        // eTST.setLTV(address(eTST3), 0.95e4, 0);
-        // eTST2.setLTV(address(eTST), 0.95e4, 0);
+        startHoax(address(this));
+        eTST.setLTV(address(eTST3), 0.95e4, 0);
+        eTST2.setLTV(address(eTST), 0.95e4, 0);
 
-        // // Increase TST2 interest rate
-        // assetTST.mint(borrower2, 100e18);
-        // startHoax(borrower2);
-        // assetTST.approve(address(eTST), type(uint256).max);
-        // eTST.deposit(100e18, borrower2);
-        // evc.enableCollateral(borrower2, address(eTST));
-        // evc.enableController(borrower2, address(eTST2));
-        // eTST2.borrow(50e18, borrower2);
+        // Increase TST2 interest rate
+        assetTST.mint(borrower2, 100e18);
+        startHoax(borrower2);
+        assetTST.approve(address(eTST), type(uint256).max);
+        eTST.deposit(100e18, borrower2);
+        evc.enableCollateral(borrower2, address(eTST));
+        evc.enableController(borrower2, address(eTST2));
+        eTST2.borrow(50e18, borrower2);
 
-        // startHoax(address(this));
-        // eTST2.setInterestRateModel(address(new IRMTestFixed()));
-        // skip(10110*86400);
-        // eTST2.touch();
-        // eTST2.setInterestRateModel(address(new IRMTestZero()));
+        startHoax(address(this));
+        eTST2.setInterestRateModel(address(new IRMTestFixed()));
+        skip(10110*86400);
+        eTST2.touch();
+        eTST2.setInterestRateModel(address(new IRMTestZero()));
 
-        // oracle.setPrice(address(assetTST), unitOfAccount, 16e18);
+        oracle.setPrice(address(assetTST), unitOfAccount, 16e18);
 
-        // // exchange rate is 5.879
-        // assertApproxEqAbs(eTST2.convertToAssets(1e18), 5.879e18, 0.001e18);
-        // (uint256 collateralValue, uint256 liabilityValue) = eTST.accountLiquidity(borrower, false);
-        // uint256 healthScore = collateralValue * 1e18 / liabilityValue;
-        // assertApproxEqAbs(healthScore, 0.881e18, 0.001e18);
+        // exchange rate is 5.879
+        assertApproxEqAbs(eTST2.convertToAssets(1e18), 5.879e18, 0.001e18);
+        (uint256 collateralValue, uint256 liabilityValue) = eTST.accountLiquidity(borrower, false);
+        uint256 healthScore = collateralValue * 1e18 / liabilityValue;
+        assertApproxEqAbs(healthScore, 0.881e18, 0.001e18);
 
         // (uint256 maxRepay, uint256 maxYield) = eTST.checkLiquidation(lender, borrower, address(eTST2));
         // uint256 maxRepayStash = maxRepay;
