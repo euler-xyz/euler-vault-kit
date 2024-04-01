@@ -256,11 +256,10 @@ abstract contract VaultModule is IVault, Base, AssetTransfers, BalanceUtils {
     }
 
     function maxDepositInternal(VaultCache memory vaultCache, address) private pure returns (uint256) {
-        uint256 remainingSupply;
         uint256 supply = totalAssetsInternal(vaultCache);
         if (supply >= vaultCache.supplyCap) return 0;
 
-        remainingSupply = vaultCache.supplyCap - supply;
+        uint256 remainingSupply = vaultCache.supplyCap - supply;
 
         uint256 remainingCash = MAX_SANE_AMOUNT - vaultCache.cash.toUint();
 
