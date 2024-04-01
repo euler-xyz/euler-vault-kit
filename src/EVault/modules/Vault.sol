@@ -43,9 +43,6 @@ abstract contract VaultModule is IVault, Base, AssetTransfers, BalanceUtils {
     }
 
     /// @inheritdoc IERC4626
-    /// @dev If the hook on `deposit` allows only certain amounts, `maxDeposit` might not be fully compliant with ERC4626
-    /// @dev Because `nonReentrantView` can revert, the function might be considered not fully compliant with ERC4626
-    /// @dev If vault status checks are deferred on the EVC, supply caps are temporarily ineffective and function will underestimate
     function maxDeposit(address account) public view virtual nonReentrantView returns (uint256) {
         VaultCache memory vaultCache = loadVault();
 
@@ -58,9 +55,6 @@ abstract contract VaultModule is IVault, Base, AssetTransfers, BalanceUtils {
     }
 
     /// @inheritdoc IERC4626
-    /// @dev If the hook on `mint` allows only certain amounts, `maxMint` might not be fully compliant with ERC4626
-    /// @dev Because `nonReentrantView` can revert, the function might be considered not fully compliant with ERC4626
-    /// @dev If vault status checks are deferred on the EVC, supply caps are temporarily ineffective and function will underestimate
     function maxMint(address account) public view virtual nonReentrantView returns (uint256) {
         VaultCache memory vaultCache = loadVault();
 
@@ -79,8 +73,6 @@ abstract contract VaultModule is IVault, Base, AssetTransfers, BalanceUtils {
     }
 
     /// @inheritdoc IERC4626
-    /// @dev When account has a controller enabled, assume controller will withold all of the deposited assets
-    /// @dev Because `nonReentrantView` modifier can revert, the function might be considered not fully compliant with ERC4626
     function maxWithdraw(address owner) public view virtual nonReentrantView returns (uint256) {
         VaultCache memory vaultCache = loadVault();
 
@@ -96,8 +88,6 @@ abstract contract VaultModule is IVault, Base, AssetTransfers, BalanceUtils {
     }
 
     /// @inheritdoc IERC4626
-    /// @dev When account has a controller enabled, assume controller will withold all of the deposited assets
-    /// @dev Because `nonReentrantView` modifier can revert, the function might be considered not fully compliant with ERC4626
     function maxRedeem(address owner) public view virtual nonReentrantView returns (uint256) {
         return validateAndCallHookView(vaultStorage.hookedOps, OP_REDEEM) ? maxRedeemInternal(owner).toUint() : 0;
     }
