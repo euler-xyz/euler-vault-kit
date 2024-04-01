@@ -16,7 +16,7 @@ contract Utils is Script {
         vm.deal(deployer, 10 ether);
         require(success || deployer.balance != 0, "Deployment: insufficient funds");
 
-        deployerPrivateKey == 1 ? vm.startBroadcast() : vm.startBroadcast(deployerPrivateKey);
+        vm.startBroadcast(deployerPrivateKey);
     }
 
     function getDeployer() internal view returns (address) {
