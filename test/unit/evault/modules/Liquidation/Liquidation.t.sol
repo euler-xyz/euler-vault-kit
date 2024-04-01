@@ -10,7 +10,7 @@ import {IAllowanceTransfer} from "permit2/src/interfaces/IAllowanceTransfer.sol"
 import "src/EVault/shared/types/Types.sol";
 import "src/EVault/shared/Constants.sol";
 
-contract VaultTest_Liquidation is EVaultTestBase {
+contract LiquidationUnitTest is EVaultTestBase {
     using TypesLib for uint256;
 
     address depositor;
@@ -97,7 +97,7 @@ contract VaultTest_Liquidation is EVaultTestBase {
 
         oracle.setPrice(address(eTST2), unitOfAccount, 5e17);
 
-        (uint256 maxRepay, uint256 yield) = eTST.checkLiquidation(liquidator, borrower, address(eTST2));
+        (uint256 maxRepay,) = eTST.checkLiquidation(liquidator, borrower, address(eTST2));
 
         evc.enableCollateral(liquidator, address(eTST2));
         evc.enableController(liquidator, address(eTST));
