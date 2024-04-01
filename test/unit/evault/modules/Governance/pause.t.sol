@@ -24,6 +24,10 @@ contract Governance_PauseOps is EVaultTestBase {
         depositor = makeAddr("depositor");
         liquidator1 = makeAddr("liquidator1");
         liquidator2 = makeAddr("liquidator2");
+        // ----------------- Setup vaults --------------------
+        eTST.setLTV(address(eTST2), 0.9e4, 0);
+        oracle.setPrice(address(assetTST), unitOfAccount, 1e18);
+        oracle.setPrice(address(eTST2), unitOfAccount, 1e18);
         // ----------------- Setup depositor -----------------
         vm.startPrank(depositor);
         assetTST.mint(depositor, type(uint256).max);
@@ -151,18 +155,19 @@ contract Governance_PauseOps is EVaultTestBase {
         eTST.skim(type(uint256).max, receiver);
     }
 
-    function testFuzz_borrowingDisabledOpsShouldFailAfterDisabled(uint256 amount, address receiver) public {
+    function testFuzz_borrowingDisabledOpsShouldFailAfterDisabled(uint256 amount) public {
         setDisabledOps(eTST, OP_BORROW);
         evc.enableController(address(this), address(eTST));
         vm.expectRevert(Errors.E_OperationDisabled.selector);
-        eTST.borrow(amount, receiver);
+        eTST.borrow(amount, address(this));
 
         // re-enable
         setDisabledOps(eTST, 0);
-        vm.startPrank(depositor);
-        evc.enableController(depositor, address(eTST));
-        vm.assume(receiver != address(0));
-        eTST.borrow(type(uint256).max, receiver);
+        vm.startPrank(borrower);
+        evc.enableController(borrower, address(eTST));
+        evc.enableCollateral(borrower, address(eTST2));
+        amount = bound(amount, 1, MINT_AMOUNT / 2);
+        eTST.borrow(amount, borrower);
         vm.stopPrank();
     }
 
@@ -185,10 +190,12 @@ contract Governance_PauseOps is EVaultTestBase {
 
         // re-enable
         setDisabledOps(eTST, 0);
-        vm.startPrank(depositor);
-        evc.enableController(depositor, address(eTST));
+        vm.startPrank(borrower);
+        evc.enableController(borrower, address(eTST));
+        evc.enableCollateral(borrower, address(eTST2));
+        amount = bound(amount, 1, MINT_AMOUNT / 2);
         vm.assume(sharesReceiver != address(0));
-        eTST.loop(MINT_AMOUNT, sharesReceiver);
+        eTST.loop(amount, sharesReceiver);
         vm.stopPrank();
     }
 
@@ -332,14 +339,10 @@ contract Governance_PauseOps is EVaultTestBase {
     }
 
     function liquidateSetup(address liquidator) internal {
-        eTST.setLTV(address(eTST2), 1e4, 0);
-        oracle.setPrice(address(assetTST), unitOfAccount, 1e18);
-        oracle.setPrice(address(eTST2), unitOfAccount, 1e18);
-
         vm.startPrank(borrower);
         evc.enableController(borrower, address(eTST));
         evc.enableCollateral(borrower, address(eTST2));
-        eTST.borrow(type(uint256).max, borrower);
+        eTST.borrow(8 * MINT_AMOUNT / 10, borrower);
         vm.stopPrank();
 
         oracle.setPrice(address(eTST2), unitOfAccount, 0.5e17);
