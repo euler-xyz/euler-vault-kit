@@ -50,6 +50,16 @@ contract LiquidationUnitTest is EVaultTestBase {
     }
 
     function test_basicLiquidation_all_collateral() public {
+        // in this test scenario, all debt value * discount = all collateral value
+
+        // mimick the behaviour of liquidator depositing some collateral to have an end healthy position
+        uint256 assetTST2LiquidatorInitialBalance = 5e18;
+        startHoax(borrower);
+        assetTST2.transfer(liquidator, assetTST2LiquidatorInitialBalance);
+        startHoax(liquidator);
+        assetTST2.approve(address(eTST2), type(uint256).max);
+        eTST2.deposit(assetTST2LiquidatorInitialBalance, liquidator);
+
         startHoax(borrower);
 
         eTST2.deposit(10e18, borrower);
@@ -76,7 +86,7 @@ contract LiquidationUnitTest is EVaultTestBase {
         eTST.liquidate(borrower, address(eTST2), type(uint256).max, 0);
 
         assertEq(eTST.debtOf(liquidator), maxRepay);
-        assertEq(eTST2.balanceOf(liquidator), yield);
+        assertEq(eTST2.balanceOf(liquidator), yield + assetTST2LiquidatorInitialBalance);
         assertEq(eTST.debtOf(borrower), 0);
         assertEq(eTST2.balanceOf(borrower), 0);
     }
