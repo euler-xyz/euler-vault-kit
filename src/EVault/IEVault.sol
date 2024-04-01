@@ -79,6 +79,9 @@ interface IERC4626 {
     function convertToShares(uint256 assets) external view returns (uint256);
 
     /// @notice Fetch the maximum amount of assets a user can deposit
+    /// @dev If the hook on `deposit` allows only certain amounts, `maxDeposit` might not be fully compliant with ERC4626
+    /// @dev Because `nonReentrantView` can revert, the function might be considered not fully compliant with ERC4626
+    /// @dev If vault status checks are deferred on the EVC, supply caps are temporarily ineffective and function will underestimate
     function maxDeposit(address account) external view returns (uint256);
 
     /// @notice Calculate an amount of shares that would be created by depositing assets
@@ -87,6 +90,9 @@ interface IERC4626 {
     function previewDeposit(uint256 assets) external view returns (uint256);
 
     /// @notice Fetch the maximum amount of shares a user can mint
+    /// @dev If the hook on `mint` allows only certain amounts, `maxMint` might not be fully compliant with ERC4626
+    /// @dev Because `nonReentrantView` can revert, the function might be considered not fully compliant with ERC4626
+    /// @dev If vault status checks are deferred on the EVC, supply caps are temporarily ineffective and function will underestimate
     function maxMint(address account) external view returns (uint256);
 
     /// @notice Calculate an amount of assets that would be required to mint requested amount of shares
@@ -97,6 +103,8 @@ interface IERC4626 {
     /// @notice Fetch the maximum amount of assets a user is allowed to withdraw
     /// @param owner Account holding the shares
     /// @return The maximum amount of assets the owner is allowed to withdraw
+    /// @dev When account has a controller enabled, assume controller will withold all of the deposited assets
+    /// @dev Because `nonReentrantView` modifier can revert, the function might be considered not fully compliant with ERC4626
     function maxWithdraw(address owner) external view returns (uint256);
 
     /// @notice Calculate the amount of shares that will be burned when withdrawing requested amount of assets
@@ -107,6 +115,8 @@ interface IERC4626 {
     /// @notice Fetch the maximum amount of shares a user is allowed to redeem for assets
     /// @param owner Account holding the shares
     /// @return The maximum amount of shares the owner is allowed to redeem
+    /// @dev When account has a controller enabled, assume controller will withold all of the deposited assets
+    /// @dev Because `nonReentrantView` modifier can revert, the function might be considered not fully compliant with ERC4626
     function maxRedeem(address owner) external view returns (uint256);
 
     /// @notice Calculate the amount of assets that will be transferred when redeeming requested amount of shares
@@ -187,9 +197,6 @@ interface IBorrowing {
     /// @notice Retrieves the current interest rate accumulator for an asset
     /// @return An opaque accumulator that increases as interest is accrued
     function interestAccumulator() external view returns (uint256);
-
-    /// @notice Retrieves amount of the collateral that is being actively used to support the debt of the account.
-    function collateralUsed(address collateral, address account) external view returns (uint256);
 
     /// @notice Address of the sidecar DToken
     function dToken() external view returns (address);

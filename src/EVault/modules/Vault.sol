@@ -43,7 +43,6 @@ abstract contract VaultModule is IVault, Base, AssetTransfers, BalanceUtils {
     }
 
     /// @inheritdoc IERC4626
-    /// @dev Because `nonReentrantView` can revert, the function might be considered not fully compliant with ERC4626
     function maxDeposit(address account) public view virtual nonReentrantView returns (uint256) {
         VaultCache memory vaultCache = loadVault();
 
@@ -56,8 +55,6 @@ abstract contract VaultModule is IVault, Base, AssetTransfers, BalanceUtils {
     }
 
     /// @inheritdoc IERC4626
-    /// @dev If the hook on `mint` allows only certain amounts, maxMint function might not be fully compliant with ERC4626
-    /// @dev Because `nonReentrantView` can revert, the function might be considered not fully compliant with ERC4626
     function maxMint(address account) public view virtual nonReentrantView returns (uint256) {
         VaultCache memory vaultCache = loadVault();
 
@@ -76,7 +73,6 @@ abstract contract VaultModule is IVault, Base, AssetTransfers, BalanceUtils {
     }
 
     /// @inheritdoc IERC4626
-    /// @dev Because `nonReentrantView` can revert, the function might be considered not fully compliant with ERC4626
     function maxWithdraw(address owner) public view virtual nonReentrantView returns (uint256) {
         VaultCache memory vaultCache = loadVault();
 
@@ -92,7 +88,6 @@ abstract contract VaultModule is IVault, Base, AssetTransfers, BalanceUtils {
     }
 
     /// @inheritdoc IERC4626
-    /// @dev Because `nonReentrantView` can revert, the function might be considered not fully compliant with ERC4626
     function maxRedeem(address owner) public view virtual nonReentrantView returns (uint256) {
         return validateAndCallHookView(vaultStorage.hookedOps, OP_REDEEM) ? maxRedeemInternal(owner).toUint() : 0;
     }
@@ -232,24 +227,15 @@ abstract contract VaultModule is IVault, Base, AssetTransfers, BalanceUtils {
 
     function maxRedeemInternal(address owner) internal view returns (Shares) {
         Shares max = vaultStorage.users[owner].getBalance();
-        if (max.isZero()) return max;
+        if (max.isZero()) return Shares.wrap(0);
 
-        // When checks are deferred, all of the balance can be withdrawn, even if only temporarily
-        if (!isAccountStatusCheckDeferred(owner)) {
-            address controller = getController(owner);
-
-            if (controller != address(0)) {
-                (bool success, bytes memory data) =
-                    controller.staticcall(abi.encodeCall(IBorrowing.collateralUsed, (address(this), owner)));
-
-                // if controller doesn't implement the function, assume it will not block withdrawal
-                if (success) {
-                    uint256 used = abi.decode(data, (uint256));
-                    if (used >= max.toUint()) return Shares.wrap(0);
-                    max = max - used.toShares();
-                }
-            }
-        }
+        // If account has borrows, withdrawal might be reverted by the controller during account status checks.
+        // The collateral vault has no way to verify or enforce the behaviour of the controller, which the account owner
+        // has enabled. It will therefore assume that all of the assets would be witheld by the controller and
+        // under-estimate the return amount to zero.
+        // Integrators who handle borrowing should implement custom logic to work with the particular controllers
+        // they want to support.
+        if (isCollateralEnabled(owner, address(this)) && hasControllerEnabled(owner)) return Shares.wrap(0);
 
         VaultCache memory vaultCache = loadVault();
 
@@ -259,18 +245,12 @@ abstract contract VaultModule is IVault, Base, AssetTransfers, BalanceUtils {
         return max;
     }
 
-    function maxDepositInternal(VaultCache memory vaultCache, address) private view returns (uint256) {
+    function maxDepositInternal(VaultCache memory vaultCache, address) private pure returns (uint256) {
         uint256 remainingSupply;
+        uint256 supply = totalAssetsInternal(vaultCache);
+        if (supply >= vaultCache.supplyCap) return 0;
 
-        // In transient state with vault status checks deferred, supply caps will not be immediately enforced
-        if (isVaultStatusCheckDeferred()) {
-            remainingSupply = type(uint256).max;
-        } else {
-            uint256 supply = totalAssetsInternal(vaultCache);
-            if (supply >= vaultCache.supplyCap) return 0;
-
-            remainingSupply = vaultCache.supplyCap - supply;
-        }
+        remainingSupply = vaultCache.supplyCap - supply;
 
         uint256 remainingCash = MAX_SANE_AMOUNT - vaultCache.cash.toUint();
 

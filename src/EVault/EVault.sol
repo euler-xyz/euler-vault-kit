@@ -112,8 +112,6 @@ contract EVault is Dispatch {
 
     function interestAccumulator() public view virtual override useView(MODULE_BORROWING) returns (uint256) {}
 
-    function collateralUsed(address collateral, address account) public view virtual override useView(MODULE_BORROWING) returns (uint256) {}
-
     function dToken() public view virtual override useView(MODULE_BORROWING) returns (address) {}
 
 

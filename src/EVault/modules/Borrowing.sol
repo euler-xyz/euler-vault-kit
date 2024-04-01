@@ -60,55 +60,6 @@ abstract contract BorrowingModule is IBorrowing, Base, AssetTransfers, BalanceUt
     }
 
     /// @inheritdoc IBorrowing
-    function collateralUsed(address collateral, address account)
-        public
-        view
-        virtual
-        nonReentrantView
-        returns (uint256)
-    {
-        validateController(account);
-
-        // if collateral is not enabled, it will not be locked
-        if (!isCollateralEnabled(account, collateral)) return 0;
-
-        address[] memory collaterals = getCollaterals(account);
-        VaultCache memory vaultCache = loadVault();
-        (uint256 totalCollateralValueRiskAdjusted, uint256 liabilityValue) =
-            calculateLiquidity(vaultCache, account, collaterals, LTVType.BORROWING);
-
-        uint256 collateralBalance = IERC20(collateral).balanceOf(account);
-
-        // if account is not healthy, all of the collateral will be locked
-        if (liabilityValue >= totalCollateralValueRiskAdjusted) {
-            return collateralBalance;
-        }
-
-        // if collateral has zero LTV configured, it will not be locked
-        ConfigAmount ltv = getLTV(collateral, LTVType.BORROWING);
-        if (ltv.isZero()) return 0;
-
-        // calculate extra collateral value in terms of requested collateral balance, by dividing by LTV
-        uint256 extraCollateralValue = ltv.mulInv(totalCollateralValueRiskAdjusted - liabilityValue);
-
-        if (extraCollateralValue != 0) {
-            // adjust due to health score definition which is collateral value > liability value
-            unchecked {
-                extraCollateralValue -= 1;
-            }
-        }
-
-        // convert back to collateral balance (bid)
-        (uint256 collateralPrice,) = vaultCache.oracle.getQuotes(1e18, collateral, vaultCache.unitOfAccount);
-        if (collateralPrice == 0) return 0; // worthless / unpriced collateral is not locked
-        uint256 extraCollateralBalance = extraCollateralValue * 1e18 / collateralPrice;
-
-        if (extraCollateralBalance >= collateralBalance) return 0; // other collaterals are sufficient to support the debt
-
-        return collateralBalance - extraCollateralBalance;
-    }
-
-    /// @inheritdoc IBorrowing
     function dToken() public view virtual reentrantOK returns (address) {
         return calculateDTokenAddress();
     }

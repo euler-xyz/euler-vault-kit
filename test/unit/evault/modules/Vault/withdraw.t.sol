@@ -10,6 +10,8 @@ import {IAllowanceTransfer} from "permit2/src/interfaces/IAllowanceTransfer.sol"
 import "src/EVault/shared/types/Types.sol";
 import "src/EVault/shared/Constants.sol";
 
+import "forge-std/Test.sol";
+
 contract VaultTest_withdraw is EVaultTestBase {
     using TypesLib for uint256;
 
@@ -51,14 +53,6 @@ contract VaultTest_withdraw is EVaultTestBase {
     }
 
     function test_basicMaxWithdraw() public {
-        startHoax(borrower);
-
-        evc.enableCollateral(borrower, address(eTST2));
-        evc.enableController(borrower, address(eTST));
-
-        eTST.borrow(5e18, borrower);
-        assertEq(assetTST.balanceOf(borrower), 5e18);
-
         uint256 maxWithdrawAmount = eTST2.maxWithdraw(borrower);
         uint256 expectedBurnedShares = eTST2.previewWithdraw(maxWithdrawAmount);
 
@@ -67,10 +61,21 @@ contract VaultTest_withdraw is EVaultTestBase {
 
         // Should only be able to withdraw up to maxWithdraw, so these should fail:
 
-        vm.expectRevert(Errors.E_AccountLiquidity.selector);
+        vm.prank(borrower);
+        vm.expectRevert(Errors.E_InsufficientCash.selector);
         eTST2.withdraw(maxWithdrawAmount + 1, borrower, borrower);
 
-        vm.expectRevert(Errors.E_AccountLiquidity.selector);
+        startHoax(depositor);
+        assetTST2.mint(depositor, type(uint256).max);
+        assetTST2.approve(address(eTST2), type(uint256).max);
+        eTST2.deposit(100e18, depositor);
+        vm.stopPrank();
+
+        startHoax(borrower);
+        vm.expectRevert(Errors.E_InsufficientBalance.selector);
+        eTST2.withdraw(maxWithdrawAmount + 1, borrower, borrower);
+
+        vm.expectRevert(Errors.E_InsufficientBalance.selector);
         eTST2.withdraw(maxWithdrawAmount + 1e18, borrower, borrower);
 
         // Withdrawing the maximum should pass
@@ -84,15 +89,23 @@ contract VaultTest_withdraw is EVaultTestBase {
         assertEq(eVaultSharesBalanceBefore - eVaultSharesBalanceAfter, expectedBurnedShares);
     }
 
-    function test_basicMaxRedeem() public {
+    function test_maxWithdrawWithController() public {
         startHoax(borrower);
 
-        evc.enableCollateral(borrower, address(eTST2));
+        assertEq(eTST2.maxWithdraw(borrower), 10e18);
+
         evc.enableController(borrower, address(eTST));
+        assertEq(eTST2.maxWithdraw(borrower), 10e18);
 
-        eTST.borrow(5e18, borrower);
-        assertEq(assetTST.balanceOf(borrower), 5e18);
+        // both controller and collateral enabled - collateral could be witheld
+        evc.enableCollateral(borrower, address(eTST2));
+        assertEq(eTST2.maxWithdraw(borrower), 0);
 
+        eTST.disableController();
+        assertEq(eTST2.maxWithdraw(borrower), 10e18);
+    }
+
+    function test_basicMaxRedeem() public {
         uint256 maxRedeemAmount = eTST2.maxRedeem(borrower);
         uint256 expectedRedeemedAssets = eTST2.previewRedeem(maxRedeemAmount);
 
@@ -101,10 +114,21 @@ contract VaultTest_withdraw is EVaultTestBase {
 
         // Should only be able to redeem up to maxRedeem, so these should fail:
 
-        vm.expectRevert(Errors.E_AccountLiquidity.selector);
+        vm.prank(borrower);
+        vm.expectRevert(Errors.E_InsufficientCash.selector);
         eTST2.redeem(maxRedeemAmount + 1, borrower, borrower);
 
-        vm.expectRevert(Errors.E_AccountLiquidity.selector);
+        startHoax(depositor);
+        assetTST2.mint(depositor, type(uint256).max);
+        assetTST2.approve(address(eTST2), type(uint256).max);
+        eTST2.deposit(100e18, depositor);
+        vm.stopPrank();
+
+        startHoax(borrower);
+        vm.expectRevert(Errors.E_InsufficientBalance.selector);
+        eTST2.redeem(maxRedeemAmount + 1, borrower, borrower);
+
+        vm.expectRevert(Errors.E_InsufficientBalance.selector);
         eTST2.redeem(maxRedeemAmount + 1e18, borrower, borrower);
 
         // Withdrawing the maximum should pass
@@ -116,6 +140,22 @@ contract VaultTest_withdraw is EVaultTestBase {
 
         assertEq(assetBalanceAfter - assetBalanceBefore, expectedRedeemedAssets);
         assertEq(eVaultSharesBalanceBefore - eVaultSharesBalanceAfter, maxRedeemAmount);
+    }
+
+    function test_maxRedeemWithController() public {
+        startHoax(borrower);
+
+        assertEq(eTST2.maxRedeem(borrower), 10e18);
+
+        evc.enableController(borrower, address(eTST));
+        assertEq(eTST2.maxRedeem(borrower), 10e18);
+
+        // both controller and collateral enabled - collateral could be witheld
+        evc.enableCollateral(borrower, address(eTST2));
+        assertEq(eTST2.maxRedeem(borrower), 0);
+
+        eTST.disableController();
+        assertEq(eTST2.maxRedeem(borrower), 10e18);
     }
 
     function test_Withdraw_RevertsWhen_ReceiverIsSubaccount() public {
