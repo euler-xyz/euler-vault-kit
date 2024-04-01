@@ -140,7 +140,7 @@ This script uses lens contract to look up the vault and, if needed, the account 
 Inputs:
 `script/input/03_Lens/Lens.json`
 
-If only vault info needed, do not provide the account address when prompted by simply hitting *ENTER*.
+If only vault info needed, do not provide the account address when prompted, simply hitting *ENTER*.
 
 ```sh
 source .env && forge script script/03_Lens.s.sol:Lens --rpc-url "$ANVIL_RPC_URL"
