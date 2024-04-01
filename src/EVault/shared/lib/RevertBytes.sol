@@ -4,6 +4,9 @@ pragma solidity ^0.8.0;
 
 import "../Errors.sol";
 
+/// @title RevertBytes Library
+/// @author Euler Labs (https://www.eulerlabs.com/)
+/// @notice The library provides a helper function for bubbling up errors
 library RevertBytes {
     function revertBytes(bytes memory errMsg) internal pure {
         if (errMsg.length > 0) {

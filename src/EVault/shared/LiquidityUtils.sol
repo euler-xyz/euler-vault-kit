@@ -7,6 +7,9 @@ import {LTVUtils} from "./LTVUtils.sol";
 
 import "./types/Types.sol";
 
+/// @title LiquidityUtils
+/// @author Euler Labs (https://www.eulerlabs.com/)
+/// @notice Utilities for calculating account liquidity and health status
 abstract contract LiquidityUtils is BorrowUtils, LTVUtils {
     using TypesLib for uint256;
 
@@ -37,12 +40,11 @@ abstract contract LiquidityUtils is BorrowUtils, LTVUtils {
         if (owed.isZero()) return;
 
         uint256 liabilityValue = getLiabilityValue(vaultCache, account, owed);
-        if (liabilityValue == 0) return;
 
         uint256 collateralValue;
         for (uint256 i; i < collaterals.length; ++i) {
             collateralValue += getCollateralValue(vaultCache, account, collaterals[i], LTVType.BORROWING);
-            if (collateralValue >= liabilityValue) return;
+            if (collateralValue > liabilityValue) return;
         }
 
         revert E_AccountLiquidity();

@@ -10,6 +10,9 @@ import {ProxyUtils} from "./lib/ProxyUtils.sol";
 
 import "./types/Types.sol";
 
+/// @title Cache
+/// @author Euler Labs (https://www.eulerlabs.com/)
+/// @notice Utilities for loading vault storage and updating it with interest accrued
 contract Cache is Storage, Errors {
     using TypesLib for uint256;
     using SafeERC20Lib for IERC20;
@@ -61,12 +64,12 @@ contract Cache is Storage, Errors {
         vaultCache.interestAccumulator = vaultStorage.interestAccumulator;
 
         // Update interest accumulator and fees balance
-        uint256 deltaT = block.timestamp - vaultCache.lastInterestAccumulatorUpdate;
 
+        uint256 deltaT = block.timestamp - vaultCache.lastInterestAccumulatorUpdate;
         if (deltaT > 0) {
             dirty = true;
 
-            // Compute new values. Use full precision for intermediate results.
+            // Compute new cache values. Use full precision for intermediate results.
 
             ConfigAmount interestFee = vaultStorage.interestFee;
             uint256 interestRate = vaultStorage.interestRate;
@@ -76,6 +79,7 @@ contract Cache is Storage, Errors {
             unchecked {
                 (uint256 multiplier, bool overflow) = RPow.rpow(interestRate + 1e27, deltaT, 1e27);
 
+                // if exponentiation or accumulator update overflows, keep the old accumulator
                 if (!overflow) {
                     uint256 intermediate = newInterestAccumulator * multiplier;
                     if (newInterestAccumulator == intermediate / multiplier) {

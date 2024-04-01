@@ -9,6 +9,9 @@ import {ProxyUtils} from "../shared/lib/ProxyUtils.sol";
 
 import "../shared/types/Types.sol";
 
+/// @title TokenModule
+/// @author Euler Labs (https://www.eulerlabs.com/)
+/// @notice An EVault module handling ERC20 behaviour of vault shares
 abstract contract TokenModule is IToken, Base, BalanceUtils {
     using TypesLib for uint256;
 
@@ -79,6 +82,7 @@ abstract contract TokenModule is IToken, Base, BalanceUtils {
     }
 }
 
+/// @dev Deployable module contract
 contract Token is TokenModule {
     constructor(Integrations memory integrations) Base(integrations) {}
 }

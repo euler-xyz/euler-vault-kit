@@ -4,6 +4,9 @@ pragma solidity ^0.8.0;
 
 import {VaultCache} from "../types/VaultCache.sol";
 
+/// @title ConversionHelpers Library
+/// @author Euler Labs (https://www.eulerlabs.com/)
+/// @notice The library provides a helper function for conversions between shares and assets
 library ConversionHelpers {
     // virtual deposit used in conversions between shares and assets, serving as exchange rate manipulation mitigation
     uint256 constant VIRTUAL_DEPOSIT_AMOUNT = 1e6;

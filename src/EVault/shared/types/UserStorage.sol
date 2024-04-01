@@ -4,21 +4,30 @@ pragma solidity ^0.8.0;
 
 import {Shares, Owed} from "./Types.sol";
 
+/// @dev Custom type for holding shares and debt balances of an account, packed with balance forwarder opt-in flag
 type PackedUserSlot is uint256;
 
+/// @title UserStorage
+/// @notice This struct is used to store user account data
 struct UserStorage {
-    PackedUserSlot data; // Shares and debt balance, balance forwarder opt-in flag
+    // Shares and debt balances, balance forwarder opt-in
+    PackedUserSlot data;
+    // Snapshot of the interest accumulator from the last change to account's liability
     uint256 interestAccumulator;
+    // A mapping with allowances for the vault shares token (eToken)
     mapping(address spender => uint256 allowance) eTokenAllowance;
 }
 
+/// @title UserStorageLib
+/// @author Euler Labs (https://www.eulerlabs.com/)
+/// @notice Library for working with the UserStorage struct
 library UserStorageLib {
     uint256 constant BALANCE_FORWARDER_MASK = 0x8000000000000000000000000000000000000000000000000000000000000000;
     uint256 constant OWED_MASK = 0x7FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF0000000000000000000000000000;
     uint256 constant SHARES_MASK = 0x000000000000000000000000000000000000FFFFFFFFFFFFFFFFFFFFFFFFFFFF;
     uint256 constant OWED_OFFSET = 112;
 
-    function getBalanceForwarderEnabled(UserStorage storage self) internal view returns (bool) {
+    function isBalanceForwarderEnabled(UserStorage storage self) internal view returns (bool) {
         return unpackBalanceForwarder(self.data);
     }
 

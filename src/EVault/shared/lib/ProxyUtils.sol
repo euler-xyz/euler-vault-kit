@@ -5,6 +5,9 @@ pragma solidity ^0.8.0;
 import {IERC20} from "../../IEVault.sol";
 import {IPriceOracle} from "../../../interfaces/IPriceOracle.sol";
 
+/// @title ProxyUtils Library
+/// @author Euler Labs (https://www.eulerlabs.com/)
+/// @notice The library provides a helper function for working with proxy meta data
 library ProxyUtils {
     function metadata() internal pure returns (IERC20 asset, IPriceOracle oracle, address unitOfAccount) {
         assembly {

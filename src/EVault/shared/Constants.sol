@@ -1,10 +1,6 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 pragma solidity ^0.8.0;
 
-// TODO merge with IRM updates
-uint256 constant SECONDS_PER_YEAR = 365.2425 * 86400; // Gregorian calendar
-uint256 constant MAX_ALLOWED_INTEREST_RATE = 291867236321699131285; // 1,000,000% APY: ln(1 + (1000000 / 100)) * 1e27 / (365.2425 * 86400)
-
 // Implementation internals
 
 // asset amounts are shifted left by this number of bits for increased precision of debt tracking.
@@ -15,6 +11,10 @@ uint256 constant MAX_SANE_AMOUNT = type(uint112).max;
 uint256 constant MAX_SANE_DEBT_AMOUNT = uint256(MAX_SANE_AMOUNT) << INTERNAL_DEBT_PRECISION;
 // proxy trailing calldata length in bytes. Three addresses, 20 bytes each: vault underlying asset, oracle and unit of account.
 uint256 constant PROXY_METADATA_LENGTH = 60;
+// gregorian calendar
+uint256 constant SECONDS_PER_YEAR = 365.2425 * 86400;
+// max interest rate accepted from interest rate model contract. 1,000,000% APY: ln(1 + (1000000 / 100)) * 1e27 / (365.2425 * 86400)
+uint256 constant MAX_ALLOWED_INTEREST_RATE = 291867236321699131285;
 
 // Account status checks special values
 

@@ -15,6 +15,9 @@ import {RiskManagerModule} from "./modules/RiskManager.sol";
 
 import "./shared/Constants.sol";
 
+/// @title Dispatch
+/// @author Euler Labs (https://www.eulerlabs.com/)
+/// @notice Contract which ties in the EVault modules and provides utilities for routing calls to modules and the EVC
 abstract contract Dispatch is
     Base,
     InitializeModule,
@@ -78,6 +81,9 @@ abstract contract Dispatch is
         }
     }
 
+    // External function which is only callable by the EVault itself. Its purpose is to be static called by `delegateToModuleView`
+    // which allows view functions to be implemented in modules, even though delegatecall cannot be directly used within
+    // view functions.
     function viewDelegate() external {
         if (msg.sender != address(this)) revert E_Unauthorized();
 
