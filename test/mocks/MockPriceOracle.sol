@@ -2,6 +2,8 @@
 
 pragma solidity ^0.8.0;
 
+import "src/EVault/IEVault.sol";
+
 contract MockPriceOracle {
     error PO_BaseUnsupported();
     error PO_QuoteUnsupported();
@@ -16,6 +18,8 @@ contract MockPriceOracle {
 
     function getQuote(uint256 amount, address base, address quote) public view returns (uint256 out) {
         uint256 price = prices[base][quote];
+        (bool success,) = base.staticcall(abi.encodeCall(IERC4626.asset, ()));
+        if (success) amount = IEVault(base).convertToAssets(amount);
 
         return amount * price / 1e18;
     }
