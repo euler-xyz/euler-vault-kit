@@ -170,12 +170,24 @@ contract GovernanceTest_InterestFee is EVaultTestBase {
     }
 
     function test_setInterestFee_OutsideGuaranteedRange() public {
-        uint16 newInterestFee = 1.6e4;
+        uint16 newInterestFee = 0.05e4;
 
         startHoax(address(this));
         
         vm.expectRevert(Errors.E_BadFee.selector);
         eTST.setInterestFee(newInterestFee);
+        
+        startHoax(admin);
+        protocolConfig.setVaultInterestFeeRange(address(eTST), true, 0, 1e4);
+
+        startHoax(address(this));
+
+        vm.expectEmit();
+        emit GovernanceModule.GovSetInterestFee(newInterestFee);
+
+        eTST.setInterestFee(newInterestFee);
+
+        assertEq(eTST.interestFee(), newInterestFee);
     }
 
     function getAccumulatedFees() internal returns(uint accumFee){
