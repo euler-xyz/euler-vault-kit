@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 pragma solidity ^0.8.0;
-import {console2} from "forge-std/Test.sol";
 
 import {EVaultTestBase} from "../../EVaultTestBase.t.sol";
 import {GovernanceModule} from "src/EVault/modules/Governance.sol";
@@ -64,14 +63,12 @@ contract GovernanceTest_InterestFee is EVaultTestBase {
 
     function test_feesAccrual() public {
         startHoax(borrower);
- 
         evc.enableCollateral(borrower, address(eTST2));
         evc.enableController(borrower, address(eTST));
 
         eTST.borrow(5e18, borrower);
 
         startHoax(borrower2);
- 
         evc.enableCollateral(borrower2, address(eTST2));
         evc.enableController(borrower2, address(eTST));
 
@@ -79,7 +76,7 @@ contract GovernanceTest_InterestFee is EVaultTestBase {
 
         skip(1000);
 
-        uint accumFees = eTST.interestFee() * (eTST.debtOf(borrower) + eTST.debtOf(borrower2) - 11e18) / (1e4);
+        uint256 accumFees = eTST.interestFee() * (eTST.debtOf(borrower) + eTST.debtOf(borrower2) - 11e18) / (1e4);
 
         assertApproxEqAbs(accumFees, eTST.accumulatedFeesAssets(), 10);
     }
@@ -121,10 +118,8 @@ contract GovernanceTest_InterestFee is EVaultTestBase {
         uint256 accumFee = getAccumulatedFees();
         uint256 protocolShare = eTST.protocolFeeShare();
         uint256 partFee = accumFee.toShares().mulDiv(1e4 - protocolShare, 1e4).toUint();
-        
         assertEq(eTST.balanceOf(governFeeReceiver), 0);
         assertEq(eTST.balanceOf(protocolFeeReceiver), 0);
-        
         eTST.convertFees();
 
         assertEq(eTST.balanceOf(governFeeReceiver), partFee);
@@ -140,11 +135,10 @@ contract GovernanceTest_InterestFee is EVaultTestBase {
         startHoax(admin);
         protocolConfig.setProtocolFeeShare(newProtocolFeeShare);
 
-        uint accumFee = getAccumulatedFees();
+        uint256 accumFee = getAccumulatedFees();
 
         assertEq(eTST.balanceOf(governFeeReceiver), 0);
         assertEq(eTST.balanceOf(protocolFeeReceiver), 0);
-        
         eTST.convertFees();
 
         uint256 partFee = accumFee.toShares().mulDiv(1e4 - newProtocolFeeShare, 1e4).toUint();
@@ -173,10 +167,8 @@ contract GovernanceTest_InterestFee is EVaultTestBase {
         uint16 newInterestFee = 0.05e4;
 
         startHoax(address(this));
-        
         vm.expectRevert(Errors.E_BadFee.selector);
         eTST.setInterestFee(newInterestFee);
-        
         startHoax(admin);
         protocolConfig.setVaultInterestFeeRange(address(eTST), true, 0, 1e4);
 
@@ -190,9 +182,8 @@ contract GovernanceTest_InterestFee is EVaultTestBase {
         assertEq(eTST.interestFee(), newInterestFee);
     }
 
-    function getAccumulatedFees() internal returns(uint accumFee){
+    function getAccumulatedFees() internal returns (uint256 accumFee) {
         startHoax(borrower);
- 
         evc.enableCollateral(borrower, address(eTST2));
         evc.enableController(borrower, address(eTST));
 
@@ -205,5 +196,4 @@ contract GovernanceTest_InterestFee is EVaultTestBase {
 
         return eTST.accumulatedFees();
     }
-
 }
