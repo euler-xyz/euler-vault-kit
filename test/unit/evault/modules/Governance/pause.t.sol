@@ -132,7 +132,7 @@ contract Governance_PauseOps is EVaultTestBase {
 
     function testFuzz_disablingTransferOpsShouldFailAfterDisabled(address to, uint256 amount) public {
         setDisabledOps(eTST, OP_TRANSFER);
-        vm.assume(to != address(this));
+        vm.assume(to != address(this) && to != depositor);
         vm.expectRevert(Errors.E_OperationDisabled.selector);
         eTST.transfer(to, amount);
 

@@ -188,9 +188,6 @@ interface IBorrowing {
     /// @return An opaque accumulator that increases as interest is accrued
     function interestAccumulator() external view returns (uint256);
 
-    /// @notice Retrieves amount of the collateral that is being actively used to support the debt of the account.
-    function collateralUsed(address collateral, address account) external view returns (uint256);
-
     /// @notice Address of the sidecar DToken
     function dToken() external view returns (address);
 

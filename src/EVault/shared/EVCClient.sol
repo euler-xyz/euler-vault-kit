@@ -83,6 +83,10 @@ abstract contract EVCClient is Storage, Events, Errors {
         return controllers.length == 1 ? controllers[0] : address(0);
     }
 
+    function hasControllerEnabled(address account) internal view returns (bool) {
+        return evc.getControllers(account).length > 0;
+    }
+
     function getCollaterals(address account) internal view returns (address[] memory) {
         return evc.getCollaterals(account);
     }
