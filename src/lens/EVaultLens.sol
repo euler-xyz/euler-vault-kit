@@ -61,11 +61,6 @@ contract EVaultLens {
         result.assets = IEVault(vault).convertToAssets(result.shares);
         result.borrowed = IEVault(vault).debtOf(account);
 
-        result.maxDeposit = IEVault(vault).maxDeposit(account);
-        result.maxMint = IEVault(vault).maxMint(account);
-        result.maxWithdraw = IEVault(vault).maxWithdraw(account);
-        result.maxRedeem = IEVault(vault).maxRedeem(account);
-
         result.assetAllowanceVault = IEVault(result.asset).allowance(account, vault);
 
         address permit2 = IEVault(vault).permit2Address();

@@ -31,10 +31,6 @@ struct VaultAccountInfo {
     uint256 shares;
     uint256 assets;
     uint256 borrowed;
-    uint256 maxDeposit;
-    uint256 maxMint;
-    uint256 maxWithdraw;
-    uint256 maxRedeem;
     uint256 assetAllowanceVault;
     uint256 assetAllowanceVaultPermit2;
     uint256 assetAllowanceExpirationVaultPermit2;

@@ -46,10 +46,6 @@ contract Lens is Utils {
             object2 = vm.serializeUint("vaultAccountInfo", "shares", accountInfo.vaultAccountInfo.shares);
             object2 = vm.serializeUint("vaultAccountInfo", "assets", accountInfo.vaultAccountInfo.assets);
             object2 = vm.serializeUint("vaultAccountInfo", "borrowed", accountInfo.vaultAccountInfo.borrowed);
-            object2 = vm.serializeUint("vaultAccountInfo", "maxDeposit", accountInfo.vaultAccountInfo.maxDeposit);
-            object2 = vm.serializeUint("vaultAccountInfo", "maxMint", accountInfo.vaultAccountInfo.maxMint);
-            object2 = vm.serializeUint("vaultAccountInfo", "maxWithdraw", accountInfo.vaultAccountInfo.maxWithdraw);
-            object2 = vm.serializeUint("vaultAccountInfo", "maxRedeem", accountInfo.vaultAccountInfo.maxRedeem);
             object2 = vm.serializeUint(
                 "vaultAccountInfo", "assetAllowanceVault", accountInfo.vaultAccountInfo.assetAllowanceVault
             );
