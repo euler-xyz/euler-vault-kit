@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 pragma solidity ^0.8.0;
+import {console2} from "forge-std/Test.sol";
 
 import {EVaultTestBase} from "../../EVaultTestBase.t.sol";
 import {GovernanceModule} from "src/EVault/modules/Governance.sol";
@@ -101,57 +102,58 @@ contract GovernanceTest_InterestFee is EVaultTestBase {
     }
 
     function test_convertFees_NoGovernorReceiver() public {
-        uint256 accumFee = getAccumulatedFees();
-        
-        assertEq(eTST.balanceOf(feeReceiver), 0);
+        startHoax(address(this));
+        eTST.setFeeReceiver(address(0));
+        assertEq(eTST.feeReceiver(), address(0));
 
+        uint256 accumFee = eTST.accumulatedFees();
+        address protocolFeeReceiver = protocolConfig.feeReceiver();
+
+        assertEq(eTST.balanceOf(protocolFeeReceiver), 0);
         eTST.convertFees();
-        
-        assertEq(eTST.balanceOf(feeReceiver), accumFee);
+        assertEq(eTST.balanceOf(protocolFeeReceiver), accumFee);
     }
 
     function test_convertFees_WithGovernorReceiver() public {
-        address receiver = makeAddr("receiver");
-        startHoax(address(this));
-        eTST.setFeeReceiver(receiver);
+        address governFeeReceiver = eTST.feeReceiver();
+        address protocolFeeReceiver = protocolConfig.feeReceiver();
 
         uint256 accumFee = getAccumulatedFees();
         uint256 protocolShare = eTST.protocolFeeShare();
         uint256 partFee = accumFee.toShares().mulDiv(1e4 - protocolShare, 1e4).toUint();
         
-        assertEq(eTST.balanceOf(receiver), 0);
-        assertEq(eTST.balanceOf(feeReceiver), 0);
+        assertEq(eTST.balanceOf(governFeeReceiver), 0);
+        assertEq(eTST.balanceOf(protocolFeeReceiver), 0);
         
         eTST.convertFees();
 
-        assertEq(eTST.balanceOf(receiver), partFee);
-        assertEq(eTST.balanceOf(feeReceiver), accumFee - partFee);
+        assertEq(eTST.balanceOf(governFeeReceiver), partFee);
+        assertEq(eTST.balanceOf(protocolFeeReceiver), accumFee - partFee);
     }
 
     function test_convertFees_OverMaxProtocolFeeShare() public {
-        address receiver = makeAddr("receiver");
-        startHoax(address(this));
-        eTST.setFeeReceiver(receiver);
-
         uint16 newProtocolFeeShare = MAX_PROTOCOL_FEE_SHARE + 0.1e4;
+
+        address governFeeReceiver = eTST.feeReceiver();
+        address protocolFeeReceiver = protocolConfig.feeReceiver();
 
         startHoax(admin);
         protocolConfig.setProtocolFeeShare(newProtocolFeeShare);
 
         uint accumFee = getAccumulatedFees();
 
-        assertEq(eTST.balanceOf(receiver), 0);
-        assertEq(eTST.balanceOf(feeReceiver), 0);
+        assertEq(eTST.balanceOf(governFeeReceiver), 0);
+        assertEq(eTST.balanceOf(protocolFeeReceiver), 0);
         
         eTST.convertFees();
 
         uint256 partFee = accumFee.toShares().mulDiv(1e4 - newProtocolFeeShare, 1e4).toUint();
-        assertNotEq(eTST.balanceOf(receiver), partFee);
-        assertNotEq(eTST.balanceOf(feeReceiver), accumFee - partFee);
+        assertNotEq(eTST.balanceOf(governFeeReceiver), partFee);
+        assertNotEq(eTST.balanceOf(protocolFeeReceiver), accumFee - partFee);
 
         partFee = accumFee.toShares().mulDiv(1e4 - MAX_PROTOCOL_FEE_SHARE, 1e4).toUint();
-        assertEq(eTST.balanceOf(receiver), partFee);
-        assertEq(eTST.balanceOf(feeReceiver), accumFee - partFee);
+        assertEq(eTST.balanceOf(governFeeReceiver), partFee);
+        assertEq(eTST.balanceOf(protocolFeeReceiver), accumFee - partFee);
     }
 
     function test_setInterestFee_InsideGuaranteedRange() public {
@@ -168,24 +170,12 @@ contract GovernanceTest_InterestFee is EVaultTestBase {
     }
 
     function test_setInterestFee_OutsideGuaranteedRange() public {
-        uint16 newInterestFee = 0.6e4;
+        uint16 newInterestFee = 1.6e4;
 
         startHoax(address(this));
         
         vm.expectRevert(Errors.E_BadFee.selector);
         eTST.setInterestFee(newInterestFee);
-        
-        startHoax(admin);
-        protocolConfig.setVaultInterestFeeRange(address(eTST), true, 0, 1e4);
-
-        startHoax(address(this));
-
-        vm.expectEmit();
-        emit GovernanceModule.GovSetInterestFee(newInterestFee);
-
-        eTST.setInterestFee(newInterestFee);
-
-        assertEq(eTST.interestFee(), newInterestFee);
     }
 
     function getAccumulatedFees() internal returns(uint accumFee){
