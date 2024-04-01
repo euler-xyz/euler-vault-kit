@@ -294,4 +294,31 @@ contract FactoryTest is Test {
         assertNotEq(config.implementation, factory.implementation());
         assertEq(eVaultNonUpg.implementation(), "TRANSPARENT");
     }
+
+    function test_payableProxies() public {
+        // Create and install mock eVault impl
+        MockEVault mockEvaultImpl = new MockEVault(address(factory), address(1));
+        vm.prank(upgradeAdmin);
+        factory.setImplementation(address(mockEvaultImpl));
+
+        TestERC20 asset = new TestERC20("Test Token", "TST", 17, false);
+
+        // BeaconProxy (upgradeable)
+        {
+            MockEVault eTST = MockEVault(factory.createProxy(true, abi.encodePacked(address(asset))));
+
+            assertEq(address(eTST).balance, 0);
+            eTST.payMe{value: 12345}();
+            assertEq(address(eTST).balance, 12345);
+        }
+
+        // MetaProxy (non-upgradeable)
+        {
+            MockEVault eTST = MockEVault(factory.createProxy(false, abi.encodePacked(address(asset))));
+
+            assertEq(address(eTST).balance, 0);
+            eTST.payMe{value: 12345}();
+            assertEq(address(eTST).balance, 12345);
+        }
+    }
 }
