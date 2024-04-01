@@ -118,7 +118,7 @@ Outputs:
 
 ### Test environment deployment
 
-This command deploys multiple vaults and, in needed, test assets.
+This command deploys multiple vaults and, if needed, test assets.
 
 Inputs:
 `script/input/02_DeploymentAll/DeploymentAll.json`
