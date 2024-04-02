@@ -7,11 +7,12 @@ import "../../src/InterestRateModels/IIRM.sol";
 contract IRMTestZero is IIRM {
     constructor() {}
 
-    function computeInterestRate(address, uint256, uint256) public pure returns (uint256) {
+    function computeInterestRate(address vault, uint256, uint256) public view returns (uint256) {
+        if (msg.sender != vault) revert E_IRMUpdateUnauthorized();
         return 0;
     }
 
-    function computeInterestRateView(address vault, uint256 cash, uint256 borrows) external pure returns (uint256) {
+    function computeInterestRateView(address vault, uint256 cash, uint256 borrows) external view returns (uint256) {
         return computeInterestRate(vault, cash, borrows);
     }
 }
