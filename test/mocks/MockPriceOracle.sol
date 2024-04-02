@@ -19,7 +19,7 @@ contract MockPriceOracle {
     function getQuote(uint256 amount, address base, address quote) public view returns (uint256 out) {
         uint256 price = prices[base][quote];
         (bool success,) = base.staticcall(abi.encodeCall(IERC4626.asset, ()));
-        if (success) amount = IEVault(base).convertToAssets(amount);
+        if (base.code.length > 0 && success) amount = IEVault(base).convertToAssets(amount);
 
         return amount * price / 1e18;
     }
