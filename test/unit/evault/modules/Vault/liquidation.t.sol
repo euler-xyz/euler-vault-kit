@@ -266,10 +266,6 @@ contract VaultLiquidation_Test is EVaultTestBase {
         uint256 maxRepayStash = maxRepay / 4;
         uint256 maxYieldStash = maxRepayStash * maxYield / maxRepay;
 
-        (uint256 collateralValue, uint256 liabilityValue) = eTST.accountLiquidity(borrower, false);
-
-        uint256 healthScore = collateralValue * 1e18 / liabilityValue;
-
         startHoax(lender);
         eTST.liquidate(borrower, address(eTST2), maxRepayStash, 0);
 
@@ -358,7 +354,7 @@ contract VaultLiquidation_Test is EVaultTestBase {
         eTST.liquidate(borrower, address(eTST2), maxRepayStash, 0);
 
         // pool takes a loss
-        (uint256 collateralValue, uint256 liabilityValue) = eTST.accountLiquidity(borrower, false);
+        (, uint256 liabilityValue) = eTST.accountLiquidity(borrower, false);
         uint256 liability = getRiskAdjustedValue(18e18 - maxRepayStash, 2.7e18, 1e18);
         assertEq(liabilityValue, liability);
 
@@ -445,18 +441,15 @@ contract VaultLiquidation_Test is EVaultTestBase {
         vm.expectRevert(Errors.E_AccountLiquidity.selector);
         evc.disableCollateral(borrower, address(eTST2));
 
-        (uint256 maxRepay, uint256 maxYield) = eTST.checkLiquidation(lender, borrower, address(eTST2));
-        uint256 maxRepayStash = maxRepay;
-        uint256 maxYieldStash = maxYield;
-
-        assertEq(eTST.debtOf(borrower), maxRepayStash);
+        (uint256 maxRepay,) = eTST.checkLiquidation(lender, borrower, address(eTST2));
+        assertEq(eTST.debtOf(borrower), maxRepay);
 
         (uint256 collateralValue, uint256 liabilityValue) = eTST.accountLiquidity(borrower, false);
 
         assertApproxEqAbs(collateralValue * 1e18 / liabilityValue, 0.0003636e18, 0.0000001e18);
 
         startHoax(lender);
-        eTST.liquidate(borrower, address(eTST2), maxRepayStash, 0);
+        eTST.liquidate(borrower, address(eTST2), maxRepay, 0);
 
         startHoax(borrower);
         eTST.disableController();
@@ -560,8 +553,6 @@ contract VaultLiquidation_Test is EVaultTestBase {
         assertApproxEqAbs(healthScore, 0.881e18, 0.001e18);
 
         (uint256 maxRepay, uint256 maxYield) = eTST.checkLiquidation(lender, borrower, address(eTST2));
-        uint256 maxRepayStash = maxRepay;
-        uint256 maxYieldStash = maxYield;
 
         uint256 valYield = oracle.getQuote(maxYield, address(eTST2), unitOfAccount);
         uint256 valRepay = oracle.getQuote(maxRepay, address(assetTST), unitOfAccount);
@@ -648,7 +639,6 @@ contract VaultLiquidation_Test is EVaultTestBase {
         assertEq(eTST.balanceOf(lender), maxYieldStash);
     }
 
-    //collateral worth 0
     function test_zeroCollateralWorth() public {
         // set up liquidator to support the debt
         startHoax(lender);
@@ -676,8 +666,6 @@ contract VaultLiquidation_Test is EVaultTestBase {
         // no repay, yield full collateral balance
         assertEq(maxRepay, 0);
         assertEq(maxYield, 100e18);
-
-        uint256 maxYieldStash = maxYield;
 
         startHoax(lender);
         vm.expectRevert(Errors.E_ExcessiveRepayAmount.selector);
@@ -734,23 +722,6 @@ contract VaultLiquidation_Test is EVaultTestBase {
         vm.revertTo(snapshot);
         snapshot = vm.snapshot();
 
-        // Try it once more, this time with debt socialization switched on all the time.
-        startHoax(lender);
-        eTST.liquidate(borrower, address(eTST2), 0, 0);
-
-        // Collateral is claimed, debt is socialized
-        // violator
-        assertEq(eTST.debtOf(borrower), 0);
-        assertEq(eTST2.balanceOf(borrower), 0);
-
-        // liquidator:
-        assertEq(eTST.debtOf(lender), 0);
-        assertEq(eTST2.balanceOf(lender), 100e18);
-
-        // total borrows
-        assertEq(eTST.totalBorrows(), 0);
-
-        vm.revertTo(snapshot);
         // One wei of a second collateral (even worthless) will prevent socialization
 
         startHoax(borrower);
@@ -785,6 +756,52 @@ contract VaultLiquidation_Test is EVaultTestBase {
 
         // total borrows
         assertEq(eTST.totalBorrows(), 0);
+    }
+
+    function test_zeroLTVCollateral() public {
+        // set up liquidator to support the debt
+        startHoax(lender);
+        evc.enableController(lender, address(eTST));
+        evc.enableCollateral(lender, address(eTST3));
+        evc.enableCollateral(lender, address(eTST2));
+
+        startHoax(borrower);
+        evc.enableCollateral(borrower, address(eTST3));
+        evc.enableController(borrower, address(eTST));
+        eTST.borrow(5e18, borrower);
+
+        startHoax(address(this));
+        eTST.setLTV(address(eTST2), 0, 0);
+
+        (uint256 collateralValueRA,) = eTST.accountLiquidity(borrower, false);
+        assertEq(collateralValueRA, 0);
+
+        (uint256 maxRepay, uint256 maxYield) = eTST.checkLiquidation(lender, borrower, address(eTST2));
+        assertEq(maxRepay, 5e18);
+        // max discount - 20%
+        uint256 discountedYieldValue = oracle.getQuote(5e18, address(assetTST), unitOfAccount) * 1e18 / 0.8e18;
+        uint256 collateralValue = oracle.getQuote(100e18, address(eTST2), unitOfAccount);
+        assertEq(maxYield, 100e18 * discountedYieldValue / collateralValue);
+
+        startHoax(lender);
+        // liquidated collateral doesn't support debt
+        vm.expectRevert(Errors.E_AccountLiquidity.selector);
+        eTST.liquidate(borrower, address(eTST2), type(uint).max, 0);
+
+        // liquidator needs other support
+        startHoax(address(this));
+        eTST.setLTV(address(eTST3), 0.9e4, 0);
+
+        startHoax(lender);
+        eTST.liquidate(borrower, address(eTST2), type(uint).max, 0);
+
+        // liquidator
+        assertEq(eTST2.balanceOf(lender), maxYield);
+        assertEq(eTST.debtOf(lender), maxRepay);
+
+        // violator
+        assertEq(eTST.debtOf(borrower), 0);
+        assertEq(eTST2.balanceOf(borrower), 100e18 - maxYield);
     }
 
     //repay adjusted rounds down to 0
@@ -827,7 +844,6 @@ contract VaultLiquidation_Test is EVaultTestBase {
         // no repay, yield full collateral balance
         assertEq(maxRepay, 0);
         assertEq(maxYield, 40);
-        uint256 maxYieldStash = maxYield;
 
         startHoax(lender);
         eTST.liquidate(borrower, address(eTST2), 0, 0);
@@ -1163,7 +1179,7 @@ contract VaultLiquidation_Test is EVaultTestBase {
         vm.revertTo(snapshot);
     }
 
-    function getRiskAdjustedValue(uint256 amount, uint256 price, uint256 factor) public returns (uint256) {
+    function getRiskAdjustedValue(uint256 amount, uint256 price, uint256 factor) public pure returns (uint256) {
         return amount * price / 1e18 * factor / 1e18;
     }
 }
