@@ -61,12 +61,12 @@ contract MockPriceOracle {
 
     function resolveUnderlying(address asset) internal view returns (address) {
         if (asset.code.length > 0) {
-           (bool success, bytes memory data) = asset.staticcall(abi.encodeCall(IERC4626.asset, ()));
-           if (success) return abi.decode(data, (address));
+            (bool success, bytes memory data) = asset.staticcall(abi.encodeCall(IERC4626.asset, ()));
+            if (success) return abi.decode(data, (address));
         }
 
         return asset;
-    } 
+    }
 
     function testExcludeFromCoverage() public pure {
         return;
