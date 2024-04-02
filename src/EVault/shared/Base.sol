@@ -4,6 +4,7 @@ pragma solidity ^0.8.0;
 
 import {EVCClient} from "./EVCClient.sol";
 import {Cache} from "./Cache.sol";
+import {ProxyUtils} from "./lib/ProxyUtils.sol";
 import {RevertBytes} from "./lib/RevertBytes.sol";
 
 import {IProtocolConfig} from "../../ProtocolConfig/IProtocolConfig.sol";
@@ -45,7 +46,18 @@ abstract contract Base is EVCClient, Cache {
     }
 
     modifier nonReentrantView() {
-        if (vaultStorage.reentrancyLocked) revert E_Reentrancy();
+        if (vaultStorage.reentrancyLocked) {
+            address hookTarget = vaultStorage.hookTarget;
+
+            // the hook target is allowed to bypass the RO-reentrancy lock. the hook target can either be a msg.sender
+            // when the view function is inlined in the EVault.sol or the hook target should be taked from the trailing
+            // data appended by the delegateToModuleView function used by useView modifier. in the latter case, it is
+            // safe to consume the trailing data as we know we are inside the useView because msg.sender == address(this)
+            if (msg.sender != hookTarget && !(msg.sender == address(this) && ProxyUtils.useViewCaller() == hookTarget))
+            {
+                revert E_Reentrancy();
+            }
+        }
         _;
     }
 
