@@ -559,14 +559,13 @@ contract VaultLiquidation_Test is EVaultTestBase {
         uint256 healthScore = collateralValue * 1e18 / liabilityValue;
         assertApproxEqAbs(healthScore, 0.881e18, 0.001e18);
 
-        // (uint256 maxRepay, uint256 maxYield) = eTST.checkLiquidation(lender, borrower, address(eTST2));
-        // uint256 maxRepayStash = maxRepay;
-        // uint256 maxYieldStash = maxYield;
+        (uint256 maxRepay, uint256 maxYield) = eTST.checkLiquidation(lender, borrower, address(eTST2));
+        uint256 maxRepayStash = maxRepay;
+        uint256 maxYieldStash = maxYield;
 
-        // uint256 yieldAssets = eTST2.convertToAssets(maxYield);
-        // uint256 valYield = oracle.getQuote(yieldAssets, address(eTST2), unitOfAccount);
-        // uint256 valRepay = oracle.getQuote(maxRepay, address(assetTST), unitOfAccount);
-        // assertApproxEqAbs(valRepay, valYield * healthScore / 1e18, 0.000000001e18);
+        uint256 valYield = oracle.getQuote(maxYield, address(eTST2), unitOfAccount);
+        uint256 valRepay = oracle.getQuote(maxRepay, address(assetTST), unitOfAccount);
+        assertApproxEqAbs(valRepay, valYield * healthScore / 1e18, 0.000000001e18);
     }
 
     function test_debtSocialization() public {
