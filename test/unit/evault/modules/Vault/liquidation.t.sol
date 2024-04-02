@@ -818,14 +818,14 @@ contract VaultLiquidation_Test is EVaultTestBase {
         startHoax(lender);
         // liquidated collateral doesn't support debt
         vm.expectRevert(Errors.E_AccountLiquidity.selector);
-        eTST.liquidate(borrower, address(eTST2), type(uint).max, 0);
+        eTST.liquidate(borrower, address(eTST2), type(uint256).max, 0);
 
         // liquidator needs other support
         startHoax(address(this));
         eTST.setLTV(address(eTST3), 0.9e4, 0);
 
         startHoax(lender);
-        eTST.liquidate(borrower, address(eTST2), type(uint).max, 0);
+        eTST.liquidate(borrower, address(eTST2), type(uint256).max, 0);
 
         // liquidator
         assertEq(eTST2.balanceOf(lender), maxYield);
@@ -867,10 +867,10 @@ contract VaultLiquidation_Test is EVaultTestBase {
         // collateral value (not RA) = 18
         // yield value initially = 40/0.8 = 50
         // repay value initially = 40
-        // collateral value < yield, so: 
+        // collateral value < yield, so:
         //  repay value = 18 * 0.8 = 14
         //  yield value = 18
-        // => repay = 14 * 2 / 40 = 0 (rounded down) 
+        // => repay = 14 * 2 / 40 = 0 (rounded down)
         // yield = 18 * 45 / 18 = 40
 
         // no repay, yield full collateral balance
