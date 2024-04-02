@@ -1062,7 +1062,7 @@ contract VaultLiquidation_Test is EVaultTestBase {
         assertApproxEqAbs(collateralValue * 1e18 / liabilityValue, healthScore * 0.75e4 / 1e4, 0.01e18);
 
         snapshot = vm.snapshot();
-        eTST.touch(); 
+        eTST.touch();
 
         (collateralValue, liabilityValue) = eTST.accountLiquidity(borrower, true);
         assertApproxEqAbs(collateralValue * 1e18 / liabilityValue, healthScore * 0.75e4 / 1e4, 0.01e18);
