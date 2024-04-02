@@ -56,10 +56,8 @@ contract VaultLiquidation_Test is EVaultTestBase {
 
         oracle.setPrice(address(assetTST), unitOfAccount, 2.2e18);
         oracle.setPrice(address(assetTST2), unitOfAccount, 0.4e18);
-        oracle.setPrice(address(eTST), unitOfAccount, 0.4e18);
-        oracle.setPrice(address(eTST2), unitOfAccount, 0.4e18);
-        oracle.setPrice(address(eTST3), unitOfAccount, 2.2e18);
-        oracle.setPrice(address(eWETH), unitOfAccount, 1e18);
+        oracle.setPrice(address(assetTST3), unitOfAccount, 2.2e18);
+        oracle.setPrice(address(assetWETH), unitOfAccount, 1e18);
 
         startHoax(lender);
 
@@ -677,7 +675,7 @@ contract VaultLiquidation_Test is EVaultTestBase {
         (uint256 collateralValue, uint256 liabilityValue) = eTST.accountLiquidity(borrower, false);
         assertApproxEqAbs(collateralValue * 1e18 / liabilityValue, 1.09e18, 0.01e18);
 
-        oracle.setPrice(address(eTST2), unitOfAccount, 0);
+        oracle.setPrice(address(assetTST2), unitOfAccount, 0);
 
         (collateralValue, liabilityValue) = eTST.accountLiquidity(borrower, false);
         assertEq(collateralValue, 0);
@@ -904,7 +902,7 @@ contract VaultLiquidation_Test is EVaultTestBase {
         eTST2.deposit(1, borrower);
 
         oracle.setPrice(address(assetTST), unitOfAccount, 0.001e18);
-        oracle.setPrice(address(eTST2), unitOfAccount, 15e18);
+        oracle.setPrice(address(assetTST2), unitOfAccount, 15e18);
 
         eTST.borrow(3000, borrower);
         (uint256 collateralValue, uint256 liabilityValue) = eTST.accountLiquidity(borrower, false);
@@ -1179,6 +1177,97 @@ contract VaultLiquidation_Test is EVaultTestBase {
         assertEq(eTST2.balanceOf(lender), maxYield);
 
         vm.revertTo(snapshot);
+    }
+
+    function test_liquidationWithBidAskPricing() public {
+        // set up liquidator to support the debt
+        startHoax(lender);
+        evc.enableController(lender, address(eTST));
+        evc.enableCollateral(lender, address(eTST3));
+        evc.enableCollateral(lender, address(eTST2));
+
+        startHoax(borrower);
+        evc.enableController(borrower, address(eTST));
+        eTST.borrow(5e18, borrower);
+
+        startHoax(address(this));
+        eTST.setLTV(address(eTST3), 0.95e4, 0);
+
+        (uint256 collateralValue, uint256 liabilityValue) = eTST.accountLiquidity(borrower, false);
+        assertApproxEqAbs(collateralValue * 1e18 / liabilityValue, 1.09e18, 0.01e18);
+
+        // regular liquidation, bid = ask = mid price
+
+        oracle.setPrice(address(assetTST), unitOfAccount, 2.5e18);
+
+        (collateralValue, liabilityValue) = eTST.accountLiquidity(borrower, false);
+        uint256 healthScore = collateralValue * 1e18 / liabilityValue;
+        assertApproxEqAbs(healthScore, 0.96e18, 0.001e18);
+        // liability price bid price changes
+
+        oracle.setPrices(address(assetTST), unitOfAccount, 2.4e18, 2.5e18);
+
+        // no influence
+        (uint256 newCollateralValue, uint256 newLiabilityValue) = eTST.accountLiquidity(borrower, false);
+        assertEq(collateralValue, newCollateralValue);
+        assertEq(liabilityValue, newLiabilityValue);
+
+        // liability ask price changes
+
+        oracle.setPrices(address(assetTST), unitOfAccount, 2.5e18, 2.6e18);
+
+        // liability valued at ask
+        (newCollateralValue, newLiabilityValue) = eTST.accountLiquidity(borrower, false);
+        assertEq(collateralValue, newCollateralValue);
+        assertGt(newLiabilityValue, liabilityValue);
+
+        liabilityValue = newLiabilityValue;
+
+        // collateral ask price changes
+
+        oracle.setPrices(address(assetTST2), unitOfAccount, 0.4e18, 0.5e18);
+
+        (newCollateralValue, newLiabilityValue) = eTST.accountLiquidity(borrower, false);
+        assertEq(collateralValue, newCollateralValue);
+        assertEq(liabilityValue, newLiabilityValue);
+
+        // collateral bid price changes
+
+        oracle.setPrices(address(assetTST2), unitOfAccount, 0.3e18, 0.4e18);
+
+        (newCollateralValue, newLiabilityValue) = eTST.accountLiquidity(borrower, false);
+        assertGt(collateralValue, newCollateralValue);
+        assertEq(liabilityValue, newLiabilityValue);
+
+        collateralValue = newCollateralValue;
+
+        healthScore = collateralValue * 1e18 / liabilityValue;
+        assertApproxEqAbs(healthScore, 0.692e18, 0.001e18);
+
+        // The discount is max - 20% on mid point prices
+
+        (uint256 maxRepay, uint256 maxYield) = eTST.checkLiquidation(lender, borrower, address(eTST2));
+
+        uint256 repayValue = oracle.getQuote(maxRepay, address(eTST), unitOfAccount);
+        uint256 yieldValue = oracle.getQuote(maxYield, address(eTST2), unitOfAccount);
+
+        assertEq(yieldValue, repayValue * 1e18 / 0.8e18);
+
+        uint256 violatorsOriginalCollateral = eTST2.balanceOf(borrower);
+
+        startHoax(lender);
+
+        // max uint is equivalent to maxRepay
+        eTST.liquidate(borrower, address(eTST2), type(uint256).max, 0);
+
+        // liquidator:
+        assertEq(eTST.debtOf(lender), maxRepay);
+        assertEq(eTST2.balanceOf(lender), maxYield);
+
+        // violator:
+        startHoax(borrower);
+        assertEq(eTST.debtOf(borrower), 0);
+        assertEq(eTST2.balanceOf(borrower), violatorsOriginalCollateral - maxYield);
     }
 
     function getRiskAdjustedValue(uint256 amount, uint256 price, uint256 factor) public pure returns (uint256) {

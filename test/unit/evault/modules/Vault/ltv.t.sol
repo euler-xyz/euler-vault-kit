@@ -20,7 +20,7 @@ contract VaultTest_LTV is EVaultTestBase {
         // Setup
 
         oracle.setPrice(address(assetTST), unitOfAccount, 1e18);
-        oracle.setPrice(address(eTST2), unitOfAccount, 1e18);
+        oracle.setPrice(address(assetTST2), unitOfAccount, 1e18);
 
         depositor = makeAddr("depositor");
         borrower = makeAddr("borrower");

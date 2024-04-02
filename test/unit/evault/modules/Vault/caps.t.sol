@@ -438,7 +438,7 @@ contract VaultTest_Caps is EVaultTestBase {
         evc.enableCollateral(user, address(eTST2));
 
         oracle.setPrice(address(assetTST), unitOfAccount, 1 ether);
-        oracle.setPrice(address(eTST2), unitOfAccount, 1000 ether);
+        oracle.setPrice(address(assetTST2), unitOfAccount, 1000 ether);
         vm.stopPrank();
     }
 }
