@@ -295,7 +295,7 @@ contract BalanceForwarderTest_Hooks is EVaultTestBase {
         evc.enableCollateral(user, address(eTST2));
 
         oracle.setPrice(address(assetTST), unitOfAccount, 1 ether);
-        oracle.setPrice(address(eTST2), unitOfAccount, 1 ether);
+        oracle.setPrice(address(assetTST2), unitOfAccount, 1 ether);
         vm.stopPrank();
     }
 }

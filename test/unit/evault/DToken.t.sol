@@ -174,6 +174,6 @@ contract DTokenTest is EVaultTestBase {
         vm.stopPrank();
 
         oracle.setPrice(address(assetTST), unitOfAccount, 1 ether);
-        oracle.setPrice(address(eTST2), unitOfAccount, 1000 ether);
+        oracle.setPrice(address(assetTST2), unitOfAccount, 1000 ether);
     }
 }
