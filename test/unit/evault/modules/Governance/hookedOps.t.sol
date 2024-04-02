@@ -91,11 +91,13 @@ contract Governance_HookedOps is EVaultTestBase {
         vm.expectRevert(MockHookTarget.ExpectedData.selector);
         deposit ? eTST.deposit(amount, receiver) : eTST.mint(amount, receiver);
 
+        // if the hook target is a contract, it's not considered disabled from the max* functions perspective
         data = getHookCalldata(
             abi.encodeCall(deposit ? IEVault(eTST).maxDeposit : IEVault(eTST).maxMint, (receiver)), address(0)
         );
         MockHookTarget(hookTarget1).setExpectedDataHash(keccak256(data));
-        assertEq(deposit ? eTST.maxDeposit(receiver) : eTST.maxMint(receiver), 0);
+        if (deposit) assertEq(eTST.maxDeposit(receiver), MAX_SANE_AMOUNT - eTST.cash());
+        else assertEq(eTST.maxMint(receiver), MAX_SANE_AMOUNT - eTST.totalSupply());
 
         // the operation succeeds which proves that it's not affected if the hook target call succeeds
         vm.startPrank(receiver);
@@ -129,11 +131,13 @@ contract Governance_HookedOps is EVaultTestBase {
         vm.expectRevert(MockHookTarget.ExpectedData.selector);
         withdraw ? eTST.withdraw(amount / 2, sender, sender) : eTST.redeem(amount / 2, sender, sender);
 
+        // if the hook target is a contract, it's not considered disabled from the max* functions perspective
         data = getHookCalldata(
             abi.encodeCall(withdraw ? IEVault(eTST).maxWithdraw : IEVault(eTST).maxRedeem, (sender)), address(0)
         );
         MockHookTarget(hookTarget2).setExpectedDataHash(keccak256(data));
-        assertEq(withdraw ? eTST.maxWithdraw(sender) : eTST.maxRedeem(sender), 0);
+        if (withdraw) assertEq(eTST.maxWithdraw(sender), eTST.convertToAssets(eTST.balanceOf(sender)));
+        else assertEq(eTST.maxRedeem(sender), eTST.balanceOf(sender));
     }
 
     function testFuzz_hookedAllOps(
@@ -164,7 +168,7 @@ contract Governance_HookedOps is EVaultTestBase {
 
             data = getHookCalldata(abi.encodeCall(IEVault(eTST).maxDeposit, (address1)), address(0));
             MockHookTarget(hookTarget).setExpectedDataHash(keccak256(data));
-            assertEq(eTST.maxDeposit(address1), 0);
+            assertEq(eTST.maxDeposit(address1), MAX_SANE_AMOUNT);
         }
 
         if (hookedOps & OP_MINT != 0) {
@@ -175,7 +179,7 @@ contract Governance_HookedOps is EVaultTestBase {
 
             data = getHookCalldata(abi.encodeCall(IEVault(eTST).maxMint, (address1)), address(0));
             MockHookTarget(hookTarget).setExpectedDataHash(keccak256(data));
-            assertEq(eTST.maxMint(address1), 0);
+            assertEq(eTST.maxMint(address1), MAX_SANE_AMOUNT);
         }
 
         if (hookedOps & OP_WITHDRAW != 0) {
