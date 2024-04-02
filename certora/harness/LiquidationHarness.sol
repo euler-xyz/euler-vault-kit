@@ -60,6 +60,11 @@ contract LiquidationHarness is Liquidation {
         (, liquidator) = initOperation(OP_LIQUIDATE, CHECKACCOUNT_CALLER);
     }
 
+    function vaultIsOnlyController(address account) external view returns (bool) {
+        address[] memory controllers = IEVC(evc).getControllers(account);
+        return controllers.length == 1 && controllers[0] == address(this);
+    }
+
     function calculateLiquidationExt(
         VaultCache memory vaultCache,
         address liquidator,
