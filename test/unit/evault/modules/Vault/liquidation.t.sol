@@ -1130,7 +1130,7 @@ contract VaultLiquidation_Test is EVaultTestBase {
         assertApproxEqAbs(collateralValue * 1e18 / liabilityValue, healthScore * 0.65e4 / 1e4, 0.01e18);
 
         // 1 - HS > 29%, discount maxes out at 20%
-        assertApproxEqAbs(1e18 - collateralValue * 1e18 / liabilityValue, 0.29e18, 0.001e18); // js value - 0.296 !!!
+        assertApproxEqAbs(1e18 - collateralValue * 1e18 / liabilityValue, 0.29e18, 0.001e18);
         discountStash = 0.2e18;
 
         (maxRepay, maxYield) = eTST.checkLiquidation(lender, borrower, address(eTST2));
