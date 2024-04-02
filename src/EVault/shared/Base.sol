@@ -75,6 +75,12 @@ abstract contract Base is EVCClient, Cache {
         }
     }
 
+    // Checks whether the operation is disabled and returns the result of the check.
+    // The operation is considered disabled if the operation is hooked and the hook target is not a contract.
+    function isOperationDisabled(Flags hookedOps, uint32 operation) internal view returns (bool) {
+        return hookedOps.isSet(operation) && vaultStorage.hookTarget.code.length == 0;
+    }
+
     // Checks whether the operation is hookable and if so, calls the hook target.
     // If the hook target is not a contract, the operation is considered disabled.
     function validateAndCallHook(Flags hookedOps, uint32 operation, address caller) internal {
@@ -87,18 +93,6 @@ abstract contract Base is EVCClient, Cache {
         (bool success, bytes memory data) = hookTarget.call(abi.encodePacked(msg.data, caller));
 
         if (!success) RevertBytes.revertBytes(data);
-    }
-
-    // Checks whether the operation is hookable and if so, calls the hook target.
-    // If the hook target is not a contract or the hook target call is reverting,
-    // the operation is considered disabled.
-    function validateAndCallHookView(Flags hookedOps, uint32 operation) internal view returns (bool) {
-        if (hookedOps.isNotSet(operation)) return true;
-
-        address hookTarget = vaultStorage.hookTarget;
-        (bool success,) = hookTarget.staticcall(msg.data);
-
-        return success && hookTarget.code.length != 0;
     }
 
     function logVaultStatus(VaultCache memory a, uint256 interestRate) internal {
