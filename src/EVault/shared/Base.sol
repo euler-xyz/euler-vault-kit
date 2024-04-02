@@ -4,6 +4,7 @@ pragma solidity ^0.8.0;
 
 import {EVCClient} from "./EVCClient.sol";
 import {Cache} from "./Cache.sol";
+import {ProxyUtils} from "./lib/ProxyUtils.sol";
 import {RevertBytes} from "./lib/RevertBytes.sol";
 
 import {IProtocolConfig} from "../../ProtocolConfig/IProtocolConfig.sol";
@@ -45,7 +46,14 @@ abstract contract Base is EVCClient, Cache {
     }
 
     modifier nonReentrantView() {
-        if (vaultStorage.reentrancyLocked) revert E_Reentrancy();
+        if (vaultStorage.reentrancyLocked) {
+            address hookTarget = vaultStorage.hookTarget;
+
+            if (msg.sender != hookTarget && !(msg.sender == address(this) && ProxyUtils.useViewCaller() == hookTarget))
+            {
+                revert E_Reentrancy();
+            }
+        }
         _;
     }
 

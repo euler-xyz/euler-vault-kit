@@ -16,4 +16,10 @@ library ProxyUtils {
             unitOfAccount := shr(96, calldataload(sub(calldatasize(), 20)))
         }
     }
+
+    function useViewCaller() internal pure returns (address viewCaller) {
+        assembly {
+            viewCaller := shr(96, calldataload(sub(calldatasize(), 80)))
+        }
+    }
 }

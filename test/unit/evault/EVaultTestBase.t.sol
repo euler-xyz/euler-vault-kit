@@ -146,6 +146,10 @@ contract MockHook {
     function deposit(uint256, address) external view {
         address asset = IEVault(msg.sender).asset();
 
+        // these calls are just to test if there's no RO-reentrancy for the hook target
+        IEVault(msg.sender).totalBorrows();
+        IEVault(msg.sender).balanceOf(address(this));
+
         if (asset != caller()) revert E_OnlyAssetCanDeposit();
     }
 
