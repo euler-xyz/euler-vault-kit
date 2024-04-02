@@ -13,8 +13,8 @@ uint256 constant MAX_SANE_DEBT_AMOUNT = uint256(MAX_SANE_AMOUNT) << INTERNAL_DEB
 uint256 constant PROXY_METADATA_LENGTH = 60;
 // gregorian calendar
 uint256 constant SECONDS_PER_YEAR = 365.2425 * 86400;
-// max interest rate accepted from interest rate model contract. 1,000,000% APY: ln(1 + (1000000 / 100)) * 1e27 / (365.2425 * 86400)
-uint256 constant MAX_ALLOWED_INTEREST_RATE = 291867236321699131285;
+// max interest rate accepted from IRM. 1,000,000% APY: floor(((1000000 / 100 + 1)**(1/(86400*365.2425)) - 1) * 1e27)
+uint256 constant MAX_ALLOWED_INTEREST_RATE = 291867278914945094175;
 
 // Account status checks special values
 
