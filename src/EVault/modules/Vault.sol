@@ -46,7 +46,7 @@ abstract contract VaultModule is IVault, Base, AssetTransfers, BalanceUtils {
     function maxDeposit(address account) public view virtual nonReentrantView returns (uint256) {
         VaultCache memory vaultCache = loadVault();
 
-        return vaultCache.hookedOps.isSet(OP_DEPOSIT) ? 0 : maxDepositInternal(vaultCache, account);
+        return isOperationDisabled(vaultCache.hookedOps, OP_DEPOSIT) ? 0 : maxDepositInternal(vaultCache, account);
     }
 
     /// @inheritdoc IERC4626
@@ -58,7 +58,7 @@ abstract contract VaultModule is IVault, Base, AssetTransfers, BalanceUtils {
     function maxMint(address account) public view virtual nonReentrantView returns (uint256) {
         VaultCache memory vaultCache = loadVault();
 
-        if (vaultCache.hookedOps.isSet(OP_MINT)) return 0;
+        if (isOperationDisabled(vaultCache.hookedOps, OP_MINT)) return 0;
 
         // make sure to not revert on conversion
         uint256 shares = maxDepositInternal(vaultCache, account).toAssets().toUint256SharesDown(vaultCache);
@@ -76,7 +76,9 @@ abstract contract VaultModule is IVault, Base, AssetTransfers, BalanceUtils {
     function maxWithdraw(address owner) public view virtual nonReentrantView returns (uint256) {
         VaultCache memory vaultCache = loadVault();
 
-        return vaultCache.hookedOps.isSet(OP_WITHDRAW) ? 0 : maxRedeemInternal(owner).toAssetsDown(vaultCache).toUint();
+        return isOperationDisabled(vaultCache.hookedOps, OP_WITHDRAW)
+            ? 0
+            : maxRedeemInternal(owner).toAssetsDown(vaultCache).toUint();
     }
 
     /// @inheritdoc IERC4626
@@ -87,7 +89,7 @@ abstract contract VaultModule is IVault, Base, AssetTransfers, BalanceUtils {
 
     /// @inheritdoc IERC4626
     function maxRedeem(address owner) public view virtual nonReentrantView returns (uint256) {
-        return vaultStorage.hookedOps.isSet(OP_REDEEM) ? 0 : maxRedeemInternal(owner).toUint();
+        return isOperationDisabled(vaultStorage.hookedOps, OP_REDEEM) ? 0 : maxRedeemInternal(owner).toUint();
     }
 
     /// @inheritdoc IERC4626
