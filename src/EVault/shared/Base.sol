@@ -49,6 +49,10 @@ abstract contract Base is EVCClient, Cache {
         if (vaultStorage.reentrancyLocked) {
             address hookTarget = vaultStorage.hookTarget;
 
+            // the hook target is allowed to bypass the RO-reentrancy lock. the hook target can either be a msg.sender
+            // when the view function is inlined in the EVault.sol or the hook target should be taked from the trailing
+            // data appended by the delegateToModuleView function used by useView modifier. in the latter case, it is
+            // safe to consume the trailing data as we know we are inside the useView because msg.sender == address(this)
             if (msg.sender != hookTarget && !(msg.sender == address(this) && ProxyUtils.useViewCaller() == hookTarget))
             {
                 revert E_Reentrancy();
