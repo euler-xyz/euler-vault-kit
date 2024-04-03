@@ -2,6 +2,7 @@
 pragma solidity ^0.8.13;
 
 import {Test} from "forge-std/Test.sol";
+import {IIRM} from "../../../src/InterestRateModels/IIRM.sol";
 import {IRMLinearKink} from "../../../src/InterestRateModels/IRMLinearKink.sol";
 import {MathTesting} from "../../helpers/MathTesting.sol";
 
@@ -16,6 +17,14 @@ contract InterestRateLinearKink is Test, MathTesting {
             19050045013,
             2147483648
         );
+    }
+
+    function test_OnlyVaultCanMutateIRMState() public {
+        vm.expectRevert(IIRM.E_IRMUpdateUnauthorized.selector);
+        irm.computeInterestRate(address(1234), 5, 6);
+
+        vm.prank(address(1234));
+        irm.computeInterestRate(address(1234), 5, 6);
     }
 
     function test_MaxIR() public view {
