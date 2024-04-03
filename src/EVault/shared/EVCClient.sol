@@ -75,14 +75,6 @@ abstract contract EVCClient is Storage, Events, Errors {
         evc.forgiveAccountStatusCheck(account);
     }
 
-    function getController(address account) internal view returns (address) {
-        address[] memory controllers = evc.getControllers(account);
-
-        if (controllers.length > 1) revert E_TransientState();
-
-        return controllers.length == 1 ? controllers[0] : address(0);
-    }
-
     function hasControllerEnabled(address account) internal view returns (bool) {
         return evc.getControllers(account).length > 0;
     }
