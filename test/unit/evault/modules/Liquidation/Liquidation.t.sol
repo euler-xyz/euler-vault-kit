@@ -86,12 +86,11 @@ contract LiquidationUnitTest is EVaultTestBase {
         uint256 collateralValue = eTST2.balanceOf(borrower) * 5e17 / 1e18;
         uint256 liquiditycollateralValue = collateralValue * uint256(eTST.liquidationLTV(address(eTST2))) / 1e4;
         uint256 liabilityValue = eTST.debtOf(borrower);
-        uint256 discountFactor =  liquiditycollateralValue * 1e18 / liabilityValue;
+        uint256 discountFactor = liquiditycollateralValue * 1e18 / liabilityValue;
         uint256 expectedMaxRepayValue = collateralValue * discountFactor / 1e18;
         uint256 expectedMaxYieldValue = collateralValue;
         uint256 expectedRepayValue = expectedMaxRepayValue * eTST.debtOf(borrower) / liabilityValue;
         uint256 expectedYield = expectedMaxYieldValue * eTST2.balanceOf(borrower) / collateralValue;
-
 
         assertEq(maxRepay, expectedRepayValue);
         assertEq(yield, expectedYield);
