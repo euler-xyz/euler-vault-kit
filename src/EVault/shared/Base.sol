@@ -4,6 +4,7 @@ pragma solidity ^0.8.0;
 
 import {EVCClient} from "./EVCClient.sol";
 import {Cache} from "./Cache.sol";
+import {ProxyUtils} from "./lib/ProxyUtils.sol";
 import {RevertBytes} from "./lib/RevertBytes.sol";
 
 import {IProtocolConfig} from "../../ProtocolConfig/IProtocolConfig.sol";
@@ -45,7 +46,18 @@ abstract contract Base is EVCClient, Cache {
     }
 
     modifier nonReentrantView() {
-        if (vaultStorage.reentrancyLocked) revert E_Reentrancy();
+        if (vaultStorage.reentrancyLocked) {
+            address hookTarget = vaultStorage.hookTarget;
+
+            // the hook target is allowed to bypass the RO-reentrancy lock. the hook target can either be a msg.sender
+            // when the view function is inlined in the EVault.sol or the hook target should be taked from the trailing
+            // data appended by the delegateToModuleView function used by useView modifier. in the latter case, it is
+            // safe to consume the trailing data as we know we are inside the useView because msg.sender == address(this)
+            if (msg.sender != hookTarget && !(msg.sender == address(this) && ProxyUtils.useViewCaller() == hookTarget))
+            {
+                revert E_Reentrancy();
+            }
+        }
         _;
     }
 
@@ -75,6 +87,12 @@ abstract contract Base is EVCClient, Cache {
         }
     }
 
+    // Checks whether the operation is disabled and returns the result of the check.
+    // The operation is considered disabled if the operation is hooked and the hook target is not a contract.
+    function isOperationDisabled(Flags hookedOps, uint32 operation) internal view returns (bool) {
+        return hookedOps.isSet(operation) && vaultStorage.hookTarget.code.length == 0;
+    }
+
     // Checks whether the operation is hookable and if so, calls the hook target.
     // If the hook target is not a contract, the operation is considered disabled.
     function validateAndCallHook(Flags hookedOps, uint32 operation, address caller) internal {
@@ -87,18 +105,6 @@ abstract contract Base is EVCClient, Cache {
         (bool success, bytes memory data) = hookTarget.call(abi.encodePacked(msg.data, caller));
 
         if (!success) RevertBytes.revertBytes(data);
-    }
-
-    // Checks whether the operation is hookable and if so, calls the hook target.
-    // If the hook target is not a contract or the hook target call is reverting,
-    // the operation is considered disabled.
-    function validateAndCallHookView(Flags hookedOps, uint32 operation) internal view returns (bool) {
-        if (hookedOps.isNotSet(operation)) return true;
-
-        address hookTarget = vaultStorage.hookTarget;
-        (bool success,) = hookTarget.staticcall(msg.data);
-
-        return success && hookTarget.code.length != 0;
     }
 
     function logVaultStatus(VaultCache memory a, uint256 interestRate) internal {
