@@ -96,6 +96,7 @@ contract ERC4626Test_ProtocolConfig is EVaultTestBase {
         address newFeeReceiver = makeAddr("newFeeReceiver");
 
         vm.expectRevert(ProtocolConfig.E_InvalidReceiver.selector);
+        vm.prank(admin);
         protocolConfig.setFeeReceiver(address(0));
 
         vm.prank(admin);
