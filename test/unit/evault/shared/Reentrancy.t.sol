@@ -28,6 +28,9 @@ contract MockHookTarget is Test {
         uint256 amount1 = uint256(keccak256(abi.encodePacked(data, "amount1")));
         uint256 amount2 = uint256(keccak256(abi.encodePacked(data, "amount2")));
 
+        eTST.name();
+        eTST.symbol();
+        eTST.decimals();
         eTST.totalSupply();
         eTST.balanceOf(account1);
         eTST.allowance(account1, account2);
@@ -44,6 +47,7 @@ contract MockHookTarget is Test {
         vm.expectRevert(Errors.E_Reentrancy.selector);
         eTST.transferFromMax(account1, account2);
 
+        eTST.asset();
         eTST.totalAssets();
         eTST.convertToAssets(uint112(bound(amount1, 0, type(uint112).max)));
         eTST.convertToShares(uint112(bound(amount1, 0, type(uint112).max)));
@@ -57,6 +61,7 @@ contract MockHookTarget is Test {
         eTST.previewRedeem(uint112(bound(amount1, 0, type(uint112).max)));
         eTST.accumulatedFees();
         eTST.accumulatedFeesAssets();
+        eTST.creator();
 
         vm.expectRevert(Errors.E_Reentrancy.selector);
         eTST.deposit(amount1, account1);
@@ -80,6 +85,7 @@ contract MockHookTarget is Test {
         eTST.debtOfExact(account1);
         eTST.interestRate();
         eTST.interestAccumulator();
+        eTST.dToken();
 
         vm.expectRevert(Errors.E_Reentrancy.selector);
         eTST.borrow(amount1, account1);
@@ -117,11 +123,33 @@ contract MockHookTarget is Test {
         vm.expectRevert(Errors.E_Reentrancy.selector);
         eTST.disableController();
 
+        eTST.balanceTrackerAddress();
+        eTST.balanceForwarderEnabled(account1);
+
         vm.expectRevert(Errors.E_Reentrancy.selector);
         eTST.enableBalanceForwarder();
 
         vm.expectRevert(Errors.E_Reentrancy.selector);
         eTST.disableBalanceForwarder();
+
+        eTST.governorAdmin();
+        eTST.feeReceiver();
+        eTST.interestFee();
+        eTST.interestRateModel();
+        eTST.protocolConfigAddress();
+        eTST.protocolFeeShare();
+        eTST.protocolFeeReceiver();
+        eTST.caps();
+        eTST.borrowingLTV(account1);
+        eTST.liquidationLTV(account1);
+        eTST.LTVFull(account1);
+        eTST.LTVList();
+        eTST.hookConfig();
+        eTST.configFlags();
+        eTST.EVC();
+        eTST.unitOfAccount();
+        eTST.oracle();
+        eTST.permit2Address();
 
         vm.expectRevert(Errors.E_Reentrancy.selector);
         eTST.convertFees();
@@ -189,6 +217,10 @@ contract ReentrancyTest is EVaultTestBase {
 
         vm.startPrank(sender);
 
+        eTST.name();
+        eTST.symbol();
+        eTST.decimals();
+
         vm.expectRevert(Errors.E_Reentrancy.selector);
         eTST.totalSupply();
 
@@ -209,6 +241,8 @@ contract ReentrancyTest is EVaultTestBase {
 
         vm.expectRevert(Errors.E_Reentrancy.selector);
         eTST.transferFromMax(account1, account2);
+
+        eTST.asset();
 
         vm.expectRevert(Errors.E_Reentrancy.selector);
         eTST.totalAssets();
@@ -249,6 +283,8 @@ contract ReentrancyTest is EVaultTestBase {
         vm.expectRevert(Errors.E_Reentrancy.selector);
         eTST.accumulatedFeesAssets();
 
+        eTST.creator();
+
         vm.expectRevert(Errors.E_Reentrancy.selector);
         eTST.deposit(amount1, account1);
 
@@ -284,6 +320,8 @@ contract ReentrancyTest is EVaultTestBase {
 
         vm.expectRevert(Errors.E_Reentrancy.selector);
         eTST.interestAccumulator();
+
+        eTST.dToken();
 
         vm.expectRevert(Errors.E_Reentrancy.selector);
         eTST.borrow(amount1, account1);
@@ -321,11 +359,35 @@ contract ReentrancyTest is EVaultTestBase {
         vm.expectRevert(Errors.E_Reentrancy.selector);
         eTST.disableController();
 
+        eTST.balanceTrackerAddress();
+
+        vm.expectRevert(Errors.E_Reentrancy.selector);
+        eTST.balanceForwarderEnabled(account1);
+
         vm.expectRevert(Errors.E_Reentrancy.selector);
         eTST.enableBalanceForwarder();
 
         vm.expectRevert(Errors.E_Reentrancy.selector);
         eTST.disableBalanceForwarder();
+
+        eTST.governorAdmin();
+        eTST.feeReceiver();
+        eTST.interestFee();
+        eTST.interestRateModel();
+        eTST.protocolConfigAddress();
+        eTST.protocolFeeShare();
+        eTST.protocolFeeReceiver();
+        eTST.caps();
+        eTST.borrowingLTV(account1);
+        eTST.liquidationLTV(account1);
+        eTST.LTVFull(account1);
+        eTST.LTVList();
+        eTST.hookConfig();
+        eTST.configFlags();
+        eTST.EVC();
+        eTST.unitOfAccount();
+        eTST.oracle();
+        eTST.permit2Address();
 
         vm.expectRevert(Errors.E_Reentrancy.selector);
         eTST.convertFees();
