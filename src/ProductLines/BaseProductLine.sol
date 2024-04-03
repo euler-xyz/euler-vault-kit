@@ -38,7 +38,7 @@ abstract contract BaseProductLine {
     // Modifiers
 
     modifier nonReentrant() {
-        if (reentrancyLock != REENTRANCYLOCK__UNLOCKED) revert E_Reentrancy();
+        if (reentrancyLock == REENTRANCYLOCK__LOCKED) revert E_Reentrancy();
 
         reentrancyLock = REENTRANCYLOCK__LOCKED;
         _;
@@ -50,6 +50,8 @@ abstract contract BaseProductLine {
     constructor(address vaultFactory_, address evc_) {
         vaultFactory = vaultFactory_;
         evc = evc_;
+
+        reentrancyLock = REENTRANCYLOCK__UNLOCKED;
 
         emit Genesis();
     }
