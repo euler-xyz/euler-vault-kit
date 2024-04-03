@@ -15,12 +15,12 @@ abstract contract BalanceForwarderModule is IBalanceForwarder, Base {
     }
 
     /// @inheritdoc IBalanceForwarder
-    function balanceForwarderEnabled(address account) public view virtual reentrantOK returns (bool) {
+    function balanceForwarderEnabled(address account) public view virtual nonReentrantView returns (bool) {
         return vaultStorage.users[account].isBalanceForwarderEnabled();
     }
 
     /// @inheritdoc IBalanceForwarder
-    function enableBalanceForwarder() public virtual reentrantOK {
+    function enableBalanceForwarder() public virtual nonReentrant {
         if (address(balanceTracker) == address(0)) revert E_BalanceForwarderUnsupported();
 
         address account = EVCAuthenticate();
@@ -33,7 +33,7 @@ abstract contract BalanceForwarderModule is IBalanceForwarder, Base {
     }
 
     /// @inheritdoc IBalanceForwarder
-    function disableBalanceForwarder() public virtual reentrantOK {
+    function disableBalanceForwarder() public virtual nonReentrant {
         if (address(balanceTracker) == address(0)) revert E_BalanceForwarderUnsupported();
 
         address account = EVCAuthenticate();
