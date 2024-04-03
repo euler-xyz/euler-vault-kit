@@ -7,6 +7,8 @@ import {Events} from "src/EVault/shared/Events.sol";
 import {SafeERC20Lib} from "src/EVault/shared/lib/SafeERC20Lib.sol";
 import {IAllowanceTransfer} from "permit2/src/interfaces/IAllowanceTransfer.sol";
 
+import {console} from "forge-std/Test.sol";
+
 import "src/EVault/shared/types/Types.sol";
 import "src/EVault/shared/Constants.sol";
 
@@ -80,6 +82,19 @@ contract LiquidationUnitTest is EVaultTestBase {
         oracle.setPrice(address(eTST2), unitOfAccount, 5e17);
 
         (maxRepay, yield) = eTST.checkLiquidation(liquidator, borrower, address(eTST2));
+
+        uint256 collateralValue = eTST2.balanceOf(borrower) * 5e17 / 1e18;
+        uint256 liquiditycollateralValue = collateralValue * uint256(eTST.liquidationLTV(address(eTST2))) / 1e4;
+        uint256 liabilityValue = eTST.debtOf(borrower);
+        uint256 discountFactor =  liquiditycollateralValue * 1e18 / liabilityValue;
+        uint256 expectedMaxRepayValue = collateralValue * discountFactor / 1e18;
+        uint256 expectedMaxYieldValue = collateralValue;
+        uint256 expectedRepayValue = expectedMaxRepayValue * eTST.debtOf(borrower) / liabilityValue;
+        uint256 expectedYield = expectedMaxYieldValue * eTST2.balanceOf(borrower) / collateralValue;
+
+
+        assertEq(maxRepay, expectedRepayValue);
+        assertEq(yield, expectedYield);
 
         evc.enableCollateral(liquidator, address(eTST2));
         evc.enableController(liquidator, address(eTST));
