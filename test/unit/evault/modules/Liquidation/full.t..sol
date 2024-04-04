@@ -156,9 +156,9 @@ contract VaultLiquidation_Test is EVaultTestBase {
         eTST.liquidate(lender, address(eTST2), 1, 0);
     }
 
-
     function test_noOracle() public {
-        IEVault eTSTx = IEVault(factory.createProxy(true, abi.encodePacked(address(assetTST), address(0), unitOfAccount)));
+        IEVault eTSTx =
+            IEVault(factory.createProxy(true, abi.encodePacked(address(assetTST), address(0), unitOfAccount)));
 
         startHoax(borrower);
         vm.expectRevert(Errors.E_NoPriceOracle.selector);
@@ -167,7 +167,6 @@ contract VaultLiquidation_Test is EVaultTestBase {
         vm.expectRevert(Errors.E_ControllerDisabled.selector);
         eTSTx.liquidate(borrower, address(eTST2), 1, 0);
     }
-
 
     function test_basicFullLiquidation() public {
         // set up liquidator to support the debt
@@ -1285,7 +1284,8 @@ contract VaultLiquidation_Test is EVaultTestBase {
     function test_liquidationWhenUnitOfAccountIsAsset() public {
         // set up liquidator to support the debt
 
-        IEVault eTSTx = IEVault(factory.createProxy(true, abi.encodePacked(address(assetTST), address(oracle), address(assetTST))));
+        IEVault eTSTx =
+            IEVault(factory.createProxy(true, abi.encodePacked(address(assetTST), address(oracle), address(assetTST))));
         eTSTx.setLTV(address(eTST2), 0.95e4, 0);
 
         oracle.setPrice(address(assetTST2), address(assetTST), 0.5e18);
@@ -1311,7 +1311,6 @@ contract VaultLiquidation_Test is EVaultTestBase {
 
         (collateralValue,) = eTSTx.accountLiquidity(borrower, false);
         assertEq(collateralValue * 1e18 / liabilityValue, 0.9975e18);
-
 
         (uint256 maxRepay, uint256 maxYield) = eTSTx.checkLiquidation(lender, borrower, address(eTST2));
 
