@@ -2,7 +2,9 @@
 
 pragma solidity ^0.8.0;
 
-import {EVaultTestBase, EVault, Base, Dispatch, TypesLib, GenericFactory, IRMTestDefault} from "../EVaultTestBase.t.sol";
+import {
+    EVaultTestBase, EVault, Base, Dispatch, TypesLib, GenericFactory, IRMTestDefault
+} from "../EVaultTestBase.t.sol";
 import {EVCClient} from "src/EVault/shared/EVCClient.sol";
 // import {SafeERC20Lib} from "src/EVault/shared/lib/SafeERC20Lib.sol";
 
@@ -91,7 +93,8 @@ contract EVCClientUnitTest is EVaultTestBase {
         GenericFactory factory = new GenericFactory(admin);
 
         factory.setImplementation(address(bVaultImpl));
-        IEVault v = IEVault(factory.createProxy(true, abi.encodePacked(address(assetTST2), address(oracle), unitOfAccount)));
+        IEVault v =
+            IEVault(factory.createProxy(true, abi.encodePacked(address(assetTST2), address(oracle), unitOfAccount)));
         v.setInterestRateModel(address(new IRMTestDefault()));
 
         return address(v);
