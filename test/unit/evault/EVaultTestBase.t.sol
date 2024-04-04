@@ -53,8 +53,8 @@ contract EVaultTestBase is AssertionsCustomTypes, Test, DeployPermit2 {
     Core public coreProductLine;
     Escrow public escrowProductLine;
 
-    Base.Integrations integrations;
-    Dispatch.DeployedModules modules;
+    Base.Integrations public integrations;
+    Dispatch.DeployedModules public modules;
 
     TestERC20 assetTST;
     TestERC20 assetTST2;
