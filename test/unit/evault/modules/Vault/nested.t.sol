@@ -172,7 +172,7 @@ contract VaultTest_Nested is EVaultTestBase {
         assertEq(eTSTNested.balanceOf(borrower), 5e18);
     }
 
-    function test_legacyDepositWithdraw() public {
+    function test_depositWithdraw() public {
         startHoax(depositor);
 
         eTST.approve(address(eTSTNested), type(uint256).max);
@@ -188,7 +188,7 @@ contract VaultTest_Nested is EVaultTestBase {
         assertEq(eTST.balanceOf(depositor), 100e18);
     }
 
-    function test_legacyBasicBorrowAndRepay() public {
+    function test_borrowLiquidateAndRepay() public {
         startHoax(depositor);
 
         eTST.approve(address(eTSTNested), type(uint256).max);
@@ -292,7 +292,7 @@ contract VaultTest_Nested is EVaultTestBase {
         assertEq(eTSTNested.debtOf(liquidator), 0);
     }
 
-    function test_legacyRepayWhenNotHealthy() public {
+    function test_repayWhenNotHealthy() public {
         startHoax(depositor);
 
         eTST.approve(address(eTSTNested), type(uint256).max);
