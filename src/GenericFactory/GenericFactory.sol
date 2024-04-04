@@ -27,7 +27,7 @@ contract GenericFactory is MetaProxyDeployer {
 
     address public upgradeAdmin;
     address public implementation;
-    mapping(address proxy => ProxyConfig) public proxyLookup;
+    mapping(address proxy => ProxyConfig) internal proxyLookup;
     address[] public proxyList;
 
     // Events

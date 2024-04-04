@@ -29,7 +29,7 @@ abstract contract LiquidityUtils is BorrowUtils, LTVUtils {
         liabilityValue = getLiabilityValue(vaultCache, account, vaultStorage.users[account].getOwed());
     }
 
-    // Check that the value of the collateral, adjusted for borrowing TVL, is equal or greater than the liability value.
+    // Check that the value of the collateral, adjusted for borrowing LTV, is equal or greater than the liability value.
     function checkLiquidity(VaultCache memory vaultCache, address account, address[] memory collaterals)
         internal
         view

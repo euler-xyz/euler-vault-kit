@@ -58,6 +58,10 @@ abstract contract BalanceUtils is Base {
         vaultStorage.totalShares = vaultCache.totalShares = vaultCache.totalShares - amount;
 
         if (balanceForwarderEnabled) {
+            // if the balance is decreased as a part of the collateral transfer during liquidation,
+            // which is indicated by the EVC with a collateral control in progress flag,
+            // instruct the balance tracker to forfeit rewards due to the liquidated account, in order to
+            // limit gas consumption, which could potentially be abused by violators to prevent liquidations.
             tryBalanceTrackerHook(account, newBalance.toUint(), isControlCollateralInProgress());
         }
 

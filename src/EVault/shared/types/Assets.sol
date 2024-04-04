@@ -39,7 +39,7 @@ library AssetsLib {
 
     function toOwed(Assets self) internal pure returns (Owed) {
         unchecked {
-            return TypesLib.toOwed(uint256(Assets.unwrap(self)) << INTERNAL_DEBT_PRECISION);
+            return TypesLib.toOwed(uint256(Assets.unwrap(self)) << INTERNAL_DEBT_PRECISION_SHIFT);
         }
     }
 }

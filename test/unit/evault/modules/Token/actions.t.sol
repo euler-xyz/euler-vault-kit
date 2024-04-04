@@ -92,9 +92,12 @@ contract ERC20Test_Actions is EVaultTestBase {
 
         _mintAndDeposit(alice, balance);
 
-        vm.expectRevert(Errors.E_SelfTransfer.selector);
+        uint256 balanceBefore = eTST.balanceOf(alice);
+
         vm.prank(alice);
         eTST.transfer(alice, amount);
+
+        assertEq(balanceBefore,  eTST.balanceOf(alice));
     }
 
     function test_Transfer_ReentrancyThroughBalanceTrackerIsIgnored() public {
@@ -189,15 +192,18 @@ contract ERC20Test_Actions is EVaultTestBase {
         eTST.transferFrom(alice, bob, amount);
     }
 
-    function test_TransferFrom_RevertsWhen_SelfTransfer(uint256 balance, uint256 amount) public {
+    function test_TransferFrom_SelfTransferIsNoop(uint256 balance, uint256 amount) public {
         amount = bound(amount, 1, MAX_SANE_AMOUNT);
         balance = bound(balance, amount, MAX_SANE_AMOUNT);
 
         _mintAndDeposit(alice, balance);
 
-        vm.expectRevert(Errors.E_SelfTransfer.selector);
+        uint256 balanceBefore = eTST.balanceOf(alice);
+
         vm.prank(alice);
         eTST.transferFrom(alice, alice, amount);
+
+        assertEq(balanceBefore,  eTST.balanceOf(alice));
     }
 
     function test_TransferFromMax_Integrity(uint256 balance) public {

@@ -28,8 +28,8 @@ abstract contract TokenModule is IToken, Base, BalanceUtils {
     /// @inheritdoc IERC20
     function decimals() public view virtual reentrantOK returns (uint8) {
         (IERC20 asset,,) = ProxyUtils.metadata();
-
-        return asset.decimals();
+        (bool success, bytes memory data) = address(asset).staticcall(abi.encodeCall(IERC20.decimals, ()));
+        return success && data.length >= 32 ? abi.decode(data, (uint8)) : 18;
     }
 
     /// @inheritdoc IERC20
@@ -62,7 +62,7 @@ abstract contract TokenModule is IToken, Base, BalanceUtils {
         (, address account) = initOperation(OP_TRANSFER, from == address(0) ? CHECKACCOUNT_CALLER : from);
 
         if (from == address(0)) from = account;
-        if (from == to) revert E_SelfTransfer();
+        if (from == to) return true;
 
         Shares shares = amount.toShares();
 

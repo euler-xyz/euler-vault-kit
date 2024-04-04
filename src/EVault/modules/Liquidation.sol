@@ -23,7 +23,7 @@ abstract contract LiquidationModule is ILiquidation, Base, BalanceUtils, Liquidi
         address violator;
         address collateral;
         address[] collaterals;
-        Assets owed;
+        Assets liability;
         Assets repay;
         uint256 yieldBalance;
     }
@@ -72,7 +72,7 @@ abstract contract LiquidationModule is ILiquidation, Base, BalanceUtils, Liquidi
 
         liqCache.repay = Assets.wrap(0);
         liqCache.yieldBalance = 0;
-        liqCache.owed = getCurrentOwed(vaultCache, violator).toAssetsUp();
+        liqCache.liability = getCurrentOwed(vaultCache, violator).toAssetsUp();
         liqCache.collaterals = getCollaterals(violator);
 
         // Checks
@@ -90,7 +90,7 @@ abstract contract LiquidationModule is ILiquidation, Base, BalanceUtils, Liquidi
         if (isAccountStatusCheckDeferred(violator)) revert E_ViolatorLiquidityDeferred();
 
         // Violator has no liabilities, liquidation is a no-op
-        if (liqCache.owed.isZero()) return liqCache;
+        if (liqCache.liability.isZero()) return liqCache;
 
         // Calculate max yield and repay
 
@@ -124,7 +124,7 @@ abstract contract LiquidationModule is ILiquidation, Base, BalanceUtils, Liquidi
 
         // Compute discount
 
-        uint256 discountFactor = liquidityCollateralValue * 1e18 / liquidityLiabilityValue; // health score = 1 - discount
+        uint256 discountFactor = liquidityCollateralValue * 1e18 / liquidityLiabilityValue; // discountFactor = health score = 1 - discount
 
         if (discountFactor < 1e18 - MAXIMUM_LIQUIDATION_DISCOUNT) {
             discountFactor = 1e18 - MAXIMUM_LIQUIDATION_DISCOUNT;
@@ -142,7 +142,7 @@ abstract contract LiquidationModule is ILiquidation, Base, BalanceUtils, Liquidi
             return liqCache;
         }
 
-        uint256 liabilityValue = liqCache.owed.toUint();
+        uint256 liabilityValue = liqCache.liability.toUint();
         if (address(vaultCache.asset) != vaultCache.unitOfAccount) {
             // liquidation, in contrast to liquidity calculation, uses mid-point pricing instead of bid/ask
             liabilityValue =
@@ -160,7 +160,7 @@ abstract contract LiquidationModule is ILiquidation, Base, BalanceUtils, Liquidi
             maxYieldValue = collateralValue;
         }
 
-        liqCache.repay = (maxRepayValue * liqCache.owed.toUint() / liabilityValue).toAssets();
+        liqCache.repay = (maxRepayValue * liqCache.liability.toUint() / liabilityValue).toAssets();
         liqCache.yieldBalance = maxYieldValue * collateralBalance / collateralValue;
 
         return liqCache;
@@ -202,10 +202,10 @@ abstract contract LiquidationModule is ILiquidation, Base, BalanceUtils, Liquidi
         // Handle debt socialization
 
         if (
-            vaultCache.configFlags.isNotSet(CFG_DONT_SOCIALIZE_DEBT) && liqCache.owed > liqCache.repay
+            vaultCache.configFlags.isNotSet(CFG_DONT_SOCIALIZE_DEBT) && liqCache.liability > liqCache.repay
                 && checkNoCollateral(liqCache.violator, liqCache.collaterals)
         ) {
-            Assets owedRemaining = liqCache.owed - liqCache.repay;
+            Assets owedRemaining = liqCache.liability - liqCache.repay;
             decreaseBorrow(vaultCache, liqCache.violator, owedRemaining);
 
             // decreaseBorrow emits Repay without any assets entering the vault. Emit Withdraw from and to zero address to cover the missing amount for offchain trackers.
