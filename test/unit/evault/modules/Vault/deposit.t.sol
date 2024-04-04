@@ -182,6 +182,7 @@ contract VaultTest_Deposit is EVaultTestBase {
 
     function test_depositWithPermit2InBatch() public {
         uint256 amount = 1e18;
+        vm.warp(100);
 
         // cancel the approval to the vault
         assetTST.approve(address(eTST), 0);
@@ -229,6 +230,10 @@ contract VaultTest_Deposit is EVaultTestBase {
         items[1].data = abi.encodeCall(eTST.deposit, (amount, user));
 
         evc.batch(items);
+        assertEq(assetTST.balanceOf(address(eTST)), amount);
+        assertEq(eTST.balanceOf(user), amount);
+        assertEq(eTST.totalSupply(), amount);
+        assertEq(eTST.totalAssets(), amount);
 
         // cannot replay the same batch
         vm.expectRevert(InvalidNonce.selector);
@@ -255,5 +260,28 @@ contract VaultTest_Deposit is EVaultTestBase {
             )
         );
         evc.batch(items);
+
+        // cancel the approval to the vault via permit2
+        IAllowanceTransfer(permit2).approve(address(assetTST), address(eTST), type(uint160).max, 1);
+
+        // permit2 approval is expired
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                SafeERC20Lib.E_TransferFromFailed.selector,
+                abi.encodeWithSignature("Error(string)", "ERC20: transfer amount exceeds allowance"),
+                abi.encodeWithSelector(IAllowanceTransfer.AllowanceExpired.selector, 1)
+            )
+        );
+        eTST.deposit(amount, user);
+
+        // once again approve the vault
+        assetTST.approve(address(eTST), amount);
+
+        // deposit succeeds now
+        eTST.deposit(amount, user);
+        assertEq(assetTST.balanceOf(address(eTST)), 2 * amount);
+        assertEq(eTST.balanceOf(user), 2 * amount);
+        assertEq(eTST.totalSupply(), 2 * amount);
+        assertEq(eTST.totalAssets(), 2 * amount);
     }
 }
