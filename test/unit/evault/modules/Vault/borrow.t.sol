@@ -222,6 +222,31 @@ contract VaultTest_Borrow is EVaultTestBase {
         vm.stopPrank();
     }
 
+    function test_ControllerRequiredOps(address controller, uint112 amount, address account) public {
+        vm.assume(controller.code.length == 0 && uint160(controller) > 256);
+        vm.assume(account != address(0) && account != controller);
+        vm.assume(amount > 0);
+
+        vm.etch(controller, address(eTST).code);
+        IEVault(controller).initialize(address(this));
+
+        vm.startPrank(account);
+
+        vm.expectRevert(Errors.E_ControllerDisabled.selector);
+        IEVault(controller).borrow(amount, account);
+
+        vm.expectRevert(Errors.E_ControllerDisabled.selector);
+        IEVault(controller).loop(amount, account);
+
+        vm.expectRevert(Errors.E_ControllerDisabled.selector);
+        IEVault(controller).pullDebt(amount, account);
+
+        vm.expectRevert(Errors.E_ControllerDisabled.selector);
+        IEVault(controller).liquidate(account, account, amount, amount);
+
+        evc.enableController(account, controller);
+    }
+
     function test_Borrow_RevertsWhen_ReceiverIsSubaccount() public {
         // Configure vault as non-EVC compatible: protections on
         eTST.setConfigFlags(eTST.configFlags() & ~CFG_EVC_COMPATIBLE_ASSET);
