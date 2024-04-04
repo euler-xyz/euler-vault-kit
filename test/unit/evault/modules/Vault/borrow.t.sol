@@ -54,11 +54,29 @@ contract VaultTest_Borrow is EVaultTestBase {
     function test_basicBorrow() public {
         startHoax(borrower);
 
-        evc.enableCollateral(borrower, address(eTST2));
+        vm.expectRevert(Errors.E_ControllerDisabled.selector);
+        eTST.borrow(5e18, borrower);
+
         evc.enableController(borrower, address(eTST));
+
+        vm.expectRevert(Errors.E_AccountLiquidity.selector);
+        eTST.borrow(5e18, borrower);
+
+        // still no borrow hence possible to disable controller
+        assertEq(evc.isControllerEnabled(borrower, address(eTST)), true);
+        eTST.disableController();
+        assertEq(evc.isControllerEnabled(borrower, address(eTST)), false);
+        evc.enableController(borrower, address(eTST));
+        assertEq(evc.isControllerEnabled(borrower, address(eTST)), true);
+
+        evc.enableCollateral(borrower, address(eTST2));
 
         eTST.borrow(5e18, borrower);
         assertEq(assetTST.balanceOf(borrower), 5e18);
+
+        // no longer possible to disable controller
+        vm.expectRevert(Errors.E_OutstandingDebt.selector);
+        eTST.disableController();
 
         // Should be able to borrow up to 9, so this should fail:
 
