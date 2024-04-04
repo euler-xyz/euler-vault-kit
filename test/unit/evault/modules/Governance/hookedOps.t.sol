@@ -2,20 +2,42 @@
 
 pragma solidity ^0.8.0;
 
+import {Test} from "forge-std/Test.sol";
 import {EVaultTestBase, EthereumVaultConnector, IEVault} from "test/unit/evault/EVaultTestBase.t.sol";
 import {Errors} from "src/EVault/shared/Errors.sol";
 import "src/EVault/shared/Constants.sol";
 
-contract MockHookTarget {
+contract MockHookTarget is Test {
     bytes32 internal expectedDataHash;
 
+    error UnexpectedError();
     error ExpectedData();
+    error EVC_ChecksReentrancy();
 
     function setExpectedDataHash(bytes32 _expectedDataHash) public {
         expectedDataHash = _expectedDataHash;
     }
 
     fallback() external {
+        // test reentrancy protection
+        if (bytes4(msg.data) == IEVault(msg.sender).checkVaultStatus.selector) {
+            try IEVault(msg.sender).touch() {
+                revert UnexpectedError();
+            } catch (bytes memory reason) {
+                if (bytes4(reason) != EVC_ChecksReentrancy.selector) revert UnexpectedError();
+            }
+
+            try IEVault(msg.sender).approve(address(0), 0) {
+                revert UnexpectedError();
+            } catch (bytes memory reason) {
+                if (bytes4(reason) != Errors.E_Reentrancy.selector) revert UnexpectedError();
+            }
+
+            // view functions are still reentrant for the hook target
+            IEVault(msg.sender).totalSupply();
+            IEVault(msg.sender).balanceOf(address(0));
+        }
+
         if (expectedDataHash == keccak256(msg.data)) revert ExpectedData();
     }
 
