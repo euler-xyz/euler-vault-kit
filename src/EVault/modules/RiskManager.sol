@@ -112,7 +112,7 @@ abstract contract RiskManagerModule is IRiskManager, Base, LiquidityUtils {
             snapshot.reset();
         }
 
-        validateAndCallHookNonReentrant(vaultCache.hookedOps, OP_VAULT_STATUS_CHECK, address(evc));
+        callHookWithLock(vaultCache.hookedOps, OP_VAULT_STATUS_CHECK, address(evc));
 
         magicValue = IEVCVault.checkVaultStatus.selector;
     }

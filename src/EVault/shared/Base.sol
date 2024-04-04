@@ -49,10 +49,10 @@ abstract contract Base is EVCClient, Cache {
         if (vaultStorage.reentrancyLocked) {
             address hookTarget = vaultStorage.hookTarget;
 
-            // the hook target is allowed to bypass the RO-reentrancy lock. the hook target can either be a msg.sender
-            // when the view function is inlined in the EVault.sol or the hook target should be taked from the trailing
-            // data appended by the delegateToModuleView function used by useView modifier. in the latter case, it is
-            // safe to consume the trailing data as we know we are inside the useView because msg.sender == address(this)
+            // The hook target is allowed to bypass the RO-reentrancy lock. The hook target can either be a msg.sender
+            // when the view function is inlined in the EVault.sol or the hook target should be taken from the trailing
+            // data appended by the delegateToModuleView function used by useView modifier. In the latter case, it is
+            // safe to consume the trailing data as we know we are inside useView because msg.sender == address(this)
             if (msg.sender != hookTarget && !(msg.sender == address(this) && ProxyUtils.useViewCaller() == hookTarget))
             {
                 revert E_Reentrancy();
@@ -72,7 +72,7 @@ abstract contract Base is EVCClient, Cache {
         vaultCache = updateVault();
         account = EVCAuthenticateDeferred(CONTROLLER_NEUTRAL_OPS & operation == 0);
 
-        validateAndCallHook(vaultCache.hookedOps, operation, account);
+        callHook(vaultCache.hookedOps, operation, account);
         EVCRequireStatusChecks(accountToCheck == CHECKACCOUNT_CALLER ? account : accountToCheck);
 
         // The snapshot is used only to verify that supply increased when checking the supply cap, and to verify that the borrows
@@ -88,30 +88,28 @@ abstract contract Base is EVCClient, Cache {
     }
 
     // Checks whether the operation is disabled and returns the result of the check.
-    // The operation is considered disabled if the operation is hooked and the hook target is not a contract.
+    // An operation is considered disabled if a hook has been installed for it and the
+    // hook target is not a contract.
     function isOperationDisabled(Flags hookedOps, uint32 operation) internal view returns (bool) {
         return hookedOps.isSet(operation) && vaultStorage.hookTarget.code.length == 0;
     }
 
-    // Checks whether the operation is hookable and if so, calls the hook target.
-    // If the hook target is not a contract, the operation is considered disabled.
-    function validateAndCallHook(Flags hookedOps, uint32 operation, address caller) internal {
+    // Checks whether a hook has been installed for the operation and if so, invokes the hook target.
+    // If the hook target is not a contract, this will revert.
+    function callHook(Flags hookedOps, uint32 operation, address caller) internal {
         if (hookedOps.isNotSet(operation)) return;
 
-        callHook(caller);
+        invokeHookTarget(caller);
     }
 
-    function validateAndCallHookNonReentrant(Flags hookedOps, uint32 operation, address caller) internal {
+    // Same as callHook, but acquires the reentrancy lock when calling the hook
+    function callHookWithLock(Flags hookedOps, uint32 operation, address caller) internal {
         if (hookedOps.isNotSet(operation)) return;
 
-        if (vaultStorage.reentrancyLocked) revert E_Reentrancy();
-
-        vaultStorage.reentrancyLocked = true;
-        callHook(caller);
-        vaultStorage.reentrancyLocked = false;
+        invokeHookTargetWithLock(caller);
     }
 
-    function callHook(address caller) private {
+    function invokeHookTarget(address caller) private {
         address hookTarget = vaultStorage.hookTarget;
 
         if (hookTarget.code.length == 0) revert E_OperationDisabled();
@@ -119,6 +117,10 @@ abstract contract Base is EVCClient, Cache {
         (bool success, bytes memory data) = hookTarget.call(abi.encodePacked(msg.data, caller));
 
         if (!success) RevertBytes.revertBytes(data);
+    }
+
+    function invokeHookTargetWithLock(address caller) private nonReentrant {
+        invokeHookTarget(caller);
     }
 
     function logVaultStatus(VaultCache memory a, uint256 interestRate) internal {

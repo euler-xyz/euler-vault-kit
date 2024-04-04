@@ -165,7 +165,7 @@ abstract contract BorrowingModule is IBorrowing, Base, AssetTransfers, BalanceUt
     /// @inheritdoc IBorrowing
     function flashLoan(uint256 amount, bytes calldata data) public virtual nonReentrant {
         address account = EVCAuthenticate();
-        validateAndCallHook(vaultStorage.hookedOps, OP_FLASHLOAN, account);
+        callHook(vaultStorage.hookedOps, OP_FLASHLOAN, account);
 
         (IERC20 asset,,) = ProxyUtils.metadata();
 
