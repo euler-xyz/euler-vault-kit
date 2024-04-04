@@ -7,6 +7,8 @@ import {Events} from "src/EVault/shared/Events.sol";
 
 import {console2} from "forge-std/Test.sol";
 
+import {IEVault} from "../../EVaultTestBase.t.sol";
+
 import "src/EVault/shared/types/Types.sol";
 import "src/EVault/shared/Constants.sol";
 
@@ -18,7 +20,7 @@ interface IFlashLoan {
 
 // Mocks
 contract MockFlashloanReceiverDoesNothing is IFlashLoan, Test {
-    function onFlashLoan(bytes memory data) external {
+    function onFlashLoan(bytes memory data) external view {
         (address assetTSTAddress, uint256 flashloanAmount) = abi.decode(data, (address, uint256));
         uint256 assetTSTBalance = IERC20(assetTSTAddress).balanceOf(address(this));
 
@@ -28,7 +30,8 @@ contract MockFlashloanReceiverDoesNothing is IFlashLoan, Test {
 
 contract MockFlashloanReceiverReturnsFunds is IFlashLoan, Test {
     function onFlashLoan(bytes memory data) external {
-        (address eTSTAddress, address assetTSTAddress, uint256 repayAmount) = abi.decode(data, (address, address, uint256));
+        (address eTSTAddress, address assetTSTAddress, uint256 repayAmount) =
+            abi.decode(data, (address, address, uint256));
 
         IERC20(assetTSTAddress).transfer(eTSTAddress, repayAmount);
     }
@@ -36,13 +39,17 @@ contract MockFlashloanReceiverReturnsFunds is IFlashLoan, Test {
 
 contract MockFlashloanReceiverTriesReentry is IFlashLoan {
     function onFlashLoan(bytes memory data) external {
+        (address eTSTAddress, address debtHolder, uint256 borrowAmount) = abi.decode(data, (address, address, uint256));
 
+        IEVault(eTSTAddress).repay(borrowAmount, debtHolder);
     }
 }
 
 contract MockFlashloanReceiverTriesReadReentry is IFlashLoan {
-    function onFlashLoan(bytes memory data) external {
+    function onFlashLoan(bytes memory data) external view {
+        (address eTSTAddress, uint256 amount) = abi.decode(data, (address, uint256));
 
+        IEVault(eTSTAddress).convertToAssets(amount);
     }
 }
 
@@ -51,7 +58,7 @@ contract VaultTest_Flashloan is EVaultTestBase {
 
     address depositor;
     address borrower;
-    
+
     address FLRDoesNothing;
     address FLRReturnsFunds;
     address FLRTriesReentry;
@@ -118,21 +125,68 @@ contract VaultTest_Flashloan is EVaultTestBase {
 
         assertEq(assetTSTBalanceBefore, assetTSTBalanceAfter);
 
-        // TODO: Users borrows unaffected
+        vm.stopPrank();
+
+        startHoax(borrower);
+        evc.enableCollateral(borrower, address(eTST2));
+        evc.enableController(borrower, address(eTST));
+
+        assetTST2.mint(borrower, type(uint256).max);
+        assetTST2.approve(address(eTST2), type(uint256).max);
+        eTST2.deposit(10e18, borrower);
+
+        uint256 borrowAmount = 5e18;
+        eTST.borrow(borrowAmount, borrower);
+
+        uint256 assetTSTBorrowAmountBefore = assetTST.balanceOf(borrower);
+        uint256 eTSTDebtAmountBefore = eTST.debtOf(borrower);
+
+        vm.stopPrank();
+
+        startHoax(FLRReturnsFunds);
+        flashloanAmount = 5e18;
+        repayAmount = flashloanAmount;
+
+        eTST.flashLoan(flashloanAmount, abi.encode(address(eTST), address(assetTST), repayAmount));
+
+        assertEq(assetTSTBorrowAmountBefore, assetTST.balanceOf(borrower));
+        assertEq(eTSTDebtAmountBefore, eTST.debtOf(borrower));
     }
 
     function test_flashloanTryReentry() public {
-        // TODO
+        startHoax(borrower);
+        evc.enableCollateral(borrower, address(eTST2));
+        evc.enableController(borrower, address(eTST));
+
+        assetTST2.mint(borrower, type(uint256).max);
+        assetTST2.approve(address(eTST2), type(uint256).max);
+        eTST2.deposit(10e18, borrower);
+
+        uint256 borrowAmount = 5e18;
+        eTST.borrow(borrowAmount, borrower);
+
+        vm.stopPrank();
+
+        startHoax(FLRTriesReentry);
+        uint256 flashloanAmount = borrowAmount;
+
+        // Expect this to revert as we can't re-enter
+        vm.expectRevert(Errors.E_Reentrancy.selector);
+        eTST.flashLoan(flashloanAmount, abi.encode(address(eTST), borrower, borrowAmount));
     }
 
     function test_flashloanTryReadReentry() public {
-        // TODO
+        startHoax(FLRTriesReadReentry);
+        uint256 amount;
+
+        vm.expectRevert(Errors.E_Reentrancy.selector);
+        eTST.flashLoan(amount, abi.encode(address(eTST), amount));
     }
 
     function test_flashloanOpDisabled() public {
         vm.stopPrank();
-        
-        eTST.setDisabledOps(OP_FLASHLOAN);
+
+        eTST.setHookConfig(address(0), OP_FLASHLOAN);
 
         startHoax(FLRReturnsFunds);
 
