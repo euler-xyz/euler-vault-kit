@@ -162,6 +162,22 @@ contract FactoryTest is Test {
         assertEq(config.trailingData, abi.encodePacked(address(TST)));
     }
 
+    function test_isProxy(address proxy) public {
+        vm.assume(proxy.code.length == 0);
+
+        // Create and install mock eVault impl
+        vm.startPrank(upgradeAdmin);
+        factory.setImplementation(address(new MockEVault(address(factory), address(1))));
+
+        assertEq(factory.isProxy(proxy), false);
+
+        // Create a Token and activate Vault
+        TestERC20 TST = new TestERC20("Test Token", "TST", 18, false);
+        proxy = factory.createProxy(true, abi.encodePacked(address(TST)));
+
+        assertEq(factory.isProxy(proxy), true);
+    }
+
     function test_Event_ProxyCreated() public {
         // Create and install mock eVault impl
         MockEVault mockEvaultImpl = new MockEVault(address(factory), address(1));
