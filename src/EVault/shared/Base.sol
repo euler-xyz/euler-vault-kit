@@ -111,7 +111,7 @@ abstract contract Base is EVCClient, Cache {
         vaultStorage.reentrancyLocked = false;
     }
 
-    function callHook(address caller) internal {
+    function callHook(address caller) private {
         address hookTarget = vaultStorage.hookTarget;
 
         if (hookTarget.code.length == 0) revert E_OperationDisabled();
