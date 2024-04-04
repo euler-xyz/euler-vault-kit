@@ -62,7 +62,7 @@ abstract contract TokenModule is IToken, Base, BalanceUtils {
         (, address account) = initOperation(OP_TRANSFER, from == address(0) ? CHECKACCOUNT_CALLER : from);
 
         if (from == address(0)) from = account;
-        if (from == to) revert E_SelfTransfer();
+        if (from == to) return true;
 
         Shares shares = amount.toShares();
 
