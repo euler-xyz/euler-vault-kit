@@ -13,6 +13,10 @@ contract EVaultTest is EVault {
     function setReentrancyLock() external {
         vaultStorage.reentrancyLocked = true;
     }
+
+    function testExcludeFromCoverage() public pure {
+        return;
+    }
 }
 
 contract MockHookTarget is Test {
@@ -188,6 +192,10 @@ contract MockHookTarget is Test {
         eTST.setInterestFee(uint16(bound(amount1, 0, type(uint16).max)));
 
         return "";
+    }
+
+    function testExcludeFromCoverage() public pure {
+        return;
     }
 }
 

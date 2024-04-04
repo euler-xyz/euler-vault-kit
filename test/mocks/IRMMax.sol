@@ -14,4 +14,8 @@ contract IRMMax is IIRM {
     function computeInterestRateView(address, uint256, uint256) external pure override returns (uint256) {
         return MAX_ALLOWED_INTEREST_RATE;
     }
+
+    function testExcludeFromCoverage() public pure {
+        return;
+    }
 }

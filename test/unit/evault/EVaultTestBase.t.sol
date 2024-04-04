@@ -136,6 +136,10 @@ contract EVaultTestBase is AssertionsCustomTypes, Test, DeployPermit2 {
 
         return v;
     }
+
+    function test__ExcludeFromCoverage() public pure {
+        return;
+    }
 }
 
 contract MockHook {
@@ -162,5 +166,9 @@ contract MockHook {
         assembly {
             _caller := shr(96, calldataload(sub(calldatasize(), 20)))
         }
+    }
+
+    function test_ExcludeFromCoverage() public pure {
+        return;
     }
 }
