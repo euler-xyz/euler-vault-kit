@@ -39,17 +39,45 @@ contract MockFlashloanReceiverReturnsFunds is IFlashLoan, Test {
 
 contract MockFlashloanReceiverTriesReentry is IFlashLoan {
     function onFlashLoan(bytes memory data) external {
-        (address eTSTAddress, address debtHolder, uint256 borrowAmount) = abi.decode(data, (address, address, uint256));
+        (address eTSTAddress, address debtHolder, uint256 borrowAmount, uint256 caseNumber) =
+            abi.decode(data, (address, address, uint256, uint256));
 
-        IEVault(eTSTAddress).repay(borrowAmount, debtHolder);
+        if (caseNumber == 1) {
+            IEVault(eTSTAddress).repay(borrowAmount, debtHolder);
+        } else if (caseNumber == 2) {
+            IEVault(eTSTAddress).flashLoan(10e18, abi.encode(""));
+        }
     }
 }
 
 contract MockFlashloanReceiverTriesReadReentry is IFlashLoan {
-    function onFlashLoan(bytes memory data) external view {
-        (address eTSTAddress, uint256 amount) = abi.decode(data, (address, uint256));
+    function onFlashLoan(bytes memory data) external {
+        (address eTSTAddress, uint256 amount, uint256 caseNumber) = abi.decode(data, (address, uint256, uint256));
 
-        IEVault(eTSTAddress).convertToAssets(amount);
+        if (caseNumber == 1) {
+            IEVault(eTSTAddress).convertToAssets(amount);
+        } else if (caseNumber == 2) {
+            IEVault(eTSTAddress).convertToShares(amount);
+        } else if (caseNumber == 3) {
+            IEVault(eTSTAddress).maxDeposit(address(0));
+        } else if (caseNumber == 4) {
+            IEVault(eTSTAddress).totalBorrows();
+        } else if (caseNumber == 5) {
+            IEVault(eTSTAddress).totalAssets();
+        } else if (caseNumber == 6) {
+            IEVault(eTSTAddress).totalSupply();
+        } else if (caseNumber == 7) {
+            IEVault(eTSTAddress).accountLiquidity(address(0), false);
+        } else if (caseNumber == 8) {
+            address[] memory collats = new address[](2);
+            collats[0] = address(0);
+            collats[1] = address(1);
+            IEVault(eTSTAddress).checkAccountStatus(address(0), collats);
+        } else if (caseNumber == 9) {
+            IEVault(eTSTAddress).checkVaultStatus();
+        } else if (caseNumber == 10) {
+            IEVault(eTSTAddress).debtOf(address(0));
+        }
     }
 }
 
@@ -172,7 +200,10 @@ contract VaultTest_Flashloan is EVaultTestBase {
 
         // Expect this to revert as we can't re-enter
         vm.expectRevert(Errors.E_Reentrancy.selector);
-        eTST.flashLoan(flashloanAmount, abi.encode(address(eTST), borrower, borrowAmount));
+        eTST.flashLoan(flashloanAmount, abi.encode(address(eTST), borrower, borrowAmount, 1));
+
+        vm.expectRevert(Errors.E_Reentrancy.selector);
+        eTST.flashLoan(flashloanAmount, abi.encode(address(eTST), borrower, borrowAmount, 2));
     }
 
     function test_flashloanTryReadReentry() public {
@@ -180,7 +211,36 @@ contract VaultTest_Flashloan is EVaultTestBase {
         uint256 amount;
 
         vm.expectRevert(Errors.E_Reentrancy.selector);
-        eTST.flashLoan(amount, abi.encode(address(eTST), amount));
+        eTST.flashLoan(amount, abi.encode(address(eTST), amount, 1));
+
+        vm.expectRevert(Errors.E_Reentrancy.selector);
+        eTST.flashLoan(amount, abi.encode(address(eTST), amount, 2));
+
+        vm.expectRevert(Errors.E_Reentrancy.selector);
+        eTST.flashLoan(amount, abi.encode(address(eTST), amount, 3));
+
+        vm.expectRevert(Errors.E_Reentrancy.selector);
+        eTST.flashLoan(amount, abi.encode(address(eTST), amount, 4));
+
+        vm.expectRevert(Errors.E_Reentrancy.selector);
+        eTST.flashLoan(amount, abi.encode(address(eTST), amount, 5));
+
+        vm.expectRevert(Errors.E_Reentrancy.selector);
+        eTST.flashLoan(amount, abi.encode(address(eTST), amount, 6));
+
+        vm.expectRevert(Errors.E_Reentrancy.selector);
+        eTST.flashLoan(amount, abi.encode(address(eTST), amount, 7));
+
+        // this one is not reentrant directly as EVC handles it
+        vm.expectRevert(Errors.E_CheckUnauthorized.selector);
+        eTST.flashLoan(amount, abi.encode(address(eTST), amount, 8));
+
+        // this one is not reentrant directly as EVC handles it
+        vm.expectRevert(Errors.E_CheckUnauthorized.selector);
+        eTST.flashLoan(amount, abi.encode(address(eTST), amount, 9));
+
+        vm.expectRevert(Errors.E_Reentrancy.selector);
+        eTST.flashLoan(amount, abi.encode(address(eTST), amount, 10));
     }
 
     function test_flashloanOpDisabled() public {
