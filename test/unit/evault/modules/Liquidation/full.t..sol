@@ -171,11 +171,30 @@ contract VaultLiquidation_Test is EVaultTestBase {
         eTST.setLTV(address(eTST3), 0.95e4, 0);
 
         (uint256 collateralValue, uint256 liabilityValue) = eTST.accountLiquidity(borrower, false);
+        (address[] memory collaterals, uint256[] memory collateralValues, uint256 _liabilityValue) =
+            eTST.accountLiquidityFull(borrower, false);
         assertApproxEqAbs(collateralValue * 1e18 / liabilityValue, 1.09e18, 0.01e18);
+        assertEq(collaterals.length, 1);
+        assertEq(collaterals[0], address(eTST2));
+        assertEq(collateralValues[0], 100e18 * 0.4e18 * 0.3e4 / 1e18 / 1e4);
+        assertEq(liabilityValue, _liabilityValue);
+
+        // enable collateral with no deposit to verify accountLiquidityFull behavior
+        vm.stopPrank();
+        vm.prank(borrower);
+        evc.enableCollateral(borrower, address(eTST3));
+        startHoax(address(this));
 
         oracle.setPrice(address(assetTST), unitOfAccount, 2.5e18);
 
         (collateralValue, liabilityValue) = eTST.accountLiquidity(borrower, false);
+        (collaterals, collateralValues, _liabilityValue) = eTST.accountLiquidityFull(borrower, false);
+        assertEq(collaterals.length, 2);
+        assertEq(collaterals[0], address(eTST2));
+        assertEq(collateralValues[0], 100e18 * 0.4e18 * 0.3e4 / 1e18 / 1e4);
+        assertEq(collaterals[1], address(eTST3));
+        assertEq(collateralValues[1], 0);
+        assertEq(liabilityValue, _liabilityValue);
 
         uint256 healthScore = collateralValue * 1e18 / liabilityValue;
         assertApproxEqAbs(healthScore, 0.96e18, 0.001e18);
