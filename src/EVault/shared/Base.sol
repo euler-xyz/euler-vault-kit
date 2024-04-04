@@ -98,6 +98,20 @@ abstract contract Base is EVCClient, Cache {
     function validateAndCallHook(Flags hookedOps, uint32 operation, address caller) internal {
         if (hookedOps.isNotSet(operation)) return;
 
+        callHook(caller);
+    }
+
+    function validateAndCallHookNonReentrant(Flags hookedOps, uint32 operation, address caller) internal {
+        if (hookedOps.isNotSet(operation)) return;
+
+        if (vaultStorage.reentrancyLocked) revert E_Reentrancy();
+
+        vaultStorage.reentrancyLocked = true;
+        callHook(caller);
+        vaultStorage.reentrancyLocked = false;
+    }
+
+    function callHook(address caller) internal {
         address hookTarget = vaultStorage.hookTarget;
 
         if (hookTarget.code.length == 0) revert E_OperationDisabled();
