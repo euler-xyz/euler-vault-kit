@@ -5,20 +5,31 @@ pragma solidity ^0.8.0;
 import {EVaultTestBase} from "../../EVaultTestBase.t.sol";
 import {Events} from "src/EVault/shared/Events.sol";
 import {SafeERC20Lib} from "src/EVault/shared/lib/SafeERC20Lib.sol";
+import {Permit2ECDSASigner} from "../../../../mocks/Permit2ECDSASigner.sol";
 import {IAllowanceTransfer} from "permit2/src/interfaces/IAllowanceTransfer.sol";
+import {IEVC} from "ethereum-vault-connector/interfaces/IEthereumVaultConnector.sol";
 
 import "src/EVault/shared/types/Types.sol";
 
 contract VaultTest_Deposit is EVaultTestBase {
     using TypesLib for uint256;
 
+    error InvalidNonce();
+    error InsufficientAllowance(uint256 amount);
+
+    uint256 userPK;
     address user;
     address user1;
+
+    Permit2ECDSASigner permit2Signer;
 
     function setUp() public override {
         super.setUp();
 
-        user = makeAddr("depositor");
+        permit2Signer = new Permit2ECDSASigner(address(permit2));
+
+        userPK = 0x123400;
+        user = vm.addr(userPK);
         user1 = makeAddr("user1");
 
         assetTST.mint(user1, type(uint256).max);
@@ -167,5 +178,82 @@ contract VaultTest_Deposit is EVaultTestBase {
         assertEq(eTST.balanceOf(user), amount);
         assertEq(eTST.totalSupply(), amount);
         assertEq(eTST.totalAssets(), amount);
+    }
+
+    function test_depositWithPermit2InBatch() public {
+        uint256 amount = 1e18;
+
+        // cancel the approval to the vault
+        assetTST.approve(address(eTST), 0);
+
+        // deposit won't succeed without any approval
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                SafeERC20Lib.E_TransferFromFailed.selector,
+                abi.encodeWithSignature("Error(string)", "ERC20: transfer amount exceeds allowance"),
+                abi.encodeWithSelector(IAllowanceTransfer.AllowanceExpired.selector, 0)
+            )
+        );
+        eTST.deposit(amount, user);
+
+        // approve permit2 contract to spend the tokens
+        assetTST.approve(permit2, type(uint160).max);
+
+        // build permit2 object
+        IAllowanceTransfer.PermitSingle memory permitSingle = IAllowanceTransfer.PermitSingle({
+            details: IAllowanceTransfer.PermitDetails({
+                token: address(assetTST),
+                amount: type(uint160).max,
+                expiration: type(uint48).max,
+                nonce: 0
+            }),
+            spender: address(eTST),
+            sigDeadline: type(uint256).max
+        });
+
+        // build a deposit batch with permit2
+        IEVC.BatchItem[] memory items = new IEVC.BatchItem[](2);
+        items[0].onBehalfOfAccount = user;
+        items[0].targetContract = permit2;
+        items[0].value = 0;
+        items[0].data = abi.encodeWithSignature(
+            "permit(address,((address,uint160,uint48,uint48),address,uint256),bytes)",
+            user,
+            permitSingle,
+            permit2Signer.signPermitSingle(userPK, permitSingle)
+        );
+
+        items[1].onBehalfOfAccount = user;
+        items[1].targetContract = address(eTST);
+        items[1].value = 0;
+        items[1].data = abi.encodeCall(eTST.deposit, (amount, user));
+
+        evc.batch(items);
+
+        // cannot replay the same batch
+        vm.expectRevert(InvalidNonce.selector);
+        evc.batch(items);
+
+        // modify permit
+        permitSingle.details.amount = uint160(amount - 1);
+        permitSingle.details.nonce = 1;
+
+        // modify batch item
+        items[0].data = abi.encodeWithSignature(
+            "permit(address,((address,uint160,uint48,uint48),address,uint256),bytes)",
+            user,
+            permitSingle,
+            permit2Signer.signPermitSingle(userPK, permitSingle)
+        );
+
+        // not enough permitted
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                SafeERC20Lib.E_TransferFromFailed.selector,
+                abi.encodeWithSignature("Error(string)", "ERC20: transfer amount exceeds allowance"),
+                abi.encodeWithSelector(InsufficientAllowance.selector, amount - 1)
+            )
+        );
+        evc.batch(items);
     }
 }
