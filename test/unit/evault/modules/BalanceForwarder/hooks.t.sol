@@ -258,14 +258,14 @@ contract BalanceForwarderTest_Hooks is EVaultTestBase {
         address govFeeReceiver = makeAddr("govFeeReceiver");
         eTST.setFeeReceiver(govFeeReceiver);
 
-        vm.prank(feeReceiver);
+        vm.prank(protocolFeeReceiver);
         eTST.enableBalanceForwarder();
         vm.prank(govFeeReceiver);
         eTST.enableBalanceForwarder();
 
         uint256 fees = eTST.accumulatedFees();
 
-        assertEq(MBT.calls(feeReceiver, 0, false), 1);
+        assertEq(MBT.calls(protocolFeeReceiver, 0, false), 1);
         assertEq(MBT.calls(govFeeReceiver, 0, false), 1);
 
         vm.prank(alice);
@@ -274,7 +274,7 @@ contract BalanceForwarderTest_Hooks is EVaultTestBase {
         uint256 governorFees = fees * 9e17 / 1e18;
         uint256 protocolFees = fees - governorFees;
 
-        assertEq(MBT.calls(feeReceiver, protocolFees, false), 1);
+        assertEq(MBT.calls(protocolFeeReceiver, protocolFees, false), 1);
         assertEq(MBT.calls(govFeeReceiver, governorFees, false), 1);
     }
 
@@ -295,7 +295,7 @@ contract BalanceForwarderTest_Hooks is EVaultTestBase {
         evc.enableCollateral(user, address(eTST2));
 
         oracle.setPrice(address(assetTST), unitOfAccount, 1 ether);
-        oracle.setPrice(address(eTST2), unitOfAccount, 1 ether);
+        oracle.setPrice(address(assetTST2), unitOfAccount, 1 ether);
         vm.stopPrank();
     }
 }

@@ -5,12 +5,15 @@ pragma solidity ^0.8.0;
 import {Storage} from "./Storage.sol";
 import "./types/Types.sol";
 
+/// @title LTVUtils
+/// @author Euler Labs (https://www.eulerlabs.com/)
+/// @notice Overridable getters for LTV configuration
 abstract contract LTVUtils is Storage {
     function getLTV(address collateral, LTVType ltvType) internal view virtual returns (ConfigAmount) {
-        return marketStorage.ltvLookup[collateral].getLTV(ltvType);
+        return vaultStorage.ltvLookup[collateral].getLTV(ltvType);
     }
 
     function isRecognizedCollateral(address collateral) internal view virtual returns (bool) {
-        return marketStorage.ltvLookup[collateral].isRecognizedCollateral();
+        return vaultStorage.ltvLookup[collateral].isRecognizedCollateral();
     }
 }

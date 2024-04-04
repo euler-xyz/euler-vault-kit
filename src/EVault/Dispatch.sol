@@ -2,19 +2,22 @@
 
 pragma solidity ^0.8.0;
 
-import {Base} from "../shared/Base.sol";
+import {Base} from "./shared/Base.sol";
 
-import {TokenModule} from "./Token.sol";
-import {VaultModule} from "./Vault.sol";
-import {BorrowingModule} from "./Borrowing.sol";
-import {LiquidationModule} from "./Liquidation.sol";
-import {InitializeModule} from "./Initialize.sol";
-import {BalanceForwarderModule} from "./BalanceForwarder.sol";
-import {GovernanceModule} from "./Governance.sol";
-import {RiskManagerModule} from "./RiskManager.sol";
+import {TokenModule} from "./modules/Token.sol";
+import {VaultModule} from "./modules/Vault.sol";
+import {BorrowingModule} from "./modules/Borrowing.sol";
+import {LiquidationModule} from "./modules/Liquidation.sol";
+import {InitializeModule} from "./modules/Initialize.sol";
+import {BalanceForwarderModule} from "./modules/BalanceForwarder.sol";
+import {GovernanceModule} from "./modules/Governance.sol";
+import {RiskManagerModule} from "./modules/RiskManager.sol";
 
-import "../shared/Constants.sol";
+import "./shared/Constants.sol";
 
+/// @title Dispatch
+/// @author Euler Labs (https://www.eulerlabs.com/)
+/// @notice Contract which ties in the EVault modules and provides utilities for routing calls to modules and the EVC
 abstract contract Dispatch is
     Base,
     InitializeModule,
@@ -26,14 +29,14 @@ abstract contract Dispatch is
     BalanceForwarderModule,
     GovernanceModule
 {
-    address immutable MODULE_INITIALIZE;
-    address immutable MODULE_TOKEN;
-    address immutable MODULE_VAULT;
-    address immutable MODULE_BORROWING;
-    address immutable MODULE_LIQUIDATION;
-    address immutable MODULE_RISKMANAGER;
-    address immutable MODULE_BALANCE_FORWARDER;
-    address immutable MODULE_GOVERNANCE;
+    address public immutable MODULE_INITIALIZE;
+    address public immutable MODULE_TOKEN;
+    address public immutable MODULE_VAULT;
+    address public immutable MODULE_BORROWING;
+    address public immutable MODULE_LIQUIDATION;
+    address public immutable MODULE_RISKMANAGER;
+    address public immutable MODULE_BALANCE_FORWARDER;
+    address public immutable MODULE_GOVERNANCE;
 
     struct DeployedModules {
         address initialize;
@@ -78,6 +81,9 @@ abstract contract Dispatch is
         }
     }
 
+    // External function which is only callable by the EVault itself. Its purpose is to be static called by `delegateToModuleView`
+    // which allows view functions to be implemented in modules, even though delegatecall cannot be directly used within
+    // view functions.
     function viewDelegate() external {
         if (msg.sender != address(this)) revert E_Unauthorized();
 
@@ -106,13 +112,15 @@ abstract contract Dispatch is
     function delegateToModuleView(address module) private view {
         assembly {
             // Construct optimized custom call data for `this.viewDelegate()`
-            // [selector 4B][module address 32B][calldata with stripped proxy metadata]
+            // [selector 4B][module address 32B][calldata with stripped proxy metadata][caller address 32B]
             // Proxy metadata will be appended back by the proxy on staticcall
             mstore(0, 0x1fe8b95300000000000000000000000000000000000000000000000000000000)
             mstore(4, module)
-            calldatacopy(36, 0, calldatasize())
-            // insize: calldatasize + 36 (signature and address) - proxy metadata size
-            let result := staticcall(gas(), address(), 0, sub(add(calldatasize(), 36), PROXY_METADATA_LENGTH), 0, 0)
+            let strippedCalldataSize := sub(calldatasize(), PROXY_METADATA_LENGTH)
+            calldatacopy(36, 0, strippedCalldataSize)
+            mstore(add(36, strippedCalldataSize), caller())
+            // insize: stripped calldatasize + 36 (signature and module address) + 32 (caller address)
+            let result := staticcall(gas(), address(), 0, add(strippedCalldataSize, 68), 0, 0)
             returndatacopy(0, 0, returndatasize())
             switch result
             case 0 { revert(0, returndatasize()) }
@@ -120,6 +128,12 @@ abstract contract Dispatch is
         }
     }
 
+    // Modifier ensures, that the body of the function is always executed from the EVC call.
+    // It is accomplished by intercepting calls incoming directly to the vault and passing them
+    // to the EVC.call function. EVC calls the vault back with original calldata. As a result, the account
+    // and vault status checks are always executed in the checks deferral frame, at the end of the call,
+    // outside of the vault's re-entrancy protections.
+    // The modifier is applied to all functions which schedule account or vault status checks.
     function callThroughEVCInternal() private {
         address _evc = address(evc);
         assembly {

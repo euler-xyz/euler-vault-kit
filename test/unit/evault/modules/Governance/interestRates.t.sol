@@ -4,7 +4,7 @@ pragma solidity ^0.8.0;
 
 import "../../EVaultTestBase.t.sol";
 
-contract GovernanceTest is EVaultTestBase {
+contract Governance_InterestRates is EVaultTestBase {
     using TypesLib for uint256;
 
     address depositor;
@@ -19,7 +19,7 @@ contract GovernanceTest is EVaultTestBase {
         // Setup
 
         oracle.setPrice(address(assetTST), unitOfAccount, 1e18);
-        oracle.setPrice(address(eTST2), unitOfAccount, 1e18);
+        oracle.setPrice(address(assetTST2), unitOfAccount, 1e18);
 
         eTST.setLTV(address(eTST2), 0.9e4, 0);
 
@@ -45,7 +45,7 @@ contract GovernanceTest is EVaultTestBase {
         eTST.borrow(5e18, borrower);
     }
 
-    function test_Governance_setIRM_setAddressZero() public {
+    function test_Governance_setInterestRateModel_setAddressZero() public {
         assertEq(eTST.totalAssets(), 100e18);
 
         skip(1 days);
@@ -57,7 +57,7 @@ contract GovernanceTest is EVaultTestBase {
 
         vm.stopPrank();
         address previousIRM = eTST.interestRateModel();
-        eTST.setIRM(address(0));
+        eTST.setInterestRateModel(address(0));
 
         // the previous interest accrued is recorded in the accumulator
         assertEq(beforePause, eTST.totalAssets());
@@ -68,45 +68,9 @@ contract GovernanceTest is EVaultTestBase {
         assertEq(beforePause, eTST.totalAssets());
 
         // set the previous IRM back
-        eTST.setIRM(previousIRM);
+        eTST.setInterestRateModel(previousIRM);
         // no change yet
         assertEq(beforePause, eTST.totalAssets());
-
-        skip(1);
-
-        // interest starts accruing again
-        assertGt(eTST.totalAssets(), beforePause);
-        assertApproxEqRel(eTST.totalAssets(), beforePause, 0.0000000001e18);
-    }
-
-    function test_Governance_disableInterestAccrual() public {
-        assertEq(eTST.totalAssets(), 100e18);
-
-        skip(1 days);
-
-        uint256 beforePause = eTST.totalAssets();
-
-        // some interest accrued
-        assertGt(beforePause, 100e18);
-
-        vm.stopPrank();
-
-        // disable interest accrual
-        eTST.setDisabledOps(OP_ACCRUE_INTEREST);
-
-        // the previous interest accrued is recorded in the accumulator
-        assertEq(beforePause, eTST.totalAssets());
-
-        skip(10 days);
-
-        // no change
-        assertEq(beforePause, eTST.totalAssets());
-
-        // no change yet
-        assertEq(beforePause, eTST.totalAssets());
-
-        // re-enable interest accrual
-        eTST.setDisabledOps(0);
 
         skip(1);
 

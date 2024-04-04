@@ -33,10 +33,9 @@ contract ESRFuzzTest is ESRTest {
     }
 
     // this tests shows that when you have a very small deposit and a very large interestAmount minted to the contract
-    // some interest might be lost due to the uint168 cast
     function testFuzz_gulp_under_uint168(uint256 interestAmount, uint256 depositAmount, uint256 timePassed) public {
         depositAmount = bound(depositAmount, 0, type(uint112).max);
-        interestAmount = bound(interestAmount, 0, type(uint112).max - depositAmount); // this makes sure that the mint won't cause overflow
+        interestAmount = bound(interestAmount, 0, type(uint256).max - depositAmount); // this makes sure that the mint won't cause overflow
         timePassed = bound(timePassed, block.timestamp, type(uint40).max);
         asset.mint(address(esr), interestAmount);
 
@@ -44,7 +43,11 @@ contract ESRFuzzTest is ESRTest {
         esr.gulp();
 
         EulerSavingsRate.ESRSlot memory esrSlot = esr.updateInterestAndReturnESRSlotCache();
-        assertEq(esrSlot.interestLeft, interestAmount);
+        if (interestAmount <= type(uint168).max - depositAmount) {
+            assertEq(esrSlot.interestLeft, interestAmount);
+        } else {
+            assertEq(esrSlot.interestLeft, type(uint168).max);
+        }
     }
 
     // fuzz test that any deposits added are added to the totalAssetsDeposited

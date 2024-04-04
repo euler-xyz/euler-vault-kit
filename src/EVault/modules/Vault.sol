@@ -11,6 +11,9 @@ import {ProxyUtils} from "../shared/lib/ProxyUtils.sol";
 
 import "../shared/types/Types.sol";
 
+/// @title VaultModule
+/// @author Euler Labs (https://www.eulerlabs.com/)
+/// @notice An EVault module handling ERC4626 standard behaviour
 abstract contract VaultModule is IVault, Base, AssetTransfers, BalanceUtils {
     using TypesLib for uint256;
     using SafeERC20Lib for IERC20;
@@ -23,28 +26,27 @@ abstract contract VaultModule is IVault, Base, AssetTransfers, BalanceUtils {
 
     /// @inheritdoc IERC4626
     function totalAssets() public view virtual nonReentrantView returns (uint256) {
-        MarketCache memory marketCache = loadMarket();
-        return totalAssetsInternal(marketCache);
+        VaultCache memory vaultCache = loadVault();
+        return totalAssetsInternal(vaultCache);
     }
 
     /// @inheritdoc IERC4626
     function convertToAssets(uint256 shares) public view virtual nonReentrantView returns (uint256) {
-        MarketCache memory marketCache = loadMarket();
-        return shares.toShares().toAssetsDown(marketCache).toUint();
+        VaultCache memory vaultCache = loadVault();
+        return shares.toShares().toAssetsDown(vaultCache).toUint();
     }
 
     /// @inheritdoc IERC4626
     function convertToShares(uint256 assets) public view virtual nonReentrantView returns (uint256) {
-        MarketCache memory marketCache = loadMarket();
-        return assets.toAssets().toSharesDown(marketCache).toUint();
+        VaultCache memory vaultCache = loadVault();
+        return assets.toAssets().toSharesDown(vaultCache).toUint();
     }
 
     /// @inheritdoc IERC4626
     function maxDeposit(address account) public view virtual nonReentrantView returns (uint256) {
-        MarketCache memory marketCache = loadMarket();
-        if (marketCache.disabledOps.check(OP_DEPOSIT)) return 0;
+        VaultCache memory vaultCache = loadVault();
 
-        return maxDepositInternal(marketCache, account);
+        return isOperationDisabled(vaultCache.hookedOps, OP_DEPOSIT) ? 0 : maxDepositInternal(vaultCache, account);
     }
 
     /// @inheritdoc IERC4626
@@ -54,38 +56,40 @@ abstract contract VaultModule is IVault, Base, AssetTransfers, BalanceUtils {
 
     /// @inheritdoc IERC4626
     function maxMint(address account) public view virtual nonReentrantView returns (uint256) {
-        MarketCache memory marketCache = loadMarket();
+        VaultCache memory vaultCache = loadVault();
 
-        if (marketCache.disabledOps.check(OP_MINT)) return 0;
-        return maxDepositInternal(marketCache, account).toAssets().toSharesDown(marketCache).toUint();
+        if (isOperationDisabled(vaultCache.hookedOps, OP_MINT)) return 0;
+
+        // make sure to not revert on conversion
+        uint256 shares = maxDepositInternal(vaultCache, account).toAssets().toUint256SharesDown(vaultCache);
+
+        return shares < MAX_SANE_AMOUNT ? shares : MAX_SANE_AMOUNT;
     }
 
     /// @inheritdoc IERC4626
     function previewMint(uint256 shares) public view virtual nonReentrantView returns (uint256) {
-        MarketCache memory marketCache = loadMarket();
-        return shares.toShares().toAssetsUp(marketCache).toUint();
+        VaultCache memory vaultCache = loadVault();
+        return shares.toShares().toAssetsUp(vaultCache).toUint();
     }
 
     /// @inheritdoc IERC4626
     function maxWithdraw(address owner) public view virtual nonReentrantView returns (uint256) {
-        MarketCache memory marketCache = loadMarket();
-        if (marketCache.disabledOps.check(OP_WITHDRAW)) return 0;
+        VaultCache memory vaultCache = loadVault();
 
-        return maxRedeemInternal(owner).toAssetsDown(marketCache).toUint();
+        return isOperationDisabled(vaultCache.hookedOps, OP_WITHDRAW)
+            ? 0
+            : maxRedeemInternal(owner).toAssetsDown(vaultCache).toUint();
     }
 
     /// @inheritdoc IERC4626
     function previewWithdraw(uint256 assets) public view virtual nonReentrantView returns (uint256) {
-        MarketCache memory marketCache = loadMarket();
-        return assets.toAssets().toSharesUp(marketCache).toUint();
+        VaultCache memory vaultCache = loadVault();
+        return assets.toAssets().toSharesUp(vaultCache).toUint();
     }
 
     /// @inheritdoc IERC4626
     function maxRedeem(address owner) public view virtual nonReentrantView returns (uint256) {
-        MarketCache memory marketCache = loadMarket();
-        if (marketCache.disabledOps.check(OP_REDEEM)) return 0;
-
-        return maxRedeemInternal(owner).toUint();
+        return isOperationDisabled(vaultStorage.hookedOps, OP_REDEEM) ? 0 : maxRedeemInternal(owner).toUint();
     }
 
     /// @inheritdoc IERC4626
@@ -95,86 +99,85 @@ abstract contract VaultModule is IVault, Base, AssetTransfers, BalanceUtils {
 
     /// @inheritdoc IVault
     function accumulatedFees() public view virtual nonReentrantView returns (uint256) {
-        return loadMarket().accumulatedFees.toUint();
+        return loadVault().accumulatedFees.toUint();
     }
 
     /// @inheritdoc IVault
     function accumulatedFeesAssets() public view virtual nonReentrantView returns (uint256) {
-        MarketCache memory marketCache = loadMarket();
+        VaultCache memory vaultCache = loadVault();
 
-        return marketCache.accumulatedFees.toAssetsDown(marketCache).toUint();
+        return vaultCache.accumulatedFees.toAssetsDown(vaultCache).toUint();
     }
 
     /// @inheritdoc IVault
     function creator() public view virtual reentrantOK returns (address) {
-        return marketStorage.creator;
+        return vaultStorage.creator;
     }
 
     /// @inheritdoc IERC4626
     function deposit(uint256 amount, address receiver) public virtual nonReentrant returns (uint256) {
-        (MarketCache memory marketCache, address account) = initOperation(OP_DEPOSIT, CHECKACCOUNT_NONE);
+        (VaultCache memory vaultCache, address account) = initOperation(OP_DEPOSIT, CHECKACCOUNT_NONE);
 
-        Assets assets =
-            amount == type(uint256).max ? marketCache.asset.balanceOf(account).toAssets() : amount.toAssets();
+        Assets assets = amount == type(uint256).max ? vaultCache.asset.balanceOf(account).toAssets() : amount.toAssets();
         if (assets.isZero()) return 0;
 
-        Shares shares = assets.toSharesDown(marketCache);
+        Shares shares = assets.toSharesDown(vaultCache);
         if (shares.isZero()) revert E_ZeroShares();
 
-        finalizeDeposit(marketCache, assets, shares, account, receiver);
+        finalizeDeposit(vaultCache, assets, shares, account, receiver);
 
         return shares.toUint();
     }
 
     /// @inheritdoc IERC4626
     function mint(uint256 amount, address receiver) public virtual nonReentrant returns (uint256) {
-        (MarketCache memory marketCache, address account) = initOperation(OP_MINT, CHECKACCOUNT_NONE);
+        (VaultCache memory vaultCache, address account) = initOperation(OP_MINT, CHECKACCOUNT_NONE);
 
         Shares shares = amount.toShares();
         if (shares.isZero()) return 0;
 
-        Assets assets = shares.toAssetsUp(marketCache);
+        Assets assets = shares.toAssetsUp(vaultCache);
 
-        finalizeDeposit(marketCache, assets, shares, account, receiver);
+        finalizeDeposit(vaultCache, assets, shares, account, receiver);
 
         return assets.toUint();
     }
 
     /// @inheritdoc IERC4626
     function withdraw(uint256 amount, address receiver, address owner) public virtual nonReentrant returns (uint256) {
-        (MarketCache memory marketCache, address account) = initOperation(OP_WITHDRAW, owner);
+        (VaultCache memory vaultCache, address account) = initOperation(OP_WITHDRAW, owner);
 
         Assets assets = amount.toAssets();
         if (assets.isZero()) return 0;
 
-        Shares shares = assets.toSharesUp(marketCache);
+        Shares shares = assets.toSharesUp(vaultCache);
 
-        finalizeWithdraw(marketCache, assets, shares, account, receiver, owner);
+        finalizeWithdraw(vaultCache, assets, shares, account, receiver, owner);
 
         return shares.toUint();
     }
 
     /// @inheritdoc IERC4626
     function redeem(uint256 amount, address receiver, address owner) public virtual nonReentrant returns (uint256) {
-        (MarketCache memory marketCache, address account) = initOperation(OP_REDEEM, owner);
+        (VaultCache memory vaultCache, address account) = initOperation(OP_REDEEM, owner);
 
-        Shares shares = amount == type(uint256).max ? marketStorage.users[owner].getBalance() : amount.toShares();
+        Shares shares = amount == type(uint256).max ? vaultStorage.users[owner].getBalance() : amount.toShares();
         if (shares.isZero()) return 0;
 
-        Assets assets = shares.toAssetsDown(marketCache);
+        Assets assets = shares.toAssetsDown(vaultCache);
         if (assets.isZero()) revert E_ZeroAssets();
 
-        finalizeWithdraw(marketCache, assets, shares, account, receiver, owner);
+        finalizeWithdraw(vaultCache, assets, shares, account, receiver, owner);
 
         return assets.toUint();
     }
 
     /// @inheritdoc IVault
     function skim(uint256 amount, address receiver) public virtual nonReentrant returns (uint256) {
-        (MarketCache memory marketCache, address account) = initOperation(OP_SKIM, CHECKACCOUNT_NONE);
+        (VaultCache memory vaultCache, address account) = initOperation(OP_SKIM, CHECKACCOUNT_NONE);
 
-        Assets balance = marketCache.asset.balanceOf(address(this)).toAssets();
-        Assets available = balance <= marketCache.cash ? Assets.wrap(0) : balance - marketCache.cash;
+        Assets balance = vaultCache.asset.balanceOf(address(this)).toAssets();
+        Assets available = balance <= vaultCache.cash ? Assets.wrap(0) : balance - vaultCache.cash;
 
         Assets assets;
         if (amount == type(uint256).max) {
@@ -185,91 +188,76 @@ abstract contract VaultModule is IVault, Base, AssetTransfers, BalanceUtils {
         }
         if (assets.isZero()) return 0;
 
-        Shares shares = assets.toSharesDown(marketCache);
+        Shares shares = assets.toSharesDown(vaultCache);
         if (shares.isZero()) revert E_ZeroShares();
 
-        increaseBalance(marketCache, receiver, account, shares, assets);
-        marketStorage.cash = marketCache.cash = marketCache.cash + assets;
+        increaseBalance(vaultCache, receiver, account, shares, assets);
+        vaultStorage.cash = vaultCache.cash = vaultCache.cash + assets;
 
         return shares.toUint();
     }
 
     function finalizeDeposit(
-        MarketCache memory marketCache,
+        VaultCache memory vaultCache,
         Assets assets,
         Shares shares,
         address sender,
         address receiver
     ) private {
-        pullAssets(marketCache, sender, assets);
+        pullAssets(vaultCache, sender, assets);
 
-        increaseBalance(marketCache, receiver, sender, shares, assets);
+        increaseBalance(vaultCache, receiver, sender, shares, assets);
     }
 
     function finalizeWithdraw(
-        MarketCache memory marketCache,
+        VaultCache memory vaultCache,
         Assets assets,
         Shares shares,
         address sender,
         address receiver,
         address owner
     ) private {
-        if (marketCache.cash < assets) revert E_InsufficientCash();
+        if (vaultCache.cash < assets) revert E_InsufficientCash();
 
         decreaseAllowance(owner, sender, shares);
-        decreaseBalance(marketCache, owner, sender, receiver, shares, assets);
+        decreaseBalance(vaultCache, owner, sender, receiver, shares, assets);
 
-        pushAssets(marketCache, receiver, assets);
+        pushAssets(vaultCache, receiver, assets);
     }
 
     function maxRedeemInternal(address owner) internal view returns (Shares) {
-        Shares max = marketStorage.users[owner].getBalance();
-        if (max.isZero()) return max;
+        Shares max = vaultStorage.users[owner].getBalance();
+        if (max.isZero()) return Shares.wrap(0);
 
-        // When checks are deferred, all of the balance can be withdrawn, even if only temporarily
-        if (!isAccountStatusCheckDeferred(owner)) {
-            address controller = getController(owner);
+        // If account has borrows, withdrawal might be reverted by the controller during account status checks.
+        // The collateral vault has no way to verify or enforce the behaviour of the controller, which the account owner
+        // has enabled. It will therefore assume that all of the assets would be witheld by the controller and
+        // under-estimate the return amount to zero.
+        // Integrators who handle borrowing should implement custom logic to work with the particular controllers
+        // they want to support.
+        if (isCollateralEnabled(owner, address(this)) && hasControllerEnabled(owner)) return Shares.wrap(0);
 
-            if (controller != address(0)) {
-                (bool success, bytes memory data) =
-                    controller.staticcall(abi.encodeCall(IBorrowing.collateralUsed, (address(this), owner)));
+        VaultCache memory vaultCache = loadVault();
 
-                // if controller doesn't implement the function, assume it will not block withdrawal
-                if (success) {
-                    uint256 used = abi.decode(data, (uint256));
-                    if (used >= max.toUint()) return Shares.wrap(0);
-                    max = max - used.toShares();
-                }
-            }
-        }
-
-        MarketCache memory marketCache = loadMarket();
-
-        Shares cash = marketCache.cash.toSharesDown(marketCache);
+        Shares cash = vaultCache.cash.toSharesDown(vaultCache);
         max = max > cash ? cash : max;
 
         return max;
     }
 
-    function maxDepositInternal(MarketCache memory marketCache, address) private view returns (uint256) {
-        uint256 remainingSupply;
+    function maxDepositInternal(VaultCache memory vaultCache, address) private pure returns (uint256) {
+        uint256 supply = totalAssetsInternal(vaultCache);
+        if (supply >= vaultCache.supplyCap) return 0;
 
-        // In transient state with vault status checks deferred, supply caps will not be immediately enforced
-        if (isVaultStatusCheckDeferred()) {
-            remainingSupply = type(uint256).max;
-        } else {
-            uint256 supply = totalAssetsInternal(marketCache);
-            if (supply >= marketCache.supplyCap) return 0;
+        uint256 remainingSupply = vaultCache.supplyCap - supply;
 
-            remainingSupply = marketCache.supplyCap - supply;
-        }
-
-        uint256 remainingCash = MAX_SANE_AMOUNT - marketCache.cash.toUint();
+        uint256 remainingCash = MAX_SANE_AMOUNT - vaultCache.cash.toUint();
 
         return remainingCash < remainingSupply ? remainingCash : remainingSupply;
     }
 }
 
+/// @dev Deployable module contract
 contract Vault is VaultModule {
     constructor(Integrations memory integrations) Base(integrations) {}
 }

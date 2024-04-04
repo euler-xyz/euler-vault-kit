@@ -3,10 +3,13 @@
 pragma solidity ^0.8.0;
 
 import {Assets, Shares, Owed, TypesLib} from "./Types.sol";
-import {MarketCache} from "./MarketCache.sol";
+import {VaultCache} from "./VaultCache.sol";
+import {ConversionHelpers} from "../lib/ConversionHelpers.sol";
 import "../Constants.sol";
-import "./ConversionHelpers.sol";
 
+/// @title AssetsLib
+/// @author Euler Labs (https://www.eulerlabs.com/)
+/// @notice Custom type `Assets` represents amounts of the vault's underlying asset
 library AssetsLib {
     function toUint(Assets self) internal pure returns (uint256) {
         return Assets.unwrap(self);
@@ -16,17 +19,21 @@ library AssetsLib {
         return Assets.unwrap(self) == 0;
     }
 
-    function toSharesDown(Assets amount, MarketCache memory marketCache) internal pure returns (Shares) {
-        (uint256 totalAssets, uint256 totalShares) = conversionTotals(marketCache);
+    function toSharesDown(Assets amount, VaultCache memory vaultCache) internal pure returns (Shares) {
+        return TypesLib.toShares(toUint256SharesDown(amount, vaultCache));
+    }
+
+    function toUint256SharesDown(Assets amount, VaultCache memory vaultCache) internal pure returns (uint256) {
+        (uint256 totalAssets, uint256 totalShares) = ConversionHelpers.conversionTotals(vaultCache);
         unchecked {
-            return TypesLib.toShares(amount.toUint() * totalShares / totalAssets);
+            return amount.toUint() * totalShares / totalAssets;
         }
     }
 
-    function toSharesUp(Assets amount, MarketCache memory marketCache) internal pure returns (Shares) {
-        (uint256 totalAssets, uint256 totalShares) = conversionTotals(marketCache);
+    function toSharesUp(Assets amount, VaultCache memory vaultCache) internal pure returns (Shares) {
+        (uint256 totalAssets, uint256 totalShares) = ConversionHelpers.conversionTotals(vaultCache);
         unchecked {
-            return TypesLib.toShares((amount.toUint() * totalShares + (totalAssets - 1)) / totalAssets);
+            return TypesLib.toShares((amount.toUint() * totalShares + (totalAssets - 1)) / totalAssets); // totalAssets >= VIRTUAL_DEPOSIT_AMOUNT > 1
         }
     }
 

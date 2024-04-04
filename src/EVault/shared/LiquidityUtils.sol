@@ -7,42 +7,44 @@ import {LTVUtils} from "./LTVUtils.sol";
 
 import "./types/Types.sol";
 
+/// @title LiquidityUtils
+/// @author Euler Labs (https://www.eulerlabs.com/)
+/// @notice Utilities for calculating account liquidity and health status
 abstract contract LiquidityUtils is BorrowUtils, LTVUtils {
     using TypesLib for uint256;
 
     // Calculate the value of liabilities, and the liquidation or borrowing LTV adjusted collateral value.
     function calculateLiquidity(
-        MarketCache memory marketCache,
+        VaultCache memory vaultCache,
         address account,
         address[] memory collaterals,
         LTVType ltvType
     ) internal view returns (uint256 collateralValue, uint256 liabilityValue) {
-        validateOracle(marketCache);
+        validateOracle(vaultCache);
 
         for (uint256 i; i < collaterals.length; ++i) {
-            collateralValue += getCollateralValue(marketCache, account, collaterals[i], ltvType);
+            collateralValue += getCollateralValue(vaultCache, account, collaterals[i], ltvType);
         }
 
-        liabilityValue = getLiabilityValue(marketCache, account, marketStorage.users[account].getOwed());
+        liabilityValue = getLiabilityValue(vaultCache, account, vaultStorage.users[account].getOwed());
     }
 
     // Check that the value of the collateral, adjusted for borrowing TVL, is equal or greater than the liability value.
-    function checkLiquidity(MarketCache memory marketCache, address account, address[] memory collaterals)
+    function checkLiquidity(VaultCache memory vaultCache, address account, address[] memory collaterals)
         internal
         view
     {
-        validateOracle(marketCache);
+        validateOracle(vaultCache);
 
-        Owed owed = marketStorage.users[account].getOwed();
+        Owed owed = vaultStorage.users[account].getOwed();
         if (owed.isZero()) return;
 
-        uint256 liabilityValue = getLiabilityValue(marketCache, account, owed);
-        if (liabilityValue == 0) return;
+        uint256 liabilityValue = getLiabilityValue(vaultCache, account, owed);
 
         uint256 collateralValue;
         for (uint256 i; i < collaterals.length; ++i) {
-            collateralValue += getCollateralValue(marketCache, account, collaterals[i], LTVType.BORROWING);
-            if (collateralValue >= liabilityValue) return;
+            collateralValue += getCollateralValue(vaultCache, account, collaterals[i], LTVType.BORROWING);
+            if (collateralValue > liabilityValue) return;
         }
 
         revert E_AccountLiquidity();
@@ -65,25 +67,25 @@ abstract contract LiquidityUtils is BorrowUtils, LTVUtils {
         return true;
     }
 
-    function getLiabilityValue(MarketCache memory marketCache, address account, Owed owed)
+    function getLiabilityValue(VaultCache memory vaultCache, address account, Owed owed)
         internal
         view
         returns (uint256 value)
     {
         // update owed with interest accrued
-        uint256 owedAssets = getCurrentOwed(marketCache, account, owed).toAssetsUp().toUint();
+        uint256 owedAssets = getCurrentOwed(vaultCache, account, owed).toAssetsUp().toUint();
 
         if (owedAssets == 0) return 0;
 
-        if (address(marketCache.asset) == marketCache.unitOfAccount) {
+        if (address(vaultCache.asset) == vaultCache.unitOfAccount) {
             value = owedAssets;
         } else {
             // ask price for liability
-            (, value) = marketCache.oracle.getQuotes(owedAssets, address(marketCache.asset), marketCache.unitOfAccount);
+            (, value) = vaultCache.oracle.getQuotes(owedAssets, address(vaultCache.asset), vaultCache.unitOfAccount);
         }
     }
 
-    function getCollateralValue(MarketCache memory marketCache, address account, address collateral, LTVType ltvType)
+    function getCollateralValue(VaultCache memory vaultCache, address account, address collateral, LTVType ltvType)
         internal
         view
         returns (uint256 value)
@@ -95,12 +97,12 @@ abstract contract LiquidityUtils is BorrowUtils, LTVUtils {
         if (balance == 0) return 0;
 
         // bid price for collateral
-        (uint256 currentCollateralValue,) = marketCache.oracle.getQuotes(balance, collateral, marketCache.unitOfAccount);
+        (uint256 currentCollateralValue,) = vaultCache.oracle.getQuotes(balance, collateral, vaultCache.unitOfAccount);
 
         return ltv.mul(currentCollateralValue);
     }
 
-    function validateOracle(MarketCache memory marketCache) internal pure {
-        if (address(marketCache.oracle) == address(0)) revert E_NoPriceOracle();
+    function validateOracle(VaultCache memory vaultCache) internal pure {
+        if (address(vaultCache.oracle) == address(0)) revert E_NoPriceOracle();
     }
 }

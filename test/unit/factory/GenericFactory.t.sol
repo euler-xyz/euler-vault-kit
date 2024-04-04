@@ -50,7 +50,7 @@ contract FactoryTest is Test {
         assertEq(factory.implementation(), address(2));
     }
 
-    function test_activateMarket() public {
+    function test_activateVault() public {
         // Create and install mock eVault impl
         MockEVault mockEvaultImpl = new MockEVault(address(factory), address(1));
         vm.prank(upgradeAdmin);
@@ -69,11 +69,11 @@ contract FactoryTest is Test {
 
             address randomUser = vm.addr(5000);
             vm.prank(randomUser);
-            (string memory outputArg, address theMsgSender, address marketAsset) = eTST.arbitraryFunction(inputArg);
+            (string memory outputArg, address theMsgSender, address vaultAsset) = eTST.arbitraryFunction(inputArg);
 
             assertEq(outputArg, inputArg);
             assertEq(theMsgSender, randomUser);
-            assertEq(marketAsset, address(asset));
+            assertEq(vaultAsset, address(asset));
         }
     }
 
@@ -83,7 +83,7 @@ contract FactoryTest is Test {
         vm.prank(upgradeAdmin);
         factory.setImplementation(address(mockEvaultImpl));
 
-        // Create Tokens and activate Markets
+        // Create Tokens and activate Vaults
         uint256 amountEVault = 10;
         for (uint256 i; i < amountEVault; i++) {
             TestERC20 TST = new TestERC20("Test Token", "TST", 18, false);
@@ -101,7 +101,7 @@ contract FactoryTest is Test {
         vm.prank(upgradeAdmin);
         factory.setImplementation(address(mockEvaultImpl));
 
-        // Create Tokens and activate Markets
+        // Create Tokens and activate Vaults
         uint256 amountEVaults = 100;
 
         address[] memory eVaultsList = new address[](amountEVaults);
@@ -146,7 +146,7 @@ contract FactoryTest is Test {
         vm.prank(upgradeAdmin);
         factory.setImplementation(address(mockEvaultImpl));
 
-        // Create Tokens and activate Markets
+        // Create Tokens and activate Vaults
         TestERC20 TST = new TestERC20("Test Token", "TST", 18, false);
         MockEVault eVault = MockEVault(factory.createProxy(true, abi.encodePacked(address(TST))));
 
@@ -208,7 +208,7 @@ contract FactoryTest is Test {
         factory.setImplementation(address(1));
     }
 
-    function test_RevertIfNonReentrancy_ActivateMarket() public {
+    function test_RevertIfNonReentrancy_ActivateVault() public {
         ReentrancyAttack badVaultImpl = new ReentrancyAttack(address(factory), address(1));
         vm.prank(upgradeAdmin);
         factory.setImplementation(address(badVaultImpl));
@@ -219,7 +219,7 @@ contract FactoryTest is Test {
         factory.createProxy(false, abi.encodePacked(address(asset)));
     }
 
-    function test_RevertIfImplementation_ActivateMarket() public {
+    function test_RevertIfImplementation_ActivateVault() public {
         address asset = vm.addr(1);
 
         vm.expectRevert(GenericFactory.E_Implementation.selector);
@@ -242,7 +242,7 @@ contract FactoryTest is Test {
         vm.prank(upgradeAdmin);
         factory.setImplementation(address(mockEvaultImpl));
 
-        // Create Tokens and activate Markets
+        // Create Tokens and activate Vaults
         uint256 amountEVaults = 100;
 
         address[] memory eVaultsList = new address[](amountEVaults);
@@ -293,5 +293,32 @@ contract FactoryTest is Test {
         config = factory.getProxyConfig(address(eVaultNonUpg));
         assertNotEq(config.implementation, factory.implementation());
         assertEq(eVaultNonUpg.implementation(), "TRANSPARENT");
+    }
+
+    function test_payableProxies() public {
+        // Create and install mock eVault impl
+        MockEVault mockEvaultImpl = new MockEVault(address(factory), address(1));
+        vm.prank(upgradeAdmin);
+        factory.setImplementation(address(mockEvaultImpl));
+
+        TestERC20 asset = new TestERC20("Test Token", "TST", 17, false);
+
+        // BeaconProxy (upgradeable)
+        {
+            MockEVault eTST = MockEVault(factory.createProxy(true, abi.encodePacked(address(asset))));
+
+            assertEq(address(eTST).balance, 0);
+            eTST.payMe{value: 12345}();
+            assertEq(address(eTST).balance, 12345);
+        }
+
+        // MetaProxy (non-upgradeable)
+        {
+            MockEVault eTST = MockEVault(factory.createProxy(false, abi.encodePacked(address(asset))));
+
+            assertEq(address(eTST).balance, 0);
+            eTST.payMe{value: 12345}();
+            assertEq(address(eTST).balance, 12345);
+        }
     }
 }

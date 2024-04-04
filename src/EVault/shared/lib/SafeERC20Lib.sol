@@ -4,11 +4,11 @@ pragma solidity ^0.8.0;
 
 import {IERC20} from "../../IEVault.sol";
 import {RevertBytes} from "./RevertBytes.sol";
+import {IPermit2} from "../../../interfaces/IPermit2.sol";
 
-interface IPermit2 {
-    function transferFrom(address from, address to, uint160 amount, address token) external;
-}
-
+/// @title SafeERC20Lib Library
+/// @author Euler Labs (https://www.eulerlabs.com/)
+/// @notice The library provides helpers for ERC20 transfers, including Permit2 support
 library SafeERC20Lib {
     error E_TransferFromFailed(bytes errorTransferFrom, bytes errorPermit2);
     error E_Permit2AmountOverflow();
@@ -31,7 +31,7 @@ library SafeERC20Lib {
             if (value > type(uint160).max) {
                 revert E_TransferFromFailed(tryData, abi.encodeWithSelector(E_Permit2AmountOverflow.selector));
             }
-
+            // it's now safe to down-cast value to uint160
             (success, fallbackData) =
                 permit2.call(abi.encodeCall(IPermit2.transferFrom, (from, to, uint160(value), address(token))));
         }

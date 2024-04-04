@@ -2,7 +2,7 @@
 
 pragma solidity ^0.8.0;
 
-import {EVaultTestBase} from "test/unit/evault/EVaultTestBase.t.sol";
+import {EVaultTestBase, ProtocolConfig} from "test/unit/evault/EVaultTestBase.t.sol";
 import {Errors} from "src/EVault/shared/Errors.sol";
 import {GovernanceModule} from "src/EVault/modules/Governance.sol";
 import "src/EVault/modules/Governance.sol";
@@ -13,9 +13,6 @@ uint16 constant DEFAULT_INTEREST_FEE = 0.23e4; // TODO expose in harness from In
 
 contract ERC4626Test_ProtocolConfig is EVaultTestBase {
     using TypesLib for uint256;
-
-    error E_InvalidConfigValue();
-    error E_InvalidVault();
 
     address user = makeAddr("user");
 
@@ -33,19 +30,22 @@ contract ERC4626Test_ProtocolConfig is EVaultTestBase {
         vm.expectRevert(Errors.E_BadFee.selector);
         eTST.setInterestFee(0.005e4);
 
-        vm.expectRevert(Errors.E_BadFee.selector);
-        eTST.setInterestFee(0.9e4);
+        eTST.setInterestFee(1e4);
+        assertEq(eTST.interestFee(), 1e4);
 
-        eTST.setInterestFee(0.4e4);
-        assertEq(eTST.interestFee(), 0.4e4);
+        eTST.setInterestFee(0.1e4);
+        assertEq(eTST.interestFee(), 0.1e4);
+
+        eTST.setInterestFee(0.9e4);
+        assertEq(eTST.interestFee(), 0.9e4);
     }
 
     function test_interestFees_extended() public {
         vm.prank(admin);
-        protocolConfig.setVaultInterestFeeRange(address(eTST), true, 0.002e4, 0.6e4);
+        protocolConfig.setVaultInterestFeeRange(address(eTST), true, 0.05e4, 1e4);
 
-        eTST.setInterestFee(0.005e4);
-        assertEq(eTST.interestFee(), 0.005e4);
+        eTST.setInterestFee(0.08e4);
+        assertEq(eTST.interestFee(), 0.08e4);
 
         vm.expectRevert(Errors.E_BadFee.selector);
         eTST.setInterestFee(0.001e4);
@@ -53,11 +53,11 @@ contract ERC4626Test_ProtocolConfig is EVaultTestBase {
         eTST.setInterestFee(0.55e4);
         assertEq(eTST.interestFee(), 0.55e4);
 
-        vm.expectRevert(Errors.E_BadFee.selector);
-        eTST.setInterestFee(0.65e4);
+        eTST.setInterestFee(1e4);
+        assertEq(eTST.interestFee(), 1e4);
     }
 
-    function test_interestFees_maliciousProtocolConfig() public {
+    function test_interestFees_rogueProtocolConfig() public {
         vm.prank(admin);
         protocolConfig.setVaultInterestFeeRange(address(eTST), true, 0.8e4, 0.9e4);
 
@@ -69,7 +69,7 @@ contract ERC4626Test_ProtocolConfig is EVaultTestBase {
         // But will outside the always-valid range
 
         vm.expectRevert(Errors.E_BadFee.selector);
-        eTST.setInterestFee(0.55e4);
+        eTST.setInterestFee(0.05e4);
     }
 
     function test_override_interestFeeRanges() public {
@@ -94,6 +94,10 @@ contract ERC4626Test_ProtocolConfig is EVaultTestBase {
 
     function test_updateProtocolConfig() public {
         address newFeeReceiver = makeAddr("newFeeReceiver");
+
+        vm.expectRevert(ProtocolConfig.E_InvalidReceiver.selector);
+        vm.prank(admin);
+        protocolConfig.setFeeReceiver(address(0));
 
         vm.prank(admin);
         protocolConfig.setFeeReceiver(newFeeReceiver);
@@ -131,41 +135,66 @@ contract ERC4626Test_ProtocolConfig is EVaultTestBase {
         assertEq(genericFeeShare, feeShare);
     }
 
+    function test_setInterestFeeRange() public {
+        uint16 newMinInterestFee = 0.6e4;
+        uint16 newMaxInterestFee = 1e4;
+
+        vm.prank(admin);
+        protocolConfig.setInterestFeeRange(newMinInterestFee, newMaxInterestFee);
+
+        (uint16 minInterestFee, uint16 maxInterestFee) = protocolConfig.interestFeeRange(address(0));
+
+        assertEq(minInterestFee, newMinInterestFee);
+        assertEq(maxInterestFee, newMaxInterestFee);
+    }
+
     function test_invalid_configs() public {
         vm.startPrank(admin);
 
         // Bad config values
 
-        vm.expectRevert(E_InvalidConfigValue.selector);
+        vm.expectRevert(ProtocolConfig.E_InvalidConfigValue.selector);
         protocolConfig.setProtocolFeeShare(1e4 + 1);
 
-        vm.expectRevert(E_InvalidConfigValue.selector);
+        vm.expectRevert(ProtocolConfig.E_InvalidConfigValue.selector);
         protocolConfig.setInterestFeeRange(0, 1e4 + 1);
 
-        vm.expectRevert(E_InvalidConfigValue.selector);
+        vm.expectRevert(ProtocolConfig.E_InvalidConfigValue.selector);
         protocolConfig.setInterestFeeRange(1e4 + 1, 1e4 + 2);
 
-        vm.expectRevert(E_InvalidConfigValue.selector);
+        vm.expectRevert(ProtocolConfig.E_InvalidConfigValue.selector);
         protocolConfig.setInterestFeeRange(0.6e4, 0.4e4);
 
-        vm.expectRevert(E_InvalidConfigValue.selector);
+        vm.expectRevert(ProtocolConfig.E_InvalidConfigValue.selector);
         protocolConfig.setVaultInterestFeeRange(address(eTST), true, 0.1e4, 1e4 + 1);
 
-        vm.expectRevert(E_InvalidConfigValue.selector);
+        vm.expectRevert(ProtocolConfig.E_InvalidConfigValue.selector);
         protocolConfig.setVaultInterestFeeRange(address(eTST), true, 1e4 + 1, 1e4 + 2);
 
-        vm.expectRevert(E_InvalidConfigValue.selector);
+        vm.expectRevert(ProtocolConfig.E_InvalidConfigValue.selector);
         protocolConfig.setVaultInterestFeeRange(address(eTST), true, 0.6e4, 0.4e4);
 
-        vm.expectRevert(E_InvalidConfigValue.selector);
+        vm.expectRevert(ProtocolConfig.E_InvalidConfigValue.selector);
         protocolConfig.setVaultFeeConfig(address(eTST), true, address(0), 1e4 + 1);
 
         // Bad vaults
 
-        vm.expectRevert(E_InvalidVault.selector);
+        vm.expectRevert(ProtocolConfig.E_InvalidVault.selector);
         protocolConfig.setVaultInterestFeeRange(address(0), true, 0.1e4, 0.2e4);
 
-        vm.expectRevert(E_InvalidVault.selector);
+        vm.expectRevert(ProtocolConfig.E_InvalidVault.selector);
         protocolConfig.setVaultFeeConfig(address(0), true, address(0), 0.1e4);
+    }
+
+    function test_setAdmin() public {
+        address newAdmin = makeAddr("newAdmin");
+
+        vm.startPrank(admin);
+
+        vm.expectRevert(ProtocolConfig.E_InvalidAdmin.selector);
+        protocolConfig.setAdmin(address(0));
+
+        protocolConfig.setAdmin(newAdmin);
+        assertEq(protocolConfig.admin(), newAdmin);
     }
 }

@@ -11,6 +11,9 @@ import "./Constants.sol";
 import {IERC20} from "../IEVault.sol";
 import {IEVC} from "ethereum-vault-connector/interfaces/IEthereumVaultConnector.sol";
 
+/// @title EVCClient
+/// @author Euler Labs (https://www.eulerlabs.com/)
+/// @notice Utilities for interacting with the EVC (Ethereum Vault Connector)
 abstract contract EVCClient is Storage, Events, Errors {
     IEVC immutable evc;
 
@@ -72,20 +75,16 @@ abstract contract EVCClient is Storage, Events, Errors {
         evc.forgiveAccountStatusCheck(account);
     }
 
-    function getController(address account) internal view returns (address) {
-        address[] memory controllers = evc.getControllers(account);
-
-        if (controllers.length > 1) revert E_TransientState();
-
-        return controllers.length == 1 ? controllers[0] : address(0);
+    function hasControllerEnabled(address account) internal view returns (bool) {
+        return evc.getControllers(account).length > 0;
     }
 
     function getCollaterals(address account) internal view returns (address[] memory) {
         return evc.getCollaterals(account);
     }
 
-    function isCollateralEnabled(address account, address market) internal view returns (bool) {
-        return evc.isCollateralEnabled(account, market);
+    function isCollateralEnabled(address account, address collateral) internal view returns (bool) {
+        return evc.isCollateralEnabled(account, collateral);
     }
 
     function isAccountStatusCheckDeferred(address account) internal view returns (bool) {
@@ -100,7 +99,7 @@ abstract contract EVCClient is Storage, Events, Errors {
         return evc.isControlCollateralInProgress();
     }
 
-    function verifyController(address account) internal view {
+    function validateController(address account) internal view {
         address[] memory controllers = IEVC(evc).getControllers(account);
 
         if (controllers.length > 1) revert E_TransientState();
