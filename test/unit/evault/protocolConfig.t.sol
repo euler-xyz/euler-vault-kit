@@ -95,6 +95,10 @@ contract ERC4626Test_ProtocolConfig is EVaultTestBase {
     function test_updateProtocolConfig() public {
         address newFeeReceiver = makeAddr("newFeeReceiver");
 
+        vm.expectRevert(ProtocolConfig.E_InvalidReceiver.selector);
+        vm.prank(admin);
+        protocolConfig.setFeeReceiver(address(0));
+
         vm.prank(admin);
         protocolConfig.setFeeReceiver(newFeeReceiver);
 
@@ -129,6 +133,19 @@ contract ERC4626Test_ProtocolConfig is EVaultTestBase {
 
         assertEq(genericFeeReceiver, feeReceiver);
         assertEq(genericFeeShare, feeShare);
+    }
+
+    function test_setInterestFeeRange() public {
+        uint16 newMinInterestFee = 0.6e4;
+        uint16 newMaxInterestFee = 1e4;
+
+        vm.prank(admin);
+        protocolConfig.setInterestFeeRange(newMinInterestFee, newMaxInterestFee);
+
+        (uint16 minInterestFee, uint16 maxInterestFee) = protocolConfig.interestFeeRange(address(0));
+
+        assertEq(minInterestFee, newMinInterestFee);
+        assertEq(maxInterestFee, newMaxInterestFee);
     }
 
     function test_invalid_configs() public {

@@ -25,4 +25,6 @@ contract MockEVault {
     function testExcludeFromCoverage() public pure {
         return;
     }
+
+    function payMe() external payable {}
 }
