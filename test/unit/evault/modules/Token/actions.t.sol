@@ -86,7 +86,7 @@ contract ERC20Test_Actions is EVaultTestBase {
         eTST.transfer(bob, amount);
     }
 
-    function test_Transfer_RevertsWhen_SelfTransfer(uint256 balance, uint256 amount) public {
+    function test_Transfer_SelfTransferIsNoop(uint256 balance, uint256 amount) public {
         amount = bound(amount, 1, MAX_SANE_AMOUNT);
         balance = bound(balance, amount, MAX_SANE_AMOUNT);
 
