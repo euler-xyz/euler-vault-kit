@@ -224,7 +224,7 @@ contract VaultTest_Borrow is EVaultTestBase {
 
     function test_ControllerRequiredOps(address controller, uint112 amount, address account) public {
         vm.assume(controller.code.length == 0 && uint160(controller) > 256);
-        vm.assume(account != address(0) && account != controller);
+        vm.assume(account != address(0) && account != controller && account != address(evc));
         vm.assume(amount > 0);
 
         vm.etch(controller, address(eTST).code);
