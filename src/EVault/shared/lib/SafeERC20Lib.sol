@@ -46,7 +46,7 @@ library SafeERC20Lib {
         if (!isEmptyOrTrueReturn(success, data)) RevertBytes.revertBytes(data);
     }
 
-    function isEmptyOrTrueReturn(bool callSuccess, bytes memory data) private returns (bool) {
+    function isEmptyOrTrueReturn(bool callSuccess, bytes memory data) private pure returns (bool) {
         return callSuccess && (data.length == 0 || (data.length >= 32 && abi.decode(data, (bool))));
     }
 }
