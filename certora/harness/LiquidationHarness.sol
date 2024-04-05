@@ -16,11 +16,7 @@ contract LiquidationHarness is Liquidation {
     function calculateLiquidityExternal(
         address account
     ) public view returns (uint256 collateralValue, uint256 liabilityValue) {
-        // This is intentionally an uninitialized vaultCache.
-        // calculateLiquidity is summarized in a way that vaultCache does not
-        // matter and calling loadVault() causes issues.
-        VaultCache memory vaultCache;
-        return calculateLiquidity(vaultCache, account, getCollaterals(account), LTVType.LIQUIDATION);
+        return calculateLiquidity(loadVault(), account, getCollaterals(account), LTVType.LIQUIDATION);
     }
 
     function getLiquidityValue(address account, VaultCache memory vaultCache, address[] memory collaterals) public view returns (uint256 collateralValue) {
