@@ -2,12 +2,11 @@
 
 pragma solidity ^0.8.0;
 
-import {Test} from "forge-std/Test.sol";
 import {EVaultTestBase, EthereumVaultConnector, IEVault} from "test/unit/evault/EVaultTestBase.t.sol";
 import {Errors} from "src/EVault/shared/Errors.sol";
 import "src/EVault/shared/Constants.sol";
 
-contract MockHookTarget is Test {
+contract MockHookTarget {
     bytes32 internal expectedDataHash;
 
     error UnexpectedError();
@@ -163,7 +162,10 @@ contract Governance_HookedOps is EVaultTestBase {
     function testFuzz_vaultStatusCheckHook(address hookTarget, address sender, uint256 amount, address receiver)
         public
     {
-        vm.assume(hookTarget.code.length == 0 && !evc.haveCommonOwner(hookTarget, address(0)));
+        vm.assume(
+            hookTarget.code.length == 0 && !evc.haveCommonOwner(hookTarget, address(0))
+                && hookTarget != 0x000000000000000000636F6e736F6c652e6c6f67
+        );
         vm.assume(
             sender.code.length == 0 && receiver.code.length == 0 && !evc.haveCommonOwner(sender, address(0))
                 && !evc.haveCommonOwner(receiver, address(0)) && !evc.haveCommonOwner(sender, receiver)
