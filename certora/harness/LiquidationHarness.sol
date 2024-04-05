@@ -6,6 +6,7 @@ import "../../src/EVault/modules/Liquidation.sol";
 import {IEVC} from "ethereum-vault-connector/interfaces/IEthereumVaultConnector.sol";
 import "../../src/interfaces/IPriceOracle.sol";
 import {IERC20} from "../../src/EVault/IEVault.sol";
+import {ERC20} from "../../lib/ethereum-vault-connector/lib/openzeppelin-contracts/contracts/token/ERC20/ERC20.sol";
 
 contract LiquidationHarness is Liquidation {
     // VaultCache vaultCache_;
