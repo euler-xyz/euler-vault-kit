@@ -3,9 +3,16 @@
 pragma solidity ^0.8.0;
 
 import {
-    EVaultTestBase, EVault, Base, Dispatch, TypesLib, GenericFactory, IRMTestDefault
+    EVaultTestBase,
+    EVault,
+    Base,
+    Dispatch,
+    TypesLib,
+    GenericFactory,
+    IRMTestDefault,
+    TestERC20
 } from "../EVaultTestBase.t.sol";
-import {EVCClient} from "src/EVault/shared/EVCClient.sol";
+import {EVCClient, IEVC} from "src/EVault/shared/EVCClient.sol";
 // import {SafeERC20Lib} from "src/EVault/shared/lib/SafeERC20Lib.sol";
 
 import "src/EVault/shared/types/Types.sol";
@@ -41,6 +48,10 @@ contract EVCClientUnitTest is EVaultTestBase {
     address public depositor;
     address public borrower;
 
+    TestERC20 assetTST3;
+
+    IEVault public eTST3;
+
     function setUp() public override {
         super.setUp();
 
@@ -66,6 +77,11 @@ contract EVCClientUnitTest is EVaultTestBase {
         assetTST2.mint(borrower, type(uint256).max);
 
         vm.stopPrank();
+
+        // create third random vault
+        assetTST3 = new TestERC20("Test Token 3", "TST3", 18, false);
+        eTST3 = IEVault(coreProductLine.createVault(address(assetTST3), address(oracle), unitOfAccount));
+        eTST3.setInterestRateModel(address(new IRMTestDefault()));
     }
 
     function test_functionWithNo_callThroughEVC() public {
@@ -109,6 +125,70 @@ contract EVCClientUnitTest is EVaultTestBase {
         vm.expectRevert(Errors.E_ControllerDisabled.selector);
         eTST.liquidate(borrower, address(eTST2), type(uint256).max, 0);
         vm.stopPrank();
+    }
+
+    function test_validateController_E_NoLiability() public {
+        startHoax(borrower);
+
+        assetTST2.approve(address(eTST2), type(uint256).max);
+        eTST2.deposit(10e18, borrower);
+
+        evc.enableCollateral(borrower, address(eTST2));
+        vm.stopPrank();
+
+        address liquidator = makeAddr("liquidator");
+        startHoax(liquidator);
+        vm.expectRevert(Errors.E_NoLiability.selector);
+        eTST.checkLiquidation(liquidator, borrower, address(eTST2));
+    }
+
+    function test_validateController_E_NotController() public {
+        startHoax(borrower);
+
+        assetTST2.approve(address(eTST2), type(uint256).max);
+        eTST2.deposit(10e18, borrower);
+
+        evc.enableCollateral(borrower, address(eTST2));
+        evc.enableController(borrower, address(eTST2));
+        vm.stopPrank();
+
+        address liquidator = makeAddr("liquidator");
+        startHoax(liquidator);
+        vm.expectRevert(Errors.E_NotController.selector);
+        eTST.checkLiquidation(liquidator, borrower, address(eTST2));
+    }
+
+    function test_validateController_E_TransientState() public {
+        startHoax(borrower);
+
+        assetTST2.approve(address(eTST2), type(uint256).max);
+        eTST2.deposit(10e18, borrower);
+
+        evc.enableCollateral(borrower, address(eTST2));
+        evc.enableController(borrower, address(eTST));
+
+        eTST.borrow(5e18, borrower);
+        assertEq(assetTST.balanceOf(borrower), 5e18);
+        vm.stopPrank();
+
+        vm.startPrank(borrower);
+
+        address liquidator = makeAddr("liquidator");
+
+        IEVC.BatchItem[] memory items = new IEVC.BatchItem[](2);
+
+        items[0].onBehalfOfAccount = address(0);
+        items[0].targetContract = address(evc);
+        items[0].value = 0;
+        items[0].data = abi.encodeWithSelector(evc.enableController.selector, borrower, eTST3);
+
+        items[1].onBehalfOfAccount = borrower;
+        items[1].targetContract = address(eTST);
+        items[1].value = 0;
+        items[1].data = abi.encodeWithSelector(EVault.checkLiquidation.selector, liquidator, borrower, address(eTST2));
+
+        vm.expectRevert(Errors.E_TransientState.selector);
+        evc.batch(items);
     }
 
     function setUpBuggyVault() internal returns (address) {
