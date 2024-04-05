@@ -15,4 +15,8 @@ contract IRMTestFixed is IIRM {
     function computeInterestRateView(address vault, uint256 cash, uint256 borrows) external view returns (uint256) {
         return computeInterestRate(vault, cash, borrows);
     }
+
+    function testExcludeFromCoverage() public pure {
+        return;
+    }
 }

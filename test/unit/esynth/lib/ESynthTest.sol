@@ -24,4 +24,8 @@ contract ESynthTest is EVaultTestBase {
 
         eTST = createSynthEVault(address(assetTST));
     }
+
+    function test_ExcludeFromCoverage() public pure {
+        return;
+    }
 }

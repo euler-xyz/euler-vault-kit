@@ -156,6 +156,18 @@ contract VaultLiquidation_Test is EVaultTestBase {
         eTST.liquidate(lender, address(eTST2), 1, 0);
     }
 
+    function test_noOracle() public {
+        IEVault eTSTx =
+            IEVault(factory.createProxy(true, abi.encodePacked(address(assetTST), address(0), unitOfAccount)));
+
+        startHoax(borrower);
+        vm.expectRevert(Errors.E_NoPriceOracle.selector);
+        evc.enableController(borrower, address(eTSTx));
+
+        vm.expectRevert(Errors.E_ControllerDisabled.selector);
+        eTSTx.liquidate(borrower, address(eTST2), 1, 0);
+    }
+
     function test_basicFullLiquidation() public {
         // set up liquidator to support the debt
         startHoax(lender);
@@ -1265,8 +1277,63 @@ contract VaultLiquidation_Test is EVaultTestBase {
         assertEq(eTST2.balanceOf(lender), maxYield);
 
         // violator:
-        startHoax(borrower);
         assertEq(eTST.debtOf(borrower), 0);
+        assertEq(eTST2.balanceOf(borrower), violatorsOriginalCollateral - maxYield);
+    }
+
+    function test_liquidationWhenUnitOfAccountIsAsset() public {
+        // set up liquidator to support the debt
+
+        IEVault eTSTx =
+            IEVault(factory.createProxy(true, abi.encodePacked(address(assetTST), address(oracle), address(assetTST))));
+        eTSTx.setLTV(address(eTST2), 0.95e4, 0);
+
+        oracle.setPrice(address(assetTST2), address(assetTST), 0.5e18);
+
+        startHoax(lender);
+        evc.enableCollateral(lender, address(eTST2));
+        evc.enableController(lender, address(eTSTx));
+        assetTST.approve(address(eTSTx), type(uint256).max);
+        eTSTx.deposit(100e18, lender);
+        eTST2.deposit(10e18, lender);
+
+        startHoax(borrower);
+        evc.enableController(borrower, address(eTSTx));
+        eTSTx.borrow(40e18, borrower);
+
+        (uint256 collateralValue, uint256 liabilityValue) = eTSTx.accountLiquidity(borrower, false);
+        assertApproxEqAbs(collateralValue * 1e18 / liabilityValue, 1.18e18, 0.01e18);
+
+        // liability value is denominated in the asset itself
+        assertEq(liabilityValue, 40e18);
+
+        oracle.setPrice(address(assetTST2), address(assetTST), 0.42e18);
+
+        (collateralValue,) = eTSTx.accountLiquidity(borrower, false);
+        assertEq(collateralValue * 1e18 / liabilityValue, 0.9975e18);
+
+        (uint256 maxRepay, uint256 maxYield) = eTSTx.checkLiquidation(lender, borrower, address(eTST2));
+
+        assertEq(liabilityValue, maxRepay);
+
+        uint256 repayValue = maxRepay;
+        uint256 yieldValue = oracle.getQuote(maxYield, address(eTST2), address(assetTST));
+
+        assertApproxEqAbs(yieldValue, repayValue * 1e18 / 0.9975e18, 1);
+
+        uint256 violatorsOriginalCollateral = eTST2.balanceOf(borrower);
+        uint256 lendersOriginalCollateral = eTST2.balanceOf(lender);
+
+        startHoax(lender);
+
+        eTSTx.liquidate(borrower, address(eTST2), type(uint256).max, 0);
+
+        // liquidator:
+        assertEq(eTSTx.debtOf(lender), maxRepay);
+        assertEq(eTST2.balanceOf(lender), lendersOriginalCollateral + maxYield);
+
+        // violator:
+        assertEq(eTSTx.debtOf(borrower), 0);
         assertEq(eTST2.balanceOf(borrower), violatorsOriginalCollateral - maxYield);
     }
 
