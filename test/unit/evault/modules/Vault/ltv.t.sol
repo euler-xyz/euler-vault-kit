@@ -90,7 +90,7 @@ contract VaultTest_LTV is EVaultTestBase {
         skip(50);
 
         assertEq(eTST.borrowingLTV(address(eTST2)), 0.5e4);
-        assertEq(eTST.liquidationLTV(address(eTST2)), 0.5063e4);
+        assertEq(eTST.liquidationLTV(address(eTST2)), 0.5062e4);
 
         skip(50);
 

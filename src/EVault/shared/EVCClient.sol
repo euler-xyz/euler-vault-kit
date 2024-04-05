@@ -54,12 +54,17 @@ abstract contract EVCClient is Storage, Events, Errors {
         return msg.sender;
     }
 
-    function isKnownSubaccount(address account) internal view returns (bool) {
+    // Checks if the account is known to EVC to be a non-owner sub-account.
+    // Assets that are not EVC integrated should not be sent to those accounts,
+    // as there will be no way to transfer them out.
+    function isKnownNonOwnerAccount(address account) internal view returns (bool) {
         address owner = evc.getAccountOwner(account);
         return owner != address(0) && owner != account;
     }
 
     function EVCRequireStatusChecks(address account) internal {
+        if (account == CHECKACCOUNT_CALLER) revert E_BadAddress(); // the special value should be resolved by now
+
         if (account == CHECKACCOUNT_NONE) {
             evc.requireVaultStatusCheck();
         } else {

@@ -14,7 +14,7 @@ import {AmountCap} from "./Types.sol";
 ///   * This is so that uninitialized storage implies no limit
 ///   * For an actual cap value of 0, use a zero mantissa and non-zero exponent
 library AmountCapLib {
-    function toUint(AmountCap self) internal pure returns (uint256) {
+    function resolve(AmountCap self) internal pure returns (uint256) {
         uint256 amountCap = AmountCap.unwrap(self);
 
         if (amountCap == 0) return type(uint256).max;

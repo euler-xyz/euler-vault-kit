@@ -116,7 +116,7 @@ abstract contract BorrowingModule is IBorrowing, Base, AssetTransfers, BalanceUt
 
     /// @inheritdoc IBorrowing
     function deloop(uint256 amount, address debtFrom) public virtual nonReentrant returns (uint256) {
-        (VaultCache memory vaultCache, address account) = initOperation(OP_DELOOP, CHECKACCOUNT_NONE);
+        (VaultCache memory vaultCache, address account) = initOperation(OP_DELOOP, CHECKACCOUNT_CALLER);
 
         Assets owed = getCurrentOwed(vaultCache, debtFrom).toAssetsUp();
         if (owed.isZero()) return 0;

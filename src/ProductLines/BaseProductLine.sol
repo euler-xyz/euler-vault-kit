@@ -96,14 +96,14 @@ abstract contract BaseProductLine {
         // Handle MKR like tokens returning bytes32
         (bool success, bytes memory data) = address(asset).staticcall(abi.encodeWithSelector(IERC20.name.selector));
         if (!success) RevertBytes.revertBytes(data);
-        return data.length == 32 ? string(data) : abi.decode(data, (string));
+        return data.length <= 32 ? string(data) : abi.decode(data, (string));
     }
 
     function getTokenSymbol(address asset) internal view returns (string memory) {
         // Handle MKR like tokens returning bytes32
         (bool success, bytes memory data) = address(asset).staticcall(abi.encodeWithSelector(IERC20.symbol.selector));
         if (!success) RevertBytes.revertBytes(data);
-        return data.length == 32 ? string(data) : abi.decode(data, (string));
+        return data.length <= 32 ? string(data) : abi.decode(data, (string));
     }
 
     function isEVCCompatible(address asset) private view returns (bool) {

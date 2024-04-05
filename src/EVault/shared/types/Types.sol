@@ -42,6 +42,7 @@ using {
     eqAssets as ==,
     neqAssets as !=,
     gtAssets as >,
+    gteAssets as >=,
     ltAssets as <,
     lteAssets as <=
 } for Assets global;
@@ -50,7 +51,9 @@ using OwedLib for Owed global;
 using {addOwed as +, subOwed as -, eqOwed as ==, neqOwed as !=, gtOwed as >, ltOwed as <} for Owed global;
 
 using ConfigAmountLib for ConfigAmount global;
-using {gtConfigAmount as >, ltConfigAmount as <} for ConfigAmount global;
+using {
+    gtConfigAmount as >, gteConfigAmount as >=, ltConfigAmount as <, lteConfigAmount as <=
+} for ConfigAmount global;
 
 using AmountCapLib for AmountCap global;
 using FlagsLib for Flags global;

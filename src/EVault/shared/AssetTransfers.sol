@@ -25,7 +25,7 @@ abstract contract AssetTransfers is Base {
             // If the underlying asset is not EVC-compatible, do not transfer assets to any
             // address that the EVC knows to be a sub-account. Non-EVC-compatible tokens do
             // not know about sub-accounts, so the funds would be lost.
-            || (vaultCache.configFlags.isNotSet(CFG_EVC_COMPATIBLE_ASSET) && isKnownSubaccount(to))
+            || (vaultCache.configFlags.isNotSet(CFG_EVC_COMPATIBLE_ASSET) && isKnownNonOwnerAccount(to))
         ) {
             revert E_BadAssetReceiver();
         }
