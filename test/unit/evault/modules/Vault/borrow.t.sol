@@ -54,11 +54,29 @@ contract VaultTest_Borrow is EVaultTestBase {
     function test_basicBorrow() public {
         startHoax(borrower);
 
-        evc.enableCollateral(borrower, address(eTST2));
+        vm.expectRevert(Errors.E_ControllerDisabled.selector);
+        eTST.borrow(5e18, borrower);
+
         evc.enableController(borrower, address(eTST));
+
+        vm.expectRevert(Errors.E_AccountLiquidity.selector);
+        eTST.borrow(5e18, borrower);
+
+        // still no borrow hence possible to disable controller
+        assertEq(evc.isControllerEnabled(borrower, address(eTST)), true);
+        eTST.disableController();
+        assertEq(evc.isControllerEnabled(borrower, address(eTST)), false);
+        evc.enableController(borrower, address(eTST));
+        assertEq(evc.isControllerEnabled(borrower, address(eTST)), true);
+
+        evc.enableCollateral(borrower, address(eTST2));
 
         eTST.borrow(5e18, borrower);
         assertEq(assetTST.balanceOf(borrower), 5e18);
+
+        // no longer possible to disable controller
+        vm.expectRevert(Errors.E_OutstandingDebt.selector);
+        eTST.disableController();
 
         // Should be able to borrow up to 9, so this should fail:
 
@@ -202,6 +220,31 @@ contract VaultTest_Borrow is EVaultTestBase {
         vm.expectRevert(Errors.E_InsufficientBalance.selector);
         eTST.pullDebt(amountToBorrow + 1, borrower);
         vm.stopPrank();
+    }
+
+    function test_ControllerRequiredOps(address controller, uint112 amount, address account) public {
+        vm.assume(controller.code.length == 0 && uint160(controller) > 256);
+        vm.assume(account != address(0) && account != controller);
+        vm.assume(amount > 0);
+
+        vm.etch(controller, address(eTST).code);
+        IEVault(controller).initialize(address(this));
+
+        vm.startPrank(account);
+
+        vm.expectRevert(Errors.E_ControllerDisabled.selector);
+        IEVault(controller).borrow(amount, account);
+
+        vm.expectRevert(Errors.E_ControllerDisabled.selector);
+        IEVault(controller).loop(amount, account);
+
+        vm.expectRevert(Errors.E_ControllerDisabled.selector);
+        IEVault(controller).pullDebt(amount, account);
+
+        vm.expectRevert(Errors.E_ControllerDisabled.selector);
+        IEVault(controller).liquidate(account, account, amount, amount);
+
+        evc.enableController(account, controller);
     }
 
     function test_Borrow_RevertsWhen_ReceiverIsSubaccount() public {
