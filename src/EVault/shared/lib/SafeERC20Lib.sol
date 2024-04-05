@@ -21,7 +21,7 @@ library SafeERC20Lib {
         (bool success, bytes memory data) =
             address(token).call(abi.encodeWithSelector(IERC20.transferFrom.selector, from, to, value));
 
-        return (!success || (data.length != 0 && !abi.decode(data, (bool)))) ? (false, data) : (true, bytes(""));
+        return isEmptyOrTrueReturn(success, data) ? (true, bytes("")) : (false, data);
     }
 
     function safeTransferFrom(IERC20 token, address from, address to, uint256 value, address permit2) internal {
@@ -43,6 +43,10 @@ library SafeERC20Lib {
     function safeTransfer(IERC20 token, address to, uint256 value) internal {
         (bool success, bytes memory data) =
             address(token).call(abi.encodeWithSelector(IERC20.transfer.selector, to, value));
-        if (!success || (data.length != 0 && !abi.decode(data, (bool)))) RevertBytes.revertBytes(data);
+        if (!isEmptyOrTrueReturn(success, data)) RevertBytes.revertBytes(data);
+    }
+
+    function isEmptyOrTrueReturn(bool callSuccess, bytes memory data) private returns (bool) {
+        return callSuccess && (data.length == 0 || (data.length >= 32 && abi.decode(data, (bool))));
     }
 }
