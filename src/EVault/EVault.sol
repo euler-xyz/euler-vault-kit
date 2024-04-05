@@ -11,14 +11,11 @@ import {Dispatch} from "./Dispatch.sol";
 contract EVault is Dispatch {
     constructor(Integrations memory integrations, DeployedModules memory modules) Dispatch(integrations, modules) {}
 
-
     ///////////////////////////////////////////////////////////////////////////////////////////////
     //                                     INITIALIZATION                                        //
     ///////////////////////////////////////////////////////////////////////////////////////////////
 
     function initialize(address proxyCreator) public virtual override use(MODULE_INITIALIZE) {}
-
-
 
     ///////////////////////////////////////////////////////////////////////////////////////////////
     //                                         TOKEN                                             //
@@ -32,32 +29,53 @@ contract EVault is Dispatch {
 
     function totalSupply() public view virtual override useView(MODULE_TOKEN) returns (uint256) {}
 
-    function balanceOf(address account) public view virtual override returns (uint256) { return super.balanceOf(account); }
+    function balanceOf(address account) public view virtual override returns (uint256) {
+        return super.balanceOf(account);
+    }
 
-    function allowance(address holder, address spender) public view virtual override returns (uint256) { return super.allowance(holder, spender); }
+    function allowance(address holder, address spender) public view virtual override returns (uint256) {
+        return super.allowance(holder, spender);
+    }
 
+    function transfer(address to, uint256 amount) public virtual override callThroughEVC returns (bool) {
+        return super.transfer(to, amount);
+    }
 
-    function transfer(address to, uint256 amount) public virtual override callThroughEVC returns (bool) { return super.transfer(to, amount); }
+    function transferFrom(address from, address to, uint256 amount)
+        public
+        virtual
+        override
+        callThroughEVC
+        returns (bool)
+    {
+        return super.transferFrom(from, to, amount);
+    }
 
-    function transferFrom(address from, address to, uint256 amount) public virtual override callThroughEVC returns (bool) { return super.transferFrom(from, to, amount); }
+    function approve(address spender, uint256 amount) public virtual override returns (bool) {
+        return super.approve(spender, amount);
+    }
 
-    function approve(address spender, uint256 amount) public virtual override returns (bool) { return super.approve(spender, amount); }
-
-    function transferFromMax(address from, address to) public virtual override callThroughEVC returns (bool) { return super.transferFromMax(from, to); }
-
-
+    function transferFromMax(address from, address to) public virtual override callThroughEVC returns (bool) {
+        return super.transferFromMax(from, to);
+    }
 
     ///////////////////////////////////////////////////////////////////////////////////////////////
     //                                         VAULT                                             //
     ///////////////////////////////////////////////////////////////////////////////////////////////
 
-    function asset() public view virtual override returns (address) { return super.asset(); }
+    function asset() public view virtual override returns (address) {
+        return super.asset();
+    }
 
     function totalAssets() public view virtual override useView(MODULE_VAULT) returns (uint256) {}
 
-    function convertToAssets(uint256 shares) public view virtual override returns (uint256) { return super.convertToAssets(shares); }
+    function convertToAssets(uint256 shares) public view virtual override returns (uint256) {
+        return super.convertToAssets(shares);
+    }
 
-    function convertToShares(uint256 assets) public view virtual override returns (uint256) { return super.convertToShares(assets); }
+    function convertToShares(uint256 assets) public view virtual override returns (uint256) {
+        return super.convertToShares(assets);
+    }
 
     function maxDeposit(address account) public view virtual override useView(MODULE_VAULT) returns (uint256) {}
 
@@ -81,8 +99,18 @@ contract EVault is Dispatch {
 
     function creator() public view virtual override useView(MODULE_VAULT) returns (address) {}
 
+    function deposit(uint256 amount, address receiver) public virtual override callThroughEVC returns (uint256) {
+        return super.deposit(amount, receiver);
+    }
 
-    function deposit(uint256 amount, address receiver) public virtual override callThroughEVC returns (uint256) { return super.deposit(amount, receiver); }
+    function mint(uint256 amount, address receiver)
+        public
+        virtual
+        override
+        callThroughEVC
+        use(MODULE_VAULT)
+        returns (uint256)
+    {}
 
     function mint(uint256 amount, address receiver) public virtual override callThroughEVC use(MODULE_VAULT) returns (uint256) {}
 
@@ -92,7 +120,23 @@ contract EVault is Dispatch {
 
     function skim(uint256 amount, address receiver) public virtual override callThroughEVC use(MODULE_VAULT) returns (uint256) {}
 
+    function redeem(uint256 amount, address receiver, address owner)
+        public
+        virtual
+        override
+        callThroughEVC
+        use(MODULE_VAULT)
+        returns (uint256)
+    {}
 
+    function skim(uint256 amount, address receiver)
+        public
+        virtual
+        override
+        callThroughEVC
+        use(MODULE_VAULT)
+        returns (uint256)
+    {}
 
     ///////////////////////////////////////////////////////////////////////////////////////////////
     //                                        BORROWING                                          //
@@ -104,7 +148,9 @@ contract EVault is Dispatch {
 
     function cash() public view virtual override useView(MODULE_BORROWING) returns (uint256) {}
 
-    function debtOf(address account) public view virtual override returns (uint256) { return super.debtOf(account); }
+    function debtOf(address account) public view virtual override returns (uint256) {
+        return super.debtOf(account);
+    }
 
     function debtOfExact(address account) public view virtual override useView(MODULE_BORROWING) returns (uint256) {}
 
@@ -114,49 +160,112 @@ contract EVault is Dispatch {
 
     function dToken() public view virtual override useView(MODULE_BORROWING) returns (address) {}
 
+    function borrow(uint256 amount, address receiver)
+        public
+        virtual
+        override
+        callThroughEVC
+        use(MODULE_BORROWING)
+        returns (uint256)
+    {}
 
-    function borrow(uint256 amount, address receiver) public virtual override callThroughEVC use(MODULE_BORROWING) returns (uint256) {}
+    function repay(uint256 amount, address receiver)
+        public
+        virtual
+        override
+        callThroughEVC
+        use(MODULE_BORROWING)
+        returns (uint256)
+    {}
 
-    function repay(uint256 amount, address receiver) public virtual override callThroughEVC use(MODULE_BORROWING) returns (uint256) {}
+    function loop(uint256 amount, address sharesReceiver)
+        public
+        virtual
+        override
+        callThroughEVC
+        use(MODULE_BORROWING)
+        returns (uint256)
+    {}
 
-    function loop(uint256 amount, address sharesReceiver) public virtual override callThroughEVC use(MODULE_BORROWING) returns (uint256) {}
+    function deloop(uint256 amount, address debtFrom)
+        public
+        virtual
+        override
+        callThroughEVC
+        use(MODULE_BORROWING)
+        returns (uint256)
+    {}
 
-    function deloop(uint256 amount, address debtFrom) public virtual override callThroughEVC use(MODULE_BORROWING) returns (uint256) {}
-
-    function pullDebt(uint256 amount, address from) public virtual override callThroughEVC use(MODULE_BORROWING) returns (uint256) {}
+    function pullDebt(uint256 amount, address from)
+        public
+        virtual
+        override
+        callThroughEVC
+        use(MODULE_BORROWING)
+        returns (uint256)
+    {}
 
     function flashLoan(uint256 amount, bytes calldata data) public virtual override use(MODULE_BORROWING) {}
 
     function touch() public virtual override callThroughEVC use(MODULE_BORROWING) {}
 
-
-
     ///////////////////////////////////////////////////////////////////////////////////////////////
     //                                     LIQUIDATION                                           //
     ///////////////////////////////////////////////////////////////////////////////////////////////
 
-    function checkLiquidation(address liquidator, address violator, address collateral) public view virtual override useView(MODULE_LIQUIDATION) returns (uint256 maxRepay, uint256 maxYield) {}
+    function checkLiquidation(address liquidator, address violator, address collateral)
+        public
+        view
+        virtual
+        override
+        useView(MODULE_LIQUIDATION)
+        returns (uint256 maxRepay, uint256 maxYield)
+    {}
 
-    function liquidate(address violator, address collateral, uint256 repayAssets, uint256 minYieldBalance) public virtual override callThroughEVC use(MODULE_LIQUIDATION) {}
-
-
+    function liquidate(address violator, address collateral, uint256 repayAssets, uint256 minYieldBalance)
+        public
+        virtual
+        override
+        callThroughEVC
+        use(MODULE_LIQUIDATION)
+    {}
 
     ///////////////////////////////////////////////////////////////////////////////////////////////
     //                                    RISK MANAGEMENT                                        //
     ///////////////////////////////////////////////////////////////////////////////////////////////
 
-    function accountLiquidity(address account, bool liquidation) public view virtual override useView(MODULE_RISKMANAGER) returns (uint256 collateralValue, uint256 liabilityValue) {}
+    function accountLiquidity(address account, bool liquidation)
+        public
+        view
+        virtual
+        override
+        useView(MODULE_RISKMANAGER)
+        returns (uint256 collateralValue, uint256 liabilityValue)
+    {}
 
-    function accountLiquidityFull(address account, bool liquidation) public view virtual override useView(MODULE_RISKMANAGER) returns (address[] memory collaterals, uint256[] memory collateralValues, uint256 liabilityValue) {}
-
+    function accountLiquidityFull(address account, bool liquidation)
+        public
+        view
+        virtual
+        override
+        useView(MODULE_RISKMANAGER)
+        returns (address[] memory collaterals, uint256[] memory collateralValues, uint256 liabilityValue)
+    {}
 
     function disableController() public virtual override use(MODULE_RISKMANAGER) {}
 
-    function checkAccountStatus(address account, address[] calldata collaterals) public virtual override returns (bytes4) { return super.checkAccountStatus(account, collaterals); }
+    function checkAccountStatus(address account, address[] calldata collaterals)
+        public
+        virtual
+        override
+        returns (bytes4)
+    {
+        return super.checkAccountStatus(account, collaterals);
+    }
 
-    function checkVaultStatus() public virtual override returns (bytes4) { return super.checkVaultStatus(); }
-
-
+    function checkVaultStatus() public virtual override returns (bytes4) {
+        return super.checkVaultStatus();
+    }
 
     ///////////////////////////////////////////////////////////////////////////////////////////////
     //                                   BALANCE TRACKING                                        //
@@ -164,14 +273,18 @@ contract EVault is Dispatch {
 
     function balanceTrackerAddress() public view virtual override useView(MODULE_BALANCE_FORWARDER) returns (address) {}
 
-    function balanceForwarderEnabled(address account) public view virtual override useView(MODULE_BALANCE_FORWARDER) returns (bool) {}
-
+    function balanceForwarderEnabled(address account)
+        public
+        view
+        virtual
+        override
+        useView(MODULE_BALANCE_FORWARDER)
+        returns (bool)
+    {}
 
     function enableBalanceForwarder() public virtual override use(MODULE_BALANCE_FORWARDER) {}
 
     function disableBalanceForwarder() public virtual override use(MODULE_BALANCE_FORWARDER) {}
-
-
 
     ///////////////////////////////////////////////////////////////////////////////////////////////
     //                                     GOVERNANCE                                            //
@@ -191,13 +304,41 @@ contract EVault is Dispatch {
 
     function protocolFeeReceiver() public view virtual override useView(MODULE_GOVERNANCE) returns (address) {}
 
-    function caps() public view virtual override useView(MODULE_GOVERNANCE) returns (uint16 supplyCap, uint16 borrowCap) {}
+    function caps()
+        public
+        view
+        virtual
+        override
+        useView(MODULE_GOVERNANCE)
+        returns (uint16 supplyCap, uint16 borrowCap)
+    {}
 
-    function borrowingLTV(address collateral) public view virtual override useView(MODULE_GOVERNANCE) returns (uint16) {}
+    function borrowingLTV(address collateral)
+        public
+        view
+        virtual
+        override
+        useView(MODULE_GOVERNANCE)
+        returns (uint16)
+    {}
 
-    function liquidationLTV(address collateral) public view virtual override useView(MODULE_GOVERNANCE) returns (uint16) {}
+    function liquidationLTV(address collateral)
+        public
+        view
+        virtual
+        override
+        useView(MODULE_GOVERNANCE)
+        returns (uint16)
+    {}
 
-    function LTVFull(address collateral) public view virtual override useView(MODULE_GOVERNANCE) returns (uint48 targetTimestamp, uint16 targetLTV, uint32 rampDuration, uint16 originalLTV) {}
+    function LTVFull(address collateral)
+        public
+        view
+        virtual
+        override
+        useView(MODULE_GOVERNANCE)
+        returns (uint48 targetTimestamp, uint16 targetLTV, uint32 rampDuration, uint16 originalLTV)
+    {}
 
     function LTVList() public view virtual override useView(MODULE_GOVERNANCE) returns (address[] memory) {}
 
@@ -213,7 +354,6 @@ contract EVault is Dispatch {
 
     function permit2Address() public view virtual override useView(MODULE_GOVERNANCE) returns (address) {}
 
-
     function convertFees() public virtual override callThroughEVC use(MODULE_GOVERNANCE) {}
 
     function setName(string calldata newName) public virtual override use(MODULE_GOVERNANCE) {}
@@ -226,7 +366,12 @@ contract EVault is Dispatch {
 
     function setHookConfig(address newHookTarget, uint32 newHookedOps) public virtual override use(MODULE_GOVERNANCE) {}
 
-    function setLTV(address collateral, uint16 ltv, uint32 rampDuration) public virtual override use(MODULE_GOVERNANCE) {}
+    function setLTV(address collateral, uint16 ltv, uint32 rampDuration)
+        public
+        virtual
+        override
+        use(MODULE_GOVERNANCE)
+    {}
 
     function clearLTV(address collateral) public virtual override use(MODULE_GOVERNANCE) {}
 

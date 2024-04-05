@@ -37,7 +37,7 @@ abstract contract BorrowUtils is Base {
         vaultStorage.users[account].interestAccumulator = vaultCache.interestAccumulator;
     }
 
-    function increaseBorrow(VaultCache memory vaultCache, address account, Assets assets) internal {
+    function increaseBorrow(VaultCache memory vaultCache, address account, Assets assets) internal virtual {
         (Owed owed, Owed prevOwed) = updateUserBorrow(vaultCache, account);
 
         Owed amount = assets.toOwed();
@@ -49,7 +49,7 @@ abstract contract BorrowUtils is Base {
         logBorrowChange(account, prevOwed, owed);
     }
 
-    function decreaseBorrow(VaultCache memory vaultCache, address account, Assets amount) internal {
+    function decreaseBorrow(VaultCache memory vaultCache, address account, Assets amount) internal virtual {
         (Owed owedExact, Owed prevOwed) = updateUserBorrow(vaultCache, account);
         Assets owed = owedExact.toAssetsUp();
 
@@ -67,7 +67,7 @@ abstract contract BorrowUtils is Base {
         logBorrowChange(account, prevOwed, owedRemaining);
     }
 
-    function transferBorrow(VaultCache memory vaultCache, address from, address to, Assets assets) internal {
+    function transferBorrow(VaultCache memory vaultCache, address from, address to, Assets assets) internal virtual {
         Owed amount = assets.toOwed();
 
         (Owed fromOwed, Owed fromOwedPrev) = updateUserBorrow(vaultCache, from);

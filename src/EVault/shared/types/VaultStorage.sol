@@ -25,22 +25,18 @@ struct VaultStorage {
     bool reentrancyLocked;
     // A flag indicating if the vault snapshot has already been initialized for the currently executing batch
     bool snapshotInitialized;
-
     // Packed slot 14 + 18 = 32
     // Sum of all user shares
     Shares totalShares;
     // Sum of all user debts
     Owed totalBorrows;
-
     // Packed slot 14 + 4 = 18
     // Interest fees accrued since the last fee conversion
     Shares accumulatedFees;
     // A bitfield of vault configuration options
     Flags configFlags;
-
     // Current interest accumulator
     uint256 interestAccumulator;
-
     // Packed slot 20 + 2 + 9 = 31
     // Address of the interest rate model contract. If not set, 0% interest is applied
     address interestRateModel;
@@ -48,25 +44,20 @@ struct VaultStorage {
     ConfigAmount interestFee;
     // Current interest rate applied to outstanding borrows
     uint72 interestRate;
-
     // Name of the shares token (eToken)
     string name;
     // Symbol of the shares token (eToken)
     string symbol;
-
     // Address of the vault's creator
     address creator;
-
     // Address of the vault's governor
     address governorAdmin;
     // Address which receives governor fees
     address feeReceiver;
     // Address which will be called for enabled hooks
     address hookTarget;
-
     // User accounts
     mapping(address account => UserStorage) users;
-
     // LTV configuration for collaterals
     mapping(address collateral => LTVConfig) ltvLookup;
     // List of addresses which were at any point configured as collateral
