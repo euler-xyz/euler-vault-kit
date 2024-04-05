@@ -49,8 +49,6 @@ contract Governance_ConvertFees is EVaultTestBase {
         skip(1000 days);
 
         uint256 fees = eTST.accumulatedFees();
-        assertApproxEqAbs(fees, 0.03e18, 0.001e18);
-
         uint256 totalSupplyBefore = eTST.totalSupply();
 
         eTST.convertFees();

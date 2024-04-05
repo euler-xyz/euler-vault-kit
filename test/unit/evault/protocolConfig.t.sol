@@ -9,7 +9,7 @@ import "src/EVault/modules/Governance.sol";
 import "src/EVault/shared/Constants.sol";
 import "src/EVault/shared/types/Types.sol";
 
-uint16 constant DEFAULT_INTEREST_FEE = 0.23e4; // TODO expose in harness from Initialize module
+uint16 constant DEFAULT_INTEREST_FEE = 0.1e4; // TODO expose in harness from Initialize module
 
 contract ERC4626Test_ProtocolConfig is EVaultTestBase {
     using TypesLib for uint256;
