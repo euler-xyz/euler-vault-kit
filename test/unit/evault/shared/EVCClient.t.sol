@@ -83,6 +83,34 @@ contract EVCClientUnitTest is EVaultTestBase {
         vm.stopPrank();
     }
 
+    function test_non_CONTROLLER_NEUTRAL_OPS_without_enableController() public {
+        startHoax(borrower);
+
+        // OP_BORROW
+        evc.enableCollateral(borrower, address(eTST2));
+
+        vm.expectRevert(Errors.E_ControllerDisabled.selector);
+        eTST.borrow(5e18, borrower);
+
+        // OP_LOOP
+        vm.expectRevert(Errors.E_ControllerDisabled.selector);
+        eTST.loop(5e18, borrower);
+
+        // OP_PULL_DEBT
+        vm.expectRevert(Errors.E_ControllerDisabled.selector);
+        eTST.pullDebt(5e18, borrower);
+
+        vm.stopPrank();
+
+        // OP_LIQUIDATE
+        address liquidator = makeAddr("liquidator");
+        startHoax(liquidator);
+        evc.enableCollateral(liquidator, address(eTST2));
+        vm.expectRevert(Errors.E_ControllerDisabled.selector);
+        eTST.liquidate(borrower, address(eTST2), type(uint256).max, 0);
+        vm.stopPrank();
+    }
+
     function setUpBuggyVault() internal returns (address) {
         admin = makeAddr("admin");
         feeReceiver = makeAddr("feeReceiver");
