@@ -72,6 +72,10 @@ contract LiquidationHarness is Liquidation {
         return controllers.length == 1 && controllers[0] == address(this);
     }
 
+    function vaultIsController(address account) external view returns (bool) {
+        return IEVC(evc).isControllerEnabled(account, address(this));
+    }
+
     function calculateLiquidationExt(
         VaultCache memory vaultCache,
         address liquidator,
