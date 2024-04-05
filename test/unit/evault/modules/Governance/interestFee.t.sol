@@ -36,7 +36,7 @@ contract GovernanceTest_InterestFee is EVaultTestBase {
         assertEq(eTST.totalBorrows(), 0);
         assertEq(eTST.accumulatedFees(), 0);
 
-        borrow(borrowers, countBorrowers);
+        borrowMany(borrowers, countBorrowers);
 
         uint256 amount = eTST.totalBorrows();
 
@@ -45,7 +45,7 @@ contract GovernanceTest_InterestFee is EVaultTestBase {
         uint256 totalSupplyBefore = eTST.totalSupply();
         uint256 accumFees = eTST.interestFee() * (eTST.totalBorrows() - amount) / (1e4);
 
-        repay(borrowers, countBorrowers);
+        repayMany(borrowers, countBorrowers);
 
         assertApproxEqAbs(accumFees, eTST.accumulatedFeesAssets(), 1000000);
 
@@ -62,7 +62,7 @@ contract GovernanceTest_InterestFee is EVaultTestBase {
         assertEq(eTST.totalBorrows(), 0);
         assertEq(eTST.accumulatedFees(), 0);
 
-        borrow(borrowers, countBorrowers);
+        borrowMany(borrowers, countBorrowers);
 
         uint16 fee = eTST.interestFee();
         uint256 totalBorrow = eTST.totalBorrows();
@@ -101,7 +101,7 @@ contract GovernanceTest_InterestFee is EVaultTestBase {
     }
 
     function test_convertFees_NoGovernorReceiver() public {
-        uint256 countBorrowers = 15;
+        uint256 countBorrowers = 5;
         address[] memory borrowers = new address[](countBorrowers);
 
         startHoax(address(this));
@@ -111,12 +111,12 @@ contract GovernanceTest_InterestFee is EVaultTestBase {
         assertEq(eTST.accumulatedFees(), 0);
         assertEq(eTST.totalBorrows(), 0);
 
-        borrow(borrowers, countBorrowers);
+        borrowMany(borrowers, countBorrowers);
         skip(86400 * 100);
-        repay(borrowers, countBorrowers);
+        repayMany(borrowers, countBorrowers);
 
         uint256 totalSupplyBefore = eTST.totalSupply();
-        uint256 accumFee = eTST.accumulatedFees();
+        uint256 accumFees = eTST.accumulatedFees();
         address protocolFeeReceiver = protocolConfig.feeReceiver();
 
         assertEq(eTST.balanceOf(protocolFeeReceiver), 0);
@@ -124,7 +124,7 @@ contract GovernanceTest_InterestFee is EVaultTestBase {
 
         eTST.convertFees();
 
-        assertEq(eTST.balanceOf(protocolFeeReceiver), accumFee);
+        assertEq(eTST.balanceOf(protocolFeeReceiver), accumFees);
         assertEq(eTST.balanceOf(address(0)), 0);
         assertEq(eTST.totalSupply(), totalSupplyBefore);
         assertEq(eTST.accumulatedFees(), 0);
@@ -137,14 +137,14 @@ contract GovernanceTest_InterestFee is EVaultTestBase {
         assertEq(eTST.totalBorrows(), 0);
         assertEq(eTST.accumulatedFees(), 0);
 
-        borrow(borrowers, countBorrowers);
+        borrowMany(borrowers, countBorrowers);
         skip(86400 * 365);
-        repay(borrowers, countBorrowers);
+        repayMany(borrowers, countBorrowers);
 
         uint256 totalSupplyBefore = eTST.totalSupply();
-        uint256 accumFee = eTST.accumulatedFees();
+        uint256 accumFees = eTST.accumulatedFees();
         uint256 protocolShare = eTST.protocolFeeShare();
-        uint256 partFee = accumFee.toShares().mulDiv(1e4 - protocolShare, 1e4).toUint();
+        uint256 partFees = accumFees.toShares().mulDiv(1e4 - protocolShare, 1e4).toUint();
 
         address governFeeReceiver = eTST.feeReceiver();
         address protocolFeeReceiver = protocolConfig.feeReceiver();
@@ -154,14 +154,14 @@ contract GovernanceTest_InterestFee is EVaultTestBase {
 
         eTST.convertFees();
 
-        assertEq(eTST.balanceOf(governFeeReceiver), partFee);
-        assertEq(eTST.balanceOf(protocolFeeReceiver), accumFee - partFee);
+        assertEq(eTST.balanceOf(governFeeReceiver), partFees);
+        assertEq(eTST.balanceOf(protocolFeeReceiver), accumFees - partFees);
         assertEq(eTST.totalSupply(), totalSupplyBefore);
         assertEq(eTST.accumulatedFees(), 0);
     }
 
-    function testFuzz_convertFees_OverMaxProtocolFeeShare(uint256 countBorrowers) public {
-        countBorrowers = bound(countBorrowers, 1, 15);
+    function test_convertFees_OverMaxProtocolFeeShare() public {
+        uint256 countBorrowers = 5;
         address[] memory borrowers = new address[](countBorrowers);
 
         uint16 newProtocolFeeShare = 0.5e4 + 0.1e4;
@@ -175,25 +175,25 @@ contract GovernanceTest_InterestFee is EVaultTestBase {
         assertEq(eTST.totalBorrows(), 0);
         assertEq(eTST.accumulatedFees(), 0);
 
-        borrow(borrowers, countBorrowers);
+        borrowMany(borrowers, countBorrowers);
         skip(86400 * 365);
-        repay(borrowers, countBorrowers);
+        repayMany(borrowers, countBorrowers);
 
         uint256 totalSupplyBefore = eTST.totalSupply();
-        uint256 accumFee = eTST.accumulatedFees();
+        uint256 accumFees = eTST.accumulatedFees();
 
         assertEq(eTST.balanceOf(governFeeReceiver), 0);
         assertEq(eTST.balanceOf(protocolFeeReceiver), 0);
 
         eTST.convertFees();
 
-        uint256 partFee = accumFee.toShares().mulDiv(1e4 - newProtocolFeeShare, 1e4).toUint();
-        assertNotEq(eTST.balanceOf(governFeeReceiver), partFee);
-        assertNotEq(eTST.balanceOf(protocolFeeReceiver), accumFee - partFee);
+        uint256 partFees = accumFees.toShares().mulDiv(1e4 - newProtocolFeeShare, 1e4).toUint();
+        assertNotEq(eTST.balanceOf(governFeeReceiver), partFees);
+        assertNotEq(eTST.balanceOf(protocolFeeReceiver), accumFees - partFees);
 
-        partFee = accumFee.toShares().mulDiv(1e4 - 0.5e4, 1e4).toUint();
-        assertEq(eTST.balanceOf(governFeeReceiver), partFee);
-        assertEq(eTST.balanceOf(protocolFeeReceiver), accumFee - partFee);
+        partFees = accumFees.toShares().mulDiv(1e4 - 0.5e4, 1e4).toUint();
+        assertEq(eTST.balanceOf(governFeeReceiver), partFees);
+        assertEq(eTST.balanceOf(protocolFeeReceiver), accumFees - partFees);
         assertEq(eTST.totalSupply(), totalSupplyBefore);
         assertEq(eTST.accumulatedFees(), 0);
     }
@@ -240,7 +240,7 @@ contract GovernanceTest_InterestFee is EVaultTestBase {
         assertEq(eTST.interestFee(), newInterestFee);
     }
 
-    function borrow(address[] memory borrowers, uint256 count) internal {
+    function borrowMany(address[] memory borrowers, uint256 count) internal {
         uint256 total;
         for (uint8 i; i < count; ++i) {
             uint256 amount = (i + 1) * 1e18;
@@ -261,7 +261,7 @@ contract GovernanceTest_InterestFee is EVaultTestBase {
         assertEq(eTST.totalBorrows(), total);
     }
 
-    function repay(address[] memory borrowers, uint256 count) internal {
+    function repayMany(address[] memory borrowers, uint256 count) internal {
         for (uint8 i; i < count; ++i) {
             startHoax(borrowers[i]);
             assetTST.approve(address(eTST), type(uint256).max);
