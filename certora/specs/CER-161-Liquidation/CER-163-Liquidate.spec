@@ -40,6 +40,15 @@ works:
 */
 
 methods {
+
+    // IPriceOracle
+    function _.getQuote(uint256 amount, address base, address quote) external => CVLGetQuote(amount, base, quote) expect (uint256);
+    function _.getQuotes(uint256 amount, address base, address quote) external => CVLGetQuotes(amount, base, quote) expect (uint256, uint256);
+    function isRecognizedCollateralExt(address collateral) external returns (bool) envfree;
+
+    // Workaround for lack of ability to summarize metadata
+    function Cache.loadVault() internal returns (Liquidation.VaultCache memory) => CVLLoadVault();
+
     function _.requireVaultStatusCheck() external => NONDET;
     function _.requireAccountAndVaultStatusCheck(address account) external => NONDET; 
     function _.calculateDTokenAddress() internal => NONDET;
@@ -49,7 +58,36 @@ methods {
     function isCollateralEnabledExt(address account, address market) external returns (bool) envfree;
     function isAccountStatusCheckDeferredExt(address account) external returns (bool) envfree;
     function vaultIsOnlyController(address account) external returns (bool) envfree;
+    function vaultIsController(address account) external returns (bool) envfree;
     function ProxyUtils.metadata() internal returns (address, address, address)=> NONDET;
+
+	// IERC20
+	function _.name()                                external => DISPATCHER(true);
+    function _.symbol()                              external => DISPATCHER(true);
+    function _.decimals()                            external => DISPATCHER(true);
+    function _.totalSupply()                         external => DISPATCHER(true);
+    function _.balanceOf(address)                    external => DISPATCHER(true);
+    function _.allowance(address,address)            external => DISPATCHER(true);
+    function _.approve(address,uint256)              external => DISPATCHER(true);
+    function _.transfer(address,uint256)             external => DISPATCHER(true);
+    function _.transferFrom(address,address,uint256) external => DISPATCHER(true);
+}
+
+function CVLGetQuote(uint256 amount, address base, address quote) returns uint256 {
+    uint256 out;
+    return out;
+}
+
+function CVLGetQuotes(uint256 amount, address base, address quote) returns (uint256, uint256) {
+    uint256 bidOut;
+    uint256 askOut;
+    return (bidOut, askOut);
+}
+
+function CVLLoadVault() returns Liquidation.VaultCache {
+    Liquidation.VaultCache vaultCache;
+    require vaultCache.oracle != 0;
+    return vaultCache;
 }
 
 rule calculateLiquidation_setViolator {
@@ -82,7 +120,7 @@ rule liquidate_mustRevert {
     bool recognizedCollateral = isRecognizedCollateralExt(collateral);
     bool enabledCollateral = isCollateralEnabledExt(violator, collateral);
     bool violatorStatusCheckDeferred = isAccountStatusCheckDeferredExt(violator);
-    bool vaultControlsLiquidator = vaultIsOnlyController(liquidator);
+    bool vaultControlsLiquidator = vaultIsController(liquidator);
     bool vaultControlsViolator = vaultIsOnlyController(violator);
     bool oracleConfigured = vaultCacheOracleConfigured(e);
 
@@ -91,9 +129,9 @@ rule liquidate_mustRevert {
     assert !selfLiquidation;
     assert recognizedCollateral;
     assert enabledCollateral;
-    // assert vaultControlsLiquidator; // VIOLATED
+    assert vaultControlsLiquidator;
     assert vaultControlsViolator;
     assert !violatorStatusCheckDeferred;
-    // assert oracleConfigured;
+    assert oracleConfigured;
     
 }
