@@ -1,5 +1,4 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
-
 pragma solidity ^0.8.0;
 
 import {
@@ -13,19 +12,17 @@ import {
     TestERC20
 } from "../EVaultTestBase.t.sol";
 import {EVCClient, IEVC} from "src/EVault/shared/EVCClient.sol";
-
 import "src/EVault/shared/types/Types.sol";
-import "src/EVault/shared/Constants.sol";
 
 contract EVCClientUnitTest is EVaultTestBase {
     using TypesLib for uint256;
 
-    address public depositor;
-    address public borrower;
+    address depositor;
+    address borrower;
 
     TestERC20 assetTST3;
 
-    IEVault public eTST3;
+    IEVault eTST3;
 
     function setUp() public override {
         super.setUp();
