@@ -56,3 +56,9 @@ function ltConfigAmount(ConfigAmount a, ConfigAmount b) pure returns (bool) {
         return a.toUint16() < b.toUint16();
     }
 }
+
+function lteConfigAmount(ConfigAmount a, ConfigAmount b) pure returns (bool) {
+    unchecked {
+        return a.toUint16() <= b.toUint16();
+    }
+}

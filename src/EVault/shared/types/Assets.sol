@@ -64,6 +64,10 @@ function gtAssets(Assets a, Assets b) pure returns (bool) {
     return Assets.unwrap(a) > Assets.unwrap(b);
 }
 
+function gteAssets(Assets a, Assets b) pure returns (bool) {
+    return Assets.unwrap(a) >= Assets.unwrap(b);
+}
+
 function ltAssets(Assets a, Assets b) pure returns (bool) {
     return Assets.unwrap(a) < Assets.unwrap(b);
 }
