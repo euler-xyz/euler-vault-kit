@@ -211,14 +211,14 @@ contract ReentrancyTest is EVaultTestBase {
         address account1,
         address account2
     ) public {
-        vm.assume(sender != address(0) && sender != address(eTST));
-
         address evaultImpl = address(new EVaultTest(integrations, modules));
 
         vm.prank(admin);
         factory.setImplementation(evaultImpl);
 
         eTST = IEVault(coreProductLine.createVault(address(assetTST), address(oracle), unitOfAccount));
+
+        vm.assume(sender != address(0) && sender != address(eTST));
 
         (bool success,) = address(eTST).call(abi.encodeWithSignature("setReentrancyLock()"));
         require(success, "setReentrancyLock failed");

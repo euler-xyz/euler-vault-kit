@@ -40,6 +40,7 @@ uint32 constant OP_CONVERT_FEES = 1 << 11;
 uint32 constant OP_LIQUIDATE = 1 << 12;
 uint32 constant OP_FLASHLOAN = 1 << 13;
 uint32 constant OP_TOUCH = 1 << 14;
+uint32 constant OP_VAULT_STATUS_CHECK = 1 << 15;
 
 // Config Flags
 
