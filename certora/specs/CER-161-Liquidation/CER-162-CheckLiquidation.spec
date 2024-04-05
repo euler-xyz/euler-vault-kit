@@ -29,9 +29,9 @@ checkLiquidation must revert if:
 using SafeERC20Lib as safeERC20;
 
 methods {
-    // This is defined in IPriceOracle which is in another codebase
-    function _.getQuote(uint256 amount, address base, address quote) external => NONDET;
-    function _.getQuotes(uint256 amount, address base, address quote) external => NONDET;
+    // IPriceOracle
+    function _.getQuote(uint256 amount, address base, address quote) external => CVLGetQuote(amount, base, quote) expect (uint256);
+    function _.getQuotes(uint256 amount, address base, address quote) external => CVLGetQuotes(amount, base, quote) expect (uint256, uint256);
     function isRecognizedCollateralExt(address collateral) external returns (bool) envfree;
 
     function isCollateralEnabledExt(address account, address market) external returns (bool) envfree;
@@ -50,7 +50,6 @@ methods {
     // Workaround for lack of ability to summarize metadata
     function Cache.loadVault() internal returns (Liquidation.VaultCache memory) => CVLLoadVault();
 
-
 	// IERC20
 	function _.name()                                external => DISPATCHER(true);
     function _.symbol()                              external => DISPATCHER(true);
@@ -63,6 +62,17 @@ methods {
     function _.transferFrom(address,address,uint256) external => DISPATCHER(true);
 }
 
+function CVLGetQuote(uint256 amount, address base, address quote) returns uint256 {
+    uint256 out;
+    return out;
+}
+
+function CVLGetQuotes(uint256 amount, address base, address quote) returns (uint256, uint256) {
+    uint256 bidOut;
+    uint256 askOut;
+    return (bidOut, askOut);
+}
+
 ghost address oracleAddress;
 ghost address unitOfAccount;
 function CVLProxyMetadata() returns (address, address, address) {
@@ -73,21 +83,6 @@ function CVLLoadVault() returns Liquidation.VaultCache {
     Liquidation.VaultCache vaultCache;
     require vaultCache.oracle != 0;
     return vaultCache;
-}
-
-persistent ghost uint256 ghost_liability;
-persistent ghost uint256 ghost_collateral;
-
-function calcLiabilityValue(address account, address[] collaterals, Liquidation.LTVType ltvType) returns uint256 {
-    return ghost_liability;
-}
-
-function calcCollateralValue(address account, address[] collaterals, Liquidation.LTVType ltvType) returns uint256 {
-    return ghost_collateral;
-}
-
-function calcLiquidity(address account, address[] collaterals, Liquidation.LTVType ltvType) returns (uint256, uint256) {
-    return (ghost_collateral, ghost_liability);
 }
 
 rule checkLiquidation_healthy() {
@@ -121,9 +116,14 @@ rule checkLiquidation_maxYieldGreater {
     uint256 maxRepay;
     uint256 maxYield;
 
-    require ghost_collateral > 0;
-    require ghost_liability > 0;
-    require ghost_collateral < ghost_liability;
+    uint256 collateralValue;
+    uint256 liabilityValue;
+    (collateralValue, liabilityValue) =     
+        calculateLiquidityExternal(e, violator);
+
+    require collateralValue > 0;
+    require liabilityValue > 0;
+    require collateralValue < liabilityValue;
 
     (maxRepay, maxYield) = checkLiquidation(e, liquidator, violator, collateral);
 
@@ -133,21 +133,6 @@ rule checkLiquidation_maxYieldGreater {
     
     assert maxYield >= maxRepay;
 
-
-    // assert false;
-
-    // require liquidityCollateralValue < liquidityLiabilityValue;
-    // assert maxYield > maxRepay;
-}
-
-rule debug_calculate_liquidity {
-    env e;
-    address account;
-    uint256 calculatedCollateral;
-    uint256 calculatedLiability;
-    (calculatedCollateral, calculatedLiability) = calculateLiquidityExternal(e, account);
-    assert calculatedCollateral == ghost_collateral;
-    assert calculatedLiability == ghost_liability;
 }
 
 rule debugCheckLiquidation {
@@ -168,7 +153,6 @@ rule alwaysRevert {
 
     checkLiquidation@withrevert(e, liquidator, violator, collateral);
     satisfy !lastReverted;
-
 }
 
 rule loadVaultSanity {
