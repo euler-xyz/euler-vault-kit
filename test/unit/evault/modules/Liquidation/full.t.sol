@@ -39,6 +39,9 @@ contract VaultLiquidation_Test is EVaultTestBase {
 
         assetTST4 = new TestERC20("Test TST 4", "TST4", 6, false);
 
+        eTST.setInterestFee(0.23e4);
+        eTST2.setInterestFee(0.23e4);
+
         eTST.setInterestRateModel(address(new IRMTestZero()));
         eTST2.setInterestRateModel(address(new IRMTestZero()));
 
