@@ -13,34 +13,9 @@ import {
     TestERC20
 } from "../EVaultTestBase.t.sol";
 import {EVCClient, IEVC} from "src/EVault/shared/EVCClient.sol";
-// import {SafeERC20Lib} from "src/EVault/shared/lib/SafeERC20Lib.sol";
 
 import "src/EVault/shared/types/Types.sol";
 import "src/EVault/shared/Constants.sol";
-
-// a contract with a function that does not use the callThroughEVC() modifier
-contract VaultWithBug is EVault {
-    using TypesLib for uint256;
-
-    constructor(Base.Integrations memory _integrations, Dispatch.DeployedModules memory _modules)
-        EVault(_integrations, _modules)
-    {}
-
-    function borrow100X(uint256 amount, address receiver) public returns (uint256) {
-        (VaultCache memory vaultCache, address account) = initOperation(OP_BORROW, CHECKACCOUNT_CALLER);
-
-        Assets assets = amount == type(uint256).max ? vaultCache.cash : amount.toAssets();
-        if (assets.isZero()) return 0;
-
-        if (assets > vaultCache.cash) revert E_InsufficientCash();
-
-        increaseBorrow(vaultCache, account, assets);
-
-        pushAssets(vaultCache, receiver, assets);
-
-        return assets.toUint();
-    }
-}
 
 contract EVCClientUnitTest is EVaultTestBase {
     using TypesLib for uint256;
@@ -206,5 +181,29 @@ contract EVCClientUnitTest is EVaultTestBase {
         v.setInterestRateModel(address(new IRMTestDefault()));
 
         return address(v);
+    }
+}
+
+// a contract with a function that does not use the callThroughEVC() modifier
+contract VaultWithBug is EVault {
+    using TypesLib for uint256;
+
+    constructor(Base.Integrations memory _integrations, Dispatch.DeployedModules memory _modules)
+        EVault(_integrations, _modules)
+    {}
+
+    function borrow100X(uint256 amount, address receiver) public returns (uint256) {
+        (VaultCache memory vaultCache, address account) = initOperation(OP_BORROW, CHECKACCOUNT_CALLER);
+
+        Assets assets = amount == type(uint256).max ? vaultCache.cash : amount.toAssets();
+        if (assets.isZero()) return 0;
+
+        if (assets > vaultCache.cash) revert E_InsufficientCash();
+
+        increaseBorrow(vaultCache, account, assets);
+
+        pushAssets(vaultCache, receiver, assets);
+
+        return assets.toUint();
     }
 }
