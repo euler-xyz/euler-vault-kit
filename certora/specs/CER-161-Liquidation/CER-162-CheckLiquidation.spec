@@ -127,10 +127,6 @@ rule checkLiquidation_maxYieldGreater {
 
     (maxRepay, maxYield) = checkLiquidation(e, liquidator, violator, collateral);
 
-    // If this works try to work this assumption "backwards"
-    require maxYield > 0;
-    require maxRepay > 0;
-    
     assert maxYield >= maxRepay;
 
 }
