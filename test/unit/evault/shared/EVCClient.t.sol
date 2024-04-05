@@ -167,10 +167,6 @@ contract EVCClientUnitTest is EVaultTestBase {
     }
 
     function setUpBuggyVault() internal returns (address) {
-        admin = makeAddr("admin");
-        feeReceiver = makeAddr("feeReceiver");
-        protocolFeeReceiver = makeAddr("protocolFeeReceiver");
-
         vm.startPrank(admin);
         address bVaultImpl = address(new VaultWithBug(integrations, modules));
         GenericFactory factory = new GenericFactory(admin);
