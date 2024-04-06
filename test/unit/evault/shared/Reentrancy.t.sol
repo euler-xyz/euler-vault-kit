@@ -14,9 +14,7 @@ contract EVaultTest is EVault {
         vaultStorage.reentrancyLocked = true;
     }
 
-    function testExcludeFromCoverage() public pure {
-        return;
-    }
+    function testExcludeFromCoverage() public pure {}
 }
 
 contract MockHookTarget is Test {
@@ -194,9 +192,7 @@ contract MockHookTarget is Test {
         return "";
     }
 
-    function testExcludeFromCoverage() public pure {
-        return;
-    }
+    function testExcludeFromCoverage() public pure {}
 }
 
 contract ReentrancyTest is EVaultTestBase {

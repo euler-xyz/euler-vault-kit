@@ -330,6 +330,8 @@ contract EntryPoint is Test {
             if (bytes4(reason) == EVault_Panic.selector) errors.push("EVault Panic on touch");
         }
     }
+
+    function testExcludeFromCoverage() public pure {}
 }
 
 // Modules overrides to check invariants.
@@ -338,6 +340,8 @@ contract BalanceForwarderOverride is BalanceForwarder {
     error EVault_Panic();
 
     constructor(Integrations memory integrations) BalanceForwarder(integrations) {}
+
+    function testExcludeFromCoverage() public pure {}
 }
 
 contract BorrowingOverride is Borrowing {
@@ -421,6 +425,8 @@ contract BorrowingOverride is Borrowing {
         checkInvariants(address(0), from);
         checkInvariants(to, to);
     }
+
+    function testExcludeFromCoverage() public pure {}
 }
 
 contract GovernanceOverride is Governance {
@@ -504,12 +510,16 @@ contract GovernanceOverride is Governance {
         checkInvariants(address(0), from);
         checkInvariants(to, to);
     }
+
+    function testExcludeFromCoverage() public pure {}
 }
 
 contract InitializeOverride is Initialize {
     error EVault_Panic();
 
     constructor(Integrations memory integrations) Initialize(integrations) {}
+
+    function testExcludeFromCoverage() public pure {}
 }
 
 contract LiquidationOverride is Liquidation {
@@ -593,12 +603,16 @@ contract LiquidationOverride is Liquidation {
         checkInvariants(address(0), from);
         checkInvariants(to, to);
     }
+
+    function testExcludeFromCoverage() public pure {}
 }
 
 contract RiskManagerOverride is RiskManager {
     error EVault_Panic();
 
     constructor(Integrations memory integrations) RiskManager(integrations) {}
+
+    function testExcludeFromCoverage() public pure {}
 }
 
 contract TokenOverride is Token {
@@ -666,6 +680,8 @@ contract TokenOverride is Token {
         super.transferBalance(from, to, amount);
         checkInvariants(from, address(0));
     }
+
+    function testExcludeFromCoverage() public pure {}
 }
 
 contract VaultOverride is Vault {
@@ -733,6 +749,8 @@ contract VaultOverride is Vault {
         super.transferBalance(from, to, amount);
         checkInvariants(from, address(0));
     }
+
+    function testExcludeFromCoverage() public pure {}
 }
 
 contract EVaultOverride is EVault {
@@ -800,6 +818,8 @@ contract EVaultOverride is EVault {
         super.transferBalance(from, to, amount);
         checkInvariants(from, address(0));
     }
+
+    function testExcludeFromCoverage() public pure {}
 }
 
 contract EVault_SimpleCriticalChecks is EVaultTestBase {
@@ -892,4 +912,6 @@ contract EVault_SimpleCriticalChecks is EVaultTestBase {
             assertTrue(false);
         }
     }
+
+    function test_ExcludeFromCoverage() public pure {}
 }

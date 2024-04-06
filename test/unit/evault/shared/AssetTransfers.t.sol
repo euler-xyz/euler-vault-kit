@@ -14,9 +14,7 @@ contract AssetTransfersHarness is AssetTransfers {
         pullAssets(cache, from, amount);
     }
 
-    function testExcludeFromCoverage() public pure {
-        return;
-    }
+    function testExcludeFromCoverage() public pure {}
 }
 
 contract AssetTransfersTest is EVaultTestBase {

@@ -39,7 +39,5 @@ contract AssertionsCustomTypes is StdAssertions {
         assertEq(Owed.unwrap(a), Owed.unwrap(b), err);
     }
 
-    function testExcludeFromCoverage() public pure {
-        return;
-    }
+    function testExcludeFromCoverage() public pure {}
 }

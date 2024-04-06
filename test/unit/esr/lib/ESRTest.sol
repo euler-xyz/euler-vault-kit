@@ -36,7 +36,5 @@ contract ESRTest is Test {
         vm.stopPrank();
     }
 
-    function testExcludeFromCoverage() public pure {
-        return;
-    }
+    function testExcludeFromCoverage() public pure {}
 }

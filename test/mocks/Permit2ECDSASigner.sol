@@ -32,7 +32,5 @@ contract Permit2ECDSASigner is Test {
         signature = abi.encodePacked(r, s, v);
     }
 
-    function testExcludeFromCoverage() public pure {
-        return;
-    }
+    function testExcludeFromCoverage() public pure {}
 }

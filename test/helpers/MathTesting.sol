@@ -69,7 +69,5 @@ contract MathTesting {
     }
     //------------------------------------------------------
 
-    function testExcludeFromCoverage() public pure {
-        return;
-    }
+    function testExcludeFromCoverage() public pure {}
 }

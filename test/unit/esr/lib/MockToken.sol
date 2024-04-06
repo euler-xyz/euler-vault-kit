@@ -10,7 +10,5 @@ contract MockToken is ERC20 {
         _mint(to, amount);
     }
 
-    function testExcludeFromCoverage() public pure {
-        return;
-    }
+    function testExcludeFromCoverage() public pure {}
 }
