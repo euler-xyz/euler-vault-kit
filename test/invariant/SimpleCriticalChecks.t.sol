@@ -17,7 +17,7 @@ import "src/EVault/modules/Liquidation.sol";
 import "src/EVault/modules/RiskManager.sol";
 import "src/EVault/modules/Token.sol";
 import "src/EVault/modules/Vault.sol";
-import "forge-std/Console.sol";
+import "forge-std/console.sol";
 
 // Entry Point contract for the fuzzer. Bounds the inputs and prepares the environment for the tests.
 contract EntryPoint is Test {
