@@ -334,52 +334,119 @@ contract EntryPoint is Test {
     function testExcludeFromCoverage() public pure {}
 }
 
-// Modules overrides to check invariants.
-// EVault must also be overriden to check invariants for embedded functions called with super.
-contract BalanceForwarderOverride is BalanceForwarder {
+// Abstract contract to override functions and check invariants.
+abstract contract FunctionOverrides is BalanceUtils, BorrowUtils {
+    uint32 internal constant INIT_OPERATION_FLAG = 1 << 31;
+
     error EVault_Panic();
 
+    function checkInvariants(address checkedAccount, address controllerEnabled) internal view {
+        if (Flags.unwrap(vaultStorage.hookedOps) & INIT_OPERATION_FLAG == 0) {
+            console.log("EVault Panic on InitOperation");
+            revert EVault_Panic();
+        }
+
+        if (!evc.isVaultStatusCheckDeferred(address(this))) {
+            console.log("EVault Panic on VaultStatusCheckDeferred");
+            revert EVault_Panic();
+        }
+
+        if (checkedAccount != address(0) && !evc.isAccountStatusCheckDeferred(checkedAccount)) {
+            console.log("EVault Panic on AccountStatusCheckDeferred");
+            revert EVault_Panic();
+        }
+
+        if (controllerEnabled != address(0) && !evc.isControllerEnabled(controllerEnabled, address(this))) {
+            console.log("EVault Panic on ControllerEnabled");
+            revert EVault_Panic();
+        }
+    }
+
+    function initOperation(uint32 operation, address accountToCheck)
+        internal
+        virtual
+        override
+        returns (VaultCache memory vaultCache, address account)
+    {
+        (vaultCache, account) = super.initOperation(operation, accountToCheck);
+        vaultStorage.hookedOps = Flags.wrap(Flags.unwrap(vaultStorage.hookedOps) | INIT_OPERATION_FLAG);
+    }
+
+    function increaseBalance(
+        VaultCache memory vaultCache,
+        address account,
+        address sender,
+        Shares amount,
+        Assets assets
+    ) internal virtual override {
+        super.increaseBalance(vaultCache, account, sender, amount, assets);
+        checkInvariants(address(0), address(0));
+    }
+
+    function decreaseBalance(
+        VaultCache memory vaultCache,
+        address account,
+        address sender,
+        address receiver,
+        Shares amount,
+        Assets assets
+    ) internal virtual override {
+        super.decreaseBalance(vaultCache, account, sender, receiver, amount, assets);
+        checkInvariants(account, address(0));
+    }
+
+    function transferBalance(address from, address to, Shares amount) internal virtual override {
+        super.transferBalance(from, to, amount);
+        checkInvariants(from, address(0));
+    }
+
+    function increaseBorrow(VaultCache memory vaultCache, address account, Assets assets) internal virtual override {
+        super.increaseBorrow(vaultCache, account, assets);
+        checkInvariants(account, account);
+    }
+
+    function decreaseBorrow(VaultCache memory vaultCache, address account, Assets amount) internal virtual override {
+        super.decreaseBorrow(vaultCache, account, amount);
+        checkInvariants(address(0), account);
+    }
+
+    function transferBorrow(VaultCache memory vaultCache, address from, address to, Assets assets)
+        internal
+        virtual
+        override
+    {
+        super.transferBorrow(vaultCache, from, to, assets);
+        checkInvariants(address(0), from);
+        checkInvariants(to, to);
+    }
+
+    function testExcludeFromCoverage() public pure virtual {}
+}
+
+// Modules and EVault overrides.
+contract BalanceForwarderOverride is BalanceForwarder, FunctionOverrides {
     constructor(Integrations memory integrations) BalanceForwarder(integrations) {}
 
-    function testExcludeFromCoverage() public pure {}
+    function initOperation(uint32 operation, address accountToCheck)
+        internal
+        override (Base, FunctionOverrides)
+        returns (VaultCache memory vaultCache, address account)
+    {
+        return FunctionOverrides.initOperation(operation, accountToCheck);
+    }
+
+    function testExcludeFromCoverage() public pure override {}
 }
 
-contract BorrowingOverride is Borrowing {
-    uint32 internal constant INIT_OPERATION_FLAG = 1 << 31;
-
-    error EVault_Panic();
-
+contract BorrowingOverride is Borrowing, FunctionOverrides {
     constructor(Integrations memory integrations) Borrowing(integrations) {}
 
-    function checkInvariants(address checkedAccount, address controllerEnabled) internal view {
-        if (Flags.unwrap(vaultStorage.hookedOps) & INIT_OPERATION_FLAG == 0) {
-            console.log("EVault Panic on InitOperation");
-            revert EVault_Panic();
-        }
-
-        if (!evc.isVaultStatusCheckDeferred(address(this))) {
-            console.log("EVault Panic on VaultStatusCheckDeferred");
-            revert EVault_Panic();
-        }
-
-        if (checkedAccount != address(0) && !evc.isAccountStatusCheckDeferred(checkedAccount)) {
-            console.log("EVault Panic on AccountStatusCheckDeferred");
-            revert EVault_Panic();
-        }
-
-        if (controllerEnabled != address(0) && !evc.isControllerEnabled(controllerEnabled, address(this))) {
-            console.log("EVault Panic on ControllerEnabled");
-            revert EVault_Panic();
-        }
-    }
-
     function initOperation(uint32 operation, address accountToCheck)
         internal
-        override
+        override (Base, FunctionOverrides)
         returns (VaultCache memory vaultCache, address account)
     {
-        (vaultCache, account) = super.initOperation(operation, accountToCheck);
-        vaultStorage.hookedOps = Flags.wrap(Flags.unwrap(vaultStorage.hookedOps) | INIT_OPERATION_FLAG);
+        return FunctionOverrides.initOperation(operation, accountToCheck);
     }
 
     function increaseBalance(
@@ -388,9 +455,8 @@ contract BorrowingOverride is Borrowing {
         address sender,
         Shares amount,
         Assets assets
-    ) internal override {
-        super.increaseBalance(vaultCache, account, sender, amount, assets);
-        checkInvariants(address(0), address(0));
+    ) internal override (BalanceUtils, FunctionOverrides) {
+        FunctionOverrides.increaseBalance(vaultCache, account, sender, amount, assets);
     }
 
     function decreaseBalance(
@@ -400,71 +466,50 @@ contract BorrowingOverride is Borrowing {
         address receiver,
         Shares amount,
         Assets assets
-    ) internal override {
-        super.decreaseBalance(vaultCache, account, sender, receiver, amount, assets);
-        checkInvariants(account, address(0));
+    ) internal override (BalanceUtils, FunctionOverrides) {
+        FunctionOverrides.decreaseBalance(vaultCache, account, sender, receiver, amount, assets);
     }
 
-    function transferBalance(address from, address to, Shares amount) internal override {
-        super.transferBalance(from, to, amount);
-        checkInvariants(from, address(0));
+    function transferBalance(address from, address to, Shares amount)
+        internal
+        override (BalanceUtils, FunctionOverrides)
+    {
+        FunctionOverrides.transferBalance(from, to, amount);
     }
 
-    function increaseBorrow(VaultCache memory vaultCache, address account, Assets assets) internal override {
-        super.increaseBorrow(vaultCache, account, assets);
-        checkInvariants(account, account);
+    function increaseBorrow(VaultCache memory vaultCache, address account, Assets assets)
+        internal
+        override (BorrowUtils, FunctionOverrides)
+    {
+        FunctionOverrides.increaseBorrow(vaultCache, account, assets);
     }
 
-    function decreaseBorrow(VaultCache memory vaultCache, address account, Assets amount) internal override {
-        super.decreaseBorrow(vaultCache, account, amount);
-        checkInvariants(address(0), account);
+    function decreaseBorrow(VaultCache memory vaultCache, address account, Assets amount)
+        internal
+        override (BorrowUtils, FunctionOverrides)
+    {
+        FunctionOverrides.decreaseBorrow(vaultCache, account, amount);
     }
 
-    function transferBorrow(VaultCache memory vaultCache, address from, address to, Assets assets) internal override {
-        super.transferBorrow(vaultCache, from, to, assets);
-        checkInvariants(address(0), from);
-        checkInvariants(to, to);
+    function transferBorrow(VaultCache memory vaultCache, address from, address to, Assets assets)
+        internal
+        override (BorrowUtils, FunctionOverrides)
+    {
+        FunctionOverrides.transferBorrow(vaultCache, from, to, assets);
     }
 
-    function testExcludeFromCoverage() public pure {}
+    function testExcludeFromCoverage() public pure override {}
 }
 
-contract GovernanceOverride is Governance {
-    uint32 internal constant INIT_OPERATION_FLAG = 1 << 31;
-
-    error EVault_Panic();
-
+contract GovernanceOverride is Governance, FunctionOverrides {
     constructor(Integrations memory integrations) Governance(integrations) {}
 
-    function checkInvariants(address checkedAccount, address controllerEnabled) internal view {
-        if (Flags.unwrap(vaultStorage.hookedOps) & INIT_OPERATION_FLAG == 0) {
-            console.log("EVault Panic on InitOperation");
-            revert EVault_Panic();
-        }
-
-        if (!evc.isVaultStatusCheckDeferred(address(this))) {
-            console.log("EVault Panic on VaultStatusCheckDeferred");
-            revert EVault_Panic();
-        }
-
-        if (checkedAccount != address(0) && !evc.isAccountStatusCheckDeferred(checkedAccount)) {
-            console.log("EVault Panic on AccountStatusCheckDeferred");
-            revert EVault_Panic();
-        }
-
-        if (controllerEnabled != address(0) && !evc.isControllerEnabled(controllerEnabled, address(this))) {
-            console.log("EVault Panic on ControllerEnabled");
-            revert EVault_Panic();
-        }
-    }
-
     function initOperation(uint32 operation, address accountToCheck)
         internal
-        override
+        override (Base, FunctionOverrides)
         returns (VaultCache memory vaultCache, address account)
     {
-        (vaultCache, account) = super.initOperation(operation, accountToCheck);
-        vaultStorage.hookedOps = Flags.wrap(Flags.unwrap(vaultStorage.hookedOps) | INIT_OPERATION_FLAG);
+        return FunctionOverrides.initOperation(operation, accountToCheck);
     }
 
     function increaseBalance(
@@ -473,9 +518,8 @@ contract GovernanceOverride is Governance {
         address sender,
         Shares amount,
         Assets assets
-    ) internal override {
-        super.increaseBalance(vaultCache, account, sender, amount, assets);
-        checkInvariants(address(0), address(0));
+    ) internal override (BalanceUtils, FunctionOverrides) {
+        FunctionOverrides.increaseBalance(vaultCache, account, sender, amount, assets);
     }
 
     function decreaseBalance(
@@ -485,79 +529,85 @@ contract GovernanceOverride is Governance {
         address receiver,
         Shares amount,
         Assets assets
-    ) internal override {
-        super.decreaseBalance(vaultCache, account, sender, receiver, amount, assets);
-        checkInvariants(account, address(0));
+    ) internal override (BalanceUtils, FunctionOverrides) {
+        FunctionOverrides.decreaseBalance(vaultCache, account, sender, receiver, amount, assets);
     }
 
-    function transferBalance(address from, address to, Shares amount) internal override {
-        super.transferBalance(from, to, amount);
-        checkInvariants(from, address(0));
+    function transferBalance(address from, address to, Shares amount)
+        internal
+        override (BalanceUtils, FunctionOverrides)
+    {
+        FunctionOverrides.transferBalance(from, to, amount);
     }
 
-    function increaseBorrow(VaultCache memory vaultCache, address account, Assets assets) internal override {
-        super.increaseBorrow(vaultCache, account, assets);
-        checkInvariants(account, account);
+    function increaseBorrow(VaultCache memory vaultCache, address account, Assets assets)
+        internal
+        override (BorrowUtils, FunctionOverrides)
+    {
+        FunctionOverrides.increaseBorrow(vaultCache, account, assets);
     }
 
-    function decreaseBorrow(VaultCache memory vaultCache, address account, Assets amount) internal override {
-        super.decreaseBorrow(vaultCache, account, amount);
-        checkInvariants(address(0), account);
+    function decreaseBorrow(VaultCache memory vaultCache, address account, Assets amount)
+        internal
+        override (BorrowUtils, FunctionOverrides)
+    {
+        FunctionOverrides.decreaseBorrow(vaultCache, account, amount);
     }
 
-    function transferBorrow(VaultCache memory vaultCache, address from, address to, Assets assets) internal override {
-        super.transferBorrow(vaultCache, from, to, assets);
-        checkInvariants(address(0), from);
-        checkInvariants(to, to);
+    function transferBorrow(VaultCache memory vaultCache, address from, address to, Assets assets)
+        internal
+        override (BorrowUtils, FunctionOverrides)
+    {
+        FunctionOverrides.transferBorrow(vaultCache, from, to, assets);
     }
 
-    function testExcludeFromCoverage() public pure {}
+    function testExcludeFromCoverage() public pure override {}
 }
 
-contract InitializeOverride is Initialize {
-    error EVault_Panic();
-
+contract InitializeOverride is Initialize, FunctionOverrides {
     constructor(Integrations memory integrations) Initialize(integrations) {}
 
-    function testExcludeFromCoverage() public pure {}
+    function initOperation(uint32 operation, address accountToCheck)
+        internal
+        override (Base, FunctionOverrides)
+        returns (VaultCache memory vaultCache, address account)
+    {
+        return FunctionOverrides.initOperation(operation, accountToCheck);
+    }
+
+    function increaseBorrow(VaultCache memory vaultCache, address account, Assets assets)
+        internal
+        override (BorrowUtils, FunctionOverrides)
+    {
+        FunctionOverrides.increaseBorrow(vaultCache, account, assets);
+    }
+
+    function decreaseBorrow(VaultCache memory vaultCache, address account, Assets amount)
+        internal
+        override (BorrowUtils, FunctionOverrides)
+    {
+        FunctionOverrides.decreaseBorrow(vaultCache, account, amount);
+    }
+
+    function transferBorrow(VaultCache memory vaultCache, address from, address to, Assets assets)
+        internal
+        override (BorrowUtils, FunctionOverrides)
+    {
+        FunctionOverrides.transferBorrow(vaultCache, from, to, assets);
+    }
+
+    function testExcludeFromCoverage() public pure override {}
 }
 
-contract LiquidationOverride is Liquidation {
-    uint32 internal constant INIT_OPERATION_FLAG = 1 << 31;
-
-    error EVault_Panic();
-
+contract LiquidationOverride is Liquidation, FunctionOverrides {
     constructor(Integrations memory integrations) Liquidation(integrations) {}
 
-    function checkInvariants(address checkedAccount, address controllerEnabled) internal view {
-        if (Flags.unwrap(vaultStorage.hookedOps) & INIT_OPERATION_FLAG == 0) {
-            console.log("EVault Panic on InitOperation");
-            revert EVault_Panic();
-        }
-
-        if (!evc.isVaultStatusCheckDeferred(address(this))) {
-            console.log("EVault Panic on VaultStatusCheckDeferred");
-            revert EVault_Panic();
-        }
-
-        if (checkedAccount != address(0) && !evc.isAccountStatusCheckDeferred(checkedAccount)) {
-            console.log("EVault Panic on AccountStatusCheckDeferred");
-            revert EVault_Panic();
-        }
-
-        if (controllerEnabled != address(0) && !evc.isControllerEnabled(controllerEnabled, address(this))) {
-            console.log("EVault Panic on ControllerEnabled");
-            revert EVault_Panic();
-        }
-    }
-
     function initOperation(uint32 operation, address accountToCheck)
         internal
-        override
+        override (Base, FunctionOverrides)
         returns (VaultCache memory vaultCache, address account)
     {
-        (vaultCache, account) = super.initOperation(operation, accountToCheck);
-        vaultStorage.hookedOps = Flags.wrap(Flags.unwrap(vaultStorage.hookedOps) | INIT_OPERATION_FLAG);
+        return FunctionOverrides.initOperation(operation, accountToCheck);
     }
 
     function increaseBalance(
@@ -566,9 +616,8 @@ contract LiquidationOverride is Liquidation {
         address sender,
         Shares amount,
         Assets assets
-    ) internal override {
-        super.increaseBalance(vaultCache, account, sender, amount, assets);
-        checkInvariants(address(0), address(0));
+    ) internal override (BalanceUtils, FunctionOverrides) {
+        FunctionOverrides.increaseBalance(vaultCache, account, sender, amount, assets);
     }
 
     function decreaseBalance(
@@ -578,79 +627,85 @@ contract LiquidationOverride is Liquidation {
         address receiver,
         Shares amount,
         Assets assets
-    ) internal override {
-        super.decreaseBalance(vaultCache, account, sender, receiver, amount, assets);
-        checkInvariants(account, address(0));
+    ) internal override (BalanceUtils, FunctionOverrides) {
+        FunctionOverrides.decreaseBalance(vaultCache, account, sender, receiver, amount, assets);
     }
 
-    function transferBalance(address from, address to, Shares amount) internal override {
-        super.transferBalance(from, to, amount);
-        checkInvariants(from, address(0));
+    function transferBalance(address from, address to, Shares amount)
+        internal
+        override (BalanceUtils, FunctionOverrides)
+    {
+        FunctionOverrides.transferBalance(from, to, amount);
     }
 
-    function increaseBorrow(VaultCache memory vaultCache, address account, Assets assets) internal override {
-        super.increaseBorrow(vaultCache, account, assets);
-        checkInvariants(account, account);
+    function increaseBorrow(VaultCache memory vaultCache, address account, Assets assets)
+        internal
+        override (BorrowUtils, FunctionOverrides)
+    {
+        FunctionOverrides.increaseBorrow(vaultCache, account, assets);
     }
 
-    function decreaseBorrow(VaultCache memory vaultCache, address account, Assets amount) internal override {
-        super.decreaseBorrow(vaultCache, account, amount);
-        checkInvariants(address(0), account);
+    function decreaseBorrow(VaultCache memory vaultCache, address account, Assets amount)
+        internal
+        override (BorrowUtils, FunctionOverrides)
+    {
+        FunctionOverrides.decreaseBorrow(vaultCache, account, amount);
     }
 
-    function transferBorrow(VaultCache memory vaultCache, address from, address to, Assets assets) internal override {
-        super.transferBorrow(vaultCache, from, to, assets);
-        checkInvariants(address(0), from);
-        checkInvariants(to, to);
+    function transferBorrow(VaultCache memory vaultCache, address from, address to, Assets assets)
+        internal
+        override (BorrowUtils, FunctionOverrides)
+    {
+        FunctionOverrides.transferBorrow(vaultCache, from, to, assets);
     }
 
-    function testExcludeFromCoverage() public pure {}
+    function testExcludeFromCoverage() public pure override {}
 }
 
-contract RiskManagerOverride is RiskManager {
-    error EVault_Panic();
-
+contract RiskManagerOverride is RiskManager, FunctionOverrides {
     constructor(Integrations memory integrations) RiskManager(integrations) {}
 
-    function testExcludeFromCoverage() public pure {}
+    function initOperation(uint32 operation, address accountToCheck)
+        internal
+        override (Base, FunctionOverrides)
+        returns (VaultCache memory vaultCache, address account)
+    {
+        return FunctionOverrides.initOperation(operation, accountToCheck);
+    }
+
+    function increaseBorrow(VaultCache memory vaultCache, address account, Assets assets)
+        internal
+        override (BorrowUtils, FunctionOverrides)
+    {
+        FunctionOverrides.increaseBorrow(vaultCache, account, assets);
+    }
+
+    function decreaseBorrow(VaultCache memory vaultCache, address account, Assets amount)
+        internal
+        override (BorrowUtils, FunctionOverrides)
+    {
+        FunctionOverrides.decreaseBorrow(vaultCache, account, amount);
+    }
+
+    function transferBorrow(VaultCache memory vaultCache, address from, address to, Assets assets)
+        internal
+        override (BorrowUtils, FunctionOverrides)
+    {
+        FunctionOverrides.transferBorrow(vaultCache, from, to, assets);
+    }
+
+    function testExcludeFromCoverage() public pure override {}
 }
 
-contract TokenOverride is Token {
-    uint32 internal constant INIT_OPERATION_FLAG = 1 << 31;
-
-    error EVault_Panic();
-
+contract TokenOverride is Token, FunctionOverrides {
     constructor(Integrations memory integrations) Token(integrations) {}
 
-    function checkInvariants(address checkedAccount, address controllerEnabled) internal view {
-        if (Flags.unwrap(vaultStorage.hookedOps) & INIT_OPERATION_FLAG == 0) {
-            console.log("EVault Panic on InitOperation");
-            revert EVault_Panic();
-        }
-
-        if (!evc.isVaultStatusCheckDeferred(address(this))) {
-            console.log("EVault Panic on VaultStatusCheckDeferred");
-            revert EVault_Panic();
-        }
-
-        if (checkedAccount != address(0) && !evc.isAccountStatusCheckDeferred(checkedAccount)) {
-            console.log("EVault Panic on AccountStatusCheckDeferred");
-            revert EVault_Panic();
-        }
-
-        if (controllerEnabled != address(0) && !evc.isControllerEnabled(controllerEnabled, address(this))) {
-            console.log("EVault Panic on ControllerEnabled");
-            revert EVault_Panic();
-        }
-    }
-
     function initOperation(uint32 operation, address accountToCheck)
         internal
-        override
+        override (Base, FunctionOverrides)
         returns (VaultCache memory vaultCache, address account)
     {
-        (vaultCache, account) = super.initOperation(operation, accountToCheck);
-        vaultStorage.hookedOps = Flags.wrap(Flags.unwrap(vaultStorage.hookedOps) | INIT_OPERATION_FLAG);
+        return FunctionOverrides.initOperation(operation, accountToCheck);
     }
 
     function increaseBalance(
@@ -659,9 +714,8 @@ contract TokenOverride is Token {
         address sender,
         Shares amount,
         Assets assets
-    ) internal override {
-        super.increaseBalance(vaultCache, account, sender, amount, assets);
-        checkInvariants(address(0), address(0));
+    ) internal override (BalanceUtils, FunctionOverrides) {
+        FunctionOverrides.increaseBalance(vaultCache, account, sender, amount, assets);
     }
 
     function decreaseBalance(
@@ -671,55 +725,29 @@ contract TokenOverride is Token {
         address receiver,
         Shares amount,
         Assets assets
-    ) internal override {
-        super.decreaseBalance(vaultCache, account, sender, receiver, amount, assets);
-        checkInvariants(account, address(0));
+    ) internal override (BalanceUtils, FunctionOverrides) {
+        FunctionOverrides.decreaseBalance(vaultCache, account, sender, receiver, amount, assets);
     }
 
-    function transferBalance(address from, address to, Shares amount) internal override {
-        super.transferBalance(from, to, amount);
-        checkInvariants(from, address(0));
+    function transferBalance(address from, address to, Shares amount)
+        internal
+        override (BalanceUtils, FunctionOverrides)
+    {
+        FunctionOverrides.transferBalance(from, to, amount);
     }
 
-    function testExcludeFromCoverage() public pure {}
+    function testExcludeFromCoverage() public pure override {}
 }
 
-contract VaultOverride is Vault {
-    uint32 internal constant INIT_OPERATION_FLAG = 1 << 31;
-
-    error EVault_Panic();
-
+contract VaultOverride is Vault, FunctionOverrides {
     constructor(Integrations memory integrations) Vault(integrations) {}
 
-    function checkInvariants(address checkedAccount, address controllerEnabled) internal view {
-        if (Flags.unwrap(vaultStorage.hookedOps) & INIT_OPERATION_FLAG == 0) {
-            console.log("EVault Panic on InitOperation");
-            revert EVault_Panic();
-        }
-
-        if (!evc.isVaultStatusCheckDeferred(address(this))) {
-            console.log("EVault Panic on VaultStatusCheckDeferred");
-            revert EVault_Panic();
-        }
-
-        if (checkedAccount != address(0) && !evc.isAccountStatusCheckDeferred(checkedAccount)) {
-            console.log("EVault Panic on AccountStatusCheckDeferred");
-            revert EVault_Panic();
-        }
-
-        if (controllerEnabled != address(0) && !evc.isControllerEnabled(controllerEnabled, address(this))) {
-            console.log("EVault Panic on ControllerEnabled");
-            revert EVault_Panic();
-        }
-    }
-
     function initOperation(uint32 operation, address accountToCheck)
         internal
-        override
+        override (Base, FunctionOverrides)
         returns (VaultCache memory vaultCache, address account)
     {
-        (vaultCache, account) = super.initOperation(operation, accountToCheck);
-        vaultStorage.hookedOps = Flags.wrap(Flags.unwrap(vaultStorage.hookedOps) | INIT_OPERATION_FLAG);
+        return FunctionOverrides.initOperation(operation, accountToCheck);
     }
 
     function increaseBalance(
@@ -728,9 +756,8 @@ contract VaultOverride is Vault {
         address sender,
         Shares amount,
         Assets assets
-    ) internal override {
-        super.increaseBalance(vaultCache, account, sender, amount, assets);
-        checkInvariants(address(0), address(0));
+    ) internal override (BalanceUtils, FunctionOverrides) {
+        FunctionOverrides.increaseBalance(vaultCache, account, sender, amount, assets);
     }
 
     function decreaseBalance(
@@ -740,55 +767,29 @@ contract VaultOverride is Vault {
         address receiver,
         Shares amount,
         Assets assets
-    ) internal override {
-        super.decreaseBalance(vaultCache, account, sender, receiver, amount, assets);
-        checkInvariants(account, address(0));
+    ) internal override (BalanceUtils, FunctionOverrides) {
+        FunctionOverrides.decreaseBalance(vaultCache, account, sender, receiver, amount, assets);
     }
 
-    function transferBalance(address from, address to, Shares amount) internal override {
-        super.transferBalance(from, to, amount);
-        checkInvariants(from, address(0));
+    function transferBalance(address from, address to, Shares amount)
+        internal
+        override (BalanceUtils, FunctionOverrides)
+    {
+        FunctionOverrides.transferBalance(from, to, amount);
     }
 
-    function testExcludeFromCoverage() public pure {}
+    function testExcludeFromCoverage() public pure override {}
 }
 
-contract EVaultOverride is EVault {
-    uint32 internal constant INIT_OPERATION_FLAG = 1 << 31;
-
-    error EVault_Panic();
-
+contract EVaultOverride is EVault, FunctionOverrides {
     constructor(Integrations memory integrations, DeployedModules memory modules) EVault(integrations, modules) {}
-
-    function checkInvariants(address checkedAccount, address controllerEnabled) internal view {
-        if (Flags.unwrap(vaultStorage.hookedOps) & INIT_OPERATION_FLAG == 0) {
-            console.log("EVault Panic on InitOperation");
-            revert EVault_Panic();
-        }
-
-        if (!evc.isVaultStatusCheckDeferred(address(this))) {
-            console.log("EVault Panic on VaultStatusCheckDeferred");
-            revert EVault_Panic();
-        }
-
-        if (checkedAccount != address(0) && !evc.isAccountStatusCheckDeferred(checkedAccount)) {
-            console.log("EVault Panic on AccountStatusCheckDeferred");
-            revert EVault_Panic();
-        }
-
-        if (controllerEnabled != address(0) && !evc.isControllerEnabled(controllerEnabled, address(this))) {
-            console.log("EVault Panic on ControllerEnabled");
-            revert EVault_Panic();
-        }
-    }
 
     function initOperation(uint32 operation, address accountToCheck)
         internal
-        override
+        override (Base, FunctionOverrides)
         returns (VaultCache memory vaultCache, address account)
     {
-        (vaultCache, account) = super.initOperation(operation, accountToCheck);
-        vaultStorage.hookedOps = Flags.wrap(Flags.unwrap(vaultStorage.hookedOps) | INIT_OPERATION_FLAG);
+        return FunctionOverrides.initOperation(operation, accountToCheck);
     }
 
     function increaseBalance(
@@ -797,9 +798,8 @@ contract EVaultOverride is EVault {
         address sender,
         Shares amount,
         Assets assets
-    ) internal override {
-        super.increaseBalance(vaultCache, account, sender, amount, assets);
-        checkInvariants(address(0), address(0));
+    ) internal override (BalanceUtils, FunctionOverrides) {
+        FunctionOverrides.increaseBalance(vaultCache, account, sender, amount, assets);
     }
 
     function decreaseBalance(
@@ -809,17 +809,39 @@ contract EVaultOverride is EVault {
         address receiver,
         Shares amount,
         Assets assets
-    ) internal override {
-        super.decreaseBalance(vaultCache, account, sender, receiver, amount, assets);
-        checkInvariants(account, address(0));
+    ) internal override (BalanceUtils, FunctionOverrides) {
+        FunctionOverrides.decreaseBalance(vaultCache, account, sender, receiver, amount, assets);
     }
 
-    function transferBalance(address from, address to, Shares amount) internal override {
-        super.transferBalance(from, to, amount);
-        checkInvariants(from, address(0));
+    function transferBalance(address from, address to, Shares amount)
+        internal
+        override (BalanceUtils, FunctionOverrides)
+    {
+        FunctionOverrides.transferBalance(from, to, amount);
     }
 
-    function testExcludeFromCoverage() public pure {}
+    function increaseBorrow(VaultCache memory vaultCache, address account, Assets assets)
+        internal
+        override (BorrowUtils, FunctionOverrides)
+    {
+        FunctionOverrides.increaseBorrow(vaultCache, account, assets);
+    }
+
+    function decreaseBorrow(VaultCache memory vaultCache, address account, Assets amount)
+        internal
+        override (BorrowUtils, FunctionOverrides)
+    {
+        FunctionOverrides.decreaseBorrow(vaultCache, account, amount);
+    }
+
+    function transferBorrow(VaultCache memory vaultCache, address from, address to, Assets assets)
+        internal
+        override (BorrowUtils, FunctionOverrides)
+    {
+        FunctionOverrides.transferBorrow(vaultCache, from, to, assets);
+    }
+
+    function testExcludeFromCoverage() public pure override {}
 }
 
 contract EVault_SimpleCriticalChecks is EVaultTestBase {
