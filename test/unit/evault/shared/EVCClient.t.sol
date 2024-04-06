@@ -13,6 +13,7 @@ import {
 } from "../EVaultTestBase.t.sol";
 import {EVCClient, IEVC} from "src/EVault/shared/EVCClient.sol";
 import "src/EVault/shared/types/Types.sol";
+import {stdError} from "forge-std/StdError.sol";
 
 contract EVCClientUnitTest is EVaultTestBase {
     using TypesLib for uint256;
@@ -66,7 +67,7 @@ contract EVCClientUnitTest is EVaultTestBase {
         evc.enableCollateral(borrower, address(eTST2));
         evc.enableController(borrower, address(bVault));
 
-        vm.expectRevert(Errors.E_Unauthorized.selector);
+        vm.expectRevert(stdError.assertionError);
         bVault.borrow100X(5e18, borrower);
         vm.stopPrank();
     }
