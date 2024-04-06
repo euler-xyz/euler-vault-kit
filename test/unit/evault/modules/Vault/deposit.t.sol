@@ -53,7 +53,7 @@ contract VaultTest_Deposit is EVaultTestBase {
         eTST.deposit(1, user);
     }
 
-    function test_zeroAmountIsNoop() public {
+    function test_deposit_zeroAmountIsNoop() public {
         assertEq(assetTST.balanceOf(address(eTST)), 0);
         assertEq(eTST.balanceOf(user), 0);
 
@@ -63,49 +63,134 @@ contract VaultTest_Deposit is EVaultTestBase {
         assertEq(eTST.balanceOf(user), 0);
     }
 
-    // function testFuzz_deposit(uint amount, address receiver, uint cash) public {
-    //     amount = bound(amount, 1, MAX_SANE_AMOUNT);
-    //     cash = bound(cash, 0, MAX_SANE_AMOUNT);
-    //     vm.assume(cash + amount < MAX_SANE_AMOUNT);
-    //     vm.assume(receiver != address(0));
-    //     uint shares = amount / (cash + 1);
+    function test_skim_zeroAmountIsNoop() public {
+        assertEq(assetTST.balanceOf(address(eTST)), 0);
+        assertEq(eTST.balanceOf(user), 0);
 
-    //     vm.assume(shares > 0);
+        assetTST.mint(address(eTST), 1e18);
 
-    //     // send tokens directly to the pool to inflate the exchange rate
-    //     startHoax(user1);
-    //     assetTST.transfer(address(eTST), cash);
-    //     startHoax(user);
+        eTST.skim(0, user);
 
-    //     vm.expectEmit(address(eTST));
-    //     emit Events.Transfer({from: address(0), to: receiver, value: shares});
-    //     vm.expectEmit();
-    //     emit Events.Deposit({sender: user, owner: receiver, assets: amount, shares: shares});
+        assertEq(assetTST.balanceOf(address(eTST)), 1e18);
+        assertEq(eTST.balanceOf(user), 0);
+        assertEq(eTST.cash(), 0);
+        assertEq(eTST.totalSupply(), 0);
+    }
 
-    //     uint result = eTST.deposit(amount, receiver);
-    //     assertEq(result, shares);
+    function test_deposit_skim_zeroShares() public {
+        startHoax(address(this));
 
-    //     // Asset was transferred
-    //     assertEq(assetTST.balanceOf(user), type(uint).max - amount);
-    //     assertEq(assetTST.balanceOf(address(eTST)), amount + cash);
-    //     assertEq(eTST.totalAssets(), amount + cash);
+        oracle.setPrice(address(assetTST), unitOfAccount, 1e18);
+        oracle.setPrice(address(assetTST2), unitOfAccount, 1e18);
 
-    //     // Shares were issued
-    //     assertEq(eTST.balanceOf(receiver), shares);
-    //     assertEq(eTST.totalSupply(), shares);
-    // }
+        eTST.setLTV(address(eTST2), 0.9e4, 0);
 
-    // function test_zeroShares() public {
-    //     assetTST.transfer(address(eTST), 2e18);
+        // user
 
-    //     vm.expectRevert(Errors.E_ZeroShares.selector);
-    //     eTST.deposit(1, user);
-    // }
+        startHoax(user);
 
-    // function test_zeroReceiver() public {
-    //     vm.expectRevert(Errors.E_ZeroShares.selector);
-    //     eTST.deposit(1e18, address(0));
-    // }
+        eTST.deposit(100e18, user);
+
+        // borrower
+
+        startHoax(user1);
+
+        assetTST2.mint(user1, type(uint256).max);
+        assetTST2.approve(address(eTST2), type(uint256).max);
+        eTST2.deposit(10e18, user1);
+
+        evc.enableController(user1, address(eTST));
+        evc.enableCollateral(user1, address(eTST2));
+
+        eTST.borrow(5e18, user1);
+
+        skip(100);
+
+        vm.expectRevert(Errors.E_ZeroShares.selector);
+        eTST.deposit(1, user1);
+
+        assetTST.mint(address(eTST), 1e18);
+
+        vm.expectRevert(Errors.E_ZeroShares.selector);
+        eTST.skim(1, user1);
+    }
+
+    function test_mint_zeroShares_isNoop() public {
+        uint256 balanceBefore = eTST.balanceOf(user);
+        eTST.mint(0, user);
+        assertEq(balanceBefore, eTST.balanceOf(user));
+    }
+
+    function test_withdraw_zeroAssets_isNoop() public {
+        eTST.deposit(1e18, user);
+
+        uint256 balanceBefore = eTST.balanceOf(user);
+        eTST.withdraw(0, user, user);
+        assertEq(balanceBefore, eTST.balanceOf(user));
+    }
+
+    function test_redeem_zeroShares_isNoop() public {
+        eTST.deposit(1e18, user);
+
+        uint256 balanceBefore = eTST.balanceOf(user);
+        eTST.redeem(0, user, user);
+        assertEq(balanceBefore, eTST.balanceOf(user));
+    }
+
+    function test_redeem_zeroAssets() public {
+        startHoax(address(this));
+
+        oracle.setPrice(address(assetTST), unitOfAccount, 1e18);
+        oracle.setPrice(address(assetTST2), unitOfAccount, 1e18);
+
+        eTST.setLTV(address(eTST2), 0.9e4, 0);
+
+        // user
+
+        startHoax(user);
+
+        eTST.deposit(100e18, user);
+
+        // borrower
+
+        startHoax(user1);
+
+        assetTST2.mint(user1, type(uint256).max);
+        assetTST2.approve(address(eTST2), type(uint256).max);
+        eTST2.deposit(10e18, user1);
+
+        evc.enableController(user1, address(eTST));
+        evc.enableCollateral(user1, address(eTST2));
+
+        eTST.borrow(5e18, user1);
+
+        // socialize debt in liquidation to push exchange rate < 1
+
+        oracle.setPrice(address(assetTST), unitOfAccount, 2e18);
+
+        startHoax(user);
+
+        assetTST2.mint(user, type(uint256).max);
+        assetTST2.approve(address(eTST2), type(uint256).max);
+        eTST2.deposit(100e18, user);
+        evc.enableController(user, address(eTST));
+        evc.enableCollateral(user, address(eTST2));
+
+        eTST.liquidate(user1, address(eTST2), type(uint256).max, 0);
+
+        assertEq(eTST.convertToAssets(1), 0);
+
+        vm.expectRevert(Errors.E_ZeroAssets.selector);
+        eTST.redeem(1, user, user);
+    }
+
+    function test_zeroReceiver() public {
+        vm.expectRevert(Errors.E_BadSharesReceiver.selector);
+        eTST.deposit(1e18, address(0));
+
+        vm.expectRevert(Errors.E_BadSharesReceiver.selector);
+        eTST.mint(1e18, address(0));
+    }
 
     function test_maxUintAmount() public {
         address user2 = makeAddr("user2");

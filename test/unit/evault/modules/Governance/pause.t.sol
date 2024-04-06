@@ -266,7 +266,6 @@ contract Governance_PauseOps is EVaultTestBase {
         eTST.touch();
     }
 
-    // TODO: socialize debt is a little bit different
     function testFuzz_socializeDebtDisabledOpsShouldFailAfterDisabled() public {
         eTST.setConfigFlags(CFG_DONT_SOCIALIZE_DEBT);
         // we need this in order to reset the borrower state as its before liquidation

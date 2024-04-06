@@ -4,7 +4,6 @@ pragma solidity ^0.8.20;
 import "./lib/ESRTest.sol";
 
 contract ESRGulpTest is ESRTest {
-    // TODO constructor tests
     function testGulpNoPreviousInterest() public {
         uint256 depositAmount = 100e18;
         doDeposit(user, depositAmount);
