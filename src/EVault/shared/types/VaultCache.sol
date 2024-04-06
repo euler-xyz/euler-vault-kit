@@ -18,6 +18,7 @@ struct VaultCache {
     IPriceOracle oracle;
     // Unit of account is the asset in which collateral and liability values are expressed
     address unitOfAccount;
+
     // Vault data
 
     // A timestamp of the last interest accumulator update
@@ -32,6 +33,7 @@ struct VaultCache {
     Shares accumulatedFees;
     // Current interest accumulator
     uint256 interestAccumulator;
+
     // Vault config
 
     // Current supply cap in asset units
@@ -42,6 +44,7 @@ struct VaultCache {
     Flags hookedOps;
     // A bitfield of vault configuration options
     Flags configFlags;
+
     // Runtime
 
     // A flag indicating if the vault snapshot has already been initialized for the currently executing batch
