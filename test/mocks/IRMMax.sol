@@ -15,7 +15,5 @@ contract IRMMax is IIRM {
         return MAX_ALLOWED_INTEREST_RATE;
     }
 
-    function testExcludeFromCoverage() public pure {
-        return;
-    }
+    function testExcludeFromCoverage() public pure {}
 }

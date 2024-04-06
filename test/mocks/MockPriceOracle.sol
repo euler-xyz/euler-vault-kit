@@ -68,7 +68,5 @@ contract MockPriceOracle {
         return asset;
     }
 
-    function testExcludeFromCoverage() public pure {
-        return;
-    }
+    function testExcludeFromCoverage() public pure {}
 }

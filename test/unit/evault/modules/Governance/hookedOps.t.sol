@@ -40,9 +40,7 @@ contract MockHookTarget {
         if (expectedDataHash == keccak256(msg.data)) revert ExpectedData();
     }
 
-    function testExcludeFromCoverage() public pure {
-        return;
-    }
+    function testExcludeFromCoverage() public pure {}
 }
 
 contract Governance_HookedOps is EVaultTestBase {

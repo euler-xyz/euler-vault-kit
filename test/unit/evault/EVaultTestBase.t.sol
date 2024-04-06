@@ -137,9 +137,7 @@ contract EVaultTestBase is AssertionsCustomTypes, Test, DeployPermit2 {
         return v;
     }
 
-    function test__ExcludeFromCoverage() public pure {
-        return;
-    }
+    function test__ExcludeFromCoverage() public pure {}
 }
 
 contract MockHook {
@@ -168,7 +166,5 @@ contract MockHook {
         }
     }
 
-    function test_ExcludeFromCoverage() public pure {
-        return;
-    }
+    function test_ExcludeFromCoverage() public pure {}
 }

@@ -34,7 +34,7 @@ abstract contract EVCClient is Storage, Events, Errors {
     }
 
     // Authenticate account and controller, making sure the call is made through EVC and the status checks are deferred
-    function EVCAuthenticateDeferred(bool checkController) internal view returns (address) {
+    function EVCAuthenticateDeferred(bool checkController) internal view virtual returns (address) {
         assert(msg.sender == address(evc)); // this ensures that callThroughEVC modifier was utilized
 
         (address onBehalfOfAccount, bool controllerEnabled) =
@@ -45,7 +45,7 @@ abstract contract EVCClient is Storage, Events, Errors {
         return onBehalfOfAccount;
     }
 
-    function EVCAuthenticate() internal view returns (address) {
+    function EVCAuthenticate() internal view virtual returns (address) {
         if (msg.sender == address(evc)) {
             (address onBehalfOfAccount,) = evc.getCurrentOnBehalfOfAccount(address(0));
 
@@ -62,7 +62,7 @@ abstract contract EVCClient is Storage, Events, Errors {
         return owner != address(0) && owner != account;
     }
 
-    function EVCRequireStatusChecks(address account) internal {
+    function EVCRequireStatusChecks(address account) internal virtual {
         assert(account != CHECKACCOUNT_CALLER); // the special value should be resolved by now
 
         if (account == CHECKACCOUNT_NONE) {
@@ -72,11 +72,14 @@ abstract contract EVCClient is Storage, Events, Errors {
         }
     }
 
-    function enforceCollateralTransfer(address collateral, uint256 amount, address from, address receiver) internal {
+    function enforceCollateralTransfer(address collateral, uint256 amount, address from, address receiver)
+        internal
+        virtual
+    {
         evc.controlCollateral(collateral, from, 0, abi.encodeCall(IERC20.transfer, (receiver, amount)));
     }
 
-    function forgiveAccountStatusCheck(address account) internal {
+    function forgiveAccountStatusCheck(address account) internal virtual {
         evc.forgiveAccountStatusCheck(account);
     }
 

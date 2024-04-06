@@ -16,7 +16,5 @@ contract IRMTestZero is IIRM {
         return computeInterestRate(vault, cash, borrows);
     }
 
-    function testExcludeFromCoverage() public pure {
-        return;
-    }
+    function testExcludeFromCoverage() public pure {}
 }

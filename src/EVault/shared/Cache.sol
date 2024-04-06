@@ -19,7 +19,7 @@ contract Cache is Storage, Errors {
 
     // Returns an updated VaultCache
     // If different from VaultStorage, updates VaultStorage
-    function updateVault() internal returns (VaultCache memory vaultCache) {
+    function updateVault() internal virtual returns (VaultCache memory vaultCache) {
         if (initVaultCache(vaultCache)) {
             vaultStorage.lastInterestAccumulatorUpdate = vaultCache.lastInterestAccumulatorUpdate;
             vaultStorage.accumulatedFees = vaultCache.accumulatedFees;
@@ -32,7 +32,7 @@ contract Cache is Storage, Errors {
     }
 
     // Returns an updated VaultCache
-    function loadVault() internal view returns (VaultCache memory vaultCache) {
+    function loadVault() internal view virtual returns (VaultCache memory vaultCache) {
         initVaultCache(vaultCache);
     }
 
@@ -116,7 +116,7 @@ contract Cache is Storage, Errors {
         }
     }
 
-    function totalAssetsInternal(VaultCache memory vaultCache) internal pure returns (uint256) {
+    function totalAssetsInternal(VaultCache memory vaultCache) internal pure virtual returns (uint256) {
         // total assets can exceed Assets max amount (MAX_SANE_AMOUNT)
         return vaultCache.cash.toUint() + vaultCache.totalBorrows.toAssetsUp().toUint();
     }
