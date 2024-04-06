@@ -5,9 +5,33 @@ pragma solidity ^0.8.0;
 import "test/unit/evault/EVaultTestBase.t.sol";
 import {Errors} from "src/EVault/shared/Errors.sol";
 import {Events} from "src/EVault/shared/Events.sol";
+import "forge-std/Test.sol";
 
 contract BalanceForwarderTest_Control is EVaultTestBase {
     address alice = makeAddr("alice");
+
+    IEVault eTSTNoTracker;
+
+    function setUp() public virtual override {
+        super.setUp();
+
+        GenericFactory factoryNoTracker = new GenericFactory(admin);
+        Base.Integrations memory integrationsNoTracker = integrations;
+        integrationsNoTracker.balanceTracker = address(0);
+
+        Dispatch.DeployedModules memory modulesNoTracker = modules;
+
+        modulesNoTracker.balanceForwarder = address(new BalanceForwarder(integrationsNoTracker));
+
+        address evaultImpl = address(new EVault(integrationsNoTracker, modulesNoTracker));
+
+        vm.prank(admin);
+        factoryNoTracker.setImplementation(evaultImpl);
+
+        eTSTNoTracker = IEVault(
+            factoryNoTracker.createProxy(true, abi.encodePacked(address(assetTST), address(oracle), unitOfAccount))
+        );
+    }
 
     function test_BalanceTrackerAddress_Integrity() public view {
         assertEq(eTST.balanceTrackerAddress(), balanceTracker);
@@ -44,11 +68,9 @@ contract BalanceForwarderTest_Control is EVaultTestBase {
     }
 
     function test_Enable_RevertsWhen_NoBalanceTracker() public {
-        vm.skip(true);
-        // todo: use eTST impl without balance tracker
         vm.expectRevert(Errors.E_BalanceForwarderUnsupported.selector);
         vm.prank(alice);
-        eTST.enableBalanceForwarder();
+        eTSTNoTracker.enableBalanceForwarder();
     }
 
     function test_Disable() public {
@@ -87,11 +109,9 @@ contract BalanceForwarderTest_Control is EVaultTestBase {
     }
 
     function test_Disable_RevertsWhen_NoBalanceTracker() public {
-        vm.skip(true);
-        // todo: use eTST impl without balance tracker
         vm.expectRevert(Errors.E_BalanceForwarderUnsupported.selector);
         vm.prank(alice);
-        eTST.disableBalanceForwarder();
+        eTSTNoTracker.disableBalanceForwarder();
     }
 
     function _mintAndDeposit(address user, uint256 amount) internal {

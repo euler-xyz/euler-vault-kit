@@ -31,6 +31,14 @@ contract DTokenTest is EVaultTestBase {
         assertEq(dToken.eVault(), address(eTST));
     }
 
+    function test_EVaultAsset() public view {
+        assertEq(dToken.asset(), address(assetTST));
+    }
+
+    function test_allowance() public view {
+        assertEq(dToken.allowance(user, user2), 0);
+    }
+
     function test_StringMetadata() public view {
         assertNotEq(dToken.symbol(), "");
         assertNotEq(dToken.name(), "");
@@ -56,6 +64,12 @@ contract DTokenTest is EVaultTestBase {
         vm.expectRevert(Errors.E_NotSupported.selector);
         vm.prank(caller);
         dToken.transferFrom(from, to, amount);
+    }
+
+    function test_EmitTransfer_NotAllowedExternally(address caller) public {
+        vm.assume(caller != address(eTST));
+        vm.expectRevert(Errors.E_Unauthorized.selector);
+        dToken.emitTransfer(user, user2, 100);
     }
 
     function test_Allowance_AlwaysZero(address from, address to) public view {

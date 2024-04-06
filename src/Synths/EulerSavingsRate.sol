@@ -14,7 +14,6 @@ contract EulerSavingsRate is EVCUtil, ERC4626 {
     uint8 internal constant REENTRANCYLOCK__UNLOCKED = 1;
     uint8 internal constant REENTRANCYLOCK__LOCKED = 2;
 
-    // TODO consider shortening this period
     uint256 public constant INTEREST_SMEAR = 2 weeks;
 
     struct ESRSlot {

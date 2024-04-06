@@ -11,8 +11,6 @@ import {TestERC20} from "../../mocks/TestERC20.sol";
 import {EthereumVaultConnector} from "ethereum-vault-connector/EthereumVaultConnector.sol";
 
 contract PSMTest is Test {
-    // TODO tests where ETH transfers fail
-
     uint256 public TO_UNDERLYING_FEE = 30;
     uint256 public TO_SYNTH_FEE = 30;
     uint256 public BPS_SCALE = 10000;

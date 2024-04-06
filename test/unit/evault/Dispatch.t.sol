@@ -3,6 +3,8 @@
 pragma solidity ^0.8.0;
 
 import "./EVaultTestBase.t.sol";
+import {Errors} from "src/EVault/shared/Errors.sol";
+import {EVault} from "src/EVault/EVault.sol";
 
 contract DispatchTest is EVaultTestBase {
     function test_Dispatch_moduleGetters() public view {
@@ -14,5 +16,10 @@ contract DispatchTest is EVaultTestBase {
         assertEq(eTST.MODULE_RISKMANAGER(), riskManagerModule);
         assertEq(eTST.MODULE_BALANCE_FORWARDER(), balanceForwarderModule);
         assertEq(eTST.MODULE_GOVERNANCE(), governanceModule);
+    }
+
+    function test_Dispatch_RevertsWhen_callViewDelegateDirectly() public {
+        vm.expectRevert(Errors.E_Unauthorized.selector);
+        EVault(address(eTST)).viewDelegate();
     }
 }
