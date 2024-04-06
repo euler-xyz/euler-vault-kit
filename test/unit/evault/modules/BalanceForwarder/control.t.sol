@@ -21,15 +21,16 @@ contract BalanceForwarderTest_Control is EVaultTestBase {
 
         Dispatch.DeployedModules memory modulesNoTracker = modules;
 
-        modulesNoTracker.balanceForwarder = address(new BalanceForwarder(integrationsNoTracker)); 
+        modulesNoTracker.balanceForwarder = address(new BalanceForwarder(integrationsNoTracker));
 
         address evaultImpl = address(new EVault(integrationsNoTracker, modulesNoTracker));
 
         vm.prank(admin);
         factoryNoTracker.setImplementation(evaultImpl);
 
-        eTSTNoTracker = 
-            IEVault(factoryNoTracker.createProxy(true, abi.encodePacked(address(assetTST), address(oracle), unitOfAccount)));
+        eTSTNoTracker = IEVault(
+            factoryNoTracker.createProxy(true, abi.encodePacked(address(assetTST), address(oracle), unitOfAccount))
+        );
     }
 
     function test_BalanceTrackerAddress_Integrity() public view {
