@@ -47,8 +47,9 @@ abstract contract ERC20Collateral is EVCUtil, ERC20Permit, ReentrancyGuard {
     /// this function.
     /// @dev Overriden to require account status checks on transfers from non-zero addresses. The account status check
     /// must be required on any operation that reduces user's balance. Note that the user balance cannot be modified
-    /// after the account status check is required. If that's the case, the contract must be modified so that the
-    /// account status check is required as the very last operation of the function.
+    // outside of this function as the account status check must always be requested after the balance is modified which
+    // is ensured by this function. If any user balance modifications are done outside of this function, the contract
+    // must be modified to request the account status check appropriately.
     /// @param from The address from which tokens are transferred or burned.
     /// @param to The address to which tokens are transferred or minted.
     /// @param value The amount of tokens to transfer, mint, or burn.
