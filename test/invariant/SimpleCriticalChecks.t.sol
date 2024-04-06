@@ -29,6 +29,7 @@ contract EntryPoint is Test {
     address immutable governor;
     IEVault[] eTST;
     address[] account;
+    string[] errors;
 
     IEVault selectedVault;
 
@@ -41,6 +42,10 @@ contract EntryPoint is Test {
 
         account = new address[](account_.length);
         account = account_;
+    }
+
+    function getErrors() public view returns (string[] memory) {
+        return errors;
     }
 
     // this modifier disables prank mode after the call and checks if the accounts are healthy
@@ -58,17 +63,19 @@ contract EntryPoint is Test {
                     IEVault(controllers[0]).accountLiquidity(account[i], false);
 
                 if (liabilityValue != 0 && liabilityValue >= collateralValue) {
-                    revert("EVault Panic on afterCall");
+                    errors.push("EVault Panic on afterCall");
                 }
             }
         }
     }
 
     // this function prepares the environment:
-    // sets the special bit in the hooked ops bitfield so that it's possible whether initOperation was called
-    // tries to disable the controller of the selected vault and checks if the debt is zero
-    // enables random vault as a controller
+    // 1. sets the special bit in the hooked ops bitfield so that it's possible whether initOperation was called
+    // 2. tries to disable the controller of the selected vault and checks if the debt is zero
+    // 3. enables random vault as a controller
     function setupEnvironment(uint256 seed) private {
+        delete errors;
+
         vm.stopPrank();
         vm.startPrank(governor);
         selectedVault = eTST[seed % eTST.length];
@@ -79,7 +86,7 @@ contract EntryPoint is Test {
         vm.startPrank(msg.sender);
 
         try selectedVault.disableController() {
-            if (selectedVault.debtOf(msg.sender) != 0) revert("EVault Panic on disableController");
+            if (selectedVault.debtOf(msg.sender) != 0) errors.push("EVault Panic on disableController");
         } catch {
             assertTrue(true);
         }
@@ -108,7 +115,7 @@ contract EntryPoint is Test {
         try selectedVault.transfer(to, amount) {
             assertTrue(true);
         } catch (bytes memory reason) {
-            if (bytes4(reason) == EVault_Panic.selector) revert("EVault Panic on transfer");
+            if (bytes4(reason) == EVault_Panic.selector) errors.push("EVault Panic on transfer");
         }
     }
 
@@ -122,7 +129,7 @@ contract EntryPoint is Test {
         try selectedVault.transferFrom(from, to, amount) {
             assertTrue(true);
         } catch (bytes memory reason) {
-            if (bytes4(reason) == EVault_Panic.selector) revert("EVault Panic on transferFrom");
+            if (bytes4(reason) == EVault_Panic.selector) errors.push("EVault Panic on transferFrom");
         }
     }
 
@@ -134,7 +141,7 @@ contract EntryPoint is Test {
         try selectedVault.approve(spender, amount) {
             assertTrue(true);
         } catch (bytes memory reason) {
-            if (bytes4(reason) == EVault_Panic.selector) revert("EVault Panic on approve");
+            if (bytes4(reason) == EVault_Panic.selector) errors.push("EVault Panic on approve");
         }
     }
 
@@ -147,7 +154,7 @@ contract EntryPoint is Test {
         try selectedVault.transferFromMax(from, to) {
             assertTrue(true);
         } catch (bytes memory reason) {
-            if (bytes4(reason) == EVault_Panic.selector) revert("EVault Panic on transferFromMax");
+            if (bytes4(reason) == EVault_Panic.selector) errors.push("EVault Panic on transferFromMax");
         }
     }
 
@@ -160,7 +167,7 @@ contract EntryPoint is Test {
         try selectedVault.deposit(amount, receiver) {
             assertTrue(true);
         } catch (bytes memory reason) {
-            if (bytes4(reason) == EVault_Panic.selector) revert("EVault Panic on deposit");
+            if (bytes4(reason) == EVault_Panic.selector) errors.push("EVault Panic on deposit");
         }
     }
 
@@ -173,7 +180,7 @@ contract EntryPoint is Test {
         try selectedVault.mint(amount, receiver) {
             assertTrue(true);
         } catch (bytes memory reason) {
-            if (bytes4(reason) == EVault_Panic.selector) revert("EVault Panic on mint");
+            if (bytes4(reason) == EVault_Panic.selector) errors.push("EVault Panic on mint");
         }
     }
 
@@ -187,7 +194,7 @@ contract EntryPoint is Test {
         try selectedVault.withdraw(amount, receiver, owner) {
             assertTrue(true);
         } catch (bytes memory reason) {
-            if (bytes4(reason) == EVault_Panic.selector) revert("EVault Panic on withdraw");
+            if (bytes4(reason) == EVault_Panic.selector) errors.push("EVault Panic on withdraw");
         }
     }
 
@@ -200,7 +207,7 @@ contract EntryPoint is Test {
         try selectedVault.redeem(amount, receiver, owner) {
             assertTrue(true);
         } catch (bytes memory reason) {
-            if (bytes4(reason) == EVault_Panic.selector) revert("EVault Panic on redeem");
+            if (bytes4(reason) == EVault_Panic.selector) errors.push("EVault Panic on redeem");
         }
     }
 
@@ -212,7 +219,7 @@ contract EntryPoint is Test {
         try selectedVault.skim(amount, receiver) {
             assertTrue(true);
         } catch (bytes memory reason) {
-            if (bytes4(reason) == EVault_Panic.selector) revert("EVault Panic on skim");
+            if (bytes4(reason) == EVault_Panic.selector) errors.push("EVault Panic on skim");
         }
     }
 
@@ -225,7 +232,7 @@ contract EntryPoint is Test {
         try selectedVault.borrow(amount, receiver) {
             assertTrue(true);
         } catch (bytes memory reason) {
-            if (bytes4(reason) == EVault_Panic.selector) revert("EVault Panic on borrow");
+            if (bytes4(reason) == EVault_Panic.selector) errors.push("EVault Panic on borrow");
         }
     }
 
@@ -237,7 +244,7 @@ contract EntryPoint is Test {
         try selectedVault.repay(amount, receiver) {
             assertTrue(true);
         } catch (bytes memory reason) {
-            if (bytes4(reason) == EVault_Panic.selector) revert("EVault Panic on repay");
+            if (bytes4(reason) == EVault_Panic.selector) errors.push("EVault Panic on repay");
         }
     }
 
@@ -250,7 +257,7 @@ contract EntryPoint is Test {
         try selectedVault.loop(amount, sharesReceiver) {
             assertTrue(true);
         } catch (bytes memory reason) {
-            if (bytes4(reason) == EVault_Panic.selector) revert("EVault Panic on loop");
+            if (bytes4(reason) == EVault_Panic.selector) errors.push("EVault Panic on loop");
         }
     }
 
@@ -262,7 +269,7 @@ contract EntryPoint is Test {
         try selectedVault.deloop(amount, debtFrom) {
             assertTrue(true);
         } catch (bytes memory reason) {
-            if (bytes4(reason) == EVault_Panic.selector) revert("EVault Panic on deloop");
+            if (bytes4(reason) == EVault_Panic.selector) errors.push("EVault Panic on deloop");
         }
     }
 
@@ -274,7 +281,7 @@ contract EntryPoint is Test {
         try selectedVault.pullDebt(amount, from) {
             assertTrue(true);
         } catch (bytes memory reason) {
-            if (bytes4(reason) == EVault_Panic.selector) revert("EVault Panic on pullDebt");
+            if (bytes4(reason) == EVault_Panic.selector) errors.push("EVault Panic on pullDebt");
         }
     }
 
@@ -297,7 +304,7 @@ contract EntryPoint is Test {
         try selectedVault.liquidate(violator, collateral, repayAssets, minYieldBalance) {
             assertTrue(true);
         } catch (bytes memory reason) {
-            if (bytes4(reason) == EVault_Panic.selector) revert("EVault Panic on liquidate");
+            if (bytes4(reason) == EVault_Panic.selector) errors.push("EVault Panic on liquidate");
         }
 
         // set the price back to normal
@@ -310,7 +317,7 @@ contract EntryPoint is Test {
         try selectedVault.convertFees() {
             assertTrue(true);
         } catch (bytes memory reason) {
-            if (bytes4(reason) == EVault_Panic.selector) revert("EVault Panic on convertFees");
+            if (bytes4(reason) == EVault_Panic.selector) errors.push("EVault Panic on convertFees");
         }
     }
 
@@ -320,12 +327,13 @@ contract EntryPoint is Test {
         try selectedVault.touch() {
             assertTrue(true);
         } catch (bytes memory reason) {
-            if (bytes4(reason) == EVault_Panic.selector) revert("EVault Panic on touch");
+            if (bytes4(reason) == EVault_Panic.selector) errors.push("EVault Panic on touch");
         }
     }
 }
 
-// Modules overrides to check invariants
+// Modules overrides to check invariants.
+// EVault must also be overriden to check invariants for embedded functions called with super.
 contract BalanceForwarderOverride is BalanceForwarder {
     error EVault_Panic();
 
@@ -727,8 +735,75 @@ contract VaultOverride is Vault {
     }
 }
 
+contract EVaultOverride is EVault {
+    uint32 internal constant INIT_OPERATION_FLAG = 1 << 31;
+
+    error EVault_Panic();
+
+    constructor(Integrations memory integrations, DeployedModules memory modules) EVault(integrations, modules) {}
+
+    function checkInvariants(address checkedAccount, address controllerEnabled) internal view {
+        if (Flags.unwrap(vaultStorage.hookedOps) & INIT_OPERATION_FLAG == 0) {
+            console.log("EVault Panic on InitOperation");
+            revert EVault_Panic();
+        }
+
+        if (!evc.isVaultStatusCheckDeferred(address(this))) {
+            console.log("EVault Panic on VaultStatusCheckDeferred");
+            revert EVault_Panic();
+        }
+
+        if (checkedAccount != address(0) && !evc.isAccountStatusCheckDeferred(checkedAccount)) {
+            console.log("EVault Panic on AccountStatusCheckDeferred");
+            revert EVault_Panic();
+        }
+
+        if (controllerEnabled != address(0) && !evc.isControllerEnabled(controllerEnabled, address(this))) {
+            console.log("EVault Panic on ControllerEnabled");
+            revert EVault_Panic();
+        }
+    }
+
+    function initOperation(uint32 operation, address accountToCheck)
+        internal
+        override
+        returns (VaultCache memory vaultCache, address account)
+    {
+        (vaultCache, account) = super.initOperation(operation, accountToCheck);
+        vaultStorage.hookedOps = Flags.wrap(Flags.unwrap(vaultStorage.hookedOps) | INIT_OPERATION_FLAG);
+    }
+
+    function increaseBalance(
+        VaultCache memory vaultCache,
+        address account,
+        address sender,
+        Shares amount,
+        Assets assets
+    ) internal override {
+        super.increaseBalance(vaultCache, account, sender, amount, assets);
+        checkInvariants(address(0), address(0));
+    }
+
+    function decreaseBalance(
+        VaultCache memory vaultCache,
+        address account,
+        address sender,
+        address receiver,
+        Shares amount,
+        Assets assets
+    ) internal override {
+        super.decreaseBalance(vaultCache, account, sender, receiver, amount, assets);
+        checkInvariants(account, address(0));
+    }
+
+    function transferBalance(address from, address to, Shares amount) internal override {
+        super.transferBalance(from, to, amount);
+        checkInvariants(from, address(0));
+    }
+}
+
 contract EVault_SimpleCriticalChecks is EVaultTestBase {
-    address entryPoint;
+    EntryPoint entryPoint;
     address[] account_;
 
     function setUp() public override {
@@ -756,7 +831,7 @@ contract EVault_SimpleCriticalChecks is EVaultTestBase {
         modules.governance = governanceModule;
 
         // deploy new EVault implementation with modified modules
-        address newEVaultImpl = address(new EVault(integrations, modules));
+        address newEVaultImpl = address(new EVaultOverride(integrations, modules));
 
         vm.prank(admin);
         factory.setImplementation(newEVaultImpl);
@@ -803,11 +878,18 @@ contract EVault_SimpleCriticalChecks is EVaultTestBase {
         eTST_[0] = eTST;
         eTST_[1] = eTST2;
 
-        entryPoint = address(new EntryPoint(eTST_, account_));
-        targetContract(entryPoint);
+        entryPoint = new EntryPoint(eTST_, account_);
+        targetContract(address(entryPoint));
     }
 
-    function invariant_SimpleCriticalChecks() public pure {
-        assertTrue(true);
+    function invariant_SimpleCriticalChecks() public view {
+        string[] memory errors = entryPoint.getErrors();
+
+        if (errors.length > 0) {
+            for (uint256 i = 0; i < errors.length; i++) {
+                console.log(errors[i]);
+            }
+            assertTrue(false);
+        }
     }
 }
