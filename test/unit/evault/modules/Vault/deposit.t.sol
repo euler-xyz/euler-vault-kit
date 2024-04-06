@@ -63,7 +63,6 @@ contract VaultTest_Deposit is EVaultTestBase {
         assertEq(eTST.balanceOf(user), 0);
     }
 
-    // TODO
     // function testFuzz_deposit(uint amount, address receiver, uint cash) public {
     //     amount = bound(amount, 1, MAX_SANE_AMOUNT);
     //     cash = bound(cash, 0, MAX_SANE_AMOUNT);
@@ -78,8 +77,6 @@ contract VaultTest_Deposit is EVaultTestBase {
     //     assetTST.transfer(address(eTST), cash);
     //     startHoax(user);
 
-    //     vm.expectEmit();
-    //     emit Events.RequestDeposit({owner: user, receiver: receiver, assets: amount});
     //     vm.expectEmit(address(eTST));
     //     emit Events.Transfer({from: address(0), to: receiver, value: shares});
     //     vm.expectEmit();
@@ -98,15 +95,17 @@ contract VaultTest_Deposit is EVaultTestBase {
     //     assertEq(eTST.totalSupply(), shares);
     // }
 
-    // TODO zero receiver
+    // function test_zeroShares() public {
+    //     assetTST.transfer(address(eTST), 2e18);
 
-    function test_zeroShares() public {
-        // TODO
-        // assetTST.transfer(address(eTST), 2e18);
+    //     vm.expectRevert(Errors.E_ZeroShares.selector);
+    //     eTST.deposit(1, user);
+    // }
 
-        // vm.expectRevert(Errors.E_ZeroShares.selector);
-        // eTST.deposit(1e18, user);
-    }
+    // function test_zeroReceiver() public {
+    //     vm.expectRevert(Errors.E_ZeroShares.selector);
+    //     eTST.deposit(1e18, address(0));
+    // }
 
     function test_maxUintAmount() public {
         address user2 = makeAddr("user2");
