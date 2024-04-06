@@ -5,8 +5,6 @@ pragma solidity ^0.8.0;
 import {IBalanceForwarder} from "../IEVault.sol";
 import {Base} from "../shared/Base.sol";
 
-import "forge-std/Test.sol";
-
 /// @title BalanceForwarderModule
 /// @author Euler Labs (https://www.eulerlabs.com/)
 /// @notice An EVault module handling communication a with balance tracker contract.
