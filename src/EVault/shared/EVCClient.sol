@@ -35,7 +35,7 @@ abstract contract EVCClient is Storage, Events, Errors {
 
     // Authenticate account and controller, making sure the call is made through EVC and the status checks are deferred
     function EVCAuthenticateDeferred(bool checkController) internal view returns (address) {
-        if (msg.sender != address(evc)) revert E_Unauthorized();
+        assert(msg.sender == address(evc)); // this ensures that callThroughEVC modifier was utilized
 
         (address onBehalfOfAccount, bool controllerEnabled) =
             evc.getCurrentOnBehalfOfAccount(checkController ? address(this) : address(0));
@@ -63,7 +63,7 @@ abstract contract EVCClient is Storage, Events, Errors {
     }
 
     function EVCRequireStatusChecks(address account) internal {
-        if (account == CHECKACCOUNT_CALLER) revert E_BadAddress(); // the special value should be resolved by now
+        assert(account != CHECKACCOUNT_CALLER); // the special value should be resolved by now
 
         if (account == CHECKACCOUNT_NONE) {
             evc.requireVaultStatusCheck();
