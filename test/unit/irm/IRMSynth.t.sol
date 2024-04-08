@@ -125,9 +125,13 @@ contract IRMSynthTest is Test {
 
         skip(irm.ADJUST_INTERVAL());
         rate = irm.computeInterestRateView(address(0), 0, 0);
-        irm.computeInterestRate(address(0), 0, 0);
         irmData = irm.getIRMData();
 
+        assertNotEq(rate, irmData.lastRate);
+
+        irm.computeInterestRate(address(0), 0, 0);
+        irmData = irm.getIRMData();
+        
         assertEq(rate, irmData.lastRate);
     }
 }
