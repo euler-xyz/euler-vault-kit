@@ -100,15 +100,135 @@ This operation affects:
  - total balance of the underlying assets held by the vault
 */
 methods {
-    function _.requireVaultStatusCheck() external => NONDET;
-    function _.requireAccountAndVaultStatusCheck(address account) external => NONDET; 
-    function _.calculateDTokenAddress() internal => NONDET;
-    function EVCClient.EVCRequireStatusChecks(address account) internal => NONDET;
+    // Track if a check was scheduled
+    function EVCClient.EVCRequireStatusChecks(address account) internal => CVLRequireStatusCheck(account);
+
+    // Track if balance forwarder hook is called
+    function BalanceUtils.tryBalanceTrackerHook(address account, uint256 newAccountBalance, bool forfeitRecentReward) internal returns (bool) => 
+        CVLCalledBalanceForwarder(account, newAccountBalance);
+
+    // TypesLib -- in practice these cause vacuity errors without summaries
+    function _.toAssets(uint256 amount) internal =>
+        CVLToAssets(amount) expect (uint112);
+    function _.toShares(uint256 amount) internal =>
+        CVLToShares(amount) expect (uint112);
+    function _.toOwed(uint256 amount) internal =>
+        CVLToOwed(amount) expect (uint144);
+
+    // Workaround for lack of ability to summarize metadata
+    function Cache.loadVault() internal returns (Vault.VaultCache memory) => CVLLoadVault();
+    function Cache.updateVault() internal returns (Vault.VaultCache memory) => CVLLoadVault();
+
+	// IERC20
+	function _.name()                                external => DISPATCHER(true);
+    function _.symbol()                              external => DISPATCHER(true);
+    function _.decimals()                            external => DISPATCHER(true);
+    function _.totalSupply()                         external => DISPATCHER(true);
+    function _.balanceOf(address)                    external => DISPATCHER(true);
+    function _.allowance(address,address)            external => DISPATCHER(true);
+    function _.approve(address,uint256)              external => DISPATCHER(true);
+    function _.transfer(address,uint256)             external => DISPATCHER(true);
+    function _.transferFrom(address,address,uint256) external => DISPATCHER(true);
 }
 
-rule sanity (method f) {
+function CVLToAssets(uint256 amount) returns uint112 {
+    return require_uint112(amount);
+}
+
+function CVLToShares(uint256 amount) returns uint112 {
+    return require_uint112(amount);
+}
+
+function CVLToOwed(uint256 amount) returns uint144 {
+    return require_uint144(amount);
+}
+
+persistent ghost bool calledStatusCheck;
+function CVLRequireStatusCheck(address account) {
+    calledStatusCheck = true;
+}
+
+function CVLLoadVault() returns Vault.VaultCache {
+    Vault.VaultCache vaultCache;
+    require vaultCache.oracle != 0;
+    return vaultCache;
+}
+
+definition isHookOperation(method f) returns bool =
+    f.selector == sig:Vault.deposit(uint256, address).selector ||
+    f.selector == sig:Vault.mint(uint256, address).selector ||
+    f.selector == sig:Vault.withdraw(uint256, address, address).selector ||
+    f.selector == sig:Vault.redeem(uint256, address, address).selector ||
+    f.selector == sig:Vault.skim(uint256, address).selector;
+
+rule status_checks_scheduled (method f) filtered { f ->
+    isHookOperation(f)
+}{
     env e;
     calldataarg args;
+    require calledStatusCheck == false;
     f(e, args);
-    satisfy true;
+    assert calledStatusCheck;
 }
+
+persistent ghost bool calledForwarder;
+function CVLCalledBalanceForwarder(address account, uint256 newAccountBalance) returns bool {
+    calledForwarder = true;
+    return true;
+}
+
+// Need to summarize UserStorage bit mask stuff
+// including BalanceFowrarder and balance
+
+rule balance_forwarding_called_deposit {
+    env e;
+    uint256 amount;
+    address receiver;
+
+    uint256 balance;
+    bool forwarderEnabled;
+
+    require !calledForwarder;
+
+    // deposit returns early if amount is 0.
+    require amount > 0;
+    require amount != 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff;
+
+    // if balance forwarding is enabled and OP is not disabled
+    balance, forwarderEnabled = getBalanceAndForwarderExt(e, receiver);
+
+    require forwarderEnabled;
+    require !isDepositDisabled(e);
+    deposit(e, amount, receiver);
+
+    // // balance forwarding hook is called
+    assert calledForwarder;
+}
+
+rule balance_forwarding_called_mint{
+    env e;
+    uint256 amount;
+    address receiver;
+
+    uint256 balance;
+    bool forwarderEnabled;
+
+    require !calledForwarder;
+
+    // mint returns early if amount is 0.
+    require amount > 0;
+
+    // if balance forwarding is enabled and OP is not disabled
+    balance, forwarderEnabled = getBalanceAndForwarderExt(e, receiver);
+    require forwarderEnabled;
+    require !isMintDisabled(e);
+    mint(e, amount, receiver);
+
+    // balance forwarding hook is called
+    assert calledForwarder;
+
+}
+
+// NOTE: disabled ops do not cause a revert. They cause the call
+// to act like a NOP in callHook (in initOperation). So we could prove
+// that the actual call does not happen by writing a "hook" on invokeTarget

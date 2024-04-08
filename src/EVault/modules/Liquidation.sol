@@ -144,7 +144,7 @@ abstract contract LiquidationModule is ILiquidation, Base, BalanceUtils, Liquidi
             return liqCache;
         }
 
-        uint256 liabilityValue = liqCache.owed.toUint();
+        uint256 liabilityValue = liqCache.liability.toUint();
         if (address(vaultCache.asset) != vaultCache.unitOfAccount) {
             liabilityValue =
                 vaultCache.oracle.getQuote(liabilityValue, address(vaultCache.asset), vaultCache.unitOfAccount);
