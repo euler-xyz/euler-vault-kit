@@ -29,26 +29,20 @@ checkLiquidation must revert if:
 using SafeERC20Lib as safeERC20;
 
 methods {
+    // envfree
+    function isRecognizedCollateralExt(address collateral) external returns (bool) envfree;
+    function isCollateralEnabledExt(address account, address market) external returns (bool) envfree;
+    function vaultIsOnlyController(address account) external returns (bool) envfree;
+    function isAccountStatusCheckDeferredExt(address account) external returns (bool) envfree;
+    
+    // function ProxyUtils.metadata() internal returns (address, address, address)=> NONDET;
+    // Workaround for lack of ability to summarize metadata
+    function Cache.loadVault() internal returns (Liquidation.VaultCache memory) => CVLLoadVault();
+
     // IPriceOracle
     function _.getQuote(uint256 amount, address base, address quote) external => CVLGetQuote(amount, base, quote) expect (uint256);
     function _.getQuotes(uint256 amount, address base, address quote) external => CVLGetQuotes(amount, base, quote) expect (uint256, uint256);
-    function isRecognizedCollateralExt(address collateral) external returns (bool) envfree;
 
-    function isCollateralEnabledExt(address account, address market) external returns (bool) envfree;
-
-    function isAccountStatusCheckDeferredExt(address account) external returns (bool) envfree;
-    // function Cache.initVaultCache(Liquidation.VaultCache memory vaultCache) internal returns (bool) => NONDET;
-    // function LiquidityUtils.calculateLiquidity(
-    //     Liquidation.VaultCache memory vaultCache,
-    //     address account,
-    //     address[] memory collaterals,
-    //     Liquidation.LTVType ltvType
-    // ) internal returns (uint256, uint256) => calcLiquidity(account, collaterals, ltvType);
-
-    // function ProxyUtils.metadata() internal returns (address, address, address)=> NONDET;
-
-    // Workaround for lack of ability to summarize metadata
-    function Cache.loadVault() internal returns (Liquidation.VaultCache memory) => CVLLoadVault();
 
 	// IERC20
 	function _.name()                                external => DISPATCHER(true);
@@ -126,37 +120,8 @@ rule checkLiquidation_maxYieldGreater {
     require collateralValue < liabilityValue;
 
     (maxRepay, maxYield) = checkLiquidation(e, liquidator, violator, collateral);
-
-    assert maxYield >= maxRepay;
-
-}
-
-rule debugCheckLiquidation {
-    env e;
-    address violator;
-    Liquidation.VaultCache vaultCache = loadVaultExt(e);
-
-    Liquidation.Assets owed = getCurrentOwedExt(e, vaultCache, violator);
-    // satisfy !isZero(owed);
-    satisfy owed > 0;
-}
-
-rule alwaysRevert {
-    env e;
-    address liquidator;
-    address violator; 
-    address collateral;
-
-    checkLiquidation@withrevert(e, liquidator, violator, collateral);
-    satisfy !lastReverted;
-}
-
-rule loadVaultSanity {
-    env e;
-    // require oracleAddress != 0;
-    Liquidation.VaultCache vaultCache = loadVaultExt(e);
-    // validateOracleExt(e, vaultCache);
-    assert vaultCache.oracle != 0;
+    assert maxRepay == maxYield => maxRepay == 0;
+    assert maxRepay > 0 => maxRepay < maxYield; 
 }
 
 rule checkLiquidation_mustRevert {
@@ -166,17 +131,21 @@ rule checkLiquidation_mustRevert {
     address collateral;
     uint256 maxRepay;
     uint256 maxYield;
-    (maxRepay, maxYield) = checkLiquidation@withrevert(e, liquidator, violator, collateral);
-    bool reverted = lastReverted;
-
+    
     bool selfLiquidate = liquidator == violator;
     bool badCollateral = !isRecognizedCollateralExt(collateral);
-    bool notEnabledCollateral = !isCollateralEnabledExt(violator, collateral);
+    bool enabledCollateral = isCollateralEnabledExt(violator, collateral);
+    bool vaultControlsViolator = vaultIsOnlyController(violator);
     bool violatorStatusCheckDeferred = isAccountStatusCheckDeferredExt(violator);
+    bool oracleConfigured = vaultCacheOracleConfigured(e);
 
-    assert selfLiquidate || 
-        badCollateral || 
-        notEnabledCollateral ||
-        violatorStatusCheckDeferred => reverted;
+    (maxRepay, maxYield) = checkLiquidation(e, liquidator, violator, collateral);
+
+    assert !selfLiquidate;
+    assert !badCollateral;
+    assert enabledCollateral;
+    assert vaultControlsViolator;
+    assert !violatorStatusCheckDeferred;
+    assert oracleConfigured;
 
 }
