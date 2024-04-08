@@ -35,6 +35,7 @@ import {MockPriceOracle} from "../../mocks/MockPriceOracle.sol";
 import {IRMTestDefault} from "../../mocks/IRMTestDefault.sol";
 
 import {AssertionsCustomTypes} from "../../helpers/AssertionsCustomTypes.sol";
+import "./InvariantOverrides.sol";
 
 import "src/EVault/shared/Constants.sol";
 
@@ -72,6 +73,7 @@ contract EVaultTestBase is AssertionsCustomTypes, Test, DeployPermit2 {
     address governanceModule;
 
     function setUp() public virtual {
+        bool deployOverrides = vm.envOr("DEPLOY_OVERRIDES", false);
         admin = vm.addr(1000);
         feeReceiver = makeAddr("feeReceiver");
         protocolFeeReceiver = makeAddr("protocolFeeReceiver");
@@ -85,14 +87,25 @@ contract EVaultTestBase is AssertionsCustomTypes, Test, DeployPermit2 {
         permit2 = deployPermit2();
         integrations = Base.Integrations(address(evc), address(protocolConfig), balanceTracker, permit2);
 
-        initializeModule = address(new Initialize(integrations));
-        tokenModule = address(new Token(integrations));
-        vaultModule = address(new Vault(integrations));
-        borrowingModule = address(new Borrowing(integrations));
-        liquidationModule = address(new Liquidation(integrations));
-        riskManagerModule = address(new RiskManager(integrations));
-        balanceForwarderModule = address(new BalanceForwarder(integrations));
-        governanceModule = address(new Governance(integrations));
+        if (deployOverrides) {
+            initializeModule = address(new InitializeOverride(integrations));
+            tokenModule = address(new TokenOverride(integrations));
+            vaultModule = address(new VaultOverride(integrations));
+            borrowingModule = address(new BorrowingOverride(integrations));
+            liquidationModule = address(new LiquidationOverride(integrations));
+            riskManagerModule = address(new RiskManagerOverride(integrations));
+            balanceForwarderModule = address(new BalanceForwarderOverride(integrations));
+            governanceModule = address(new GovernanceOverride(integrations));
+        } else {
+            initializeModule = address(new Initialize(integrations));
+            tokenModule = address(new Token(integrations));
+            vaultModule = address(new Vault(integrations));
+            borrowingModule = address(new Borrowing(integrations));
+            liquidationModule = address(new Liquidation(integrations));
+            riskManagerModule = address(new RiskManager(integrations));
+            balanceForwarderModule = address(new BalanceForwarder(integrations));
+            governanceModule = address(new Governance(integrations));
+        }
 
         modules = Dispatch.DeployedModules({
             initialize: initializeModule,
@@ -105,7 +118,12 @@ contract EVaultTestBase is AssertionsCustomTypes, Test, DeployPermit2 {
             governance: governanceModule
         });
 
-        address evaultImpl = address(new EVault(integrations, modules));
+        address evaultImpl;
+        if (deployOverrides) {
+            evaultImpl = address(new EVaultOverride(integrations, modules));
+        } else {
+            evaultImpl = address(new EVault(integrations, modules));
+        }
 
         vm.prank(admin);
         factory.setImplementation(evaultImpl);
