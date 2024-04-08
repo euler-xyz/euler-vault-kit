@@ -21,6 +21,7 @@ import {MockPriceOracle} from "../../mocks/MockPriceOracle.sol";
 import {IRMTestDefault} from "../../mocks/IRMTestDefault.sol";
 
 import {AssertionsCustomTypes} from "../../helpers/AssertionsCustomTypes.sol";
+import {EVaultLens} from "src/lens/EVaultLens.sol";
 
 import "src/EVault/shared/Constants.sol";
 
@@ -38,6 +39,7 @@ contract EVaultTestBase is AssertionsCustomTypes, Test {
     MockPriceOracle oracle;
     IRMTestDefault irm;
     GenericFactory public factory;
+    EVaultLens public lens;
 
     address initializeModule;
     address tokenModule;
@@ -76,6 +78,7 @@ contract EVaultTestBase is AssertionsCustomTypes, Test {
         oracle = MockPriceOracle(result.oracle);
         irm = IRMTestDefault(result.interestRateModel);
         factory = GenericFactory(result.factory);
+        lens = EVaultLens(result.lens);
 
         initializeModule = result.modules.initialize;
         tokenModule = result.modules.token;
