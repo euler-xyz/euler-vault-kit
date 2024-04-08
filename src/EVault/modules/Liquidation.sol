@@ -108,6 +108,7 @@ abstract contract LiquidationModule is ILiquidation, Base, BalanceUtils, Liquidi
                 liqCache.repay = desiredRepay.toAssets();
             }
         }
+
     }
 
     function calculateMaxLiquidation(LiquidationCache memory liqCache, VaultCache memory vaultCache)
@@ -143,7 +144,7 @@ abstract contract LiquidationModule is ILiquidation, Base, BalanceUtils, Liquidi
             return liqCache;
         }
 
-        uint256 liabilityValue = liqCache.liability.toUint();
+        uint256 liabilityValue = liqCache.owed.toUint();
         if (address(vaultCache.asset) != vaultCache.unitOfAccount) {
             liabilityValue =
                 vaultCache.oracle.getQuote(liabilityValue, address(vaultCache.asset), vaultCache.unitOfAccount);

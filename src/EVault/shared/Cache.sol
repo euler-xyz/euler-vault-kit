@@ -38,8 +38,9 @@ contract Cache is Storage, Errors {
 
     // Takes a VaultCache struct, overwrites it with VaultStorage data and, if time has passed since MarkeStorage
     // was last updated, updates MarkeStorage.
-    // Returns a boolean if the cache is different from storage. VaultCache param is updated to this block.
-    function initVaultCache(VaultCache memory vaultCache) private view returns (bool dirty) {
+    // Returns a VaultCache updated to this block.
+    // MUNGED internal and view by certora
+    function initVaultCache(VaultCache memory vaultCache) internal view returns (bool dirty) {
         dirty = false;
 
         // Proxy metadata
