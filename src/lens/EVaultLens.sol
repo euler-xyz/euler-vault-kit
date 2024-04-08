@@ -125,7 +125,12 @@ contract EVaultLens {
         result.asset = IEVault(vault).asset();
         result.assetName = getStringOrBytes32(result.asset, IEVault(vault).name.selector);
         result.assetSymbol = getStringOrBytes32(result.asset, IEVault(vault).symbol.selector);
-        result.assetDecimals = IEVault(result.asset).decimals();
+        result.assetDecimals = getDecimals(result.asset);
+
+        result.unitOfAccount = IEVault(vault).unitOfAccount();
+        result.unitOfAccountName = getStringOrBytes32(result.unitOfAccount, IEVault(vault).name.selector);
+        result.unitOfAccountSymbol = getStringOrBytes32(result.unitOfAccount, IEVault(vault).symbol.selector);
+        result.unitOfAccountDecimals = getDecimals(result.unitOfAccount);
 
         result.totalShares = IEVault(vault).totalSupply();
         result.totalCash = IEVault(vault).cash();
@@ -151,7 +156,6 @@ contract EVaultLens {
         result.borrowCap = AmountCapLib.toUint(AmountCap.wrap(uint16(result.borrowCap)));
 
         result.dToken = IEVault(vault).dToken();
-        result.unitOfAccount = IEVault(vault).unitOfAccount();
         result.oracle = IEVault(vault).oracle();
         result.interestRateModel = IEVault(vault).interestRateModel();
 
@@ -382,7 +386,7 @@ contract EVaultLens {
 
         if (result.oracle == address(0)) return result;
 
-        result.amountIn = 10 ** IEVault(asset).decimals();
+        result.amountIn = 10 ** getDecimals(asset);
         result.amountOutMid = IPriceOracle(result.oracle).getQuote(result.amountIn, asset, result.unitOfAccount);
         (result.amountOutBid, result.amountOutAsk) =
             IPriceOracle(result.oracle).getQuotes(result.amountIn, asset, result.unitOfAccount);
@@ -395,6 +399,12 @@ contract EVaultLens {
         (bool success, bytes memory result) = contractAddress.staticcall(abi.encodeWithSelector(selector));
 
         return success ? result.length == 32 ? string(abi.encodePacked(result)) : abi.decode(result, (string)) : "";
+    }
+
+    function getDecimals(address contractAddress) private view returns (uint8) {
+        (bool success, bytes memory data) = contractAddress.staticcall(abi.encodeCall(IEVault(contractAddress).decimals, ()));
+        
+        return success && data.length == 32 ? abi.decode(data, (uint8)) : 18;
     }
 
     function computeInterestRates(uint256 borrowSPY, uint256 cash, uint256 borrows, uint256 interestFee)

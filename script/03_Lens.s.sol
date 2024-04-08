@@ -102,6 +102,10 @@ contract Lens is Utils {
             obj = vm.serializeString("", "assetName", vaultInfo.assetName);
             obj = vm.serializeString("", "assetSymbol", vaultInfo.assetSymbol);
             obj = vm.serializeUint("", "assetDecimals", vaultInfo.assetDecimals);
+            obj = vm.serializeAddress("", "unitOfAccount", vaultInfo.unitOfAccount);
+            obj = vm.serializeString("", "unitOfAccountName", vaultInfo.unitOfAccountName);
+            obj = vm.serializeString("", "unitOfAccountSymbol", vaultInfo.unitOfAccountSymbol);
+            obj = vm.serializeUint("", "unitOfAccountDecimals", vaultInfo.unitOfAccountDecimals);
             obj = vm.serializeUint("", "totalShares", vaultInfo.totalShares);
             obj = vm.serializeUint("", "totalCash", vaultInfo.totalCash);
             obj = vm.serializeUint("", "totalBorrowed", vaultInfo.totalBorrowed);
@@ -120,7 +124,6 @@ contract Lens is Utils {
             obj = vm.serializeUint("", "supplyCap", vaultInfo.supplyCap);
             obj = vm.serializeUint("", "borrowCap", vaultInfo.borrowCap);
             obj = vm.serializeAddress("", "dToken", vaultInfo.dToken);
-            obj = vm.serializeAddress("", "unitOfAccount", vaultInfo.unitOfAccount);
             obj = vm.serializeAddress("", "oracle", vaultInfo.oracle);
             obj = vm.serializeAddress("", "interestRateModel", vaultInfo.interestRateModel);
             obj = vm.serializeAddress("", "hookTarget", vaultInfo.hookTarget);

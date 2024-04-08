@@ -65,6 +65,10 @@ struct VaultInfo {
     string assetName;
     string assetSymbol;
     uint256 assetDecimals;
+    address unitOfAccount;
+    string unitOfAccountName;
+    string unitOfAccountSymbol;
+    uint256 unitOfAccountDecimals;
     uint256 totalShares;
     uint256 totalCash;
     uint256 totalBorrowed;
@@ -83,7 +87,6 @@ struct VaultInfo {
     uint256 supplyCap;
     uint256 borrowCap;
     address dToken;
-    address unitOfAccount;
     address oracle;
     address interestRateModel;
     address hookTarget;
