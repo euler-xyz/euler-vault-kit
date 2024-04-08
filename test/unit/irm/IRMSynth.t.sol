@@ -113,4 +113,21 @@ contract IRMSynthTest is Test {
         assertEq(irmDataAfter.lastUpdated, block.timestamp);
         assertEq(irmDataAfter.lastRate, irmDataBefore.lastRate);
     }
+
+    function test_computeInterestRateView() public {
+        oracle.setPrice(SYNTH, REFERENCE_ASSET, irm.TARGET_QUOTE() / 2);
+
+        uint256 rate = irm.computeInterestRateView(address(0), 0, 0);
+        irm.computeInterestRate(address(0), 0, 0);
+        IRMSynth.IRMData memory irmData = irm.getIRMData();
+
+        assertEq(rate, irmData.lastRate);
+
+        skip(irm.ADJUST_INTERVAL());
+        rate = irm.computeInterestRateView(address(0), 0, 0);
+        irm.computeInterestRate(address(0), 0, 0);
+        irmData = irm.getIRMData();
+
+        assertEq(rate, irmData.lastRate);
+    }
 }
