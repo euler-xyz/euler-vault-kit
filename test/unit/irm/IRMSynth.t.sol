@@ -131,7 +131,7 @@ contract IRMSynthTest is Test {
 
         irm.computeInterestRate(address(0), 0, 0);
         irmData = irm.getIRMData();
-        
+
         assertEq(rate, irmData.lastRate);
     }
 }
