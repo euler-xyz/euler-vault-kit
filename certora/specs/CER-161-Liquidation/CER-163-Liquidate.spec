@@ -40,13 +40,20 @@ works:
 */
 
 methods {
+    // envfree
+    function isRecognizedCollateralExt(address collateral) external returns (bool) envfree;
+    function isRecognizedCollateralExt(address collateral) external returns (bool) envfree;
+    function isCollateralEnabledExt(address account, address market) external returns (bool) envfree;
+    function isAccountStatusCheckDeferredExt(address account) external returns (bool) envfree;
+    function vaultIsOnlyController(address account) external returns (bool) envfree;
+    function vaultIsController(address account) external returns (bool) envfree;
 
     // IPriceOracle
     function _.getQuote(uint256 amount, address base, address quote) external => CVLGetQuote(amount, base, quote) expect (uint256);
     function _.getQuotes(uint256 amount, address base, address quote) external => CVLGetQuotes(amount, base, quote) expect (uint256, uint256);
-    function isRecognizedCollateralExt(address collateral) external returns (bool) envfree;
 
     // Workaround for lack of ability to summarize metadata
+    // function ProxyUtils.metadata() internal returns (address, address, address)=> NONDET;
     function Cache.loadVault() internal returns (Liquidation.VaultCache memory) => CVLLoadVault();
 
     function _.requireVaultStatusCheck() external => NONDET;
@@ -54,12 +61,6 @@ methods {
     function _.calculateDTokenAddress() internal => NONDET;
     function EVCClient.EVCRequireStatusChecks(address account) internal => NONDET;
     function _.validateAndCallHook(Liquidation.Flags hookedOps, uint32 operation, address caller) internal => NONDET;
-    function isRecognizedCollateralExt(address collateral) external returns (bool) envfree;
-    function isCollateralEnabledExt(address account, address market) external returns (bool) envfree;
-    function isAccountStatusCheckDeferredExt(address account) external returns (bool) envfree;
-    function vaultIsOnlyController(address account) external returns (bool) envfree;
-    function vaultIsController(address account) external returns (bool) envfree;
-    function ProxyUtils.metadata() internal returns (address, address, address)=> NONDET;
 
 	// IERC20
 	function _.name()                                external => DISPATCHER(true);
@@ -126,6 +127,7 @@ rule liquidate_mustRevert {
 
     liquidate(e, violator, collateral, repayAssets, minYieldBalance);
     // TODO liquidate operation not disabled
+    // TODO amount of collateral to be seized is less than the desired amount of 
     assert !selfLiquidation;
     assert recognizedCollateral;
     assert enabledCollateral;
