@@ -3,7 +3,9 @@
 pragma solidity ^0.8.0;
 import "../../src/EVault/shared/types/Types.sol";
 import "../../src/EVault/modules/Liquidation.sol";
-
+import {IEVC} from "ethereum-vault-connector/interfaces/IEthereumVaultConnector.sol";
+import "../../src/interfaces/IPriceOracle.sol";
+import {IERC20} from "../../src/EVault/IEVault.sol";
 
 contract LiquidationHarness is Liquidation {
     // VaultCache vaultCache_;
@@ -14,7 +16,11 @@ contract LiquidationHarness is Liquidation {
     function calculateLiquidityExternal(
         address account
     ) public view returns (uint256 collateralValue, uint256 liabilityValue) {
-        return calculateLiquidity(loadVault(), account, getCollaterals(account), LTVType.LIQUIDATION);
+        // This is intentionally an uninitialized vaultCache.
+        // calculateLiquidity is summarized in a way that vaultCache does not
+        // matter and calling loadVault() causes issues.
+        VaultCache memory vaultCache;
+        return calculateLiquidity(vaultCache, account, getCollaterals(account), LTVType.LIQUIDATION);
     }
 
     function getLiquidityValue(address account, VaultCache memory vaultCache, address[] memory collaterals) public view returns (uint256 collateralValue) {
@@ -56,6 +62,10 @@ contract LiquidationHarness is Liquidation {
         return address(loadVault().oracle) != address(0);
     }
 
+    function validateOracleExt(VaultCache memory vaultCache) external pure {
+        validateOracle(vaultCache);
+    }
+
     function getLiquidator() external returns (address liquidator) {
         (, liquidator) = initOperation(OP_LIQUIDATE, CHECKACCOUNT_CALLER);
     }
@@ -73,6 +83,10 @@ contract LiquidationHarness is Liquidation {
         uint256 desiredRepay
     ) external view returns (LiquidationCache memory liqCache) {
         return calculateLiquidation(vaultCache, liquidator, violator, collateral, desiredRepay);
+    }
+
+    function getCurrentOwedExt(VaultCache memory vaultCache, address violator) external view returns (Assets) {
+        return getCurrentOwed(vaultCache, violator).toAssetsUp();
     }
 
 

@@ -49,6 +49,7 @@ methods {
     function isCollateralEnabledExt(address account, address market) external returns (bool) envfree;
     function isAccountStatusCheckDeferredExt(address account) external returns (bool) envfree;
     function vaultIsOnlyController(address account) external returns (bool) envfree;
+    function ProxyUtils.metadata() internal returns (address, address, address)=> NONDET;
 }
 
 rule calculateLiquidation_setViolator {
@@ -78,14 +79,21 @@ rule liquidate_mustRevert {
 
     address liquidator = getLiquidator(e);
     bool selfLiquidation = violator == liquidator;
-    bool recognizedCollateral = isREcognizedCollateralExt(collateral);
+    bool recognizedCollateral = isRecognizedCollateralExt(collateral);
     bool enabledCollateral = isCollateralEnabledExt(violator, collateral);
     bool violatorStatusCheckDeferred = isAccountStatusCheckDeferredExt(violator);
+    bool vaultControlsLiquidator = vaultIsOnlyController(liquidator);
+    bool vaultControlsViolator = vaultIsOnlyController(violator);
+    bool oracleConfigured = vaultCacheOracleConfigured(e);
 
     liquidate(e, violator, collateral, repayAssets, minYieldBalance);
+    // TODO liquidate operation not disabled
     assert !selfLiquidation;
     assert recognizedCollateral;
     assert enabledCollateral;
+    // assert vaultControlsLiquidator; // VIOLATED
+    assert vaultControlsViolator;
     assert !violatorStatusCheckDeferred;
+    // assert oracleConfigured;
     
 }
