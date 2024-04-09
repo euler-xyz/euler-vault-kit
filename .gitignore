@@ -12,6 +12,13 @@ out/
 .vscode
 lcov.info
 
+# Invariant testing files
+crytic-export/
+_corpus/
+
+# System Files
+.DS_Store
+
 # Coverage directory
 coverage/
 *.info
