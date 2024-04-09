@@ -6,9 +6,10 @@ import {IAllowanceTransfer} from "permit2/src/interfaces/IAllowanceTransfer.sol"
 import {IEVC} from "ethereum-vault-connector/interfaces/IEthereumVaultConnector.sol";
 //import {IRewardStreams} from "reward-streams/interfaces/IRewardStreams.sol";
 import {IEVault} from "../EVault/IEVault.sol";
-import {RPow} from "../EVault/shared/lib/RPow.sol";
 import {IIRM, IRMLinearKink} from "../InterestRateModels/IRMLinearKink.sol";
 import {IPriceOracle} from "../interfaces/IPriceOracle.sol";
+import {RPow} from "../EVault/shared/lib/RPow.sol";
+import {Errors} from "../EVault/shared/Errors.sol";
 import "../EVault/shared/types/AmountCap.sol";
 import "./LensTypes.sol";
 
@@ -19,8 +20,9 @@ contract EVaultLens {
     uint256 internal constant TTL_HS_ACCURACY = ONE / 1e4;
     int256 internal constant TTL_COMPUTATION_MIN = 0;
     int256 internal constant TTL_COMPUTATION_MAX = 400 * 1 days;
-    int256 public constant TTL_LIQUIDATION = 0;
-    int256 public constant TTL_INFINITY = -1;
+    int256 public constant TTL_INFINITY = type(int256).max;
+    int256 public constant TTL_MORE_THAN_ONE_YEAR = type(int256).max - 1;
+    int256 public constant TTL_LIQUIDATION = -1;
     int256 public constant TTL_ERROR = -2;
 
     function getAccountInfo(address account, address vault) public view returns (AccountInfo memory) {
@@ -83,53 +85,77 @@ contract EVaultLens {
         result.isController = IEVC(evc).isControllerEnabled(account, vault);
         result.isCollateral = IEVC(evc).isCollateralEnabled(account, vault);
 
-        try IEVault(vault).accountLiquidity(account, false) returns (uint256 collateralValue, uint256 liabilityValue) {
-            result.liquidityInfo.liabilityValue = liabilityValue;
-            result.liquidityInfo.collateralValueBorrowing = collateralValue;
+        try IEVault(vault).accountLiquidity(account, false) returns (uint256 _collateralValue, uint256 _liabilityValue)
+        {
+            result.liquidityInfo.liabilityValue = _liabilityValue;
+            result.liquidityInfo.collateralValueBorrowing = _collateralValue;
         } catch {}
 
-        try IEVault(vault).accountLiquidity(account, true) returns (uint256 collateralValue, uint256) {
-            result.liquidityInfo.collateralValueLiquidation = collateralValue;
-        } catch {}
+        try IEVault(vault).accountLiquidity(account, true) returns (uint256 _collateralValue, uint256) {
+            result.liquidityInfo.collateralValueLiquidation = _collateralValue;
+        } catch (bytes memory reason) {
+            if (bytes4(reason) != Errors.E_NoLiability.selector) result.liquidityInfo.timeToLiquidation = TTL_ERROR;
+        }
 
         try IEVault(vault).accountLiquidityFull(account, false) returns (
-            address[] memory collaterals, uint256[] memory collateralValues, uint256
+            address[] memory _collaterals, uint256[] memory _collateralValues, uint256
         ) {
-            result.liquidityInfo.collateralLiquidityBorrowingInfo = new CollateralLiquidityInfo[](collaterals.length);
+            result.liquidityInfo.collateralLiquidityBorrowingInfo = new CollateralLiquidityInfo[](_collaterals.length);
 
-            for (uint256 i = 0; i < collaterals.length; ++i) {
-                result.liquidityInfo.collateralLiquidityBorrowingInfo[i].collateral = collaterals[i];
-                result.liquidityInfo.collateralLiquidityBorrowingInfo[i].collateralValue = collateralValues[i];
+            for (uint256 i = 0; i < _collaterals.length; ++i) {
+                result.liquidityInfo.collateralLiquidityBorrowingInfo[i].collateral = _collaterals[i];
+                result.liquidityInfo.collateralLiquidityBorrowingInfo[i].collateralValue = _collateralValues[i];
             }
         } catch {}
 
+        address[] memory enabledCollaterals;
+        uint256[] memory collateralValues;
         try IEVault(vault).accountLiquidityFull(account, true) returns (
-            address[] memory collaterals, uint256[] memory collateralValues, uint256
+            address[] memory _collaterals, uint256[] memory _collateralValues, uint256
         ) {
-            result.liquidityInfo.collateralLiquidityLiquidationInfo = new CollateralLiquidityInfo[](collaterals.length);
+            enabledCollaterals = _collaterals;
+            collateralValues = _collateralValues;
 
-            for (uint256 i = 0; i < collaterals.length; ++i) {
-                result.liquidityInfo.collateralLiquidityLiquidationInfo[i].collateral = collaterals[i];
-                result.liquidityInfo.collateralLiquidityLiquidationInfo[i].collateralValue = collateralValues[i];
+            result.liquidityInfo.collateralLiquidityLiquidationInfo = new CollateralLiquidityInfo[](_collaterals.length);
+
+            for (uint256 i = 0; i < _collaterals.length; ++i) {
+                result.liquidityInfo.collateralLiquidityLiquidationInfo[i].collateral = _collaterals[i];
+                result.liquidityInfo.collateralLiquidityLiquidationInfo[i].collateralValue = _collateralValues[i];
             }
-        } catch {}
+        } catch (bytes memory reason) {
+            if (bytes4(reason) != Errors.E_NoLiability.selector) result.liquidityInfo.timeToLiquidation = TTL_ERROR;
+        }
+
+        if (result.liquidityInfo.timeToLiquidation == 0) {
+            if (result.liquidityInfo.liabilityValue == 0) {
+                // if there's no liability, time to liquidation is infinite
+                result.liquidityInfo.timeToLiquidation = TTL_INFINITY;
+            } else if (result.liquidityInfo.liabilityValue >= result.liquidityInfo.collateralValueLiquidation) {
+                // if liability is greater than or equal to collateral, the account is eligible for liquidation right away
+                result.liquidityInfo.timeToLiquidation = TTL_LIQUIDATION;
+            } else {
+                result.liquidityInfo.timeToLiquidation = calculateTimeToLiquidation(
+                    vault, result.liquidityInfo.liabilityValue, enabledCollaterals, collateralValues
+                );
+            }
+        }
 
         return result;
     }
 
     function getTimeToLiquidation(address account, address vault) public view returns (int256) {
-        uint256 collateralValue;
-        uint256 liabilityValue;
-        uint256 liabilitySPY;
         address[] memory collaterals;
         uint256[] memory collateralValues;
-        uint256[] memory collateralSPYs;
 
         // get collateral and liability values
+        uint256 collateralValue;
+        uint256 liabilityValue;
         try IEVault(vault).accountLiquidity(account, true) returns (uint256 _collateralValue, uint256 _liabilityValue) {
             collateralValue = _collateralValue;
             liabilityValue = _liabilityValue;
-        } catch {}
+        } catch (bytes memory reason) {
+            if (bytes4(reason) != Errors.E_NoLiability.selector) return TTL_ERROR;
+        }
 
         // if there's no liability, time to liquidation is infinite
         if (liabilityValue == 0) return TTL_INFINITY;
@@ -143,83 +169,11 @@ contract EVaultLens {
         ) {
             collaterals = _collaterals;
             collateralValues = _collateralValues;
-        } catch {}
-
-        // get borrow interest rate
-        try IEVault(vault).interestRate() returns (uint256 _spy) {
-            liabilitySPY = _spy;
-        } catch {}
-
-        // get individual collateral interest rates
-        collateralSPYs = new uint256[](collaterals.length);
-        for (uint256 i = 0; i < collaterals.length; ++i) {
-            address collateral = collaterals[i];
-            uint256 borrowSPY;
-            try IEVault(collateral).interestRate() returns (uint256 _spy) {
-                borrowSPY = _spy;
-            } catch {}
-
-            if (borrowSPY > 0) {
-                (collateralSPYs[i],,) = computeInterestRates(
-                    borrowSPY,
-                    IEVault(collateral).cash(),
-                    IEVault(collateral).totalBorrows(),
-                    IEVault(collateral).interestFee()
-                );
-            }
+        } catch (bytes memory reason) {
+            if (bytes4(reason) != Errors.E_NoLiability.selector) return TTL_ERROR;
         }
 
-        uint256 counter;
-        int256 minTTL = TTL_COMPUTATION_MIN;
-        int256 maxTTL = TTL_COMPUTATION_MAX;
-        int256 ttl;
-
-        // calculate time to liquidation using binary search
-        while (counter <= 10) {
-            ttl = minTTL + (maxTTL - minTTL) / 2;
-
-            // break if the search range is too small
-            if (maxTTL <= minTTL + 1 days) break;
-            if (ttl < 1 days) break;
-
-            // calculate the liability interest accrued
-            uint256 liabilityInterest;
-            {
-                (uint256 multiplier, bool overflow) = RPow.rpow(liabilitySPY + ONE, uint256(ttl), ONE);
-
-                if (overflow) return TTL_ERROR;
-
-                liabilityInterest = liabilityValue * multiplier / ONE - liabilityValue;
-            }
-
-            // calculate the collaterals interest accrued
-            uint256 collateralInterest;
-            for (uint256 i = 0; i < collaterals.length; ++i) {
-                (uint256 multiplier, bool overflow) = RPow.rpow(collateralSPYs[i] + ONE, uint256(ttl), ONE);
-
-                if (overflow) return TTL_ERROR;
-
-                collateralInterest = collateralValues[i] * multiplier / ONE - collateralValues[i];
-            }
-
-            // calculate the health factor
-            uint256 hs = (collateralValue + collateralInterest) * ONE / (liabilityValue + liabilityInterest);
-
-            // if the collateral interest accrues fater than the liability interest, the account should never be liquidated
-            if (collateralInterest >= liabilityInterest) return TTL_INFINITY;
-
-            // if the health factor is within the acceptable range, return the time to liquidation
-            if (hs >= ONE && hs - ONE <= TTL_HS_ACCURACY) break;
-            if (hs < ONE && ONE - hs <= TTL_HS_ACCURACY) break;
-
-            // adjust the search range
-            if (hs >= ONE) minTTL = ttl + 1 days;
-            else maxTTL = ttl - 1 days;
-
-            ++counter;
-        }
-
-        return ttl;
+        return calculateTimeToLiquidation(vault, liabilityValue, collaterals, collateralValues);
     }
 
     function getVaultInfo(address vault) public view returns (VaultInfo memory) {
@@ -537,5 +491,91 @@ contract EVaultLens {
 
         borrowAPY -= ONE;
         supplyAPY -= ONE;
+    }
+
+    function calculateTimeToLiquidation(
+        address liabilityVault,
+        uint256 liabilityValue,
+        address[] memory collaterals,
+        uint256[] memory collateralValues
+    ) private view returns (int256) {
+        // get borrow interest rate
+        uint256 liabilitySPY;
+        try IEVault(liabilityVault).interestRate() returns (uint256 _spy) {
+            liabilitySPY = _spy;
+        } catch {}
+
+        // if there's no borrow interest rate, time to liquidation is infinite
+        if (liabilitySPY == 0) return TTL_INFINITY;
+
+        // get individual collateral interest rates
+        uint256[] memory collateralSPYs = new uint256[](collaterals.length);
+        for (uint256 i = 0; i < collaterals.length; ++i) {
+            address collateral = collaterals[i];
+            uint256 borrowSPY;
+            try IEVault(collateral).interestRate() returns (uint256 _spy) {
+                borrowSPY = _spy;
+            } catch {}
+
+            if (borrowSPY > 0) {
+                (collateralSPYs[i],,) = computeInterestRates(
+                    borrowSPY,
+                    IEVault(collateral).cash(),
+                    IEVault(collateral).totalBorrows(),
+                    IEVault(collateral).interestFee()
+                );
+            }
+        }
+
+        int256 minTTL = TTL_COMPUTATION_MIN;
+        int256 maxTTL = TTL_COMPUTATION_MAX;
+        int256 ttl;
+
+        // calculate time to liquidation using binary search
+        while (true) {
+            ttl = minTTL + (maxTTL - minTTL) / 2;
+
+            // break if the search range is too small
+            if (maxTTL <= minTTL + 1 days) break;
+            if (ttl < 1 days) break;
+
+            // calculate the liability interest accrued
+            uint256 liabilityInterest;
+            {
+                (uint256 multiplier, bool overflow) = RPow.rpow(liabilitySPY + ONE, uint256(ttl), ONE);
+
+                if (overflow) return TTL_ERROR;
+
+                liabilityInterest = liabilityValue * multiplier / ONE - liabilityValue;
+            }
+
+            // calculate the collaterals interest accrued
+            uint256 collateralValue;
+            uint256 collateralInterest;
+            for (uint256 i = 0; i < collaterals.length; ++i) {
+                (uint256 multiplier, bool overflow) = RPow.rpow(collateralSPYs[i] + ONE, uint256(ttl), ONE);
+
+                if (overflow) return TTL_ERROR;
+
+                collateralValue += collateralValues[i];
+                collateralInterest = collateralValues[i] * multiplier / ONE - collateralValues[i];
+            }
+
+            // calculate the health factor
+            uint256 hs = (collateralValue + collateralInterest) * ONE / (liabilityValue + liabilityInterest);
+
+            // if the collateral interest accrues fater than the liability interest, the account should never be liquidated
+            if (collateralInterest >= liabilityInterest) return TTL_INFINITY;
+
+            // if the health factor is within the acceptable range, return the time to liquidation
+            if (hs >= ONE && hs - ONE <= TTL_HS_ACCURACY) break;
+            if (hs < ONE && ONE - hs <= TTL_HS_ACCURACY) break;
+
+            // adjust the search range
+            if (hs >= ONE) minTTL = ttl + 1 days;
+            else maxTTL = ttl - 1 days;
+        }
+
+        return ttl > int256(SECONDS_PER_YEAR) ? TTL_MORE_THAN_ONE_YEAR : int256(ttl) / 1 days;
     }
 }

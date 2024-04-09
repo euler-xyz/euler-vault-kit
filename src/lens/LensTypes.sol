@@ -42,6 +42,7 @@ struct VaultAccountInfo {
 }
 
 struct AccountLiquidityInfo {
+    int256 timeToLiquidation;
     uint256 liabilityValue;
     uint256 collateralValueBorrowing;
     uint256 collateralValueLiquidation;
