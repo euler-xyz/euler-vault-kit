@@ -36,7 +36,7 @@ methods {
     function vaultIsOnlyController(address account) external returns (bool) envfree;
     function isAccountStatusCheckDeferredExt(address account) external returns (bool) envfree;
     
-    function ProxyUtils.metadata() internal returns (address, address, address)=> NONDET;
+    function ProxyUtils.metadata() internal returns (address, address, address)=> CVLProxyMetadata();
     // Workaround for lack of ability to summarize metadata
     // function Cache.loadVault() internal returns (Liquidation.VaultCache memory) => CVLLoadVault();
 
