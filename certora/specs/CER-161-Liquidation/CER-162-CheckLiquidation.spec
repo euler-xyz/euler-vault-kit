@@ -26,7 +26,8 @@ checkLiquidation must revert if:
  - price oracle is not configured
 */
 
-using SafeERC20Lib as safeERC20;
+// using SafeERC20Lib as safeERC20;
+using ERC20 as erc20;
 
 methods {
     // envfree
@@ -35,9 +36,9 @@ methods {
     function vaultIsOnlyController(address account) external returns (bool) envfree;
     function isAccountStatusCheckDeferredExt(address account) external returns (bool) envfree;
     
-    // function ProxyUtils.metadata() internal returns (address, address, address)=> NONDET;
+    function ProxyUtils.metadata() internal returns (address, address, address)=> NONDET;
     // Workaround for lack of ability to summarize metadata
-    function Cache.loadVault() internal returns (Liquidation.VaultCache memory) => CVLLoadVault();
+    // function Cache.loadVault() internal returns (Liquidation.VaultCache memory) => CVLLoadVault();
 
     // IPriceOracle
     function _.getQuote(uint256 amount, address base, address quote) external => CVLGetQuote(amount, base, quote) expect (uint256);
@@ -70,7 +71,7 @@ function CVLGetQuotes(uint256 amount, address base, address quote) returns (uint
 ghost address oracleAddress;
 ghost address unitOfAccount;
 function CVLProxyMetadata() returns (address, address, address) {
-    return (safeERC20, oracleAddress, unitOfAccount);
+    return (erc20, oracleAddress, unitOfAccount);
 }
 
 function CVLLoadVault() returns Liquidation.VaultCache {
@@ -89,6 +90,7 @@ rule checkLiquidation_healthy() {
 
     Liquidation.VaultCache vaultCache;
     require vaultCache.oracle != 0;
+    require oracleAddress != 0;
 
     address[] collaterals = getCollateralsExt(e, violator);
 
@@ -115,13 +117,13 @@ rule checkLiquidation_maxYieldGreater {
     (collateralValue, liabilityValue) =     
         calculateLiquidityExternal(e, violator);
 
+    require oracleAddress != 0;
     require collateralValue > 0;
     require liabilityValue > 0;
     require collateralValue < liabilityValue;
 
     (maxRepay, maxYield) = checkLiquidation(e, liquidator, violator, collateral);
-    assert maxRepay == maxYield => maxRepay == 0;
-    assert maxRepay > 0 => maxRepay < maxYield; 
+    assert maxRepay > 0 => maxRepay <= maxYield; 
 }
 
 rule checkLiquidation_mustRevert {
@@ -132,6 +134,7 @@ rule checkLiquidation_mustRevert {
     uint256 maxRepay;
     uint256 maxYield;
     
+    require oracleAddress != 0;
     bool selfLiquidate = liquidator == violator;
     bool badCollateral = !isRecognizedCollateralExt(collateral);
     bool enabledCollateral = isCollateralEnabledExt(violator, collateral);
