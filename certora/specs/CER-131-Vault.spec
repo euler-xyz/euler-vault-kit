@@ -177,56 +177,116 @@ function CVLCalledBalanceForwarder(address account, uint256 newAccountBalance) r
     return true;
 }
 
-// Need to summarize UserStorage bit mask stuff
-// including BalanceFowrarder and balance
+// NOTE: these rules are not parametric because they need
+// to constrain to the case that the result is nonzero.
 
 rule balance_forwarding_called_deposit {
     env e;
     uint256 amount;
     address receiver;
+    uint256 result;
 
     uint256 balance;
     bool forwarderEnabled;
+    
 
     require !calledForwarder;
-
-    // deposit returns early if amount is 0.
-    require amount > 0;
-    require amount != 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff;
 
     // if balance forwarding is enabled and OP is not disabled
     balance, forwarderEnabled = getBalanceAndForwarderExt(e, receiver);
 
     require forwarderEnabled;
     require !isDepositDisabled(e);
-    deposit(e, amount, receiver);
+    result = deposit(e, amount, receiver);
 
     // // balance forwarding hook is called
-    assert calledForwarder;
+    assert result !=0 => calledForwarder;
 }
 
-rule balance_forwarding_called_mint{
+rule balance_forwarding_called_mint {
     env e;
     uint256 amount;
     address receiver;
+    uint256 result;
 
     uint256 balance;
     bool forwarderEnabled;
 
     require !calledForwarder;
 
-    // mint returns early if amount is 0.
-    require amount > 0;
-
     // if balance forwarding is enabled and OP is not disabled
     balance, forwarderEnabled = getBalanceAndForwarderExt(e, receiver);
     require forwarderEnabled;
     require !isMintDisabled(e);
-    mint(e, amount, receiver);
+    result = mint(e, amount, receiver);
 
     // balance forwarding hook is called
-    assert calledForwarder;
+    assert result != 0 => calledForwarder;
+}
 
+rule balance_forwarding_called_withdraw {
+    env e;
+    uint256 amount;
+    address receiver;
+    address owner;
+    uint256 result;
+
+    uint256 balance;
+    bool forwarderEnabled;
+
+    require !calledForwarder;
+
+    // if balance forwarding is enabled and OP is not disabled
+    balance, forwarderEnabled = getBalanceAndForwarderExt(e, owner);
+    require forwarderEnabled;
+    require !isWithdrawDisabled(e);
+    result = withdraw(e, amount, receiver, owner);
+
+    // balance forwarding hook is called
+    assert result !=0 => calledForwarder;
+}
+
+rule balance_forwarding_called_redeem {
+    env e;
+    uint256 amount;
+    address receiver;
+    address owner;
+    uint256 result;
+
+    uint256 balance;
+    bool forwarderEnabled;
+
+    require !calledForwarder;
+
+    // if balance forwarding is enabled and OP is not disabled
+    balance, forwarderEnabled = getBalanceAndForwarderExt(e, owner);
+    require forwarderEnabled;
+    require !isRedeemDisabled(e);
+    result = redeem(e, amount, receiver, owner);
+
+    // balance forwarding hook is called
+    assert result != 0 => calledForwarder;
+}
+
+rule balance_forwarding_called_skim {
+    env e;
+    uint256 amount;
+    address receiver;
+    uint256 result;
+
+    uint256 balance;
+    bool forwarderEnabled;
+
+    require !calledForwarder;
+
+    // if balance forwarding is enabled and OP is not disabled
+    balance, forwarderEnabled = getBalanceAndForwarderExt(e, receiver);
+    require forwarderEnabled;
+    require !isSkimDisabled(e);
+    result = skim(e, amount, receiver);
+
+    // balance forwarding hook is called
+    assert result != 0 => calledForwarder;
 }
 
 // NOTE: disabled ops do not cause a revert. They cause the call
