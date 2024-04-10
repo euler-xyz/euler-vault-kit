@@ -21,7 +21,7 @@ abstract contract BalanceUtils is Base {
         address sender,
         Shares amount,
         Assets assets
-    ) internal {
+    ) internal virtual {
         if (account == address(0)) revert E_BadSharesReceiver();
 
         (Shares origBalance, bool balanceForwarderEnabled) = vaultStorage.users[account].getBalanceAndBalanceForwarder();
@@ -45,7 +45,7 @@ abstract contract BalanceUtils is Base {
         address receiver,
         Shares amount,
         Assets assets
-    ) internal {
+    ) internal virtual {
         (Shares origBalance, bool balanceForwarderEnabled) = vaultStorage.users[account].getBalanceAndBalanceForwarder();
         if (origBalance < amount) revert E_InsufficientBalance();
 
@@ -58,6 +58,10 @@ abstract contract BalanceUtils is Base {
         vaultStorage.totalShares = vaultCache.totalShares = vaultCache.totalShares - amount;
 
         if (balanceForwarderEnabled) {
+            // if the balance is decreased as a part of the collateral transfer during liquidation,
+            // which is indicated by the EVC with a collateral control in progress flag,
+            // instruct the balance tracker to forfeit rewards due to the liquidated account, in order to
+            // limit gas consumption, which could potentially be abused by violators to prevent liquidations.
             tryBalanceTrackerHook(account, newBalance.toUint(), isControlCollateralInProgress());
         }
 
@@ -65,7 +69,7 @@ abstract contract BalanceUtils is Base {
         emit Withdraw(sender, receiver, account, assets.toUint(), amount.toUint());
     }
 
-    function transferBalance(address from, address to, Shares amount) internal {
+    function transferBalance(address from, address to, Shares amount) internal virtual {
         if (!amount.isZero()) {
             (Shares origFromBalance, bool fromBalanceForwarderEnabled) =
                 vaultStorage.users[from].getBalanceAndBalanceForwarder();
@@ -105,7 +109,7 @@ abstract contract BalanceUtils is Base {
         emit Approval(owner, spender, amount);
     }
 
-    function decreaseAllowance(address owner, address spender, Shares amount) internal {
+    function decreaseAllowance(address owner, address spender, Shares amount) internal virtual {
         if (amount.isZero()) return;
 
         uint256 allowance = vaultStorage.users[owner].eTokenAllowance[spender];

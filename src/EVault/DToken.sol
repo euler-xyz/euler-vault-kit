@@ -23,7 +23,7 @@ contract DToken is IERC20, Errors, Events {
     }
 
     function symbol() external view returns (string memory) {
-        return string.concat("d", IEVault(eVault).symbol());
+        return string.concat(IEVault(eVault).symbol(), "-DEBT");
     }
 
     function decimals() external view returns (uint8) {

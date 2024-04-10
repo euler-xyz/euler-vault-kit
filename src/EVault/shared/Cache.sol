@@ -19,7 +19,7 @@ contract Cache is Storage, Errors {
 
     // Returns an updated VaultCache
     // If different from VaultStorage, updates VaultStorage
-    function updateVault() internal returns (VaultCache memory vaultCache) {
+    function updateVault() internal virtual returns (VaultCache memory vaultCache) {
         if (initVaultCache(vaultCache)) {
             vaultStorage.lastInterestAccumulatorUpdate = vaultCache.lastInterestAccumulatorUpdate;
             vaultStorage.accumulatedFees = vaultCache.accumulatedFees;
@@ -32,13 +32,13 @@ contract Cache is Storage, Errors {
     }
 
     // Returns an updated VaultCache
-    function loadVault() internal view returns (VaultCache memory vaultCache) {
+    function loadVault() internal view virtual returns (VaultCache memory vaultCache) {
         initVaultCache(vaultCache);
     }
 
     // Takes a VaultCache struct, overwrites it with VaultStorage data and, if time has passed since MarkeStorage
     // was last updated, updates MarkeStorage.
-    // Returns a VaultCache updated to this block.
+    // Returns a boolean if the cache is different from storage. VaultCache param is updated to this block.
     function initVaultCache(VaultCache memory vaultCache) private view returns (bool dirty) {
         dirty = false;
 
@@ -50,8 +50,8 @@ contract Cache is Storage, Errors {
 
         vaultCache.lastInterestAccumulatorUpdate = vaultStorage.lastInterestAccumulatorUpdate;
         vaultCache.cash = vaultStorage.cash;
-        vaultCache.supplyCap = vaultStorage.supplyCap.toUint();
-        vaultCache.borrowCap = vaultStorage.borrowCap.toUint();
+        vaultCache.supplyCap = vaultStorage.supplyCap.resolve();
+        vaultCache.borrowCap = vaultStorage.borrowCap.resolve();
         vaultCache.hookedOps = vaultStorage.hookedOps;
         vaultCache.snapshotInitialized = vaultStorage.snapshotInitialized;
 
@@ -92,11 +92,11 @@ contract Cache is Storage, Errors {
                 vaultCache.totalBorrows.toUint() * newInterestAccumulator / vaultCache.interestAccumulator;
             uint256 newAccumulatedFees = vaultCache.accumulatedFees.toUint();
             uint256 newTotalShares = vaultCache.totalShares.toUint();
-            uint256 feeAssets =
-                interestFee.mulDiv(newTotalBorrows - vaultCache.totalBorrows.toUint(), 1 << INTERNAL_DEBT_PRECISION);
+            uint256 feeAssets = (newTotalBorrows - vaultCache.totalBorrows.toUint()) * interestFee.toUint16()
+                / (1e4 << INTERNAL_DEBT_PRECISION_SHIFT);
 
             if (feeAssets != 0) {
-                uint256 newTotalAssets = vaultCache.cash.toUint() + (newTotalBorrows >> INTERNAL_DEBT_PRECISION);
+                uint256 newTotalAssets = vaultCache.cash.toUint() + (newTotalBorrows >> INTERNAL_DEBT_PRECISION_SHIFT);
                 newTotalShares = newTotalAssets * newTotalShares / (newTotalAssets - feeAssets);
                 newAccumulatedFees += newTotalShares - vaultCache.totalShares.toUint();
             }
@@ -116,7 +116,7 @@ contract Cache is Storage, Errors {
         }
     }
 
-    function totalAssetsInternal(VaultCache memory vaultCache) internal pure returns (uint256) {
+    function totalAssetsInternal(VaultCache memory vaultCache) internal pure virtual returns (uint256) {
         // total assets can exceed Assets max amount (MAX_SANE_AMOUNT)
         return vaultCache.cash.toUint() + vaultCache.totalBorrows.toAssetsUp().toUint();
     }

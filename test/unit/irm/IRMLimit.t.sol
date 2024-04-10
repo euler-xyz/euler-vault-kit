@@ -8,14 +8,14 @@ import "../../../src/EVault/shared/Constants.sol";
 contract IRMLimit is Test {
     function test_IRMLimit_sanity() public pure {
         // 500% APY:
-        //   floor( ln(1 + 5) * 10**27 / (365.2425 * 86400) )
-        uint256 ir = 56778597287471077714;
+        //   floor(((5 + 1)**(1/(86400*365.2425)) - 1) * 1e27)
+        uint256 ir = 56778598899375661056;
 
         // After 1 year accumulator multiplies by just slightly under 6 (a 500% increase)
         (uint256 accum, bool overflow) = RPow.rpow(uint256(ir) + 1e27, SECONDS_PER_YEAR, 1e27);
         assertFalse(overflow);
         assertTrue(accum < 6e27);
-        assertApproxEqAbs(accum, 6e27, 0.000001e27);
+        assertApproxEqAbs(accum, 6e27, 0.000000000000001e27);
 
         // One second later, it exceeds 6:
         (accum, overflow) = RPow.rpow(uint256(ir) + 1e27, SECONDS_PER_YEAR + 1, 1e27);
@@ -30,7 +30,7 @@ contract IRMLimit is Test {
         {
             (uint256 accum, bool overflow) = RPow.rpow(MAX_ALLOWED_INTEREST_RATE + 1e27, SECONDS_PER_YEAR, 1e27);
             assertFalse(overflow);
-            assertApproxEqAbs(accum, 10001e27, 0.1e27);
+            assertApproxEqAbs(accum, 10001e27, 0.000000000000001e27);
         }
 
         // rpow can handle a sustained 1,000,000% APY for 5 years without overflowing:
@@ -38,7 +38,7 @@ contract IRMLimit is Test {
         {
             (uint256 accum, bool overflow) = RPow.rpow(MAX_ALLOWED_INTEREST_RATE + 1e27, SECONDS_PER_YEAR * 5, 1e27);
             assertFalse(overflow);
-            assertApproxEqAbs(accum, 10001 ** 5 * 1e27, 1e42);
+            assertApproxEqAbs(accum, 10001 ** 5 * 1e27, 1e29);
         }
     }
 

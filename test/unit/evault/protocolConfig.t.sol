@@ -9,7 +9,7 @@ import "src/EVault/modules/Governance.sol";
 import "src/EVault/shared/Constants.sol";
 import "src/EVault/shared/types/Types.sol";
 
-uint16 constant DEFAULT_INTEREST_FEE = 0.23e4; // TODO expose in harness from Initialize module
+uint16 constant DEFAULT_INTEREST_FEE = 0.1e4;
 
 contract ERC4626Test_ProtocolConfig is EVaultTestBase {
     using TypesLib for uint256;
@@ -95,6 +95,10 @@ contract ERC4626Test_ProtocolConfig is EVaultTestBase {
     function test_updateProtocolConfig() public {
         address newFeeReceiver = makeAddr("newFeeReceiver");
 
+        vm.expectRevert(ProtocolConfig.E_InvalidReceiver.selector);
+        vm.prank(admin);
+        protocolConfig.setFeeReceiver(address(0));
+
         vm.prank(admin);
         protocolConfig.setFeeReceiver(newFeeReceiver);
 
@@ -129,6 +133,19 @@ contract ERC4626Test_ProtocolConfig is EVaultTestBase {
 
         assertEq(genericFeeReceiver, feeReceiver);
         assertEq(genericFeeShare, feeShare);
+    }
+
+    function test_setInterestFeeRange() public {
+        uint16 newMinInterestFee = 0.6e4;
+        uint16 newMaxInterestFee = 1e4;
+
+        vm.prank(admin);
+        protocolConfig.setInterestFeeRange(newMinInterestFee, newMaxInterestFee);
+
+        (uint16 minInterestFee, uint16 maxInterestFee) = protocolConfig.interestFeeRange(address(0));
+
+        assertEq(minInterestFee, newMinInterestFee);
+        assertEq(maxInterestFee, newMaxInterestFee);
     }
 
     function test_invalid_configs() public {

@@ -27,7 +27,7 @@ contract GenericFactory is MetaProxyDeployer {
 
     address public upgradeAdmin;
     address public implementation;
-    mapping(address proxy => ProxyConfig) public proxyLookup;
+    mapping(address proxy => ProxyConfig) internal proxyLookup;
     address[] public proxyList;
 
     // Events
@@ -50,7 +50,7 @@ contract GenericFactory is MetaProxyDeployer {
     // Modifiers
 
     modifier nonReentrant() {
-        if (reentrancyLock != REENTRANCYLOCK__UNLOCKED) revert E_Reentrancy();
+        if (reentrancyLock == REENTRANCYLOCK__LOCKED) revert E_Reentrancy();
 
         reentrancyLock = REENTRANCYLOCK__LOCKED;
         _;

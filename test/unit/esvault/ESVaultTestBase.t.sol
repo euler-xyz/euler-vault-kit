@@ -30,4 +30,6 @@ contract ESVaultTestBase is EVaultTestBase {
         // Set the capacity for the vault on the synth
         // assetTST2AsSynth.setCapacity(address(eTST2), type(uint128).max);
     }
+
+    function test_ExcludeFromCoverage() public pure {}
 }

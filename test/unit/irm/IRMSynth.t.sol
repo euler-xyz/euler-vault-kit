@@ -94,7 +94,7 @@ contract IRMSynthTest is Test {
         assertEq(irmDataAfter.lastRate, irmDataBefore.lastRate);
     }
 
-    function test_IRMSynt_RateMax() public {
+    function test_IRMSynth_RateMax() public {
         oracle.setPrice(SYNTH, REFERENCE_ASSET, irm.TARGET_QUOTE() / 2);
 
         // Loop till at max rate

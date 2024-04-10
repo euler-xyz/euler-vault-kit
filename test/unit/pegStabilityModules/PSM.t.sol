@@ -3,7 +3,6 @@
 pragma solidity ^0.8.0;
 
 import "forge-std/Test.sol";
-import "forge-std/console.sol";
 
 import {PegStabilityModule} from "../../../src/Synths/PegStabilityModule.sol";
 import {ESynth, IEVC} from "../../../src/Synths/ESynth.sol";
@@ -11,8 +10,6 @@ import {TestERC20} from "../../mocks/TestERC20.sol";
 import {EthereumVaultConnector} from "ethereum-vault-connector/EthereumVaultConnector.sol";
 
 contract PSMTest is Test {
-    // TODO tests where ETH transfers fail
-
     uint256 public TO_UNDERLYING_FEE = 30;
     uint256 public TO_SYNTH_FEE = 30;
     uint256 public BPS_SCALE = 10000;

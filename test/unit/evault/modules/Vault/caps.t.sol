@@ -21,8 +21,8 @@ contract VaultTest_Caps is EVaultTestBase {
     }
 
     function test_SetCaps_Integrity(uint16 supplyCap, uint16 borrowCap) public {
-        uint256 supplyCapAmount = AmountCap.wrap(supplyCap).toUint();
-        uint256 borrowCapAmount = AmountCap.wrap(borrowCap).toUint();
+        uint256 supplyCapAmount = AmountCap.wrap(supplyCap).resolve();
+        uint256 borrowCapAmount = AmountCap.wrap(borrowCap).resolve();
         vm.assume(supplyCapAmount <= MAX_SANE_AMOUNT && borrowCapAmount <= MAX_SANE_AMOUNT);
 
         vm.expectEmit();
@@ -36,7 +36,7 @@ contract VaultTest_Caps is EVaultTestBase {
     }
 
     function test_SetCaps_SupplyCapMaxMethods(uint16 supplyCap, address userA) public {
-        uint256 supplyCapAmount = AmountCap.wrap(supplyCap).toUint();
+        uint256 supplyCapAmount = AmountCap.wrap(supplyCap).resolve();
         vm.assume(supplyCapAmount <= MAX_SANE_AMOUNT);
 
         eTST.setCaps(supplyCap, 0);
@@ -47,8 +47,8 @@ contract VaultTest_Caps is EVaultTestBase {
 
     function test_SetCaps_RevertsWhen_SupplyCap_AmountTooLarge(uint16 supplyCap, uint16 borrowCap) public {
         vm.assume(
-            supplyCap > 0 && AmountCap.wrap(supplyCap).toUint() > 2 * MAX_SANE_AMOUNT
-                && AmountCap.wrap(borrowCap).toUint() < MAX_SANE_AMOUNT
+            supplyCap > 0 && AmountCap.wrap(supplyCap).resolve() > 2 * MAX_SANE_AMOUNT
+                && AmountCap.wrap(borrowCap).resolve() < MAX_SANE_AMOUNT
         );
 
         vm.expectRevert(Errors.E_BadSupplyCap.selector);
@@ -57,8 +57,8 @@ contract VaultTest_Caps is EVaultTestBase {
 
     function test_SetCaps_RevertsWhen_BorrowCap_AmountTooLarge(uint16 supplyCap, uint16 borrowCap) public {
         vm.assume(
-            AmountCap.wrap(supplyCap).toUint() < 2 * MAX_SANE_AMOUNT && borrowCap > 0
-                && AmountCap.wrap(borrowCap).toUint() > MAX_SANE_AMOUNT
+            AmountCap.wrap(supplyCap).resolve() < 2 * MAX_SANE_AMOUNT && borrowCap > 0
+                && AmountCap.wrap(borrowCap).resolve() > MAX_SANE_AMOUNT
         );
 
         vm.expectRevert(Errors.E_BadBorrowCap.selector);
@@ -164,7 +164,7 @@ contract VaultTest_Caps is EVaultTestBase {
     function test_SupplyCap_WhenUnder_DecreasingActions(uint16 supplyCap, uint256 initAmount, uint256 amount) public {
         setUpCollateral();
         uint256 remaining = setUpUnderSupplyCap(supplyCap, initAmount);
-        amount = bound(amount, 1, AmountCap.wrap(supplyCap).toUint() - remaining);
+        amount = bound(amount, 1, AmountCap.wrap(supplyCap).resolve() - remaining);
         uint256 snapshot = vm.snapshot();
 
         vm.revertTo(snapshot);
@@ -183,7 +183,7 @@ contract VaultTest_Caps is EVaultTestBase {
     function test_SupplyCap_WhenAt_DecreasingActions(uint16 supplyCap, uint256 amount) public {
         setUpCollateral();
         setUpAtSupplyCap(supplyCap);
-        amount = bound(amount, 1, AmountCap.wrap(supplyCap).toUint());
+        amount = bound(amount, 1, AmountCap.wrap(supplyCap).resolve());
         uint256 snapshot = vm.snapshot();
 
         vm.revertTo(snapshot);
@@ -204,7 +204,7 @@ contract VaultTest_Caps is EVaultTestBase {
     {
         setUpCollateral();
         setUpOverSupplyCap(supplyCapOrig, supplyCapNow);
-        amount = bound(amount, 1, AmountCap.wrap(supplyCapNow).toUint());
+        amount = bound(amount, 1, AmountCap.wrap(supplyCapNow).resolve());
         uint256 snapshot = vm.snapshot();
 
         vm.revertTo(snapshot);
@@ -304,7 +304,7 @@ contract VaultTest_Caps is EVaultTestBase {
 
     function test_BorrowCap_WhenUnder_DecreasingActions(uint16 borrowCap, uint256 initAmount, uint256 amount) public {
         uint256 remaining = setUpUnderBorrowCap(borrowCap, initAmount);
-        amount = bound(amount, 0, AmountCap.wrap(borrowCap).toUint() - remaining);
+        amount = bound(amount, 0, AmountCap.wrap(borrowCap).resolve() - remaining);
         uint256 snapshot = vm.snapshot();
 
         vm.revertTo(snapshot);
@@ -318,7 +318,7 @@ contract VaultTest_Caps is EVaultTestBase {
 
     function test_BorrowCap_WhenAt_DecreasingActions(uint16 borrowCap, uint256 amount) public {
         setUpAtBorrowCap(borrowCap);
-        amount = bound(amount, 1, AmountCap.wrap(borrowCap).toUint());
+        amount = bound(amount, 1, AmountCap.wrap(borrowCap).resolve());
         uint256 snapshot = vm.snapshot();
 
         vm.revertTo(snapshot);
@@ -334,7 +334,7 @@ contract VaultTest_Caps is EVaultTestBase {
         public
     {
         setUpOverBorrowCap(borrowCapOrig, borrowCapNow);
-        amount = bound(amount, 1, AmountCap.wrap(borrowCapOrig).toUint());
+        amount = bound(amount, 1, AmountCap.wrap(borrowCapOrig).resolve());
         uint256 snapshot = vm.snapshot();
 
         vm.revertTo(snapshot);
@@ -347,7 +347,7 @@ contract VaultTest_Caps is EVaultTestBase {
     }
 
     function setUpUnderSupplyCap(uint16 supplyCap, uint256 initAmount) internal returns (uint256) {
-        uint256 supplyCapAmount = AmountCap.wrap(supplyCap).toUint();
+        uint256 supplyCapAmount = AmountCap.wrap(supplyCap).resolve();
         vm.assume(supplyCapAmount > 1 && supplyCapAmount < MAX_SANE_AMOUNT);
         eTST.setCaps(supplyCap, 0);
 
@@ -360,7 +360,7 @@ contract VaultTest_Caps is EVaultTestBase {
     }
 
     function setUpAtSupplyCap(uint16 supplyCap) internal {
-        uint256 supplyCapAmount = AmountCap.wrap(supplyCap).toUint();
+        uint256 supplyCapAmount = AmountCap.wrap(supplyCap).resolve();
         vm.assume(supplyCapAmount != 0 && supplyCapAmount <= MAX_SANE_AMOUNT);
 
         eTST.setCaps(supplyCap, 0);
@@ -369,8 +369,8 @@ contract VaultTest_Caps is EVaultTestBase {
     }
 
     function setUpOverSupplyCap(uint16 supplyCapOrig, uint16 supplyCapNow) internal {
-        uint256 supplyCapOrigAmount = AmountCap.wrap(supplyCapOrig).toUint();
-        uint256 supplyCapNowAmount = AmountCap.wrap(supplyCapNow).toUint();
+        uint256 supplyCapOrigAmount = AmountCap.wrap(supplyCapOrig).resolve();
+        uint256 supplyCapNowAmount = AmountCap.wrap(supplyCapNow).resolve();
         vm.assume(supplyCapOrigAmount > 1 && supplyCapOrigAmount <= MAX_SANE_AMOUNT);
         vm.assume(supplyCapNowAmount != 0 && supplyCapNowAmount < supplyCapOrigAmount);
 
@@ -383,7 +383,7 @@ contract VaultTest_Caps is EVaultTestBase {
     function setUpUnderBorrowCap(uint16 borrowCap, uint256 initAmount) internal returns (uint256) {
         setUpCollateral();
 
-        uint256 borrowCapAmount = AmountCap.wrap(borrowCap).toUint();
+        uint256 borrowCapAmount = AmountCap.wrap(borrowCap).resolve();
         vm.assume(borrowCapAmount > 1 && borrowCapAmount < MAX_SANE_AMOUNT);
         eTST.setCaps(0, borrowCap);
 
@@ -400,7 +400,7 @@ contract VaultTest_Caps is EVaultTestBase {
     function setUpAtBorrowCap(uint16 borrowCap) internal {
         setUpCollateral();
 
-        uint256 borrowCapAmount = AmountCap.wrap(borrowCap).toUint();
+        uint256 borrowCapAmount = AmountCap.wrap(borrowCap).resolve();
         vm.assume(borrowCapAmount != 0 && borrowCapAmount < MAX_SANE_AMOUNT);
         eTST.setCaps(0, borrowCap);
 
@@ -411,8 +411,8 @@ contract VaultTest_Caps is EVaultTestBase {
     }
 
     function setUpOverBorrowCap(uint16 borrowCapOrig, uint16 borrowCapNow) internal {
-        uint256 borrowCapOrigAmount = AmountCap.wrap(borrowCapOrig).toUint();
-        uint256 borrowCapNowAmount = AmountCap.wrap(borrowCapNow).toUint();
+        uint256 borrowCapOrigAmount = AmountCap.wrap(borrowCapOrig).resolve();
+        uint256 borrowCapNowAmount = AmountCap.wrap(borrowCapNow).resolve();
         vm.assume(borrowCapOrigAmount > 1 && borrowCapOrigAmount <= MAX_SANE_AMOUNT);
         vm.assume(borrowCapNowAmount != 0 && borrowCapNowAmount < borrowCapOrigAmount);
 
@@ -438,7 +438,7 @@ contract VaultTest_Caps is EVaultTestBase {
         evc.enableCollateral(user, address(eTST2));
 
         oracle.setPrice(address(assetTST), unitOfAccount, 1 ether);
-        oracle.setPrice(address(eTST2), unitOfAccount, 1000 ether);
+        oracle.setPrice(address(assetTST2), unitOfAccount, 1000 ether);
         vm.stopPrank();
     }
 }

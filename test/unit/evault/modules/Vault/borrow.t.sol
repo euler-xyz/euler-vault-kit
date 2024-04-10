@@ -28,7 +28,7 @@ contract VaultTest_Borrow is EVaultTestBase {
         // Setup
 
         oracle.setPrice(address(assetTST), unitOfAccount, 1e18);
-        oracle.setPrice(address(eTST2), unitOfAccount, 1e18);
+        oracle.setPrice(address(assetTST2), unitOfAccount, 1e18);
 
         eTST.setLTV(address(eTST2), 0.9e4, 0);
 
@@ -54,11 +54,34 @@ contract VaultTest_Borrow is EVaultTestBase {
     function test_basicBorrow() public {
         startHoax(borrower);
 
-        evc.enableCollateral(borrower, address(eTST2));
+        vm.expectRevert(Errors.E_ControllerDisabled.selector);
+        eTST.borrow(5e18, borrower);
+
         evc.enableController(borrower, address(eTST));
+
+        vm.expectRevert(Errors.E_AccountLiquidity.selector);
+        eTST.borrow(5e18, borrower);
+
+        // still no borrow hence possible to disable controller
+        assertEq(evc.isControllerEnabled(borrower, address(eTST)), true);
+        eTST.disableController();
+        assertEq(evc.isControllerEnabled(borrower, address(eTST)), false);
+        evc.enableController(borrower, address(eTST));
+        assertEq(evc.isControllerEnabled(borrower, address(eTST)), true);
+
+        evc.enableCollateral(borrower, address(eTST2));
 
         eTST.borrow(5e18, borrower);
         assertEq(assetTST.balanceOf(borrower), 5e18);
+        assertEq(eTST.debtOf(borrower), 5e18);
+        assertEq(eTST.debtOfExact(borrower), 5e18 << INTERNAL_DEBT_PRECISION_SHIFT);
+
+        assertEq(eTST.totalBorrows(), 5e18);
+        assertEq(eTST.totalBorrowsExact(), 5e18 << INTERNAL_DEBT_PRECISION_SHIFT);
+
+        // no longer possible to disable controller
+        vm.expectRevert(Errors.E_OutstandingDebt.selector);
+        eTST.disableController();
 
         // Should be able to borrow up to 9, so this should fail:
 
@@ -80,6 +103,75 @@ contract VaultTest_Borrow is EVaultTestBase {
 
         eTST.disableController();
         assertEq(evc.getControllers(borrower).length, 0);
+    }
+
+    function test_basicBorrowWithInterest() public {
+        startHoax(borrower);
+
+        evc.enableCollateral(borrower, address(eTST2));
+        evc.enableController(borrower, address(eTST));
+
+        eTST.borrow(5e18, borrower);
+
+        skip(1 days);
+
+        uint256 currDebt = eTST.debtOf(borrower);
+        assertApproxEqAbs(currDebt, 5.0001e18, 0.0001e18);
+
+        assertEq(eTST.debtOfExact(borrower) >> INTERNAL_DEBT_PRECISION_SHIFT, currDebt - 1); // currDebt was rounded up
+        assertEq(eTST.debtOfExact(borrower), eTST.totalBorrowsExact());
+
+        // Repay too much
+
+        assetTST.mint(borrower, 100e18);
+        assetTST.approve(address(eTST), type(uint256).max);
+
+        vm.expectRevert(Errors.E_RepayTooMuch.selector);
+        eTST.repay(currDebt + 1, borrower);
+
+        // Repay right amount
+
+        eTST.repay(currDebt, borrower);
+
+        assertEq(eTST.debtOf(borrower), 0);
+        assertEq(eTST.debtOfExact(borrower), 0);
+
+        assertEq(eTST.totalBorrows(), 0);
+        assertEq(eTST.totalBorrowsExact(), 0);
+    }
+
+    function test_loopNoop() public {
+        startHoax(borrower);
+
+        evc.enableCollateral(borrower, address(eTST2));
+        evc.enableController(borrower, address(eTST));
+
+        assertEq(eTST.balanceOf(borrower), 0);
+        assertEq(eTST.debtOf(borrower), 0);
+        eTST.loop(0, borrower);
+        assertEq(eTST.balanceOf(borrower), 0);
+        assertEq(eTST.debtOf(borrower), 0);
+    }
+
+    function test_deloopWithExtra() public {
+        startHoax(borrower);
+
+        evc.enableCollateral(borrower, address(eTST2));
+        evc.enableController(borrower, address(eTST));
+
+        assetTST.mint(borrower, 100e18);
+        assetTST.approve(address(eTST), type(uint256).max);
+
+        eTST.loop(2e18, borrower);
+        eTST.deposit(1e18, borrower);
+
+        assertEq(eTST.balanceOf(borrower), 3e18);
+        assertEq(eTST.debtOf(borrower), 2e18);
+
+        eTST.deloop(type(uint256).max, borrower);
+
+        assertEq(eTST.balanceOf(borrower), 1e18);
+        assertEq(eTST.debtOf(borrower), 0);
     }
 
     function test_repayWithPermit2() public {
@@ -202,6 +294,31 @@ contract VaultTest_Borrow is EVaultTestBase {
         vm.expectRevert(Errors.E_InsufficientBalance.selector);
         eTST.pullDebt(amountToBorrow + 1, borrower);
         vm.stopPrank();
+    }
+
+    function test_ControllerRequiredOps(address controller, uint112 amount, address account) public {
+        vm.assume(controller.code.length == 0 && uint160(controller) > 256);
+        vm.assume(account != address(0) && account != controller && account != address(evc));
+        vm.assume(amount > 0);
+
+        vm.etch(controller, address(eTST).code);
+        IEVault(controller).initialize(address(this));
+
+        vm.startPrank(account);
+
+        vm.expectRevert(Errors.E_ControllerDisabled.selector);
+        IEVault(controller).borrow(amount, account);
+
+        vm.expectRevert(Errors.E_ControllerDisabled.selector);
+        IEVault(controller).loop(amount, account);
+
+        vm.expectRevert(Errors.E_ControllerDisabled.selector);
+        IEVault(controller).pullDebt(amount, account);
+
+        vm.expectRevert(Errors.E_ControllerDisabled.selector);
+        IEVault(controller).liquidate(account, account, amount, amount);
+
+        evc.enableController(account, controller);
     }
 
     function test_Borrow_RevertsWhen_ReceiverIsSubaccount() public {

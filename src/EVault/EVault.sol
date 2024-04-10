@@ -28,7 +28,7 @@ contract EVault is Dispatch {
 
     function symbol() public view virtual override useView(MODULE_TOKEN) returns (string memory) {}
 
-    function decimals() public view virtual override useView(MODULE_TOKEN) returns (uint8) {}
+    function decimals() public view virtual override returns (uint8) { return super.decimals(); }
 
     function totalSupply() public view virtual override useView(MODULE_TOKEN) returns (uint256) {}
 
@@ -75,9 +75,9 @@ contract EVault is Dispatch {
 
     function previewRedeem(uint256 shares) public view virtual override useView(MODULE_VAULT) returns (uint256) {}
 
-    function accumulatedFees() public view virtual override useView(MODULE_VAULT) returns (uint256) {}
+    function accumulatedFees() public view virtual override returns (uint256) { return super.accumulatedFees(); }
 
-    function accumulatedFeesAssets() public view virtual override useView(MODULE_VAULT) returns (uint256) {}
+    function accumulatedFeesAssets() public view virtual override returns (uint256) { return super.accumulatedFeesAssets(); }
 
     function creator() public view virtual override useView(MODULE_VAULT) returns (address) {}
 
@@ -86,7 +86,7 @@ contract EVault is Dispatch {
 
     function mint(uint256 amount, address receiver) public virtual override callThroughEVC use(MODULE_VAULT) returns (uint256) {}
 
-    function withdraw(uint256 amount, address receiver, address owner) public virtual override callThroughEVC returns (uint256) { return super.withdraw(amount, receiver, owner); }
+    function withdraw(uint256 amount, address receiver, address owner) public virtual override callThroughEVC use(MODULE_VAULT) returns (uint256) {}
 
     function redeem(uint256 amount, address receiver, address owner) public virtual override callThroughEVC use(MODULE_VAULT) returns (uint256) {}
 
@@ -108,7 +108,7 @@ contract EVault is Dispatch {
 
     function debtOfExact(address account) public view virtual override useView(MODULE_BORROWING) returns (uint256) {}
 
-    function interestRate() public view virtual override useView(MODULE_BORROWING) returns (uint256) {}
+    function interestRate() public view virtual override returns (uint256) { return super.interestRate(); }
 
     function interestAccumulator() public view virtual override useView(MODULE_BORROWING) returns (uint256) {}
 
@@ -181,7 +181,7 @@ contract EVault is Dispatch {
 
     function feeReceiver() public view virtual override useView(MODULE_GOVERNANCE) returns (address) {}
 
-    function interestFee() public view virtual override useView(MODULE_GOVERNANCE) returns (uint16) {}
+    function interestFee() public view virtual override returns (uint16) { return super.interestFee(); }
 
     function interestRateModel() public view virtual override useView(MODULE_GOVERNANCE) returns (address) {}
 

@@ -4,6 +4,7 @@ pragma solidity ^0.8.0;
 
 import {EVCClient} from "./EVCClient.sol";
 import {Cache} from "./Cache.sol";
+import {ProxyUtils} from "./lib/ProxyUtils.sol";
 import {RevertBytes} from "./lib/RevertBytes.sol";
 
 import {IProtocolConfig} from "../../ProtocolConfig/IProtocolConfig.sol";
@@ -45,7 +46,18 @@ abstract contract Base is EVCClient, Cache {
     }
 
     modifier nonReentrantView() {
-        if (vaultStorage.reentrancyLocked) revert E_Reentrancy();
+        if (vaultStorage.reentrancyLocked) {
+            address hookTarget = vaultStorage.hookTarget;
+
+            // The hook target is allowed to bypass the RO-reentrancy lock. The hook target can either be a msg.sender
+            // when the view function is inlined in the EVault.sol or the hook target should be taken from the trailing
+            // data appended by the delegateToModuleView function used by useView modifier. In the latter case, it is
+            // safe to consume the trailing data as we know we are inside useView because msg.sender == address(this)
+            if (msg.sender != hookTarget && !(msg.sender == address(this) && ProxyUtils.useViewCaller() == hookTarget))
+            {
+                revert E_Reentrancy();
+            }
+        }
         _;
     }
 
@@ -55,12 +67,13 @@ abstract contract Base is EVCClient, Cache {
     // Returns the VaultCache and active account.
     function initOperation(uint32 operation, address accountToCheck)
         internal
+        virtual
         returns (VaultCache memory vaultCache, address account)
     {
         vaultCache = updateVault();
         account = EVCAuthenticateDeferred(CONTROLLER_NEUTRAL_OPS & operation == 0);
 
-        validateAndCallHook(vaultCache.hookedOps, operation, account);
+        callHook(vaultCache.hookedOps, operation, account);
         EVCRequireStatusChecks(accountToCheck == CHECKACCOUNT_CALLER ? account : accountToCheck);
 
         // The snapshot is used only to verify that supply increased when checking the supply cap, and to verify that the borrows
@@ -75,11 +88,29 @@ abstract contract Base is EVCClient, Cache {
         }
     }
 
-    // Checks whether the operation is hookable and if so, calls the hook target.
-    // If the hook target is not a contract, the operation is considered disabled.
-    function validateAndCallHook(Flags hookedOps, uint32 operation, address caller) internal {
+    // Checks whether the operation is disabled and returns the result of the check.
+    // An operation is considered disabled if a hook has been installed for it and the
+    // hook target is not a contract.
+    function isOperationDisabled(Flags hookedOps, uint32 operation) internal view returns (bool) {
+        return hookedOps.isSet(operation) && vaultStorage.hookTarget.code.length == 0;
+    }
+
+    // Checks whether a hook has been installed for the operation and if so, invokes the hook target.
+    // If the hook target is not a contract, this will revert.
+    function callHook(Flags hookedOps, uint32 operation, address caller) internal virtual {
         if (hookedOps.isNotSet(operation)) return;
 
+        invokeHookTarget(caller);
+    }
+
+    // Same as callHook, but acquires the reentrancy lock when calling the hook
+    function callHookWithLock(Flags hookedOps, uint32 operation, address caller) internal virtual {
+        if (hookedOps.isNotSet(operation)) return;
+
+        invokeHookTargetWithLock(caller);
+    }
+
+    function invokeHookTarget(address caller) private {
         address hookTarget = vaultStorage.hookTarget;
 
         if (hookTarget.code.length == 0) revert E_OperationDisabled();
@@ -89,16 +120,8 @@ abstract contract Base is EVCClient, Cache {
         if (!success) RevertBytes.revertBytes(data);
     }
 
-    // Checks whether the operation is hookable and if so, calls the hook target.
-    // If the hook target is not a contract or the hook target call is reverting,
-    // the operation is considered disabled.
-    function validateAndCallHookView(Flags hookedOps, uint32 operation) internal view returns (bool) {
-        if (hookedOps.isNotSet(operation)) return true;
-
-        address hookTarget = vaultStorage.hookTarget;
-        (bool success,) = hookTarget.staticcall(msg.data);
-
-        return success && hookTarget.code.length != 0;
+    function invokeHookTargetWithLock(address caller) private nonReentrant {
+        invokeHookTarget(caller);
     }
 
     function logVaultStatus(VaultCache memory a, uint256 interestRate) internal {

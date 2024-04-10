@@ -34,8 +34,8 @@ abstract contract EVCClient is Storage, Events, Errors {
     }
 
     // Authenticate account and controller, making sure the call is made through EVC and the status checks are deferred
-    function EVCAuthenticateDeferred(bool checkController) internal view returns (address) {
-        if (msg.sender != address(evc)) revert E_Unauthorized();
+    function EVCAuthenticateDeferred(bool checkController) internal view virtual returns (address) {
+        assert(msg.sender == address(evc)); // this ensures that callThroughEVC modifier was utilized
 
         (address onBehalfOfAccount, bool controllerEnabled) =
             evc.getCurrentOnBehalfOfAccount(checkController ? address(this) : address(0));
@@ -45,7 +45,7 @@ abstract contract EVCClient is Storage, Events, Errors {
         return onBehalfOfAccount;
     }
 
-    function EVCAuthenticate() internal view returns (address) {
+    function EVCAuthenticate() internal view virtual returns (address) {
         if (msg.sender == address(evc)) {
             (address onBehalfOfAccount,) = evc.getCurrentOnBehalfOfAccount(address(0));
 
@@ -54,12 +54,17 @@ abstract contract EVCClient is Storage, Events, Errors {
         return msg.sender;
     }
 
-    function isKnownSubaccount(address account) internal view returns (bool) {
+    // Checks if the account is known to EVC to be a non-owner sub-account.
+    // Assets that are not EVC integrated should not be sent to those accounts,
+    // as there will be no way to transfer them out.
+    function isKnownNonOwnerAccount(address account) internal view returns (bool) {
         address owner = evc.getAccountOwner(account);
         return owner != address(0) && owner != account;
     }
 
-    function EVCRequireStatusChecks(address account) internal {
+    function EVCRequireStatusChecks(address account) internal virtual {
+        assert(account != CHECKACCOUNT_CALLER); // the special value should be resolved by now
+
         if (account == CHECKACCOUNT_NONE) {
             evc.requireVaultStatusCheck();
         } else {
@@ -67,20 +72,15 @@ abstract contract EVCClient is Storage, Events, Errors {
         }
     }
 
-    function enforceCollateralTransfer(address collateral, uint256 amount, address from, address receiver) internal {
+    function enforceCollateralTransfer(address collateral, uint256 amount, address from, address receiver)
+        internal
+        virtual
+    {
         evc.controlCollateral(collateral, from, 0, abi.encodeCall(IERC20.transfer, (receiver, amount)));
     }
 
-    function forgiveAccountStatusCheck(address account) internal {
+    function forgiveAccountStatusCheck(address account) internal virtual {
         evc.forgiveAccountStatusCheck(account);
-    }
-
-    function getController(address account) internal view returns (address) {
-        address[] memory controllers = evc.getControllers(account);
-
-        if (controllers.length > 1) revert E_TransientState();
-
-        return controllers.length == 1 ? controllers[0] : address(0);
     }
 
     function hasControllerEnabled(address account) internal view returns (bool) {

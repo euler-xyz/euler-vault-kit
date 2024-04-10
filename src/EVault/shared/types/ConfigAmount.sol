@@ -13,13 +13,6 @@ import "../Constants.sol";
 /// @dev The type is used to store protocol configuration values.
 library ConfigAmountLib {
     // note assuming arithmetic checks are already performed
-    function mulDiv(ConfigAmount self, uint256 multiplier, uint256 divisor) internal pure returns (uint256) {
-        unchecked {
-            return uint256(self.toUint16()) * multiplier / (1e4 * divisor);
-        }
-    }
-
-    // note assuming arithmetic checks are already performed
     function mul(ConfigAmount self, uint256 multiplier) internal pure returns (uint256) {
         unchecked {
             return uint256(self.toUint16()) * multiplier / 1e4;
@@ -52,8 +45,20 @@ function gtConfigAmount(ConfigAmount a, ConfigAmount b) pure returns (bool) {
     }
 }
 
+function gteConfigAmount(ConfigAmount a, ConfigAmount b) pure returns (bool) {
+    unchecked {
+        return a.toUint16() >= b.toUint16();
+    }
+}
+
 function ltConfigAmount(ConfigAmount a, ConfigAmount b) pure returns (bool) {
     unchecked {
         return a.toUint16() < b.toUint16();
+    }
+}
+
+function lteConfigAmount(ConfigAmount a, ConfigAmount b) pure returns (bool) {
+    unchecked {
+        return a.toUint16() <= b.toUint16();
     }
 }

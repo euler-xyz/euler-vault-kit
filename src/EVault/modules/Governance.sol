@@ -204,7 +204,7 @@ abstract contract GovernanceModule is IGovernance, Base, BalanceUtils, BorrowUti
         LTVConfig memory origLTV = vaultStorage.ltvLookup[collateral];
 
         // If new LTV is higher than the previous, or the same, it should take effect immediately
-        if (!(newLTVAmount < origLTV.getLTV(LTVType.LIQUIDATION)) && rampDuration > 0) revert E_LTVRamp();
+        if (newLTVAmount >= origLTV.getLTV(LTVType.LIQUIDATION) && rampDuration > 0) revert E_LTVRamp();
 
         LTVConfig memory newLTV = origLTV.setLTV(newLTVAmount, rampDuration);
 
@@ -259,11 +259,11 @@ abstract contract GovernanceModule is IGovernance, Base, BalanceUtils, BorrowUti
     /// @inheritdoc IGovernance
     function setCaps(uint16 supplyCap, uint16 borrowCap) public virtual nonReentrant governorOnly {
         AmountCap _supplyCap = AmountCap.wrap(supplyCap);
-        // Max total assets is a sum of max pool size and max total debt, both Assets type
-        if (supplyCap > 0 && _supplyCap.toUint() > 2 * MAX_SANE_AMOUNT) revert E_BadSupplyCap();
+        // Max total assets is a sum of max cash size and max total debt, both Assets type
+        if (supplyCap > 0 && _supplyCap.resolve() > 2 * MAX_SANE_AMOUNT) revert E_BadSupplyCap();
 
         AmountCap _borrowCap = AmountCap.wrap(borrowCap);
-        if (borrowCap > 0 && _borrowCap.toUint() > MAX_SANE_AMOUNT) revert E_BadBorrowCap();
+        if (borrowCap > 0 && _borrowCap.resolve() > MAX_SANE_AMOUNT) revert E_BadBorrowCap();
 
         vaultStorage.supplyCap = _supplyCap;
         vaultStorage.borrowCap = _borrowCap;

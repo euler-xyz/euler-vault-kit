@@ -19,7 +19,7 @@ contract Governance_ConvertFees is EVaultTestBase {
         // Setup
 
         oracle.setPrice(address(assetTST), unitOfAccount, 1e18);
-        oracle.setPrice(address(eTST2), unitOfAccount, 1e18);
+        oracle.setPrice(address(assetTST2), unitOfAccount, 1e18);
 
         eTST.setLTV(address(eTST2), 0.9e4, 0);
 
@@ -49,8 +49,6 @@ contract Governance_ConvertFees is EVaultTestBase {
         skip(1000 days);
 
         uint256 fees = eTST.accumulatedFees();
-        assertApproxEqAbs(fees, 0.03e18, 0.001e18);
-
         uint256 totalSupplyBefore = eTST.totalSupply();
 
         eTST.convertFees();

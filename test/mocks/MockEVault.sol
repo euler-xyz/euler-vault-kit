@@ -22,7 +22,7 @@ contract MockEVault {
         return (arg, msg.sender, vaultAsset);
     }
 
-    function testExcludeFromCoverage() public pure {
-        return;
-    }
+    function testExcludeFromCoverage() public pure {}
+
+    function payMe() external payable {}
 }

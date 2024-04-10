@@ -311,7 +311,5 @@ contract TestERC20 {
         return msg.sender;
     }
 
-    function testExcludeFromCoverage() public pure {
-        return;
-    }
+    function testExcludeFromCoverage() public pure {}
 }

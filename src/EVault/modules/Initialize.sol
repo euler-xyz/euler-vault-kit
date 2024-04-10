@@ -19,7 +19,7 @@ abstract contract InitializeModule is IInitialize, Base, BorrowUtils {
     using TypesLib for uint16;
 
     uint256 constant INITIAL_INTEREST_ACCUMULATOR = 1e27; // 1 ray
-    uint16 constant DEFAULT_INTEREST_FEE = 0.23e4;
+    uint16 constant DEFAULT_INTEREST_FEE = 0.1e4;
 
     /// @inheritdoc IInitialize
     function initialize(address proxyCreator) public virtual reentrantOK {

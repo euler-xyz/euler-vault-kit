@@ -9,15 +9,38 @@ import "src/EVault/shared/Constants.sol";
 contract MockHookTarget {
     bytes32 internal expectedDataHash;
 
+    error UnexpectedError();
     error ExpectedData();
+    error EVC_ChecksReentrancy();
 
     function setExpectedDataHash(bytes32 _expectedDataHash) public {
         expectedDataHash = _expectedDataHash;
     }
 
     fallback() external {
+        // test reentrancy protection
+        if (bytes4(msg.data) == IEVault(msg.sender).checkVaultStatus.selector) {
+            try IEVault(msg.sender).touch() {
+                revert UnexpectedError();
+            } catch (bytes memory reason) {
+                if (bytes4(reason) != EVC_ChecksReentrancy.selector) revert UnexpectedError();
+            }
+
+            try IEVault(msg.sender).approve(address(0), 0) {
+                revert UnexpectedError();
+            } catch (bytes memory reason) {
+                if (bytes4(reason) != Errors.E_Reentrancy.selector) revert UnexpectedError();
+            }
+
+            // view functions are still reentrant for the hook target
+            IEVault(msg.sender).totalSupply();
+            IEVault(msg.sender).balanceOf(address(0));
+        }
+
         if (expectedDataHash == keccak256(msg.data)) revert ExpectedData();
     }
+
+    function testExcludeFromCoverage() public pure {}
 }
 
 contract Governance_HookedOps is EVaultTestBase {
@@ -52,6 +75,7 @@ contract Governance_HookedOps is EVaultTestBase {
     ) public {
         vm.assume(hookTarget1.code.length == 0 && !evc.haveCommonOwner(hookTarget1, address(0)));
         vm.assume(hookTarget2.code.length == 0 && !evc.haveCommonOwner(hookTarget2, address(0)));
+        vm.assume(hookedOps & OP_VAULT_STATUS_CHECK == 0);
         vm.assume(
             sender.code.length == 0 && receiver.code.length == 0 && !evc.haveCommonOwner(sender, address(0))
                 && !evc.haveCommonOwner(receiver, address(0)) && !evc.haveCommonOwner(sender, receiver)
@@ -91,11 +115,9 @@ contract Governance_HookedOps is EVaultTestBase {
         vm.expectRevert(MockHookTarget.ExpectedData.selector);
         deposit ? eTST.deposit(amount, receiver) : eTST.mint(amount, receiver);
 
-        data = getHookCalldata(
-            abi.encodeCall(deposit ? IEVault(eTST).maxDeposit : IEVault(eTST).maxMint, (receiver)), address(0)
-        );
-        MockHookTarget(hookTarget1).setExpectedDataHash(keccak256(data));
-        assertEq(deposit ? eTST.maxDeposit(receiver) : eTST.maxMint(receiver), 0);
+        // if the hook target is a contract, it's not considered disabled from the max* functions perspective
+        if (deposit) assertEq(eTST.maxDeposit(receiver), MAX_SANE_AMOUNT - eTST.cash());
+        else assertEq(eTST.maxMint(receiver), MAX_SANE_AMOUNT - eTST.totalSupply());
 
         // the operation succeeds which proves that it's not affected if the hook target call succeeds
         vm.startPrank(receiver);
@@ -129,11 +151,58 @@ contract Governance_HookedOps is EVaultTestBase {
         vm.expectRevert(MockHookTarget.ExpectedData.selector);
         withdraw ? eTST.withdraw(amount / 2, sender, sender) : eTST.redeem(amount / 2, sender, sender);
 
-        data = getHookCalldata(
-            abi.encodeCall(withdraw ? IEVault(eTST).maxWithdraw : IEVault(eTST).maxRedeem, (sender)), address(0)
-        );
+        // if the hook target is a contract, it's not considered disabled from the max* functions perspective
         MockHookTarget(hookTarget2).setExpectedDataHash(keccak256(data));
-        assertEq(withdraw ? eTST.maxWithdraw(sender) : eTST.maxRedeem(sender), 0);
+        if (withdraw) assertEq(eTST.maxWithdraw(sender), eTST.convertToAssets(eTST.balanceOf(sender)));
+        else assertEq(eTST.maxRedeem(sender), eTST.balanceOf(sender));
+    }
+
+    function testFuzz_vaultStatusCheckHook(address hookTarget, address sender, uint256 amount, address receiver)
+        public
+    {
+        vm.assume(
+            hookTarget.code.length == 0 && !evc.haveCommonOwner(hookTarget, address(0))
+                && hookTarget != 0x000000000000000000636F6e736F6c652e6c6f67
+        );
+        vm.assume(
+            sender.code.length == 0 && receiver.code.length == 0 && !evc.haveCommonOwner(sender, address(0))
+                && !evc.haveCommonOwner(receiver, address(0)) && !evc.haveCommonOwner(sender, receiver)
+        );
+        amount = bound(amount, 1, type(uint64).max);
+
+        // set the hooked ops
+        eTST.setHookConfig(hookTarget, OP_VAULT_STATUS_CHECK);
+
+        // mint some tokens to the sender
+        vm.startPrank(sender);
+        assetTST.mint(sender, 2 * amount);
+        assetTST.approve(address(eTST), type(uint256).max);
+
+        // if the hook taget is not a contract, any operation requesting a vault status check is considered disabled
+        vm.expectRevert(Errors.E_OperationDisabled.selector);
+        eTST.deposit(amount, receiver);
+
+        vm.expectRevert(Errors.E_OperationDisabled.selector);
+        eTST.touch();
+
+        // deploy the hook target
+        address deployedHookTarget = address(new MockHookTarget());
+        vm.etch(hookTarget, deployedHookTarget.code);
+
+        // now the operations succeed which proves that they're not affected if the hook target call succeeds
+        eTST.deposit(amount, receiver);
+        assertEq(eTST.balanceOf(receiver), amount);
+
+        eTST.touch();
+
+        // now the hook target call reverts, but proves that the expected calldata was passed
+        bytes memory data = getHookCalldata(abi.encodeCall(IEVault(eTST).checkVaultStatus, ()), address(evc));
+        MockHookTarget(hookTarget).setExpectedDataHash(keccak256(data));
+        vm.expectRevert(MockHookTarget.ExpectedData.selector);
+        eTST.deposit(amount, receiver);
+
+        vm.expectRevert(MockHookTarget.ExpectedData.selector);
+        eTST.touch();
     }
 
     function testFuzz_hookedAllOps(
@@ -164,7 +233,7 @@ contract Governance_HookedOps is EVaultTestBase {
 
             data = getHookCalldata(abi.encodeCall(IEVault(eTST).maxDeposit, (address1)), address(0));
             MockHookTarget(hookTarget).setExpectedDataHash(keccak256(data));
-            assertEq(eTST.maxDeposit(address1), 0);
+            assertEq(eTST.maxDeposit(address1), MAX_SANE_AMOUNT);
         }
 
         if (hookedOps & OP_MINT != 0) {
@@ -175,7 +244,7 @@ contract Governance_HookedOps is EVaultTestBase {
 
             data = getHookCalldata(abi.encodeCall(IEVault(eTST).maxMint, (address1)), address(0));
             MockHookTarget(hookTarget).setExpectedDataHash(keccak256(data));
-            assertEq(eTST.maxMint(address1), 0);
+            assertEq(eTST.maxMint(address1), MAX_SANE_AMOUNT);
         }
 
         if (hookedOps & OP_WITHDRAW != 0) {
@@ -290,6 +359,18 @@ contract Governance_HookedOps is EVaultTestBase {
 
         if (hookedOps & OP_TOUCH != 0) {
             bytes memory data = getHookCalldata(abi.encodeCall(IEVault(eTST).touch, ()), sender);
+            MockHookTarget(hookTarget).setExpectedDataHash(keccak256(data));
+            vm.expectRevert(MockHookTarget.ExpectedData.selector);
+            eTST.touch();
+        }
+
+        if (hookedOps & OP_VAULT_STATUS_CHECK != 0) {
+            // disable the touch operation hook so it doesn't interfere with the vault status check
+            vm.stopPrank();
+            eTST.setHookConfig(hookTarget, hookedOps & ~OP_TOUCH);
+
+            vm.startPrank(sender);
+            bytes memory data = getHookCalldata(abi.encodeCall(IEVault(eTST).checkVaultStatus, ()), address(evc));
             MockHookTarget(hookTarget).setExpectedDataHash(keccak256(data));
             vm.expectRevert(MockHookTarget.ExpectedData.selector);
             eTST.touch();

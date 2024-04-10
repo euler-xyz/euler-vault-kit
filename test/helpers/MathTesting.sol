@@ -68,4 +68,6 @@ contract MathTesting {
         }
     }
     //------------------------------------------------------
+
+    function testExcludeFromCoverage() public pure {}
 }

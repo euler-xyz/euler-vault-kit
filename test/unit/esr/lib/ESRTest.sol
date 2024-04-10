@@ -6,8 +6,6 @@ import {EthereumVaultConnector as EVC} from "ethereum-vault-connector/EthereumVa
 import {EulerSavingsRate} from "../../../../src/Synths/EulerSavingsRate.sol";
 import {MockToken} from "./MockToken.sol";
 
-// TODO test when 0 deposits for edge cases
-
 contract ESRTest is Test {
     EVC public evc;
     EulerSavingsRate public esr;
@@ -37,4 +35,6 @@ contract ESRTest is Test {
         esr.deposit(amount, from);
         vm.stopPrank();
     }
+
+    function testExcludeFromCoverage() public pure {}
 }

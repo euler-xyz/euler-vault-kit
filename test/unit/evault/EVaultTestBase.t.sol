@@ -136,6 +136,8 @@ contract EVaultTestBase is AssertionsCustomTypes, Test, DeployPermit2 {
 
         return v;
     }
+
+    function test__ExcludeFromCoverage() public pure {}
 }
 
 contract MockHook {
@@ -146,11 +148,11 @@ contract MockHook {
     function deposit(uint256, address) external view {
         address asset = IEVault(msg.sender).asset();
 
-        if (asset != caller()) revert E_OnlyAssetCanDeposit();
-    }
+        // these calls are just to test if there's no RO-reentrancy for the hook target
+        IEVault(msg.sender).totalBorrows();
+        IEVault(msg.sender).balanceOf(address(this));
 
-    function maxDeposit(address) public view virtual returns (uint256) {
-        return type(uint256).max;
+        if (asset != caller()) revert E_OnlyAssetCanDeposit();
     }
 
     // all the other hooked ops are disabled
@@ -163,4 +165,6 @@ contract MockHook {
             _caller := shr(96, calldataload(sub(calldatasize(), 20)))
         }
     }
+
+    function test_ExcludeFromCoverage() public pure {}
 }

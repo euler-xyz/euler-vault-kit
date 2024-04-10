@@ -39,21 +39,23 @@ library LTVConfigLib {
     // Get current LTV of a collateral. When liquidation LTV is lowered, it is ramped down to target value over a period of time.
     function getLTV(LTVConfig memory self, LTVType ltvType) internal view returns (ConfigAmount) {
         if (
-            ltvType == LTVType.BORROWING || block.timestamp >= self.targetTimestamp || self.targetLTV > self.originalLTV
+            ltvType == LTVType.BORROWING || block.timestamp >= self.targetTimestamp
+                || self.targetLTV >= self.originalLTV
         ) {
             return self.targetLTV;
         }
 
-        uint256 ltv = self.originalLTV.toUint16();
+        uint256 currentLTV = self.originalLTV.toUint16();
 
         unchecked {
-            uint256 timeElapsed = self.rampDuration - (self.targetTimestamp - block.timestamp);
+            uint256 targetLTV = self.targetLTV.toUint16();
+            uint256 timeRemaining = self.targetTimestamp - block.timestamp;
 
-            // targetLTV < originalLTV and timeElapsed < rampDuration
-            ltv = ltv - ((ltv - self.targetLTV.toUint16()) * timeElapsed / self.rampDuration);
+            // targetLTV < originalLTV and timeRemaining < rampDuration
+            currentLTV = targetLTV + (currentLTV - targetLTV) * timeRemaining / self.rampDuration;
         }
         // because ramping happens only when LTV decreases, it's safe to down-cast the new value
-        return ConfigAmount.wrap(uint16(ltv));
+        return ConfigAmount.wrap(uint16(currentLTV));
     }
 
     function setLTV(LTVConfig memory self, ConfigAmount targetLTV, uint32 rampDuration)
