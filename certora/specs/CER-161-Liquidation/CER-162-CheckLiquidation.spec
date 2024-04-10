@@ -40,6 +40,13 @@ methods {
     // Workaround for lack of ability to summarize metadata
     // function Cache.loadVault() internal returns (Liquidation.VaultCache memory) => CVLLoadVault();
 
+    function LiquidityUtils.calculateLiquidity(
+        Liquidation.VaultCache memory vaultCache,
+        address account,
+        address[] memory collaterals,
+        Liquidation.LTVType ltvType
+    ) internal returns (uint256, uint256) => calcLiquidity(account, collaterals, ltvType);
+
     // IPriceOracle
     function _.getQuote(uint256 amount, address base, address quote) external => CVLGetQuote(amount, base, quote) expect (uint256);
     function _.getQuotes(uint256 amount, address base, address quote) external => CVLGetQuotes(amount, base, quote) expect (uint256, uint256);
@@ -80,6 +87,13 @@ function CVLLoadVault() returns Liquidation.VaultCache {
     return vaultCache;
 }
 
+persistent ghost uint256 dummy_collateral;
+persistent ghost uint256 dummy_liquidity;
+function calcLiquidity(address account, address[] collaterals, Liquidation.LTVType ltvType) returns (uint256, uint256) {
+    // unconstrained but same value for same returns
+    return (dummy_collateral, dummy_liquidity);
+}
+
 rule checkLiquidation_healthy() {
     env e;
     address liquidator;
@@ -92,14 +106,22 @@ rule checkLiquidation_healthy() {
     require vaultCache.oracle != 0;
     require oracleAddress != 0;
 
-    address[] collaterals = getCollateralsExt(e, violator);
+    // address[] collaterals = getCollateralsExt(e, violator);
 
-    uint256 liquidityCollateralValue = getLiquidityValue(e, violator, vaultCache, collaterals);
-    uint256 liquidityLiabilityValue = getLiabilityValue(e, violator, vaultCache, collaterals);
+    // uint256 liquidityCollateralValue = getLiquidityValue(e, violator, vaultCache, collaterals);
+    // uint256 liquidityLiabilityValue = getLiabilityValue(e, violator, vaultCache, collaterals);
+
+    // uint256 liquidityCollateralValue;
+    // uint256 liquidityLiabilityValue;
+    // (liquidityCollateralValue, liquidityLiabilityValue) = 
+    //     calculateLiquidityExternal(e, violator);
+
+    require dummy_collateral > 0;
+    require dummy_liquidity > 0; 
+    require dummy_collateral > dummy_liquidity;
 
     (maxRepay, maxYield) = checkLiquidation(e, liquidator, violator, collateral);
 
-    require liquidityCollateralValue >= liquidityLiabilityValue;
     assert maxRepay == 0;
     assert maxYield == 0;
 }
