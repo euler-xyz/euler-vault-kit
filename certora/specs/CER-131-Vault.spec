@@ -107,14 +107,6 @@ methods {
     function BalanceUtils.tryBalanceTrackerHook(address account, uint256 newAccountBalance, bool forfeitRecentReward) internal returns (bool) => 
         CVLCalledBalanceForwarder(account, newAccountBalance);
 
-    // TypesLib -- in practice these cause vacuity errors without summaries
-    function _.toAssets(uint256 amount) internal =>
-        CVLToAssets(amount) expect (uint112);
-    function _.toShares(uint256 amount) internal =>
-        CVLToShares(amount) expect (uint112);
-    function _.toOwed(uint256 amount) internal =>
-        CVLToOwed(amount) expect (uint144);
-
     // Workaround for lack of ability to summarize metadata
     function Cache.loadVault() internal returns (Vault.VaultCache memory) => CVLLoadVault();
     function Cache.updateVault() internal returns (Vault.VaultCache memory) => CVLLoadVault();
@@ -129,18 +121,6 @@ methods {
     function _.approve(address,uint256)              external => DISPATCHER(true);
     function _.transfer(address,uint256)             external => DISPATCHER(true);
     function _.transferFrom(address,address,uint256) external => DISPATCHER(true);
-}
-
-function CVLToAssets(uint256 amount) returns uint112 {
-    return require_uint112(amount);
-}
-
-function CVLToShares(uint256 amount) returns uint112 {
-    return require_uint112(amount);
-}
-
-function CVLToOwed(uint256 amount) returns uint144 {
-    return require_uint144(amount);
 }
 
 persistent ghost bool calledStatusCheck;
@@ -188,7 +168,6 @@ rule balance_forwarding_called_deposit {
 
     uint256 balance;
     bool forwarderEnabled;
-    
 
     require !calledForwarder;
 
