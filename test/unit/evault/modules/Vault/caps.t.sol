@@ -346,6 +346,36 @@ contract VaultTest_Caps is EVaultTestBase {
         eTST.deloop(amount, user);
     }
 
+    function test_BorrowCap_WhenOver_InterestAccrual(
+        uint16 borrowCapOrig,
+        uint16 borrowCapNow,
+        uint256 amount,
+        uint24 skipAmount
+    ) public {
+        setUpOverBorrowCap(borrowCapOrig, borrowCapNow);
+        amount = bound(amount, 1, AmountCap.wrap(borrowCapOrig).resolve());
+        vm.assume(skipAmount > 0);
+
+        uint256 origOwed = eTST.debtOf(user);
+        skip(skipAmount);
+        vm.assume(eTST.debtOf(user) > origOwed);
+
+        uint256 snapshot = vm.snapshot();
+
+        vm.revertTo(snapshot);
+        vm.expectRevert();
+        vm.prank(user);
+        eTST.borrow(amount, user);
+
+        vm.revertTo(snapshot);
+        vm.prank(user);
+        eTST.touch();
+
+        vm.revertTo(snapshot);
+        vm.prank(user);
+        eTST.repay(amount, user);
+    }
+
     function setUpUnderSupplyCap(uint16 supplyCap, uint256 initAmount) internal returns (uint256) {
         uint256 supplyCapAmount = AmountCap.wrap(supplyCap).resolve();
         vm.assume(supplyCapAmount > 1 && supplyCapAmount < MAX_SANE_AMOUNT);
