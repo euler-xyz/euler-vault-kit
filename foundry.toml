@@ -33,7 +33,7 @@ seed = "0xee1d0f7d9556539a9c0e26aed5e63556"
 runs = 1000
 
 [profile.default.invariant]
-call_override = false # Override unsafe external calls to perform reentrancy checks
+call_override = false
 depth = 50
 runs = 1000
 
