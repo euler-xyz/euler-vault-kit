@@ -77,6 +77,7 @@ using EthereumVaultConnector as evc;
 methods {
     // envfree
     function vaultIsOnlyController(address account) external returns (bool) envfree;
+    // function getCollateralsExt(address account) public returns (address[] memory) envfree;
         
     function ProxyUtils.metadata() internal returns (address, address, address)=> CVLProxyMetadata();
 
@@ -96,16 +97,12 @@ methods {
     function _.transferFrom(address,address,uint256) external => DISPATCHER(true);
 }
 
-
-function CVLGetQuote(uint256 amount, address base, address quote) returns uint256 {
-    uint256 out;
-    return out;
-}
-
+ghost CVLGetQuote(uint256, address, address) returns uint256;
 function CVLGetQuotes(uint256 amount, address base, address quote) returns (uint256, uint256) {
-    uint256 bidOut;
-    uint256 askOut;
-    return (bidOut, askOut);
+    return (
+        CVLGetQuote(amount, base, quote),
+        CVLGetQuote(amount, base, quote)
+    );
 }
 
 ghost address oracleAddress;
@@ -114,10 +111,28 @@ function CVLProxyMetadata() returns (address, address, address) {
     return (erc20, oracleAddress, unitOfAccount);
 }
 
-function CVLLoadVault() returns RiskManager.VaultCache {
-    RiskManager.VaultCache vaultCache;
-    require vaultCache.oracle != 0;
-    return vaultCache;
+rule liquidations_equal_for_one {
+    env e;
+    calldataarg args;
+    address account;
+    bool liquidation;
+
+    uint256 collateralValue; 
+    uint256 liabilityValue;
+
+    require oracleAddress != 0;
+    require unitOfAccount != 0;
+    
+    address[] collaterals = getCollateralsExt(e, account);
+    require collaterals.length == 1;
+    (collateralValue, liabilityValue) = accountLiquidity(e, account, liquidation);
+    address[] collaterals_full; 
+    uint256[] collateralValues; 
+    uint256 liabilityValue_full;
+    (collaterals_full, collateralValues, liabilityValue_full) = accountLiquidityFull(e, account, liquidation);
+    assert collateralValue == collateralValues[1];
+    assert liabilityValue == liabilityValue_full;
+
 }
 
 rule accountLiquidityMustRevert {

@@ -23,4 +23,5 @@ contract RiskManagerHarness is RiskManager {
         return address(loadVault().oracle) != address(0);
     }
 
+
 }
