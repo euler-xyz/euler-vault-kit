@@ -1,0 +1,63 @@
+
+accountLiquidity
+For a given account, accountLiquidity calculates and returns the sum of risk
+adjusted values of enabled, and accepted, collaterals and the value of
+liability.
+
+If liquidation parameter is true, the risk adjusted value of collateral is the
+value of collateral multiplied by the current LTV factor calculated using the
+original LTV factor, the target LTV and ramp duration (assuming the LTV factor
+changes linearly from the original LTV to the target LTV in ramp duration time).
+
+If liquidation parameter is false, the risk adjusted value of collateral is the
+value of collateral multiplied by the target LTV.
+
+accountLiquidity must revert if:
+ - liability vault is not enabled as the only controller of the account
+ - price oracle is not configured
+
+accountLiquidityFull
+For a given account, accountLiquidityFull calculates and returns the risk
+adjusted values of enabled, and accepted, collaterals and the value of
+liability.
+
+If liquidation parameter is true, the risk adjusted value of collateral is the
+value of collateral multiplied by the current LTV factor calculated using the
+original LTV factor, the target LTV and ramp duration (assuming the LTV factor
+changes linearly from the original LTV to the target LTV in ramp duration time).
+
+If liquidation parameter is false, the risk adjusted value of collateral is the
+value of collateral multiplied by the target LTV.
+
+accountLiquidityFull must revert if:
+ - liability vault is not enabled as the only controller of the account
+ - price oracle is not configured
+
+checkAccountStatus
+If the authenticated account does not have an outstanding liability,
+disableController disables liability vault as a controller for the authenticated
+account. disableController must revert if the authenticated account has an
+outstanding liability.
+
+If account healthy, considering the risk adjusted value of collateral is the
+value of collateral multiplied by the target LTV, checkAccountStatus returns the
+selector of itself.
+
+checkAccountStatus must revert if:
+ - not called by the EVC
+ - not called when checks in progress
+ - account unhealthy
+
+checkVaultStatus
+If vault status is valid, checkVaultStatus updates the interest rate, clears the
+snapshot (if created) and returns the selector of itself.
+
+The interest rate is updated by calling into the configured interest rate model
+contract and cannot exceed the MAX_ALLOWED_INTEREST_RATE. If the interest rate
+model contract is not configured OR it reverts, the interest rate must remain
+unchanged.
+
+checkVaultStatus must revert if:
+ - not called by the EVC
+ - not called when checks in progress
+ - vault status invalid
