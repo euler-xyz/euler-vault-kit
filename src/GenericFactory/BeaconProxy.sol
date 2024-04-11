@@ -4,18 +4,19 @@ pragma solidity ^0.8.0;
 
 contract BeaconProxy {
     // ERC-1967 beacon address slot. bytes32(uint256(keccak256('eip1967.proxy.beacon')) - 1)
-    bytes32 constant BEACON_SLOT = 0xa3f0ad74e5423aebfd80d3ef4346578335a9a72aeaee59ff6cb3582b35133d50;
-    // Beacon implementation() selector
-    bytes32 constant IMPLEMENTATION_SELECTOR = 0x5c60da1b00000000000000000000000000000000000000000000000000000000;
-    // Max trailing data length, 4 immutable slots
-    uint256 constant MAX_TRAILING_DATA_LENGTH = 128;
+    bytes32 internal constant BEACON_SLOT = 0xa3f0ad74e5423aebfd80d3ef4346578335a9a72aeaee59ff6cb3582b35133d50;
+    // Beacointernal n implementation() selector
+    bytes32 internal constant IMPLEMENTATION_SELECTOR =
+        0x5c60da1b00000000000000000000000000000000000000000000000000000000;
+    // Max tinternal railing data length, 4 immutable slots
+    uint256 internal constant MAX_TRAILING_DATA_LENGTH = 128;
 
-    address immutable beacon;
-    uint256 immutable metadataLength;
-    bytes32 immutable metadata0;
-    bytes32 immutable metadata1;
-    bytes32 immutable metadata2;
-    bytes32 immutable metadata3;
+    address internal immutable beacon;
+    uint256 internal immutable metadataLength;
+    bytes32 internal immutable metadata0;
+    bytes32 internal immutable metadata1;
+    bytes32 internal immutable metadata2;
+    bytes32 internal immutable metadata3;
 
     event Genesis();
 
@@ -53,11 +54,8 @@ contract BeaconProxy {
         assembly {
             // Fetch implementation address from the beacon
             mstore(0, IMPLEMENTATION_SELECTOR)
+            // Implementation call is trusted not to revert and to return an address
             let result := staticcall(gas(), beacon_, 0, 4, 0, 32)
-            if iszero(result) {
-                returndatacopy(0, 0, returndatasize())
-                revert(0, returndatasize())
-            }
             let implementation := mload(0)
 
             // delegatecall to the implementation with trailing metadata

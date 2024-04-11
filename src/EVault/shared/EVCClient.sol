@@ -6,6 +6,8 @@ import {Storage} from "./Storage.sol";
 import {Events} from "./Events.sol";
 import {Errors} from "./Errors.sol";
 import {ProxyUtils} from "./lib/ProxyUtils.sol";
+import {validateAddress} from "./types/AddressValidation.sol";
+
 import "./Constants.sol";
 
 import {IERC20} from "../IEVault.sol";
@@ -15,7 +17,7 @@ import {IEVC} from "ethereum-vault-connector/interfaces/IEthereumVaultConnector.
 /// @author Euler Labs (https://www.eulerlabs.com/)
 /// @notice Utilities for interacting with the EVC (Ethereum Vault Connector)
 abstract contract EVCClient is Storage, Events, Errors {
-    IEVC immutable evc;
+    IEVC internal immutable evc;
 
     modifier onlyEVCChecks() {
         if (msg.sender != address(evc) || !evc.areChecksInProgress()) {
@@ -26,7 +28,7 @@ abstract contract EVCClient is Storage, Events, Errors {
     }
 
     constructor(address _evc) {
-        evc = IEVC(_evc);
+        evc = IEVC(validateAddress(_evc));
     }
 
     function disableControllerInternal(address account) internal virtual {

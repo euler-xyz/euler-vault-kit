@@ -26,7 +26,7 @@ contract EulerSavingsRate is EVCUtil, ERC4626 {
 
     ESRSlot internal esrSlot;
 
-    uint256 totalAssetsDeposited;
+    uint256 internal totalAssetsDeposited;
 
     error Reentrancy();
 
@@ -47,7 +47,7 @@ contract EulerSavingsRate is EVCUtil, ERC4626 {
     }
 
     constructor(IEVC _evc, address _asset, string memory _name, string memory _symbol)
-        EVCUtil(_evc)
+        EVCUtil(address(_evc))
         ERC4626(IERC20(_asset))
         ERC20(_name, _symbol)
     {

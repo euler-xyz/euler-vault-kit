@@ -16,7 +16,7 @@ abstract contract LiquidationModule is ILiquidation, Base, BalanceUtils, Liquidi
     using TypesLib for uint256;
 
     // Maximum liquidation discount that can be awarded under any conditions.
-    uint256 constant MAXIMUM_LIQUIDATION_DISCOUNT = 0.2 * 1e18;
+    uint256 internal constant MAXIMUM_LIQUIDATION_DISCOUNT = 0.2 * 1e18;
 
     struct LiquidationCache {
         address liquidator;

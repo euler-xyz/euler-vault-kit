@@ -89,6 +89,12 @@ abstract contract Events {
         uint256 yieldBalance
     );
 
+    /// @notice Take on debt from another account
+    /// @param from Account from which the debt is taken
+    /// @param to Account taking on the debt
+    /// @param assets Amount of debt transferred in assets
+    event PullDebt(address from, address to, uint256 assets);
+
     /// @notice Socialize debt after liquidating all of the unhealthy account's collateral
     /// @param account Address holding an unhealthy borrow
     /// @param assets Amount of debt socialized among all of the share holders

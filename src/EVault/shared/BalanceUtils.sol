@@ -7,6 +7,8 @@ import {IBalanceTracker} from "../../interfaces/IBalanceTracker.sol";
 
 import "./types/Types.sol";
 
+import "forge-std/Test.sol";
+
 /// @title BalanceUtils
 /// @author Euler Labs (https://www.eulerlabs.com/)
 /// @notice Utilities for tracking share balances and allowances
@@ -23,11 +25,12 @@ abstract contract BalanceUtils is Base {
         Assets assets
     ) internal {
         if (account == address(0)) revert E_BadSharesReceiver();
+        UserStorage storage user = vaultStorage.users[account];
 
-        (Shares origBalance, bool balanceForwarderEnabled) = vaultStorage.users[account].getBalanceAndBalanceForwarder();
+        (Shares origBalance, bool balanceForwarderEnabled) = user.getBalanceAndBalanceForwarder();
         Shares newBalance = origBalance + amount;
 
-        vaultStorage.users[account].setBalance(newBalance);
+        user.setBalance(newBalance);
         vaultStorage.totalShares = vaultCache.totalShares = vaultCache.totalShares + amount;
 
         if (balanceForwarderEnabled) {

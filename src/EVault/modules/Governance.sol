@@ -19,9 +19,9 @@ abstract contract GovernanceModule is IGovernance, Base, BalanceUtils, BorrowUti
     using TypesLib for uint16;
 
     // Protocol guarantees
-    uint16 constant MAX_PROTOCOL_FEE_SHARE = 0.5e4;
-    uint16 constant GUARANTEED_INTEREST_FEE_MIN = 0.1e4;
-    uint16 constant GUARANTEED_INTEREST_FEE_MAX = 1e4;
+    uint16 internal constant MAX_PROTOCOL_FEE_SHARE = 0.5e4;
+    uint16 internal constant GUARANTEED_INTEREST_FEE_MIN = 0.1e4;
+    uint16 internal constant GUARANTEED_INTEREST_FEE_MAX = 1e4;
 
     event GovSetName(string newName);
     event GovSetSymbol(string newSymbol);
@@ -222,6 +222,9 @@ abstract contract GovernanceModule is IGovernance, Base, BalanceUtils, BorrowUti
     }
 
     /// @inheritdoc IGovernance
+    /// @dev When LTV configuration is cleared, attempt to liquidate the collateral will revert.
+    /// Clearing should only be executed when the collateral is found to be unsafe to liquidate,
+    /// because e.g. it does external calls on transfer, which would be a critical security threat.
     function clearLTV(address collateral) public virtual nonReentrant governorOnly {
         uint16 originalLTV = getLTV(collateral, LTVType.LIQUIDATION).toUint16();
         vaultStorage.ltvLookup[collateral].clear();
@@ -259,11 +262,12 @@ abstract contract GovernanceModule is IGovernance, Base, BalanceUtils, BorrowUti
     /// @inheritdoc IGovernance
     function setCaps(uint16 supplyCap, uint16 borrowCap) public virtual nonReentrant governorOnly {
         AmountCap _supplyCap = AmountCap.wrap(supplyCap);
+        // The raw uint16 cap amount == 0 is a special value. See comments in AmountCap.sol
         // Max total assets is a sum of max pool size and max total debt, both Assets type
-        if (supplyCap > 0 && _supplyCap.toUint() > 2 * MAX_SANE_AMOUNT) revert E_BadSupplyCap();
+        if (supplyCap != 0 && _supplyCap.toUint() > 2 * MAX_SANE_AMOUNT) revert E_BadSupplyCap();
 
         AmountCap _borrowCap = AmountCap.wrap(borrowCap);
-        if (borrowCap > 0 && _borrowCap.toUint() > MAX_SANE_AMOUNT) revert E_BadBorrowCap();
+        if (borrowCap != 0 && _borrowCap.toUint() > MAX_SANE_AMOUNT) revert E_BadBorrowCap();
 
         vaultStorage.supplyCap = _supplyCap;
         vaultStorage.borrowCap = _borrowCap;

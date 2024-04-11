@@ -19,7 +19,7 @@ contract PegStabilityModule is EVCUtil {
     uint256 public immutable TO_SYNTH_FEE;
 
     constructor(address _evc, address _synth, address _underlying, uint256 toUnderlyingFeeBPS, uint256 toSynthFeeBPS)
-        EVCUtil(IEVC(_evc))
+        EVCUtil(_evc)
     {
         synth = ESynth(_synth);
         underlying = IERC20(_underlying);

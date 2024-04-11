@@ -53,6 +53,9 @@ contract ProtocolConfig is IProtocolConfig {
      * @param feeReceiver_ the address of the protocol fee receiver
      */
     constructor(address admin_, address feeReceiver_) {
+        if (admin_ == address(0)) revert E_InvalidAdmin();
+        if (feeReceiver_ == address(0)) revert E_InvalidReceiver();
+
         admin = admin_;
         feeReceiver = feeReceiver_;
 
