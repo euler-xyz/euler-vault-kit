@@ -78,6 +78,16 @@ contract PSMTest is Test {
         assertEq(psm.TO_SYNTH_FEE(), TO_SYNTH_FEE);
     }
 
+    function testConstructorToUnderlyingFeeExceedsBPS() public {
+        vm.expectRevert(PegStabilityModule.E_FEE_EXCEEDS_BPS.selector);
+        new PegStabilityModule(address(evc), address(synth), address(underlying), BPS_SCALE + 1, TO_SYNTH_FEE);
+    }
+
+    function testConstructorToSynthFeeExceedsBPS() public {
+        vm.expectRevert(PegStabilityModule.E_FEE_EXCEEDS_BPS.selector);
+        new PegStabilityModule(address(evc), address(synth), address(underlying), TO_UNDERLYING_FEE, BPS_SCALE + 1);
+    }
+
     function testSwapToUnderlyingGivenIn() public {
         uint256 amountIn = 10e18;
         uint256 expectedAmountOut = amountIn * (BPS_SCALE - TO_UNDERLYING_FEE) / BPS_SCALE;
