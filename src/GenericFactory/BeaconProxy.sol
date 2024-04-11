@@ -5,10 +5,10 @@ pragma solidity ^0.8.0;
 contract BeaconProxy {
     // ERC-1967 beacon address slot. bytes32(uint256(keccak256('eip1967.proxy.beacon')) - 1)
     bytes32 internal constant BEACON_SLOT = 0xa3f0ad74e5423aebfd80d3ef4346578335a9a72aeaee59ff6cb3582b35133d50;
-    // Beacointernal n implementation() selector
+    // Beacon implementation() selector
     bytes32 internal constant IMPLEMENTATION_SELECTOR =
         0x5c60da1b00000000000000000000000000000000000000000000000000000000;
-    // Max tinternal railing data length, 4 immutable slots
+    // Max trailing data length, 4 immutable slots
     uint256 internal constant MAX_TRAILING_DATA_LENGTH = 128;
 
     address internal immutable beacon;
@@ -38,7 +38,7 @@ contract BeaconProxy {
 
         // Pad length with uninitialized memory so the decode will succeed
         assembly {
-            mstore(trailingData, 128)
+            mstore(trailingData, MAX_TRAILING_DATA_LENGTH)
         }
         (metadata0, metadata1, metadata2, metadata3) = abi.decode(trailingData, (bytes32, bytes32, bytes32, bytes32));
     }

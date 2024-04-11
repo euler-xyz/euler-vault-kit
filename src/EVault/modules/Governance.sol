@@ -18,9 +18,15 @@ import "../shared/types/Types.sol";
 abstract contract GovernanceModule is IGovernance, Base, BalanceUtils, BorrowUtils, LTVUtils {
     using TypesLib for uint16;
 
-    // Protocol guarantees
+    // Protocol guarantees for the governor
+
+    // Governor is guaranteed that the protocol fee share will not exceed this value
     uint16 internal constant MAX_PROTOCOL_FEE_SHARE = 0.5e4;
+    // Governor is guaranteed to be able to set interest fee to a value within a certain range.
+    // Outside this range, the interest fee must be approved by ProtocolConfig.
+    // Lower bound of the guaranteed range:
     uint16 internal constant GUARANTEED_INTEREST_FEE_MIN = 0.1e4;
+    // Higher bound of the guaranteed range:
     uint16 internal constant GUARANTEED_INTEREST_FEE_MAX = 1e4;
 
     event GovSetName(string newName);
@@ -111,7 +117,7 @@ abstract contract GovernanceModule is IGovernance, Base, BalanceUtils, BorrowUti
 
     /// @inheritdoc IGovernance
     function configFlags() public view virtual reentrantOK returns (uint32) {
-        return (vaultStorage.configFlags.toUint32());
+        return vaultStorage.configFlags.toUint32();
     }
 
     /// @inheritdoc IGovernance
@@ -204,7 +210,7 @@ abstract contract GovernanceModule is IGovernance, Base, BalanceUtils, BorrowUti
         LTVConfig memory origLTV = vaultStorage.ltvLookup[collateral];
 
         // If new LTV is higher than the previous, or the same, it should take effect immediately
-        if (!(newLTVAmount < origLTV.getLTV(LTVType.LIQUIDATION)) && rampDuration > 0) revert E_LTVRamp();
+        if (newLTVAmount >= origLTV.getLTV(LTVType.LIQUIDATION) && rampDuration > 0) revert E_LTVRamp();
 
         LTVConfig memory newLTV = origLTV.setLTV(newLTVAmount, rampDuration);
 

@@ -45,15 +45,17 @@ library UserStorageLib {
     }
 
     function setBalanceForwarder(UserStorage storage self, bool newValue) internal {
-        self.data = newValue
-            ? PackedUserSlot.wrap(PackedUserSlot.unwrap(self.data) | BALANCE_FORWARDER_MASK)
-            : PackedUserSlot.wrap(PackedUserSlot.unwrap(self.data) & ~BALANCE_FORWARDER_MASK);
+        uint256 data = PackedUserSlot.unwrap(self.data);
+
+        uint256 newFlag = newValue ? BALANCE_FORWARDER_MASK : 0;
+        self.data = PackedUserSlot.wrap(newFlag | (data & (OWED_MASK | SHARES_MASK)));
     }
 
     function setOwed(UserStorage storage self, Owed owed) internal {
         uint256 data = PackedUserSlot.unwrap(self.data);
 
-        self.data = PackedUserSlot.wrap((owed.toUint() << 112) | (data & (BALANCE_FORWARDER_MASK | SHARES_MASK)));
+        self.data =
+            PackedUserSlot.wrap((owed.toUint() << OWED_OFFSET) | (data & (BALANCE_FORWARDER_MASK | SHARES_MASK)));
     }
 
     function setBalance(UserStorage storage self, Shares balance) internal {

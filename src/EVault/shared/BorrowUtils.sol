@@ -30,11 +30,12 @@ abstract contract BorrowUtils is Base {
         private
         returns (Owed newOwed, Owed prevOwed)
     {
-        prevOwed = vaultStorage.users[account].getOwed();
+        UserStorage storage user = vaultStorage.users[account];
+
+        prevOwed = user.getOwed();
         newOwed = getCurrentOwed(vaultCache, account, prevOwed);
 
-        vaultStorage.users[account].setOwed(newOwed);
-        vaultStorage.users[account].interestAccumulator = vaultCache.interestAccumulator;
+        user.interestAccumulator = vaultCache.interestAccumulator;
     }
 
     function increaseBorrow(VaultCache memory vaultCache, address account, Assets assets) internal {

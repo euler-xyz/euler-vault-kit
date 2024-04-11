@@ -117,7 +117,7 @@ abstract contract Dispatch is
             // Proxy metadata will be appended back by the proxy on staticcall
             mstore(0, 0x1fe8b95300000000000000000000000000000000000000000000000000000000)
             mstore(4, module)
-            calldatacopy(36, 0, calldatasize())
+            calldatacopy(36, 0, sub(calldatasize(), PROXY_METADATA_LENGTH))
             // insize: calldatasize + 36 (signature and address) - proxy metadata size
             let result := staticcall(gas(), address(), 0, sub(add(calldatasize(), 36), PROXY_METADATA_LENGTH), 0, 0)
             returndatacopy(0, 0, returndatasize())

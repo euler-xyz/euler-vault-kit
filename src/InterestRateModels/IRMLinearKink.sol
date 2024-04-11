@@ -50,7 +50,12 @@ contract IRMLinearKink is IIRM {
             ir += utilisation * slope1;
         } else {
             ir += kink * slope1;
-            ir += slope2 * (utilisation - kink);
+
+            uint256 utilizationOverKink;
+            unchecked {
+                utilizationOverKink = utilisation - kink;
+            }
+            ir += slope2 * utilizationOverKink;
         }
 
         return ir;

@@ -108,7 +108,7 @@ contract Cache is Storage, Errors {
                 vaultCache.interestAccumulator = newInterestAccumulator;
                 vaultCache.lastInterestAccumulatorUpdate = uint48(block.timestamp);
 
-                if (newTotalShares != Shares.unwrap(vaultCache.totalShares)) {
+                if (newTotalShares != vaultCache.totalShares.toUint()) {
                     vaultCache.accumulatedFees = newAccumulatedFees.toShares();
                     vaultCache.totalShares = newTotalShares.toShares();
                 }
