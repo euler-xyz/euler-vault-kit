@@ -56,10 +56,7 @@ abstract contract BorrowUtils is Base {
 
         if (amount > owed) revert E_RepayTooMuch();
 
-        Owed owedRemaining;
-        unchecked {
-            owedRemaining = (owed - amount).toOwed();
-        }
+        Owed owedRemaining = owed.subUnchecked(amount).toOwed();
 
         vaultStorage.users[account].setOwed(owedRemaining);
         vaultStorage.totalBorrows = vaultCache.totalBorrows =
@@ -82,9 +79,7 @@ abstract contract BorrowUtils is Base {
 
         if (amount > fromOwed) revert E_InsufficientBalance();
 
-        unchecked {
-            fromOwed = fromOwed - amount;
-        }
+        fromOwed = fromOwed.subUnchecked(amount);
 
         toOwed = toOwed + amount;
 
@@ -158,11 +153,11 @@ abstract contract BorrowUtils is Base {
         address dTokenAddress = calculateDTokenAddress();
 
         if (owed > prevOwed) {
-            uint256 change = (owed.toAssetsUp() - prevOwed.toAssetsUp()).toUint();
+            uint256 change = owed.toAssetsUp().subUnchecked(prevOwed.toAssetsUp()).toUint();
             emit Borrow(account, change);
             DToken(dTokenAddress).emitTransfer(address(0), account, change);
         } else if (prevOwed > owed) {
-            uint256 change = (prevOwed.toAssetsUp() - owed.toAssetsUp()).toUint();
+            uint256 change = prevOwed.toAssetsUp().subUnchecked(owed.toAssetsUp()).toUint();
 
             emit Repay(account, change);
             DToken(dTokenAddress).emitTransfer(account, address(0), change);

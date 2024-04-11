@@ -36,6 +36,12 @@ library OwedLib {
     function mulDiv(Owed self, uint256 multiplier, uint256 divisor) internal pure returns (Owed) {
         return TypesLib.toOwed(uint256(Owed.unwrap(self)) * multiplier / divisor);
     }
+
+    function subUnchecked(Owed self, Owed b) internal pure returns (Owed) {
+        unchecked {
+            return Owed.wrap(uint144(self.toUint() - b.toUint()));
+        }
+    } 
 }
 
 function addOwed(Owed a, Owed b) pure returns (Owed) {

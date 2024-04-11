@@ -42,6 +42,12 @@ library AssetsLib {
             return TypesLib.toOwed(uint256(Assets.unwrap(self)) << INTERNAL_DEBT_PRECISION);
         }
     }
+
+    function subUnchecked(Assets self, Assets b) internal pure returns (Assets) {
+        unchecked {
+            return Assets.wrap(uint112(self.toUint() - b.toUint()));
+        }
+    } 
 }
 
 function addAssets(Assets a, Assets b) pure returns (Assets) {
