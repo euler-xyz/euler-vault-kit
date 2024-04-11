@@ -15,21 +15,21 @@ library ConfigAmountLib {
     // note assuming arithmetic checks are already performed
     function mulDiv(ConfigAmount self, uint256 multiplier, uint256 divisor) internal pure returns (uint256) {
         unchecked {
-            return uint256(self.toUint16()) * multiplier / (1e4 * divisor);
+            return uint256(self.toUint16()) * multiplier / (CONFIG_SCALE * divisor);
         }
     }
 
     // note assuming arithmetic checks are already performed
     function mul(ConfigAmount self, uint256 multiplier) internal pure returns (uint256) {
         unchecked {
-            return uint256(self.toUint16()) * multiplier / 1e4;
+            return uint256(self.toUint16()) * multiplier / CONFIG_SCALE;
         }
     }
 
     // note assuming arithmetic checks are already performed
     function mulInv(ConfigAmount self, uint256 multiplier) internal pure returns (uint256) {
         unchecked {
-            return 1e4 * multiplier / uint256(self.toUint16());
+            return CONFIG_SCALE * multiplier / uint256(self.toUint16());
         }
     }
 
@@ -42,7 +42,7 @@ library ConfigAmountLib {
     }
 
     function validate(uint256 amount) internal pure {
-        if (amount > 1e4) revert Errors.E_InvalidConfigAmount();
+        if (amount > CONFIG_SCALE) revert Errors.E_InvalidConfigAmount();
     }
 }
 
