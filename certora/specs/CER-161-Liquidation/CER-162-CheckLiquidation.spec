@@ -40,12 +40,12 @@ methods {
     // Workaround for lack of ability to summarize metadata
     // function Cache.loadVault() internal returns (Liquidation.VaultCache memory) => CVLLoadVault();
 
-    function LiquidityUtils.calculateLiquidity(
-        Liquidation.VaultCache memory vaultCache,
-        address account,
-        address[] memory collaterals,
-        Liquidation.LTVType ltvType
-    ) internal returns (uint256, uint256) => calcLiquidity(account, collaterals, ltvType);
+    // function LiquidityUtils.calculateLiquidity(
+    //     Liquidation.VaultCache memory vaultCache,
+    //     address account,
+    //     address[] memory collaterals,
+    //     Liquidation.LTVType ltvType
+    // ) internal returns (uint256, uint256) => calcLiquidity(account, collaterals, ltvType);
 
     // IPriceOracle
     function _.getQuote(uint256 amount, address base, address quote) external => CVLGetQuote(amount, base, quote) expect (uint256);
@@ -64,16 +64,19 @@ methods {
     function _.transferFrom(address,address,uint256) external => DISPATCHER(true);
 }
 
-function CVLGetQuote(uint256 amount, address base, address quote) returns uint256 {
-    uint256 out;
-    return out;
-}
+ghost CVLGetQuotes_bidOut(uint256, address, address) returns uint256;
+ghost CVLGetQuotes_askOut(uint256, address, address) returns uint256;
+
+ghost CVLGetQuote(uint256, address, address) returns uint256;
+
 
 function CVLGetQuotes(uint256 amount, address base, address quote) returns (uint256, uint256) {
-    uint256 bidOut;
-    uint256 askOut;
-    return (bidOut, askOut);
+    return (
+        CVLGetQuotes_bidOut(amount, base, quote),
+        CVLGetQuotes_askOut(amount, base, quote)
+    );
 }
+
 
 ghost address oracleAddress;
 ghost address unitOfAccount;
@@ -102,23 +105,16 @@ rule checkLiquidation_healthy() {
     uint256 maxRepay;
     uint256 maxYield;
 
-    Liquidation.VaultCache vaultCache;
-    require vaultCache.oracle != 0;
     require oracleAddress != 0;
 
-    // address[] collaterals = getCollateralsExt(e, violator);
+    uint256 liquidityCollateralValue;
+    uint256 liquidityLiabilityValue;
+    (liquidityCollateralValue, liquidityLiabilityValue) = 
+        calculateLiquidityExternal(e, violator);
 
-    // uint256 liquidityCollateralValue = getLiquidityValue(e, violator, vaultCache, collaterals);
-    // uint256 liquidityLiabilityValue = getLiabilityValue(e, violator, vaultCache, collaterals);
-
-    // uint256 liquidityCollateralValue;
-    // uint256 liquidityLiabilityValue;
-    // (liquidityCollateralValue, liquidityLiabilityValue) = 
-    //     calculateLiquidityExternal(e, violator);
-
-    require dummy_collateral > 0;
-    require dummy_liquidity > 0; 
-    require dummy_collateral > dummy_liquidity;
+    require liquidityCollateralValue > liquidityLiabilityValue;
+    // require liquidityCollateralValue > 0;
+    // require liquidityLiabilityValue > 0;
 
     (maxRepay, maxYield) = checkLiquidation(e, liquidator, violator, collateral);
 
