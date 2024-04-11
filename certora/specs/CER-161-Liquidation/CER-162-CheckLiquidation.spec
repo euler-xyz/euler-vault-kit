@@ -64,25 +64,28 @@ methods {
     function _.transferFrom(address,address,uint256) external => DISPATCHER(true);
 }
 
-ghost CVLGetQuotes_bidOut(uint256, address, address) returns uint256;
-ghost CVLGetQuotes_askOut(uint256, address, address) returns uint256;
+// ghost CVLGetQuotes_bidOut(uint256, address, address) returns uint256;
+// ghost CVLGetQuotes_askOut(uint256, address, address) returns uint256;
 
 ghost CVLGetQuote(uint256, address, address) returns uint256;
 
 
 function CVLGetQuotes(uint256 amount, address base, address quote) returns (uint256, uint256) {
     return (
-        CVLGetQuotes_bidOut(amount, base, quote),
-        CVLGetQuotes_askOut(amount, base, quote)
+        CVLGetQuote(amount, base, quote),
+        CVLGetQuote(amount, base, quote)
     );
 }
-
 
 ghost address oracleAddress;
 ghost address unitOfAccount;
 function CVLProxyMetadata() returns (address, address, address) {
     return (erc20, oracleAddress, unitOfAccount);
 }
+
+// CRITICAL: [main] ERROR ALWAYS - Found errors in certora/specs/CER-161-Liquidation/CER-162-CheckLiquidation.spec:
+// CRITICAL: [main] ERROR ALWAYS - Error in spec file (CER-162-CheckLiquidation.spec:87:1): The type VaultCache is not allowed in a return position of a ghost functio
+// ghost CVLLoadVaultUninterp() returns Liquidation.VaultCache;
 
 function CVLLoadVault() returns Liquidation.VaultCache {
     Liquidation.VaultCache vaultCache;
