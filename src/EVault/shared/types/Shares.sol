@@ -40,7 +40,7 @@ library SharesLib {
         unchecked {
             return Shares.wrap(uint112(self.toUint() - b.toUint()));
         }
-    } 
+    }
 }
 
 function addShares(Shares a, Shares b) pure returns (Shares) {

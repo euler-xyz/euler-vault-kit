@@ -47,7 +47,7 @@ library AssetsLib {
         unchecked {
             return Assets.wrap(uint112(self.toUint() - b.toUint()));
         }
-    } 
+    }
 }
 
 function addAssets(Assets a, Assets b) pure returns (Assets) {

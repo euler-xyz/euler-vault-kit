@@ -41,7 +41,7 @@ library OwedLib {
         unchecked {
             return Owed.wrap(uint144(self.toUint() - b.toUint()));
         }
-    } 
+    }
 }
 
 function addOwed(Owed a, Owed b) pure returns (Owed) {
