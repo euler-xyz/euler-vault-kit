@@ -26,39 +26,43 @@ abstract contract BorrowUtils is Base {
         return getCurrentOwed(vaultCache, account, vaultStorage.users[account].getOwed());
     }
 
-    function updateUserBorrow(VaultCache memory vaultCache, address account)
+    function loadUserBorrow(VaultCache memory vaultCache, address account)
         private
+        view
         returns (Owed newOwed, Owed prevOwed)
     {
+        prevOwed = vaultStorage.users[account].getOwed();
+        newOwed = getCurrentOwed(vaultCache, account, prevOwed);
+    }
+
+    function setUserBorrow(VaultCache memory vaultCache, address account, Owed newOwed) private {
         UserStorage storage user = vaultStorage.users[account];
 
-        prevOwed = user.getOwed();
-        newOwed = getCurrentOwed(vaultCache, account, prevOwed);
-
+        user.setOwed(newOwed);
         user.interestAccumulator = vaultCache.interestAccumulator;
     }
 
     function increaseBorrow(VaultCache memory vaultCache, address account, Assets assets) internal {
-        (Owed owed, Owed prevOwed) = updateUserBorrow(vaultCache, account);
+        (Owed owed, Owed prevOwed) = loadUserBorrow(vaultCache, account);
 
         Owed amount = assets.toOwed();
         owed = owed + amount;
 
-        vaultStorage.users[account].setOwed(owed);
+        setUserBorrow(vaultCache, account, owed);
         vaultStorage.totalBorrows = vaultCache.totalBorrows = vaultCache.totalBorrows + amount;
 
         logBorrowChange(account, prevOwed, owed);
     }
 
     function decreaseBorrow(VaultCache memory vaultCache, address account, Assets amount) internal {
-        (Owed owedExact, Owed prevOwed) = updateUserBorrow(vaultCache, account);
+        (Owed owedExact, Owed prevOwed) = loadUserBorrow(vaultCache, account);
         Assets owed = owedExact.toAssetsUp();
 
         if (amount > owed) revert E_RepayTooMuch();
 
         Owed owedRemaining = owed.subUnchecked(amount).toOwed();
 
-        vaultStorage.users[account].setOwed(owedRemaining);
+        setUserBorrow(vaultCache, account, owedRemaining);
         vaultStorage.totalBorrows = vaultCache.totalBorrows =
             vaultCache.totalBorrows > owedExact ? vaultCache.totalBorrows - owedExact + owedRemaining : owedRemaining;
 
@@ -68,8 +72,8 @@ abstract contract BorrowUtils is Base {
     function transferBorrow(VaultCache memory vaultCache, address from, address to, Assets assets) internal {
         Owed amount = assets.toOwed();
 
-        (Owed fromOwed, Owed fromOwedPrev) = updateUserBorrow(vaultCache, from);
-        (Owed toOwed, Owed toOwedPrev) = updateUserBorrow(vaultCache, to);
+        (Owed fromOwed, Owed fromOwedPrev) = loadUserBorrow(vaultCache, from);
+        (Owed toOwed, Owed toOwedPrev) = loadUserBorrow(vaultCache, to);
 
         // If amount was rounded up, or dust is left over, transfer exact amount owed
         if ((amount > fromOwed && (amount - fromOwed).isDust()) || (amount < fromOwed && (fromOwed - amount).isDust()))
@@ -83,8 +87,8 @@ abstract contract BorrowUtils is Base {
 
         toOwed = toOwed + amount;
 
-        vaultStorage.users[from].setOwed(fromOwed);
-        vaultStorage.users[to].setOwed(toOwed);
+        setUserBorrow(vaultCache, from, fromOwed);
+        setUserBorrow(vaultCache, to, toOwed);
 
         logBorrowChange(from, fromOwedPrev, fromOwed);
         logBorrowChange(to, toOwedPrev, toOwed);
