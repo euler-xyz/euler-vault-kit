@@ -22,11 +22,11 @@ abstract contract GovernanceModule is IGovernance, Base, BalanceUtils, BorrowUti
 
     // Governor is guaranteed that the protocol fee share will not exceed this value
     uint16 internal constant MAX_PROTOCOL_FEE_SHARE = 0.5e4;
-    // Governor is guaranteed to be able to set interest fee to a value within a certain range.
+    // Governor is guaranteed to be able to set the interest fee to a value within a certain range.
     // Outside this range, the interest fee must be approved by ProtocolConfig.
-    // Lower bound of the guaranteed range:
+    // Lower bound of the guaranteed range
     uint16 internal constant GUARANTEED_INTEREST_FEE_MIN = 0.1e4;
-    // Higher bound of the guaranteed range:
+    // Higher bound of the guaranteed range
     uint16 internal constant GUARANTEED_INTEREST_FEE_MAX = 1e4;
 
     event GovSetName(string newName);

@@ -15,7 +15,6 @@ import "../shared/types/Types.sol";
 abstract contract LiquidationModule is ILiquidation, Base, BalanceUtils, LiquidityUtils {
     using TypesLib for uint256;
 
-    uint256 internal constant ONEWAD = 1e18;
     // Maximum liquidation discount that can be awarded under any conditions in wad.
     uint256 internal constant MAXIMUM_LIQUIDATION_DISCOUNT = 0.2e18;
 
@@ -125,10 +124,10 @@ abstract contract LiquidationModule is ILiquidation, Base, BalanceUtils, Liquidi
 
         // Compute discount
 
-        uint256 discountFactor = liquidityCollateralValue * ONEWAD / liquidityLiabilityValue; // health score = 1 - discount
+        uint256 discountFactor = liquidityCollateralValue * 1e18 / liquidityLiabilityValue; // health score = 1 - discount
 
-        if (discountFactor < ONEWAD - MAXIMUM_LIQUIDATION_DISCOUNT) {
-            discountFactor = ONEWAD - MAXIMUM_LIQUIDATION_DISCOUNT;
+        if (discountFactor < 1e18 - MAXIMUM_LIQUIDATION_DISCOUNT) {
+            discountFactor = 1e18 - MAXIMUM_LIQUIDATION_DISCOUNT;
         }
 
         // Compute maximum yield
@@ -151,13 +150,13 @@ abstract contract LiquidationModule is ILiquidation, Base, BalanceUtils, Liquidi
         }
 
         uint256 maxRepayValue = liabilityValue;
-        uint256 maxYieldValue = maxRepayValue * ONEWAD / discountFactor;
+        uint256 maxYieldValue = maxRepayValue * 1e18 / discountFactor;
 
         // Limit yield to borrower's available collateral, and reduce repay if necessary
         // This can happen when borrower has multiple collaterals and seizing all of this one won't bring the violator back to solvency
 
         if (collateralValue < maxYieldValue) {
-            maxRepayValue = collateralValue * discountFactor / ONEWAD;
+            maxRepayValue = collateralValue * discountFactor / 1e18;
             maxYieldValue = collateralValue;
         }
 
