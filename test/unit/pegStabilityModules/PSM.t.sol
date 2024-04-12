@@ -87,7 +87,7 @@ contract PSMTest is Test {
         vm.expectRevert(PegStabilityModule.E_FEE_EXCEEDS_BPS.selector);
         new PegStabilityModule(address(evc), address(synth), address(underlying), TO_UNDERLYING_FEE, BPS_SCALE + 1);
     }
-    
+
     function testConstructorEVCZeroAddress() public {
         vm.expectRevert(EVCUtil.EVC_InvalidAddress.selector);
         new PegStabilityModule(address(0), address(synth), address(underlying), TO_UNDERLYING_FEE, TO_SYNTH_FEE);
