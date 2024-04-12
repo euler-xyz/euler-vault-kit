@@ -87,6 +87,21 @@ contract PSMTest is Test {
         vm.expectRevert(PegStabilityModule.E_FEE_EXCEEDS_BPS.selector);
         new PegStabilityModule(address(evc), address(synth), address(underlying), TO_UNDERLYING_FEE, BPS_SCALE + 1);
     }
+    
+    function testConstructorEVCZeroAddress() public {
+        vm.expectRevert(PegStabilityModule.E_ZeroAddress.selector);
+        new PegStabilityModule(address(0), address(synth), address(underlying), TO_UNDERLYING_FEE, TO_SYNTH_FEE);
+    }
+
+    function testConstructorSynthZeroAddress() public {
+        vm.expectRevert(PegStabilityModule.E_ZeroAddress.selector);
+        new PegStabilityModule(address(evc), address(0), address(underlying), TO_UNDERLYING_FEE, TO_SYNTH_FEE);
+    }
+
+    function testConstructorUnderlyingZeroAddress() public {
+        vm.expectRevert(PegStabilityModule.E_ZeroAddress.selector);
+        new PegStabilityModule(address(evc), address(synth), address(0), TO_UNDERLYING_FEE, TO_SYNTH_FEE);
+    }
 
     function testSwapToUnderlyingGivenIn() public {
         uint256 amountIn = 10e18;

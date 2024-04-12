@@ -17,16 +17,21 @@ contract PegStabilityModule is EVCUtil {
 
     uint256 public immutable TO_UNDERLYING_FEE;
     uint256 public immutable TO_SYNTH_FEE;
-
+    
+    error E_ZeroAddress();
     error E_FEE_EXCEEDS_BPS();
 
     constructor(address _evc, address _synth, address _underlying, uint256 toUnderlyingFeeBPS, uint256 toSynthFeeBPS)
-        EVCUtil(IEVC(_evc))
-    {   
+        EVCUtil(_evc)
+    {
         if(toUnderlyingFeeBPS > BPS_SCALE || toSynthFeeBPS > BPS_SCALE) {
             revert E_FEE_EXCEEDS_BPS();
         }
         
+        if (_evc == address(0) || _synth == address(0) || _underlying == address(0)) {
+            revert E_ZeroAddress();
+        }
+
         synth = ESynth(_synth);
         underlying = IERC20(_underlying);
         TO_UNDERLYING_FEE = toUnderlyingFeeBPS;
