@@ -137,7 +137,9 @@ contract ESynth is ERC20Collateral, Ownable {
     /// @return The total supply of the token.
     function totalSupply() public view override returns (uint256) {
         uint256 total = super.totalSupply();
-        for (uint256 i = 0; i < ignoredForTotalSupply.length(); i++) {
+
+        uint256 ignoredLength = ignoredForTotalSupply.length(); // cache for efficiency
+        for (uint256 i = 0; i < ignoredLength; i++) {
             total -= balanceOf(ignoredForTotalSupply.at(i));
         }
         return total;
