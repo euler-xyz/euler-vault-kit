@@ -10,7 +10,7 @@ import {ESynth} from "./ESynth.sol";
 contract PegStabilityModule is EVCUtil {
     using SafeERC20 for IERC20;
 
-    uint256 public constant BPS_SCALE = 10000;
+    uint256 public constant BPS_SCALE = 100_00;
 
     ESynth public immutable synth;
     IERC20 public immutable underlying;
