@@ -28,7 +28,7 @@ contract IRMSynth is IIRM {
     error E_ZeroAddress();
 
     constructor(address synth_, address referenceAsset_, address oracle_) {
-        if(synth_ == address(0) || referenceAsset_ == address(0) || oracle_ == address(0)) {
+        if (synth_ == address(0) || referenceAsset_ == address(0) || oracle_ == address(0)) {
             revert E_ZeroAddress();
         }
 
