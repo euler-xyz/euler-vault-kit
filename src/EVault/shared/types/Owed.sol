@@ -19,9 +19,7 @@ library OwedLib {
         if (Owed.unwrap(amount) == 0) return Assets.wrap(0);
 
         unchecked {
-            return TypesLib.toAssets(
-                (uint256(Owed.unwrap(amount)) + (1 << INTERNAL_DEBT_PRECISION) - 1) >> INTERNAL_DEBT_PRECISION
-            );
+            return TypesLib.toAssets(toAssetsUpUint256(uint256(Owed.unwrap(amount))));
         }
     }
 
@@ -41,6 +39,10 @@ library OwedLib {
         unchecked {
             return Owed.wrap(uint144(self.toUint() - b.toUint()));
         }
+    }
+
+    function toAssetsUpUint256(uint256 owedExact) internal pure returns (uint256) {
+        return (owedExact + (1 << INTERNAL_DEBT_PRECISION) - 1) >> INTERNAL_DEBT_PRECISION;
     }
 }
 

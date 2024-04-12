@@ -96,7 +96,7 @@ contract Cache is Storage, Errors {
                 interestFee.mulDiv(newTotalBorrows - vaultCache.totalBorrows.toUint(), 1 << INTERNAL_DEBT_PRECISION);
 
             if (feeAssets != 0) {
-                uint256 newTotalAssets = vaultCache.cash.toUint() + newTotalBorrows.toOwed().toAssetsUp().toUint();
+                uint256 newTotalAssets = vaultCache.cash.toUint() + OwedLib.toAssetsUpUint256(newTotalBorrows);
                 newTotalShares = newTotalAssets * newTotalShares / (newTotalAssets - feeAssets);
                 newAccumulatedFees += newTotalShares - vaultCache.totalShares.toUint();
             }
@@ -108,7 +108,7 @@ contract Cache is Storage, Errors {
                 vaultCache.interestAccumulator = newInterestAccumulator;
                 vaultCache.lastInterestAccumulatorUpdate = uint48(block.timestamp);
 
-                if (newTotalShares <= MAX_SANE_AMOUNT && newTotalShares != vaultCache.totalShares.toUint()) {
+                if (newTotalShares != vaultCache.totalShares.toUint() && newTotalShares <= MAX_SANE_AMOUNT) {
                     vaultCache.accumulatedFees = newAccumulatedFees.toShares();
                     vaultCache.totalShares = newTotalShares.toShares();
                 }
