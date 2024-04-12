@@ -374,7 +374,7 @@ contract VaultTest_Borrow is EVaultTestBase {
         assertGt(newSupply, initialSupply);
         assertGt(fees, 0);
 
-        uint snapshot = vm.snapshot();
+        uint256 snapshot = vm.snapshot();
 
         skip(20 days);
 
