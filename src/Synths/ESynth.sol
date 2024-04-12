@@ -70,7 +70,9 @@ contract ESynth is ERC20Collateral, Ownable {
         }
 
         // If burning more than minted, reset minted to 0
-        minterCache.minted = minterCache.minted > amount ? minterCache.minted - uint128(amount) : 0; // down-casting is safe because amount < minted <= max uint128
+        unchecked {
+            minterCache.minted = minterCache.minted > amount ? minterCache.minted - uint128(amount) : 0; // down-casting is safe because amount < minted <= max uint128
+        }
         minters[sender] = minterCache;
 
         _burn(account, amount);
