@@ -123,8 +123,6 @@ rule checkLiquidation_healthy() {
         calculateLiquidityExternal(e, violator);
 
     require liquidityCollateralValue > liquidityLiabilityValue;
-    // require liquidityCollateralValue > 0;
-    // require liquidityLiabilityValue > 0;
 
     (maxRepay, maxYield) = checkLiquidation(e, liquidator, violator, collateral);
 
@@ -201,10 +199,10 @@ rule getCollateralValue_borrowing_lower {
     address account;
     address collateral;
 
+    // require getLTVConfig(e, collateral).targetLTV < getLTVConfig(e, collateral).originalLTV;
     // Not enough. Counterexample:
     // https://prover.certora.com/output/65266/83f92155749f42d98cadd58754511ebe/?anonymousKey=b3bbd7dcc5b9cec2dbc6104528456fd908ad9057
-    // require getLTVConfig(e, collateral).targetLTV < getLTVConfig(e, collateral).originalLTV;
-    // Need to also assume about ramp duration
+    // Need to also assume about ramp duration and the LTVs
     require LTVConfigAssumptions(e, collateral);
 
     uint256 collateralValue_borrowing = getCollateralValueExt(e, vaultCache, account, collateral, Liquidation.LTVType.BORROWING);
