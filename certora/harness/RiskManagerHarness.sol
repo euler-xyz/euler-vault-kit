@@ -23,5 +23,9 @@ contract RiskManagerHarness is RiskManager {
         return address(loadVault().oracle) != address(0);
     }
 
+    function getLTVConfig(address collateral) external view returns (LTVConfig memory) {
+        return vaultStorage.ltvLookup[collateral];
+    }
+
 
 }
