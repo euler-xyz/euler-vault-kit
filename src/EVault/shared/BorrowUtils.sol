@@ -139,7 +139,7 @@ abstract contract BorrowUtils is Base {
         return newInterestRate;
     }
 
-    function calculateDTokenAddress() internal view returns (address dToken) {
+    function calculateDTokenAddress() internal view virtual returns (address dToken) {
         // inspired by https://github.com/Vectorized/solady/blob/229c18cfcdcd474f95c30ad31b0f7d428ee8a31a/src/utils/CREATE3.sol#L82-L90
         assembly ("memory-safe") {
             mstore(0x14, address())
