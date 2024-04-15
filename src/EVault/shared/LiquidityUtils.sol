@@ -102,7 +102,9 @@ abstract contract LiquidityUtils is BorrowUtils, LTVUtils {
         // bid price for collateral
         (uint256 currentCollateralValue,) = vaultCache.oracle.getQuotes(balance, collateral, vaultCache.unitOfAccount);
 
-        return ltv.mul(currentCollateralValue);
+        // If collateral value is huge the following line can overflow. On a well configured vault it could only happen as a result of manipulation.
+        // We could handle the overflow, but it would be easy to overflow the total with a second collateral.
+        return ltv.toUint16() * currentCollateralValue / 1e4;
     }
 
     function validateOracle(VaultCache memory vaultCache) internal pure {
