@@ -135,5 +135,5 @@ rule liquidate_mustRevert {
     assert vaultControlsViolator;
     assert !violatorStatusCheckDeferred;
     assert oracleConfigured;
-    
 }
+
