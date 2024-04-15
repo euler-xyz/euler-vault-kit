@@ -6,7 +6,7 @@ import {Storage} from "./Storage.sol";
 import {Events} from "./Events.sol";
 import {Errors} from "./Errors.sol";
 import {ProxyUtils} from "./lib/ProxyUtils.sol";
-import {validateAddress} from "./types/AddressValidation.sol";
+import {AddressUtils} from "./lib/AddressUtils.sol";
 
 import "./Constants.sol";
 
@@ -28,7 +28,7 @@ abstract contract EVCClient is Storage, Events, Errors {
     }
 
     constructor(address _evc) {
-        evc = IEVC(validateAddress(_evc));
+        evc = IEVC(AddressUtils.checkContract(_evc));
     }
 
     function disableControllerInternal(address account) internal virtual {

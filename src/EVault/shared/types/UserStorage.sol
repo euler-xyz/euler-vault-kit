@@ -22,10 +22,10 @@ struct UserStorage {
 /// @author Euler Labs (https://www.eulerlabs.com/)
 /// @notice Library for working with the UserStorage struct
 library UserStorageLib {
-    uint256 constant BALANCE_FORWARDER_MASK = 0x8000000000000000000000000000000000000000000000000000000000000000;
-    uint256 constant OWED_MASK = 0x7FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF0000000000000000000000000000;
-    uint256 constant SHARES_MASK = 0x000000000000000000000000000000000000FFFFFFFFFFFFFFFFFFFFFFFFFFFF;
-    uint256 constant OWED_OFFSET = 112;
+    uint256 private constant BALANCE_FORWARDER_MASK = 0x8000000000000000000000000000000000000000000000000000000000000000;
+    uint256 private constant OWED_MASK = 0x7FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF0000000000000000000000000000;
+    uint256 private constant SHARES_MASK = 0x000000000000000000000000000000000000FFFFFFFFFFFFFFFFFFFFFFFFFFFF;
+    uint256 private constant OWED_OFFSET = 112;
 
     function isBalanceForwarderEnabled(UserStorage storage self) internal view returns (bool) {
         return unpackBalanceForwarder(self.data);
@@ -48,20 +48,20 @@ library UserStorageLib {
         uint256 data = PackedUserSlot.unwrap(self.data);
 
         uint256 newFlag = newValue ? BALANCE_FORWARDER_MASK : 0;
-        self.data = PackedUserSlot.wrap(newFlag | (data & (OWED_MASK | SHARES_MASK)));
+        self.data = PackedUserSlot.wrap(newFlag | (data & ~BALANCE_FORWARDER_MASK));
     }
 
     function setOwed(UserStorage storage self, Owed owed) internal {
         uint256 data = PackedUserSlot.unwrap(self.data);
 
         self.data =
-            PackedUserSlot.wrap((owed.toUint() << OWED_OFFSET) | (data & (BALANCE_FORWARDER_MASK | SHARES_MASK)));
+            PackedUserSlot.wrap((owed.toUint() << OWED_OFFSET) | (data & ~OWED_MASK));
     }
 
     function setBalance(UserStorage storage self, Shares balance) internal {
         uint256 data = PackedUserSlot.unwrap(self.data);
 
-        self.data = PackedUserSlot.wrap(balance.toUint() | (data & (BALANCE_FORWARDER_MASK | OWED_MASK)));
+        self.data = PackedUserSlot.wrap(balance.toUint() | (data & ~SHARES_MASK));
     }
 
     function unpackBalance(PackedUserSlot data) private pure returns (Shares) {

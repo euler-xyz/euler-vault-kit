@@ -5,7 +5,7 @@ pragma solidity ^0.8.0;
 import {EVCClient} from "./EVCClient.sol";
 import {Cache} from "./Cache.sol";
 import {RevertBytes} from "./lib/RevertBytes.sol";
-import {validateAddress} from "./types/AddressValidation.sol";
+import {AddressUtils} from "./lib/AddressUtils.sol";
 
 import {IProtocolConfig} from "../../ProtocolConfig/IProtocolConfig.sol";
 import {IBalanceTracker} from "../../interfaces/IBalanceTracker.sol";
@@ -28,7 +28,7 @@ abstract contract Base is EVCClient, Cache {
     }
 
     constructor(Integrations memory integrations) EVCClient(integrations.evc) {
-        protocolConfig = IProtocolConfig(validateAddress(integrations.protocolConfig));
+        protocolConfig = IProtocolConfig(AddressUtils.checkContract(integrations.protocolConfig));
         balanceTracker = IBalanceTracker(integrations.balanceTracker);
         permit2 = integrations.permit2;
     }

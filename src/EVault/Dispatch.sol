@@ -13,7 +13,7 @@ import {BalanceForwarderModule} from "./modules/BalanceForwarder.sol";
 import {GovernanceModule} from "./modules/Governance.sol";
 import {RiskManagerModule} from "./modules/RiskManager.sol";
 
-import {validateAddress} from "./shared/types/AddressValidation.sol";
+import {AddressUtils} from "./shared/lib/AddressUtils.sol";
 import "./shared/Constants.sol";
 
 /// @title Dispatch
@@ -51,14 +51,14 @@ abstract contract Dispatch is
     }
 
     constructor(Integrations memory integrations, DeployedModules memory modules) Base(integrations) {
-        MODULE_INITIALIZE = validateAddress(modules.initialize);
-        MODULE_TOKEN = validateAddress(modules.token);
-        MODULE_VAULT = validateAddress(modules.vault);
-        MODULE_BORROWING = validateAddress(modules.borrowing);
-        MODULE_LIQUIDATION = validateAddress(modules.liquidation);
-        MODULE_RISKMANAGER = validateAddress(modules.riskManager);
-        MODULE_BALANCE_FORWARDER = validateAddress(modules.balanceForwarder);
-        MODULE_GOVERNANCE = validateAddress(modules.governance);
+        MODULE_INITIALIZE = AddressUtils.checkContract(modules.initialize);
+        MODULE_TOKEN = AddressUtils.checkContract(modules.token);
+        MODULE_VAULT = AddressUtils.checkContract(modules.vault);
+        MODULE_BORROWING = AddressUtils.checkContract(modules.borrowing);
+        MODULE_LIQUIDATION = AddressUtils.checkContract(modules.liquidation);
+        MODULE_RISKMANAGER = AddressUtils.checkContract(modules.riskManager);
+        MODULE_BALANCE_FORWARDER = AddressUtils.checkContract(modules.balanceForwarder);
+        MODULE_GOVERNANCE = AddressUtils.checkContract(modules.governance);
     }
 
     // Modifier proxies the function call to a module and low-level returns the result

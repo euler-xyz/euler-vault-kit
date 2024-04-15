@@ -18,9 +18,7 @@ library OwedLib {
     function toAssetsUp(Owed amount) internal pure returns (Assets) {
         if (Owed.unwrap(amount) == 0) return Assets.wrap(0);
 
-        unchecked {
-            return TypesLib.toAssets(toAssetsUpUint256(uint256(Owed.unwrap(amount))));
-        }
+        return TypesLib.toAssets(toAssetsUpUint256(Owed.unwrap(amount)));
     }
 
     function isDust(Owed self) internal pure returns (bool) {
