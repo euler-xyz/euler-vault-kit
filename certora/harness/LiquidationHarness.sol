@@ -90,5 +90,15 @@ contract LiquidationHarness is Liquidation {
         return getCurrentOwed(vaultCache, violator).toAssetsUp();
     }
 
+    function getCollateralValueExt(VaultCache memory vaultCache, address account, address collateral, LTVType ltvType)
+        external
+        view
+        returns (uint256 value) {
+            return getCollateralValue(vaultCache, account, collateral, ltvType);
+    }
+
+    function getLTVConfig(address collateral) external view returns (LTVConfig memory) {
+        return vaultStorage.ltvLookup[collateral];
+    }
 
 }
