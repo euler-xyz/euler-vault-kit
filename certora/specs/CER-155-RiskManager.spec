@@ -77,7 +77,8 @@ using EthereumVaultConnector as evc;
 methods {
     // envfree
     function vaultIsOnlyController(address account) external returns (bool) envfree;
-    // function getCollateralsExt(address account) public returns (address[] memory) envfree;
+    function getCollateralsExt(address account) external returns (address[] memory) envfree;
+    function getLTVConfig(address collateral) external returns (RiskManager.LTVConfig memory) envfree;
         
     function ProxyUtils.metadata() internal returns (address, address, address)=> CVLProxyMetadata();
 
@@ -111,6 +112,8 @@ function CVLProxyMetadata() returns (address, address, address) {
     return (erc20, oracleAddress, unitOfAccount);
 }
 
+
+// timeout
 rule liquidations_equal_for_one {
     env e;
     calldataarg args;
@@ -132,7 +135,38 @@ rule liquidations_equal_for_one {
     (collaterals_full, collateralValues, liabilityValue_full) = accountLiquidityFull(e, account, liquidation);
     assert collateralValue == collateralValues[1];
     assert liabilityValue == liabilityValue_full;
+}
 
+function ltvs_configuration_assumption(address account) returns bool {
+    address[] collaterals = getCollateralsExt(account);
+    uint256 i;
+    return i < collaterals.length => 
+        (getLTVConfig(collaterals[i]).targetLTV <
+        getLTVConfig(collaterals[i]).originalLTV);
+}
+
+// timeout
+rule ltv_borrowing_lower {
+    env e;
+    calldataarg args;
+
+    address account;
+
+    require ltvs_configuration_assumption(account);
+
+    uint256 collateralValue_liquidation;
+    uint256 liabilityValue_liquidation;
+    (collateralValue_liquidation, liabilityValue_liquidation) = accountLiquidity(e, account, true);
+
+    uint256 collateralValue_borrowing;
+    uint256 liabilityValue_borrowing;
+    (collateralValue_borrowing, liabilityValue_borrowing) = accountLiquidity(e, account, false);
+
+    require collateralValue_liquidation > 0;
+    require collateralValue_borrowing > 0;
+
+    assert collateralValue_liquidation >= collateralValue_borrowing;
+    
 }
 
 rule accountLiquidityMustRevert {
