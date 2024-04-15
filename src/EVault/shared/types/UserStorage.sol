@@ -54,8 +54,7 @@ library UserStorageLib {
     function setOwed(UserStorage storage self, Owed owed) internal {
         uint256 data = PackedUserSlot.unwrap(self.data);
 
-        self.data =
-            PackedUserSlot.wrap((owed.toUint() << OWED_OFFSET) | (data & ~OWED_MASK));
+        self.data = PackedUserSlot.wrap((owed.toUint() << OWED_OFFSET) | (data & ~OWED_MASK));
     }
 
     function setBalance(UserStorage storage self, Shares balance) internal {
