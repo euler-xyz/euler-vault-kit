@@ -117,16 +117,6 @@ contract VaultTest_BalancesWithInterest is EVaultTestBase {
 
         // More interest is now owed:
         assertEq(eTST.debtOf(user3), 1.221402761645908299e18);
-
-        // TODO update values in this comment
-        // Additional interest owed = 1.221402761645908299 - 1.105170921404897917 = 0.116231840241010382
-
-        // Total additional earnings: (1.166190218541122110 - 1.105170921404897916) + (1.055212543104786187 - 1) = 0.116231840241010381
-        // This matches the additional interest owed (except for the rounding increase)
-
-        // wallet1 has earned more because it started with larger balance. wallet2 should have earned:
-        // 0.116231840241010382 / (1 + 1.105170921404897917) = 0.05521254310478618771
-        // ... which matches, after truncating to 18 decimals.
     }
 
     function test_basicInterestEarningFlow_withReserves() public {
@@ -143,7 +133,6 @@ contract VaultTest_BalancesWithInterest is EVaultTestBase {
         (uint256 borrowAPY, uint256 supplyAPY) = getVaultInfo(address(eTST));
         assertEq(borrowAPY, 0.105244346078570209478701625e27);
         assertEq(supplyAPY, 0.094239711147365655602112334e27);
-        // untouchedSupply APY: tst.borrowAPY * .9 = 0.094719911470713188530831462
 
         // Go ahead 1 year, with no reserve credits in between
         skip(365.2425 * 86400);
@@ -165,7 +154,6 @@ contract VaultTest_BalancesWithInterest is EVaultTestBase {
         assertApproxEqAbs(eTST.convertToAssets(2e18), 1.094719911470713189e18 * 2, 0.00000001e18);
         assertApproxEqAbs(eTST.convertToShares(1.094719911470713189e18 / uint256(2)), 0.5e18, 0.000000000001e18);
 
-        // 1.105244346078570210 - 1.094719911470713189 = 0.010524434607857021 // TODO update
         assertApproxEqAbs(eTST.accumulatedFeesAssets(), 0.010524434607856782e18, 0.000000001e18);
 
         // Jump another year:
@@ -178,7 +166,6 @@ contract VaultTest_BalancesWithInterest is EVaultTestBase {
         assertApproxEqAbs(eTST.convertToAssets(1e18), 1.198411684570446122e18, 0.00000001e18);
 
         // Original reserve balance times supplyAPY, plus 10% of current interest accrued
-        // (0.010524434607857021 * 1.094719911470713188593610243) + (1.221565064538646276 - 1.105244346078570210)*.1 // TODO update
         assertApproxEqAbs(eTST.accumulatedFeesAssets(), 0.023153379968200152e18, 0.00000001e18);
     }
 
@@ -198,7 +185,6 @@ contract VaultTest_BalancesWithInterest is EVaultTestBase {
         (uint256 borrowAPY, uint256 supplyAPY) = getVaultInfo(address(eTST));
         assertEq(borrowAPY, 0.105244346078570209478701625e27);
         assertEq(supplyAPY, 0.046059133709789858497725776e27);
-        // untouchedSupply APY: (tst.borrowAPY * .9) / 2 = 0.047359955735356594265415731
 
         // Go ahead 1 year
         skip(365.2425 * 86400);
@@ -218,7 +204,6 @@ contract VaultTest_BalancesWithInterest is EVaultTestBase {
         (borrowAPY, supplyAPY) = getVaultInfo(address(eTST));
         assertEq(borrowAPY, 0.105244346078570209478701625e27);
         assertEq(supplyAPY, 0.048416583057772105811320948e27);
-        // untouchedSupplyAPY = 0.049727551487822095990584654
 
         skip(365.2425 * 86400);
 
@@ -230,7 +215,6 @@ contract VaultTest_BalancesWithInterest is EVaultTestBase {
         assertEq(eTST.convertToAssets(eTST.balanceOf(user2)), 1.099442601860420398e18);
 
         // Original reserve balance times supplyAPY, plus 10% of current interest accrued
-        // (0.010524434607857021 * 1.049727551487822095990584654) + (1.221565064538646276 - 1.105244346078570210)*.1
         assertApproxEqAbs(eTST.accumulatedFeesAssets(), 0.022679860817706035e18, 0.0000000000000001e18);
     }
 
