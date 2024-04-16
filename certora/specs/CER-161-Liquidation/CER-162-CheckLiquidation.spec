@@ -186,10 +186,11 @@ function LTVConfigAssumptions(env e, address collateral) returns bool {
     bool targetLTVLessOne = ltvConfig.targetLTV < 10000;
     bool originalLTVLessOne = ltvConfig.originalLTV < 10000;
     bool target_less_original = ltvConfig.targetLTV < ltvConfig.originalLTV;
-    // mathint timeRemaining = ltvConfig.targetTimestamp - e.block.timestamp;
+    mathint timeRemaining = ltvConfig.targetTimestamp - e.block.timestamp;
     return targetLTVLessOne &&
         originalLTVLessOne &&
-        target_less_original; 
+        target_less_original &&
+        require_uint32(timeRemaining) < ltvConfig.rampDuration;
 }
 
 rule getCollateralValue_borrowing_lower {
