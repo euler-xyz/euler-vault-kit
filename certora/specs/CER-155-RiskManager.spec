@@ -174,10 +174,12 @@ rule ltv_borrowing_lower {
 
     address account;
 
-    // try this to get around timeout
-    require getCollateralsExt(account).length == 1;
 
-    require ltvs_configuration_assumption(e, account);
+    // based on loop bound        
+    address[] collaterals = getCollateralsExt(account);
+    require collaterals.length == 2;
+    require LTVConfigAssumptions(e, getLTVConfig(collaterals[0]));
+    require LTVConfigAssumptions(e, getLTVConfig(collaterals[1]));
 
     uint256 collateralValue_liquidation;
     uint256 liabilityValue_liquidation;
