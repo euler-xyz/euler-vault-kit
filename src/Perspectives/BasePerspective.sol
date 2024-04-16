@@ -35,6 +35,8 @@ abstract contract BasePerspective {
 
     error PerspectiveError(address perspective, address vault, uint256 code);
 
+    event PerspectiveVerified(address indexed vault);
+
     constructor(address vaultFactory_) {
         vaultFactory = GenericFactory(vaultFactory_);
     }

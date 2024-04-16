@@ -20,6 +20,9 @@ contract EscrowPerspective is BasePerspective {
         // if already verified, return true
         if (verified.contains(vault)) return true;
 
+        // optimistically assume that the vault is valid
+        verified.add(vault);
+
         // check if deployed by recognized factory
         if (!vaultFactory.isProxy(vault)) revertWithReason(vault, ERROR__NOT_FROM_FACTORY);
 
@@ -30,6 +33,8 @@ contract EscrowPerspective is BasePerspective {
 
         if (config.upgradeable) revertWithReason(vault, ERROR__UPGRADABILITY);
         if (assetLookup[asset] != address(0)) revertWithReason(vault, ERROR__NOT_SINGLETON);
+        assetLookup[asset] = vault;
+
         if (oracle != address(0)) revertWithReason(vault, ERROR__ORACLE);
         if (unitOfAccount != address(0)) revertWithReason(vault, ERROR__UNIT_OF_ACCOUNT);
 
@@ -64,8 +69,7 @@ contract EscrowPerspective is BasePerspective {
 
         if (IEVault(vault).LTVList().length != 0) revertWithReason(vault, ERROR__LTV_LENGTH);
 
-        assetLookup[asset] = vault;
-        verified.add(vault);
+        emit PerspectiveVerified(vault);
 
         return true;
     }

@@ -12,15 +12,24 @@ import "../EVault/shared/Constants.sol";
 contract EscrowPerspective is BasePerspective {
     using EnumerableSet for EnumerableSet.AddressSet;
 
-    address[] public recognizedPerspectives;
+    address[] public recognizedCollateralPerspectives;
 
-    constructor(address vaultFactory_, address[] memory recognizedPerspectives_) BasePerspective(vaultFactory_) {
-        recognizedPerspectives = recognizedPerspectives_;
+    constructor(address vaultFactory_, address[] memory recognizedCollateralPerspectives_)
+        BasePerspective(vaultFactory_)
+    {
+        recognizedCollateralPerspectives.push(address(this));
+
+        for (uint256 i = 0; i < recognizedCollateralPerspectives_.length; ++i) {
+            recognizedCollateralPerspectives.push(recognizedCollateralPerspectives_[i]);
+        }
     }
 
     function perspectiveVerify(address vault) external override returns (bool) {
         // if already verified, return true
         if (verified.contains(vault)) return true;
+
+        // optimistically assume that the vault is valid
+        verified.add(vault);
 
         // check if deployed by recognized factory
         if (!vaultFactory.isProxy(vault)) revertWithReason(vault, ERROR__NOT_FROM_FACTORY);
@@ -66,9 +75,6 @@ contract EscrowPerspective is BasePerspective {
         address[] memory ltvList = IEVault(vault).LTVList();
         if (ltvList.length == 0 || ltvList.length > 10) revertWithReason(vault, ERROR__LTV_LENGTH);
 
-        // optimistically assume that the vault is valid
-        verified.add(vault);
-
         for (uint256 i = 0; i < ltvList.length; ++i) {
             address collateral = ltvList[i];
 
@@ -78,22 +84,20 @@ contract EscrowPerspective is BasePerspective {
             if (borrowingLTV > 0 || liquidationLTV > 0) revertWithReason(vault, ERROR__LTV_CONFIG);
 
             bool recognized = false;
-            try BasePerspective(address(this)).perspectiveVerify(collateral) returns (bool result) {
-                if (result) recognized = true;
-            } catch {}
+            for (uint256 j = 0; j < recognizedCollateralPerspectives.length; ++j) {
+                try BasePerspective(recognizedCollateralPerspectives[j]).perspectiveVerify(collateral) returns (
+                    bool result
+                ) {
+                    recognized = result;
+                } catch {}
 
-            if (!recognized) {
-                for (uint256 j = 0; j < recognizedPerspectives.length; ++j) {
-                    try BasePerspective(recognizedPerspectives[j]).perspectiveVerify(collateral) returns (bool result) {
-                        if (result) recognized = true;
-                    } catch {}
-
-                    if (recognized) break;
-                }
+                if (recognized) break;
             }
 
             if (!recognized) revertWithReason(collateral, ERROR__LTV_VAULT);
         }
+
+        emit PerspectiveVerified(vault);
 
         return true;
     }
