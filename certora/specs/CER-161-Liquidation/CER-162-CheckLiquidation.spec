@@ -186,11 +186,10 @@ function LTVConfigAssumptions(env e, address collateral) returns bool {
     bool targetLTVLessOne = ltvConfig.targetLTV < 10000;
     bool originalLTVLessOne = ltvConfig.originalLTV < 10000;
     bool target_less_original = ltvConfig.targetLTV < ltvConfig.originalLTV;
-    mathint timeRemaining = ltvConfig.targetTimestamp - e.block.timestamp;
+    // mathint timeRemaining = ltvConfig.targetTimestamp - e.block.timestamp;
     return targetLTVLessOne &&
         originalLTVLessOne &&
-        target_less_original && 
-        require_uint32(timeRemaining) < ltvConfig.rampDuration;
+        target_less_original; 
 }
 
 rule getCollateralValue_borrowing_lower {
@@ -199,10 +198,9 @@ rule getCollateralValue_borrowing_lower {
     address account;
     address collateral;
 
-    // require getLTVConfig(e, collateral).targetLTV < getLTVConfig(e, collateral).originalLTV;
     // Not enough. Counterexample:
     // https://prover.certora.com/output/65266/83f92155749f42d98cadd58754511ebe/?anonymousKey=b3bbd7dcc5b9cec2dbc6104528456fd908ad9057
-    // Need to also assume about ramp duration and the LTVs
+    // Need to also assume about ramp duration
     require LTVConfigAssumptions(e, collateral);
 
     uint256 collateralValue_borrowing = getCollateralValueExt(e, vaultCache, account, collateral, Liquidation.LTVType.BORROWING);
