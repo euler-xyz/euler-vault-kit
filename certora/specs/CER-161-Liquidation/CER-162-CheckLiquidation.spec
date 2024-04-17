@@ -26,9 +26,7 @@ checkLiquidation must revert if:
  - price oracle is not configured
 */
 
-// using SafeERC20Lib as safeERC20;
-using ERC20 as erc20;
-
+import "../Base.spec";
 methods {
     // envfree
     function isRecognizedCollateralExt(address collateral) external returns (bool) envfree;
@@ -36,70 +34,9 @@ methods {
     function vaultIsOnlyController(address account) external returns (bool) envfree;
     function isAccountStatusCheckDeferredExt(address account) external returns (bool) envfree;
     
-    function ProxyUtils.metadata() internal returns (address, address, address)=> CVLProxyMetadata();
-    // Workaround for lack of ability to summarize metadata
-    // function Cache.loadVault() internal returns (Liquidation.VaultCache memory) => CVLLoadVault();
-
-    // function LiquidityUtils.calculateLiquidity(
-    //     Liquidation.VaultCache memory vaultCache,
-    //     address account,
-    //     address[] memory collaterals,
-    //     Liquidation.LTVType ltvType
-    // ) internal returns (uint256, uint256) => calcLiquidity(account, collaterals, ltvType);
-
-    // IPriceOracle
-    function _.getQuote(uint256 amount, address base, address quote) external => CVLGetQuote(amount, base, quote) expect (uint256);
-    function _.getQuotes(uint256 amount, address base, address quote) external => CVLGetQuotes(amount, base, quote) expect (uint256, uint256);
-
-
-	// IERC20
-	function _.name()                                external => DISPATCHER(true);
-    function _.symbol()                              external => DISPATCHER(true);
-    function _.decimals()                            external => DISPATCHER(true);
-    function _.totalSupply()                         external => DISPATCHER(true);
-    function _.balanceOf(address)                    external => DISPATCHER(true);
-    function _.allowance(address,address)            external => DISPATCHER(true);
-    function _.approve(address,uint256)              external => DISPATCHER(true);
-    function _.transfer(address,uint256)             external => DISPATCHER(true);
-    function _.transferFrom(address,address,uint256) external => DISPATCHER(true);
 }
 
-// ghost CVLGetQuotes_bidOut(uint256, address, address) returns uint256;
-// ghost CVLGetQuotes_askOut(uint256, address, address) returns uint256;
-
-ghost CVLGetQuote(uint256, address, address) returns uint256; 
-
-
-function CVLGetQuotes(uint256 amount, address base, address quote) returns (uint256, uint256) {
-    return (
-        CVLGetQuote(amount, base, quote),
-        CVLGetQuote(amount, base, quote)
-    );
-}
-
-ghost address oracleAddress;
-ghost address unitOfAccount;
-function CVLProxyMetadata() returns (address, address, address) {
-    return (erc20, oracleAddress, unitOfAccount);
-}
-
-// CRITICAL: [main] ERROR ALWAYS - Found errors in certora/specs/CER-161-Liquidation/CER-162-CheckLiquidation.spec:
-// CRITICAL: [main] ERROR ALWAYS - Error in spec file (CER-162-CheckLiquidation.spec:87:1): The type VaultCache is not allowed in a return position of a ghost functio
-// ghost CVLLoadVaultUninterp() returns Liquidation.VaultCache;
-
-function CVLLoadVault() returns Liquidation.VaultCache {
-    Liquidation.VaultCache vaultCache;
-    require vaultCache.oracle != 0;
-    return vaultCache;
-}
-
-persistent ghost uint256 dummy_collateral;
-persistent ghost uint256 dummy_liquidity;
-function calcLiquidity(address account, address[] collaterals, Liquidation.LTVType ltvType) returns (uint256, uint256) {
-    // unconstrained but same value for same returns
-    return (dummy_collateral, dummy_liquidity);
-}
-
+// passing
 rule checkLiquidation_healthy() {
     env e;
     address liquidator;
@@ -123,6 +60,7 @@ rule checkLiquidation_healthy() {
     assert maxYield == 0;
 }
 
+// counterexample
 rule checkLiquidation_maxYieldGreater {
     env e;
     address liquidator;
@@ -145,6 +83,7 @@ rule checkLiquidation_maxYieldGreater {
     assert maxRepay > 0 => maxRepay <= maxYield; 
 }
 
+// passing
 rule checkLiquidation_mustRevert {
     env e;
     address liquidator;
@@ -172,20 +111,21 @@ rule checkLiquidation_mustRevert {
 
 }
 
-function LTVConfigAssumptions(env e, address collateral) returns bool {
-    Liquidation.LTVConfig ltvConfig = getLTVConfig(e, collateral);
-    // the LTV should be less than 1. Here 1e4 is the scaling factor.
-    // So we assume governance sets these GT 1.
-    bool targetLTVLessOne = ltvConfig.targetLTV < 10000;
-    bool originalLTVLessOne = ltvConfig.originalLTV < 10000;
-    bool target_less_original = ltvConfig.targetLTV < ltvConfig.originalLTV;
-    mathint timeRemaining = ltvConfig.targetTimestamp - e.block.timestamp;
-    return targetLTVLessOne &&
-        originalLTVLessOne &&
-        target_less_original &&
-        require_uint32(timeRemaining) < ltvConfig.rampDuration;
-}
+// function LTVConfigAssumptions(env e, address collateral) returns bool {
+//     Liquidation.LTVConfig ltvConfig = getLTVConfig(e, collateral);
+//     // the LTV should be less than 1. Here 1e4 is the scaling factor.
+//     // So we assume governance sets these GT 1.
+//     bool targetLTVLessOne = ltvConfig.targetLTV < 10000;
+//     bool originalLTVLessOne = ltvConfig.originalLTV < 10000;
+//     bool target_less_original = ltvConfig.targetLTV < ltvConfig.originalLTV;
+//     mathint timeRemaining = ltvConfig.targetTimestamp - e.block.timestamp;
+//     return targetLTVLessOne &&
+//         originalLTVLessOne &&
+//         target_less_original &&
+//         require_uint32(timeRemaining) < ltvConfig.rampDuration;
+// }
 
+// Passing. Assumptions can be reduced with Euler's fix.
 rule getCollateralValue_borrowing_lower {
     env e;
     Liquidation.VaultCache vaultCache;
@@ -195,7 +135,8 @@ rule getCollateralValue_borrowing_lower {
     // Not enough. Counterexample:
     // https://prover.certora.com/output/65266/83f92155749f42d98cadd58754511ebe/?anonymousKey=b3bbd7dcc5b9cec2dbc6104528456fd908ad9057
     // Need to also assume about ramp duration
-    require LTVConfigAssumptions(e, collateral);
+    // Liquidation.LTVConfig ltvConfig = getLTVConfig(e, collateral);
+    require LTVConfigAssumptions(e, getLTVConfig(e, collateral));
 
     uint256 collateralValue_borrowing = getCollateralValueExt(e, vaultCache, account, collateral, Liquidation.LTVType.BORROWING);
 
