@@ -111,20 +111,6 @@ rule checkLiquidation_mustRevert {
 
 }
 
-// function LTVConfigAssumptions(env e, address collateral) returns bool {
-//     Liquidation.LTVConfig ltvConfig = getLTVConfig(e, collateral);
-//     // the LTV should be less than 1. Here 1e4 is the scaling factor.
-//     // So we assume governance sets these GT 1.
-//     bool targetLTVLessOne = ltvConfig.targetLTV < 10000;
-//     bool originalLTVLessOne = ltvConfig.originalLTV < 10000;
-//     bool target_less_original = ltvConfig.targetLTV < ltvConfig.originalLTV;
-//     mathint timeRemaining = ltvConfig.targetTimestamp - e.block.timestamp;
-//     return targetLTVLessOne &&
-//         originalLTVLessOne &&
-//         target_less_original &&
-//         require_uint32(timeRemaining) < ltvConfig.rampDuration;
-// }
-
 // Passing. Assumptions can be reduced with Euler's fix.
 rule getCollateralValue_borrowing_lower {
     env e;
