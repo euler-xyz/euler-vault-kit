@@ -77,7 +77,7 @@ import "Base.spec";
 methods {
     // envfree
     function vaultIsOnlyController(address account) external returns (bool) envfree;
-    function getCollateralsExt(address account) external returns (address[] memory) envfree;
+    // function getCollateralsExt(address account) external returns (address[] memory) envfree;
     function getLTVConfig(address collateral) external returns (RiskManager.LTVConfig memory) envfree;
         
 }
