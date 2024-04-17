@@ -9,8 +9,6 @@ import {IERC20} from "../../src/EVault/IEVault.sol";
 import {ERC20} from "../../lib/ethereum-vault-connector/lib/openzeppelin-contracts/contracts/token/ERC20/ERC20.sol";
 
 contract LiquidationHarness is Liquidation {
-    // VaultCache vaultCache_;
-    // LiquidationCache liqCache_;
 
     constructor(Integrations memory integrations) Liquidation(integrations) {}
 
@@ -55,25 +53,12 @@ contract LiquidationHarness is Liquidation {
         return isAccountStatusCheckDeferred(account);
     }
 
-    function vaultCacheOracleConfigured() external returns (bool) {
-        return address(loadVault().oracle) != address(0);
-    }
-
     function validateOracleExt(VaultCache memory vaultCache) external pure {
         validateOracle(vaultCache);
     }
 
     function getLiquidator() external returns (address liquidator) {
         (, liquidator) = initOperation(OP_LIQUIDATE, CHECKACCOUNT_CALLER);
-    }
-
-    function vaultIsOnlyController(address account) external view returns (bool) {
-        address[] memory controllers = IEVC(evc).getControllers(account);
-        return controllers.length == 1 && controllers[0] == address(this);
-    }
-
-    function vaultIsController(address account) external view returns (bool) {
-        return IEVC(evc).isControllerEnabled(account, address(this));
     }
 
     function calculateLiquidationExt(
