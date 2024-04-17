@@ -8,6 +8,12 @@ struct AccountInfo {
     AccountRewardInfo accountRewardInfo;
 }
 
+struct AccountMultipleVaultsInfo {
+    EVCAccountInfo evcAccountInfo;
+    VaultAccountInfo[] vaultAccountInfo;
+    AccountRewardInfo[] accountRewardInfo;
+}
+
 struct EVCAccountInfo {
     uint256 timestamp;
     uint256 blockNumber;

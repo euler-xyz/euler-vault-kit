@@ -35,6 +35,35 @@ contract EVaultLens {
         return result;
     }
 
+    function getAccountEnabledVaultsInfo(address evc, address account)
+        public
+        view
+        returns (AccountMultipleVaultsInfo memory)
+    {
+        AccountMultipleVaultsInfo memory result;
+
+        result.evcAccountInfo = getEVCAccountInfo(evc, account);
+
+        uint256 controllersLength = result.evcAccountInfo.enabledControllers.length;
+        uint256 collateralsLength = result.evcAccountInfo.enabledCollaterals.length;
+
+        result.vaultAccountInfo = new VaultAccountInfo[](controllersLength + collateralsLength);
+        //result.accountRewardInfo = new AccountRewardInfo[](controllersLength + collateralsLength);
+
+        for (uint256 i = 0; i < controllersLength; ++i) {
+            result.vaultAccountInfo[i] = getVaultAccountInfo(account, result.evcAccountInfo.enabledControllers[i]);
+            //result.accountRewardInfo[i] = getRewardAccountInfo(account, result.evcAccountInfo.enabledControllers[i]);
+        }
+
+        for (uint256 i = 0; i < collateralsLength; ++i) {
+            result.vaultAccountInfo[controllersLength + i] =
+                getVaultAccountInfo(account, result.evcAccountInfo.enabledCollaterals[i]);
+            //result.accountRewardInfo[controllersLength + i] = getRewardAccountInfo(account, result.evcAccountInfo.enabledCollaterals[i]);
+        }
+
+        return result;
+    }
+
     function getEVCAccountInfo(address evc, address account) public view returns (EVCAccountInfo memory) {
         EVCAccountInfo memory result;
 
