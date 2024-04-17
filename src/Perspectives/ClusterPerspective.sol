@@ -14,13 +14,15 @@ contract EscrowPerspective is BasePerspective {
 
     address[] public recognizedCollateralPerspectives;
 
-    constructor(address vaultFactory_, address[] memory recognizedCollateralPerspectives_)
-        BasePerspective(vaultFactory_)
-    {
+    constructor(
+        address vaultFactory_,
+        address[] memory recognizedCollateralPerspectives_,
+        bool thisPerspectiveRecognized_
+    ) BasePerspective(vaultFactory_) {
         // TODO currently when checking if collaterals are recognized, we first check if the collateral is
         // recognized by the cluster perspective and only then check the recognized collateral perspectives.
         // it might be good to optimize this by checking the escrow perspective first (most likely scenario)
-        recognizedCollateralPerspectives.push(address(this));
+        if (thisPerspectiveRecognized_) recognizedCollateralPerspectives.push(address(this));
 
         for (uint256 i = 0; i < recognizedCollateralPerspectives_.length; ++i) {
             recognizedCollateralPerspectives.push(recognizedCollateralPerspectives_[i]);
