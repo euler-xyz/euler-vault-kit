@@ -6,13 +6,14 @@ import {IEVC} from "ethereum-vault-connector/interfaces/IEthereumVaultConnector.
 import "../../src/interfaces/IPriceOracle.sol";
 import {IERC20} from "../../src/EVault/IEVault.sol";
 import {ERC20} from "../../lib/ethereum-vault-connector/lib/openzeppelin-contracts/contracts/token/ERC20/ERC20.sol";
+import "../../certora/harness/AbstractBaseHarness.sol";
 
-contract RiskManagerHarness is RiskManager {
+contract RiskManagerHarness is RiskManager, AbstractBaseHarness {
     constructor(Integrations memory integrations) RiskManager(integrations) {}
 
-    function getCollateralsExt(address account) public view returns (address[] memory) {
-        return getCollaterals(account);
-    }
+    // function getCollateralsExt(address account) public view returns (address[] memory) {
+    //     return getCollaterals(account);
+    // }
 
     function vaultIsOnlyController(address account) external view returns (bool) {
         address[] memory controllers = IEVC(evc).getControllers(account);

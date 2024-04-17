@@ -2,6 +2,12 @@ using ERC20 as erc20;
 using EthereumVaultConnector as evc;
 
 methods {
+    // envfree
+    // function _.getCollateralsExt(address account) external returns (address[] memory) envfree;
+    // function _.getCollateralsExt(address account) external envfree;
+    function getCollateralsExt(address account) external returns (address[] memory) envfree;
+    // function getLTVConfig(address collateral) external returns (RiskManager.LTVConfig memory) envfree;
+
     // IPriceOracle
     function _.getQuote(uint256 amount, address base, address quote) external => CVLGetQuote(amount, base, quote) expect (uint256);
     function _.getQuotes(uint256 amount, address base, address quote) external => CVLGetQuotes(amount, base, quote) expect (uint256, uint256);
