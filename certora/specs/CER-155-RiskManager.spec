@@ -72,74 +72,15 @@ checkVaultStatus must revert if:
  - vault status invalid
  */
 
-using ERC20 as erc20;
-using EthereumVaultConnector as evc;
+import "Base.spec";
+
 methods {
     // envfree
     function vaultIsOnlyController(address account) external returns (bool) envfree;
     function getCollateralsExt(address account) external returns (address[] memory) envfree;
     function getLTVConfig(address collateral) external returns (RiskManager.LTVConfig memory) envfree;
         
-    function ProxyUtils.metadata() internal returns (address, address, address)=> CVLProxyMetadata();
-
-    // IPriceOracle
-    function _.getQuote(uint256 amount, address base, address quote) external => CVLGetQuote(amount, base, quote) expect (uint256);
-    function _.getQuotes(uint256 amount, address base, address quote) external => CVLGetQuotes(amount, base, quote) expect (uint256, uint256);
-
-	// IERC20
-	function _.name()                                external => DISPATCHER(true);
-    function _.symbol()                              external => DISPATCHER(true);
-    function _.decimals()                            external => DISPATCHER(true);
-    function _.totalSupply()                         external => DISPATCHER(true);
-    function _.balanceOf(address)                    external => DISPATCHER(true);
-    function _.allowance(address,address)            external => DISPATCHER(true);
-    function _.approve(address,uint256)              external => DISPATCHER(true);
-    function _.transfer(address,uint256)             external => DISPATCHER(true);
-    function _.transferFrom(address,address,uint256) external => DISPATCHER(true);
 }
-
-ghost CVLGetQuote(uint256, address, address) returns uint256 {
-    // The total value returned by the oracle is assumed < 2**230-1.
-    // There will be overflows without an upper bound on this number.
-    // (For example, it must be less than 2**242-1 to avoid overflow in
-    // LTVConfig.mul)
-    axiom forall uint256 x. forall address y. forall address z. 
-        CVLGetQuote(x, y, z) < 1725436586697640946858688965569256363112777243042596638790631055949823;
-}
-
-function CVLGetQuotes(uint256 amount, address base, address quote) returns (uint256, uint256) {
-    return (
-        CVLGetQuote(amount, base, quote),
-        CVLGetQuote(amount, base, quote)
-    );
-}
-
-ghost address oracleAddress;
-ghost address unitOfAccount;
-function CVLProxyMetadata() returns (address, address, address) {
-    return (erc20, oracleAddress, unitOfAccount);
-}
-
-// TODO refactor to avoid duplicating this. Need a way around type declaration
-// for LTVConfig.
-function LTVConfigAssumptions(env e, RiskManager.LTVConfig ltvConfig) returns bool {
-    bool targetLTVLessOne = ltvConfig.targetLTV < 10000;
-    bool originalLTVLessOne = ltvConfig.originalLTV < 10000;
-    bool target_less_original = ltvConfig.targetLTV < ltvConfig.originalLTV;
-    mathint timeRemaining = ltvConfig.targetTimestamp - e.block.timestamp;
-    return targetLTVLessOne &&
-        originalLTVLessOne &&
-        target_less_original && 
-        require_uint32(timeRemaining) < ltvConfig.rampDuration;
-}
-
-function ltvs_configuration_assumption(env e, address account) returns bool {
-    address[] collaterals = getCollateralsExt(account);
-    uint256 i;
-    return i < collaterals.length => 
-        LTVConfigAssumptions(e, getLTVConfig(collaterals[i]));
-}
-
 
 // timeout
 rule liquidations_equal_for_one {
@@ -153,7 +94,7 @@ rule liquidations_equal_for_one {
 
     require oracleAddress != 0;
     require unitOfAccount != 0;
-    require ltvs_configuration_assumption(e, account);
+    // require ltvs_configuration_assumption(e, account);
     
     address[] collaterals = getCollateralsExt(e, account);
     require collaterals.length == 1;
