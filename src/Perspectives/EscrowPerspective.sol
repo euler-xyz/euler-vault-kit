@@ -16,14 +16,8 @@ contract EscrowPerspective is BasePerspective {
 
     constructor(address vaultFactory_) BasePerspective(vaultFactory_) {}
 
-    function perspectiveVerify(address vault) external override returns (bool) {
-        // if already verified, return true
-        if (verified.contains(vault)) return true;
-
-        // optimistically assume that the vault is valid
-        verified.add(vault);
-
-        // check if deployed by recognized factory
+    function perspectiveVerifyInternal(address vault) internal override {
+        // the vault must be deployed by recognized factory
         if (!vaultFactory.isProxy(vault)) revertWithReason(vault, ERROR__NOT_FROM_FACTORY);
 
         // verify vault configuration at the factory level
@@ -31,32 +25,49 @@ contract EscrowPerspective is BasePerspective {
         (address asset, address oracle, address unitOfAccount) =
             abi.decode(config.trailingData, (address, address, address));
 
+        // escrow vaults must not be upgradeable
         if (config.upgradeable) revertWithReason(vault, ERROR__UPGRADABILITY);
-        if (assetLookup[asset] != address(0)) revertWithReason(vault, ERROR__NOT_SINGLETON);
-        assetLookup[asset] = vault;
 
+        // there can be only one escrow vault per asset (singleton check)
+        if (assetLookup[asset] != address(0)) revertWithReason(vault, ERROR__NOT_SINGLETON);
+
+        // escrow vaults must not have an oracle or unit of account
         if (oracle != address(0)) revertWithReason(vault, ERROR__ORACLE);
         if (unitOfAccount != address(0)) revertWithReason(vault, ERROR__UNIT_OF_ACCOUNT);
 
-        // verify vault configuration at the governance level
+        // verify vault configuration at the governance level.
+        // escrow vaults must not have any collateral set up
+        if (IEVault(vault).LTVList().length != 0) revertWithReason(vault, ERROR__LTV_LENGTH);
+
+        // escrow vaults must not be nested
+        if (!vaultFactory.isProxy(asset)) revertWithReason(vault, ERROR__NESTING);
+
+        // escrow vaults must not have a governor admin, fee receiver, or interest rate model
         if (IEVault(vault).governorAdmin() != address(0)) revertWithReason(vault, ERROR__GOVERNOR);
         if (IEVault(vault).feeReceiver() != address(0)) revertWithReason(vault, ERROR__FEE_RECEIVER);
         if (IEVault(vault).interestRateModel() != address(0)) revertWithReason(vault, ERROR__INTEREST_RATE_MODEL);
 
+        // escrow vaults must not have supply or borrow caps
         (uint32 supplyCap, uint32 borrowCap) = IEVault(vault).caps();
         if (supplyCap != 0) revertWithReason(vault, ERROR__SUPPLY_CAP);
         if (borrowCap != 0) revertWithReason(vault, ERROR__BORROW_CAP);
 
+        // escrow vaults must not have a hook target
         (address hookTarget, uint32 hookedOps) = IEVault(vault).hookConfig();
         if (hookTarget != address(0)) revertWithReason(vault, ERROR__HOOK_TARGET);
 
+        // escrow vaults must have certain operations disabled
         if (
             hookedOps
                 != (OP_BORROW | OP_REPAY | OP_LOOP | OP_DELOOP | OP_PULL_DEBT | OP_CONVERT_FEES | OP_LIQUIDATE | OP_TOUCH)
         ) revertWithReason(vault, ERROR__HOOKED_OPS);
 
+        // escrow vaults must not have any config flags set
         if (IEVault(vault).configFlags() != 0) revertWithReason(vault, ERROR__CONFIG_FLAGS);
 
+        // escrow vaults must have a specific name and symbol
+        // name: "Escrow vault: <asset name>"
+        // symbol: "e<asset symbol>"
         if (
             keccak256(abi.encode(IEVault(vault).name()))
                 != keccak256(abi.encode(string.concat("Escrow vault: ", getTokenName(asset))))
@@ -67,10 +78,6 @@ contract EscrowPerspective is BasePerspective {
                 != keccak256(abi.encode(string.concat("e", getTokenSymbol(asset))))
         ) revertWithReason(vault, ERROR__SYMBOL);
 
-        if (IEVault(vault).LTVList().length != 0) revertWithReason(vault, ERROR__LTV_LENGTH);
-
-        emit PerspectiveVerified(vault);
-
-        return true;
+        assetLookup[asset] = vault;
     }
 }
