@@ -33,6 +33,7 @@ import {TestERC20} from "../../mocks/TestERC20.sol";
 import {MockBalanceTracker} from "../../mocks/MockBalanceTracker.sol";
 import {MockPriceOracle} from "../../mocks/MockPriceOracle.sol";
 import {IRMTestDefault} from "../../mocks/IRMTestDefault.sol";
+import {IHookTarget} from "src/interfaces/IHookTarget.sol";
 
 import {AssertionsCustomTypes} from "../../helpers/AssertionsCustomTypes.sol";
 
@@ -136,9 +137,13 @@ contract EVaultTestBase is AssertionsCustomTypes, Test, DeployPermit2 {
     }
 }
 
-contract MockHook {
+contract MockHook is IHookTarget {
     error E_OnlyAssetCanDeposit();
     error E_OperationDisabled();
+
+    function isHookTarget() external pure override returns (bytes4) {
+        return this.isHookTarget.selector;
+    }
 
     // deposit is only allowed for the asset
     function deposit(uint256, address) external view {

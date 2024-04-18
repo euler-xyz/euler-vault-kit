@@ -45,14 +45,14 @@ contract Governance_PauseOps is EVaultTestBase {
     function testFuzz_setHookConfigShouldFailIfNotGovernor(uint32 newDisabledOps) public {
         vm.prank(notGovernor);
         vm.expectRevert(Errors.E_Unauthorized.selector);
-        setDisabledOps(eTST, newDisabledOps);
+        eTST.setHookConfig(address(0), newDisabledOps);
     }
 
     // // disabled ops should fail if governor is not set
     function testFuzz_setHookConfigShouldFailIfGovernorNotSet(uint32 newDisabledOps) public {
         eTST.setGovernorAdmin(address(0));
         vm.expectRevert(Errors.E_Unauthorized.selector);
-        setDisabledOps(eTST, newDisabledOps);
+        eTST.setHookConfig(address(0), newDisabledOps);
     }
 
     function testFuzz_onlyGovernorShouldBeAbleToSetGovernor(address newGovernor) public {
@@ -61,8 +61,7 @@ contract Governance_PauseOps is EVaultTestBase {
     }
 
     function testFuzz_onlyGovernorShouldBeAbleToSetDisabledOps(uint32 newDisabledOps) public {
-        // eTST.setHookConfig(address(0), newDisabledOps);
-        setDisabledOps(eTST, newDisabledOps);
+        eTST.setHookConfig(address(0), newDisabledOps);
         (, uint32 disabledOps) = eTST.hookConfig();
         assertEq(disabledOps, newDisabledOps);
     }
@@ -71,12 +70,12 @@ contract Governance_PauseOps is EVaultTestBase {
         amount = bound(amount, 1, MINT_AMOUNT);
         vm.assume(receiver != address(0));
 
-        setDisabledOps(eTST, OP_DEPOSIT);
+        eTST.setHookConfig(address(0), OP_DEPOSIT);
         vm.expectRevert(Errors.E_OperationDisabled.selector);
         eTST.deposit(amount, receiver);
 
         // re-enable
-        setDisabledOps(eTST, 0);
+        eTST.setHookConfig(address(0), 0);
         vm.prank(depositor);
         eTST.deposit(amount, receiver);
     }
@@ -85,12 +84,12 @@ contract Governance_PauseOps is EVaultTestBase {
         amount = bound(amount, 1, MINT_AMOUNT);
         vm.assume(receiver != address(0));
 
-        setDisabledOps(eTST, OP_MINT);
+        eTST.setHookConfig(address(0), OP_MINT);
         vm.expectRevert(Errors.E_OperationDisabled.selector);
         eTST.mint(amount, receiver);
 
         // re-enable
-        setDisabledOps(eTST, 0);
+        eTST.setHookConfig(address(0), 0);
         vm.prank(depositor);
         eTST.mint(amount, receiver);
     }
@@ -101,12 +100,12 @@ contract Governance_PauseOps is EVaultTestBase {
         amount = bound(amount, 1, MINT_AMOUNT);
         vm.assume(receiver != address(0));
 
-        setDisabledOps(eTST, OP_WITHDRAW);
+        eTST.setHookConfig(address(0), OP_WITHDRAW);
         vm.expectRevert(Errors.E_OperationDisabled.selector);
         eTST.withdraw(amount, receiver, owner);
 
         // re-enable
-        setDisabledOps(eTST, 0);
+        eTST.setHookConfig(address(0), 0);
         vm.prank(depositor);
         eTST.withdraw(amount, receiver, depositor); // depositor should be able to withdraw
     }
@@ -114,51 +113,51 @@ contract Governance_PauseOps is EVaultTestBase {
     function testFuzz_disablingRedeemOpsShouldFailAfterDisabled(uint256 amount, address receiver, address owner)
         public
     {
-        setDisabledOps(eTST, OP_REDEEM);
+        eTST.setHookConfig(address(0), OP_REDEEM);
         vm.assume(receiver != address(this));
         vm.expectRevert(Errors.E_OperationDisabled.selector);
         eTST.redeem(amount, receiver, owner);
 
         // re-enable
-        setDisabledOps(eTST, 0);
+        eTST.setHookConfig(address(0), 0);
         vm.prank(depositor);
         // type(uint256).max redeems all of the shares
         eTST.redeem(type(uint256).max, depositor, depositor); // depositor should be able to redeem
     }
 
     function testFuzz_disablingTransferOpsShouldFailAfterDisabled(address to, uint256 amount) public {
-        setDisabledOps(eTST, OP_TRANSFER);
+        eTST.setHookConfig(address(0), OP_TRANSFER);
         vm.assume(to != address(this));
         vm.expectRevert(Errors.E_OperationDisabled.selector);
         eTST.transfer(to, amount);
 
         // re-enable
-        setDisabledOps(eTST, 0);
+        eTST.setHookConfig(address(0), 0);
         uint256 balance = eTST.balanceOf(depositor);
         vm.prank(depositor);
         eTST.transfer(to, balance);
     }
 
     function testFuzz_skimmingDisabledOpsShouldFailAfterDisabled(uint256 amount, address receiver) public {
-        setDisabledOps(eTST, OP_SKIM);
+        eTST.setHookConfig(address(0), OP_SKIM);
         vm.expectRevert(Errors.E_OperationDisabled.selector);
         eTST.skim(amount, receiver);
 
         // re-enable
-        setDisabledOps(eTST, 0);
+        eTST.setHookConfig(address(0), 0);
         vm.prank(depositor);
         // type(uint256).max skims all of the shares
         eTST.skim(type(uint256).max, receiver);
     }
 
     function testFuzz_borrowingDisabledOpsShouldFailAfterDisabled(uint256 amount, address receiver) public {
-        setDisabledOps(eTST, OP_BORROW);
+        eTST.setHookConfig(address(0), OP_BORROW);
         evc.enableController(address(this), address(eTST));
         vm.expectRevert(Errors.E_OperationDisabled.selector);
         eTST.borrow(amount, receiver);
 
         // re-enable
-        setDisabledOps(eTST, 0);
+        eTST.setHookConfig(address(0), 0);
         vm.startPrank(depositor);
         evc.enableController(depositor, address(eTST));
         vm.assume(receiver != address(0));
@@ -167,24 +166,24 @@ contract Governance_PauseOps is EVaultTestBase {
     }
 
     function testFuzz_repayingDisabledOpsShouldFailAfterDisabled(uint256 amount, address receiver) public {
-        setDisabledOps(eTST, OP_REPAY);
+        eTST.setHookConfig(address(0), OP_REPAY);
         vm.expectRevert(Errors.E_OperationDisabled.selector);
         eTST.repay(amount, receiver);
 
         // re-enable
-        setDisabledOps(eTST, 0);
+        eTST.setHookConfig(address(0), 0);
         vm.prank(borrower);
         eTST.repay(type(uint256).max, receiver);
     }
 
     function testFuzz_loopingDisabledOpsShouldFailAfterDisabled(uint256 amount, address sharesReceiver) public {
-        setDisabledOps(eTST, OP_LOOP);
+        eTST.setHookConfig(address(0), OP_LOOP);
         evc.enableController(address(this), address(eTST));
         vm.expectRevert(Errors.E_OperationDisabled.selector);
         eTST.loop(amount, sharesReceiver);
 
         // re-enable
-        setDisabledOps(eTST, 0);
+        eTST.setHookConfig(address(0), 0);
         vm.startPrank(depositor);
         evc.enableController(depositor, address(eTST));
         vm.assume(sharesReceiver != address(0));
@@ -193,36 +192,36 @@ contract Governance_PauseOps is EVaultTestBase {
     }
 
     function testFuzz_deloopingDisabledOpsShouldFailAfterDisabled(uint256 amount, address debtFrom) public {
-        setDisabledOps(eTST, OP_DELOOP);
+        eTST.setHookConfig(address(0), OP_DELOOP);
         vm.expectRevert(Errors.E_OperationDisabled.selector);
         eTST.deloop(amount, debtFrom);
 
         // re-enable
-        setDisabledOps(eTST, 0);
+        eTST.setHookConfig(address(0), 0);
         vm.prank(borrower);
         eTST.deloop(amount, borrower);
     }
 
     function testFuzz_pullingDebtDisabledOpsShouldFailAfterDisabled(uint256 amount, address from) public {
-        setDisabledOps(eTST, OP_PULL_DEBT);
+        eTST.setHookConfig(address(0), OP_PULL_DEBT);
         evc.enableController(address(this), address(eTST));
         vm.expectRevert(Errors.E_OperationDisabled.selector);
         eTST.pullDebt(amount, from);
 
         // re-enable
-        setDisabledOps(eTST, 0);
+        eTST.setHookConfig(address(0), 0);
         vm.startPrank(depositor);
         evc.enableController(depositor, address(eTST));
         eTST.pullDebt(type(uint256).max, borrower);
     }
 
     function testFuzz_convertingFeesDisabledOpsShouldFailAfterDisabled() public {
-        setDisabledOps(eTST, OP_CONVERT_FEES);
+        eTST.setHookConfig(address(0), OP_CONVERT_FEES);
         vm.expectRevert(Errors.E_OperationDisabled.selector);
         eTST.convertFees();
 
         // re-enable
-        setDisabledOps(eTST, 0);
+        eTST.setHookConfig(address(0), 0);
         eTST.convertFees();
     }
 
@@ -232,30 +231,34 @@ contract Governance_PauseOps is EVaultTestBase {
         uint256 repayAssets,
         uint256 minYieldBalance
     ) public {
-        setDisabledOps(eTST, OP_LIQUIDATE);
+        eTST.setHookConfig(address(0), OP_LIQUIDATE);
         evc.enableController(address(this), address(eTST));
         vm.expectRevert(Errors.E_OperationDisabled.selector);
         eTST.liquidate(violator, collateral, repayAssets, minYieldBalance);
 
         // re-enable
-        setDisabledOps(eTST, 0);
+        eTST.setHookConfig(address(0), 0);
         liquidateSetup(address(this));
     }
 
     function testFuzz_flashLoanDisabledOpsShouldFailAfterDisabled(uint256 amount, bytes calldata data) public {
-        setDisabledOps(eTST, OP_FLASHLOAN);
+        eTST.setHookConfig(address(0), OP_FLASHLOAN);
         vm.expectRevert(Errors.E_OperationDisabled.selector);
         eTST.flashLoan(amount, data);
 
         amount = bound(amount, 1, MINT_AMOUNT);
         // re-enable
-        setDisabledOps(eTST, 0);
+        eTST.setHookConfig(address(0), 0);
         eTST.flashLoan(amount, abi.encode(amount, address(assetTST)));
     }
 
     function testFuzz_touchDisabledOpsShouldFailAfterDisabled() public {
-        setDisabledOps(eTST, OP_TOUCH);
+        eTST.setHookConfig(address(0), OP_TOUCH);
         vm.expectRevert(Errors.E_OperationDisabled.selector);
+        eTST.touch();
+
+        // re-enable
+        eTST.setHookConfig(address(0), 0);
         eTST.touch();
     }
 
@@ -319,10 +322,6 @@ contract Governance_PauseOps is EVaultTestBase {
     }
 
     // helpers
-    function setDisabledOps(IEVault vault, uint32 ops) internal {
-        vault.setHookConfig(address(0), ops);
-    }
-
     // handles the on flashloan receiving and transfers back the funds so the fl can pass
     function onFlashLoan(bytes calldata data) external {
         // decode data as amount and address
