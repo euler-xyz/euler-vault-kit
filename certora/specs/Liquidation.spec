@@ -144,6 +144,7 @@ rule calculateLiquidation_setViolator {
     assert violator != liquidator;
 }
 
+// formerly passing but broke. must fix
 rule liquidate_mustRevert {
     env e;
     address violator;
