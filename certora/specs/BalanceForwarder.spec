@@ -12,29 +12,26 @@ balance tracker for the authenticated account. The balance tracker
 hook should be invoked with 0 as the balance of the account.
 */
 
-using EthereumVaultConnector as evc;
+import "Base.spec";
+// using EthereumVaultConnector as evc;
 
-methods {
-    // function _.isBalanceForwarderEnabled(BalanceForwarder.UserStorage storage self) internal => CVLIsBalanceForwarderEnabled(self.data) expect (bool);
-}
-
-function actualCaller(env e) returns address {
-    if(e.msg.sender == evc) {
-        address onBehalf;
-        bool unused;
-        onBehalf, unused = evc.getCurrentOnBehalfOfAccount(e, 0);
-        return onBehalf;
-    } else {
-        return e.msg.sender;
-    }
-}
+// function actualCaller(env e) returns address {
+//     if(e.msg.sender == evc) {
+//         address onBehalf;
+//         bool unused;
+//         onBehalf, unused = evc.getCurrentOnBehalfOfAccount(e, 0);
+//         return onBehalf;
+//     } else {
+//         return e.msg.sender;
+//     }
+// }
 
 
 // NOTE: Unused currently
-ghost mapping(uint256 => bool) ghost_balanceForwarderFlag;
-function CVLIsBalanceForwarderEnabled(uint256 userStorage_data) returns bool {
-   return ghost_balanceForwarderFlag[userStorage_data];
-}
+// ghost mapping(uint256 => bool) ghost_balanceForwarderFlag;
+// function CVLIsBalanceForwarderEnabled(uint256 userStorage_data) returns bool {
+//    return ghost_balanceForwarderFlag[userStorage_data];
+// }
 
 rule enableBalanceForwarder {
     address account;
