@@ -31,7 +31,6 @@ contract VaultHarness is Vault {
         return isOperationDisabledExt(OP_SKIM);
     }
 
-
     function getBalanceAndForwarderExt(address account) public returns (Shares, bool) {
         return vaultStorage.users[account].getBalanceAndBalanceForwarder();
     }
