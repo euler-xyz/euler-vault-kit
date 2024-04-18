@@ -100,7 +100,7 @@ abstract contract LiquidityUtils is BorrowUtils, LTVUtils {
         virtual
         returns (uint256 value)
     {
-        ConfigAmount ltv = getLTV(collateral, liquidation ? LTVType.LIQUIDATION : LTVType.BORROWING);
+        ConfigAmount ltv = getLTV(collateral, liquidation);
         if (ltv.isZero()) return 0;
 
         uint256 balance = IERC20(collateral).balanceOf(account);

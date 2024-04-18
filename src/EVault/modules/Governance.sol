@@ -86,12 +86,12 @@ abstract contract GovernanceModule is IGovernance, Base, BalanceUtils, BorrowUti
 
     /// @inheritdoc IGovernance
     function borrowingLTV(address collateral) public view virtual reentrantOK returns (uint16) {
-        return getLTV(collateral, LTVType.BORROWING).toUint16();
+        return getLTV(collateral, false).toUint16();
     }
 
     /// @inheritdoc IGovernance
     function liquidationLTV(address collateral) public view virtual reentrantOK returns (uint16) {
-        return getLTV(collateral, LTVType.LIQUIDATION).toUint16();
+        return getLTV(collateral, true).toUint16();
     }
 
     /// @inheritdoc IGovernance
@@ -205,7 +205,7 @@ abstract contract GovernanceModule is IGovernance, Base, BalanceUtils, BorrowUti
         LTVConfig memory origLTV = vaultStorage.ltvLookup[collateral];
 
         // If new LTV is higher than the previous, or the same, it should take effect immediately
-        if (newLTVAmount >= origLTV.getLTV(LTVType.LIQUIDATION) && rampDuration > 0) revert E_LTVRamp();
+        if (newLTVAmount >= origLTV.getLTV(true) && rampDuration > 0) revert E_LTVRamp();
 
         LTVConfig memory newLTV = origLTV.setLTV(newLTVAmount, rampDuration);
 
@@ -224,7 +224,7 @@ abstract contract GovernanceModule is IGovernance, Base, BalanceUtils, BorrowUti
 
     /// @inheritdoc IGovernance
     function clearLTV(address collateral) public virtual nonReentrant governorOnly {
-        uint16 originalLTV = getLTV(collateral, LTVType.LIQUIDATION).toUint16();
+        uint16 originalLTV = getLTV(collateral, true).toUint16();
         vaultStorage.ltvLookup[collateral].clear();
 
         emit GovSetLTV(collateral, 0, 0, 0, originalLTV);

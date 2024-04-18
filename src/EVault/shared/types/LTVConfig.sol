@@ -4,12 +4,6 @@ pragma solidity ^0.8.0;
 
 import {ConfigAmount} from "./Types.sol";
 
-/// @title LTVType
-/// @notice Enum of LTV types
-enum LTVType {
-    BORROWING,
-    LIQUIDATION
-}
 
 /// @title LTVConfig
 /// @notice This packed struct is used to store LTV configuration of a collateral
@@ -37,9 +31,9 @@ library LTVConfigLib {
     }
 
     // Get current LTV of a collateral. When liquidation LTV is lowered, it is ramped down to target value over a period of time.
-    function getLTV(LTVConfig memory self, LTVType ltvType) internal view returns (ConfigAmount) {
+    function getLTV(LTVConfig memory self, bool liquidation) internal view returns (ConfigAmount) {
         if (
-            ltvType == LTVType.BORROWING || block.timestamp >= self.targetTimestamp
+            !liquidation || block.timestamp >= self.targetTimestamp
                 || self.targetLTV >= self.originalLTV
         ) {
             return self.targetLTV;
@@ -66,7 +60,7 @@ library LTVConfigLib {
         newLTV.targetTimestamp = uint48(block.timestamp + rampDuration);
         newLTV.targetLTV = targetLTV;
         newLTV.rampDuration = rampDuration;
-        newLTV.originalLTV = self.getLTV(LTVType.LIQUIDATION);
+        newLTV.originalLTV = self.getLTV(true);
         newLTV.initialized = true;
     }
 
