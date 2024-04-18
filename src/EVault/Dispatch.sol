@@ -160,6 +160,3 @@ abstract contract Dispatch is
         }
     }
 }
-            // mstore(add(164, mainCalldataLength), 0) // add zero padding for bytes abi encoding
-            // let bytesPaddingLength := sub(32, mod(mainCalldataLength, 32)) 
-            // let result := call(gas(), _evc, callvalue(), 0, add(164, add(mainCalldataLength, bytesPaddingLength)), 0, 0)
