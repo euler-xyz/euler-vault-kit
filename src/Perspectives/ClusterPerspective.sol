@@ -15,10 +15,11 @@ contract EscrowPerspective is BasePerspective {
     address[] public recognizedCollateralPerspectives;
 
     constructor(
+        address evc_,
         address vaultFactory_,
         address[] memory recognizedCollateralPerspectives_,
         bool thisPerspectiveRecognized_
-    ) BasePerspective(vaultFactory_) {
+    ) BasePerspective(evc_, vaultFactory_) {
         // TODO currently when checking if collaterals are recognized, we first check if the collateral is
         // recognized by the cluster perspective and only then check the recognized collateral perspectives.
         // it might be good to optimize this by checking the escrow perspective first (most likely scenario)
@@ -31,54 +32,64 @@ contract EscrowPerspective is BasePerspective {
 
     function perspectiveVerifyInternal(address vault) internal override {
         // the vault must be deployed by recognized factory
-        if (!vaultFactory.isProxy(vault)) revertWithReason(vault, ERROR__NOT_FROM_FACTORY);
+        testProperty(vaultFactory.isProxy(vault), ERROR__NOT_FROM_FACTORY);
 
         // verify vault configuration at the factory level
         GenericFactory.ProxyConfig memory config = vaultFactory.getProxyConfig(vault);
-        (address asset, address oracle, address unitOfAccount) =
-            abi.decode(config.trailingData, (address, address, address));
+
+        address asset = IEVault(vault).asset();
+        address oracle = IEVault(vault).oracle();
+        address unitOfAccount = IEVault(vault).unitOfAccount();
+        testProperty(
+            keccak256(config.trailingData) == keccak256(abi.encodePacked(asset, oracle, unitOfAccount)),
+            ERROR__TRAILING_DATA
+        );
 
         // cluster vaults must not be upgradeable
-        if (config.upgradeable) revertWithReason(vault, ERROR__UPGRADABILITY);
+        testProperty(!config.upgradeable, ERROR__UPGRADABILITY);
 
         // TODO cluster vaults must have oracle and unit of account recognized
-        if (oracle != address(0)) revertWithReason(vault, ERROR__ORACLE);
-        if (unitOfAccount != address(0)) revertWithReason(vault, ERROR__UNIT_OF_ACCOUNT);
+        testProperty(oracle == address(0), ERROR__ORACLE);
+        testProperty(unitOfAccount == address(0), ERROR__UNIT_OF_ACCOUNT);
 
         // verify vault configuration at the governance level
-        // TODO cluster vaults must have collaterals set up
-        address[] memory ltvList = IEVault(vault).LTVList();
-        if (ltvList.length == 0 || ltvList.length > 10) revertWithReason(vault, ERROR__LTV_LENGTH);
-
         // cluster vaults must not have a governor admin
-        if (IEVault(vault).governorAdmin() != address(0)) revertWithReason(vault, ERROR__GOVERNOR);
+        testProperty(IEVault(vault).governorAdmin() == address(0), ERROR__GOVERNOR);
 
         // TODO cluster vaults must have a recognized interest rate model
-        if (IEVault(vault).interestRateModel() != address(0)) revertWithReason(vault, ERROR__INTEREST_RATE_MODEL);
+        testProperty(IEVault(vault).interestRateModel() == address(0), ERROR__INTEREST_RATE_MODEL);
 
-        // cluster vaults must not have supply or borrow caps
-        (uint32 supplyCap, uint32 borrowCap) = IEVault(vault).caps();
-        if (supplyCap != 0) revertWithReason(vault, ERROR__SUPPLY_CAP);
-        if (borrowCap != 0) revertWithReason(vault, ERROR__BORROW_CAP);
+        {
+            // cluster vaults must not have supply or borrow caps
+            (uint32 supplyCap, uint32 borrowCap) = IEVault(vault).caps();
+            testProperty(supplyCap == 0, ERROR__SUPPLY_CAP);
+            testProperty(borrowCap == 0, ERROR__BORROW_CAP);
 
-        // cluster vaults must not have a hook target nor any operations disabled
-        (address hookTarget, uint32 hookedOps) = IEVault(vault).hookConfig();
-        if (hookTarget != address(0)) revertWithReason(vault, ERROR__HOOK_TARGET);
-        if (hookedOps != 0) revertWithReason(vault, ERROR__HOOKED_OPS);
+            // cluster vaults must not have a hook target nor any operations disabled
+            (address hookTarget, uint32 hookedOps) = IEVault(vault).hookConfig();
+            testProperty(hookTarget == address(0), ERROR__HOOK_TARGET);
+            testProperty(hookedOps == 0, ERROR__HOOKED_OPS);
+        }
 
         // cluster vaults must not have any config flags set
-        if (IEVault(vault).configFlags() != 0) revertWithReason(vault, ERROR__CONFIG_FLAGS);
+        testProperty(IEVault(vault).configFlags() == 0, ERROR__CONFIG_FLAGS);
 
         // TODO cluster vaults must have a specific name and symbol
-        //if (
-        //    keccak256(abi.encode(IEVault(vault).name()))
-        //        != keccak256(abi.encode(string.concat("Cluster vault: ", _getTokenName(asset))))
-        //) revertWithReason(vault, ERROR__NAME);
+        testProperty(
+            keccak256(abi.encode(IEVault(vault).name()))
+                == keccak256(abi.encode(string.concat("Escrow vault: ", getTokenName(asset)))),
+            ERROR__NAME
+        );
 
-        //if (
-        //    keccak256(abi.encode(IEVault(vault).symbol()))
-        //        != keccak256(abi.encode(string.concat("e", _getTokenSymbol(asset))))
-        //) revertWithReason(vault, ERROR__SYMBOL);
+        testProperty(
+            keccak256(abi.encode(IEVault(vault).symbol()))
+                == keccak256(abi.encode(string.concat("e", getTokenSymbol(asset)))),
+            ERROR__SYMBOL
+        );
+
+        // TODO cluster vaults must have collaterals set up
+        address[] memory ltvList = IEVault(vault).LTVList();
+        testProperty(ltvList.length > 0 && ltvList.length <= 10, ERROR__LTV_LENGTH);
 
         // cluster vaults must have recognized collaterals with LTV set in range
         for (uint256 i = 0; i < ltvList.length; ++i) {
@@ -87,7 +98,8 @@ contract EscrowPerspective is BasePerspective {
             // TODO cluster vaults collaterals must have the LTV set in range
             uint16 borrowingLTV = IEVault(vault).borrowingLTV(collateral);
             uint16 liquidationLTV = IEVault(vault).liquidationLTV(collateral);
-            if (borrowingLTV > 0 || liquidationLTV > 0) revertWithReason(collateral, ERROR__LTV_CONFIG);
+            testProperty(borrowingLTV == 0, ERROR__LTV_BORROW_CONFIG);
+            testProperty(liquidationLTV == 0, ERROR__LTV_LIQUIDATION_CONFIG);
 
             // iterate over recognized collateral perspectives to check if the collateral is recognized
             bool recognized = false;
@@ -101,7 +113,7 @@ contract EscrowPerspective is BasePerspective {
                 if (recognized) break;
             }
 
-            if (!recognized) revertWithReason(collateral, ERROR__LTV_VAULT_NOT_RECOGNIZED);
+            testProperty(recognized, ERROR__LTV_COLLATERAL_NOT_RECOGNIZED);
         }
     }
 }
