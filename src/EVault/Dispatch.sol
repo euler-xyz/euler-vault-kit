@@ -128,6 +128,8 @@ abstract contract Dispatch is
         }
     }
 
+    uint256 private constant ROUND_UP_MASK = 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffe0; // -32
+
     // Modifier ensures, that the body of the function is always executed from the EVC call.
     // It is accomplished by intercepting calls incoming directly to the vault and passing them
     // to the EVC.call function. EVC calls the vault back with original calldata. As a result, the account
@@ -148,10 +150,10 @@ abstract contract Dispatch is
             calldatacopy(164, 0, mainCalldataLength) // original calldata
 
             // abi encoded bytes array should be zero padded so its length is a multiple of 32
-            // store zero word after msg.data bytes and copy 32 - mainCalldataLength % 32 padding from it to the EVC call
-            let ptr := add(164, mainCalldataLength)
-            mstore(ptr, 0)
-            let result := call(gas(), _evc, callvalue(), 0, add(ptr, sub(32, mod(mainCalldataLength, 32))), 0, 0)
+            // store zero word after msg.data bytes and round up mainCalldataLength to nearest multiple of 32
+            mstore(add(164, mainCalldataLength), 0)
+            let result :=
+                call(gas(), _evc, callvalue(), 0, add(164, and(add(mainCalldataLength, 31), ROUND_UP_MASK)), 0, 0)
 
             returndatacopy(0, 0, returndatasize())
             switch result
