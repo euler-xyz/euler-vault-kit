@@ -6,6 +6,9 @@ methods {
     function getCollateralsExt(address account) external returns (address[] memory) envfree;
     function getLTVConfig(address collateral) external returns (BaseHarness.LTVConfig memory) envfree;
 
+    // Inline assembly here gives the tool problems
+	function _.calculateDTokenAddress() internal => NONDET;
+
     // IPriceOracle
     function _.getQuote(uint256 amount, address base, address quote) external => CVLGetQuote(amount, base, quote) expect (uint256);
     function _.getQuotes(uint256 amount, address base, address quote) external => CVLGetQuotes(amount, base, quote) expect (uint256, uint256);
@@ -56,4 +59,15 @@ function LTVConfigAssumptions(env e, BaseHarness.LTVConfig ltvConfig) returns bo
         originalLTVLessOne &&
         target_less_original && 
         require_uint32(timeRemaining) < ltvConfig.rampDuration;
+}
+
+function actualCaller(env e) returns address {
+    if(e.msg.sender == evc) {
+        address onBehalf;
+        bool unused;
+        onBehalf, unused = evc.getCurrentOnBehalfOfAccount(e, 0);
+        return onBehalf;
+    } else {
+        return e.msg.sender;
+    }
 }

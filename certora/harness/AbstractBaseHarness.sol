@@ -5,10 +5,12 @@ pragma solidity ^0.8.0;
 import {IEVC} from "ethereum-vault-connector/interfaces/IEthereumVaultConnector.sol";
 import "../../src/EVault/shared/Base.sol";
 
-// This mainly exists so that Base.LTVConfig and other type declarations 
+// This exists so that Base.LTVConfig and other type declarations 
 // are available in CVL and can be used across specs for different modules.
-// It also exports some functions common across the modules.
-
+// We need to split this into a concrete contract and an Abstract contract
+// so that we can refer to Base.LTVConfig as a type in shared CVL functions
+// while also making function definitions sharable among harnesses via
+// AbstractBase. AbstractBaseHarness includes the shared function definitions.
 abstract contract AbstractBaseHarness is Base {
     function getCollateralsExt(address account) public view returns (address[] memory) {
         return getCollaterals(account);
@@ -30,4 +32,39 @@ abstract contract AbstractBaseHarness is Base {
     function vaultIsController(address account) external view returns (bool) {
         return IEVC(evc).isControllerEnabled(account, address(this));
     }
+    
+    function getBalanceAndForwarderExt(address account) public returns (Shares, bool) {
+        return vaultStorage.users[account].getBalanceAndBalanceForwarder();
+    }
+
+    //--------------------------------------------------------------------------
+    // Operation disable checks
+    //--------------------------------------------------------------------------
+    function isOperationDisabledExt(uint32 operation) public returns (bool) {
+        // This is based on the check in callHook.
+        VaultCache memory vaultCache = updateVault();
+        return vaultCache.hookedOps.isNotSet(operation);
+    }
+
+    function isDepositDisabled() public returns (bool) {
+        return isOperationDisabledExt(OP_DEPOSIT);
+    }
+
+    function isMintDisabled() public returns (bool) {
+        return isOperationDisabledExt(OP_MINT);
+    }
+
+    function isWithdrawDisabled() public returns (bool) {
+        return isOperationDisabledExt(OP_WITHDRAW);
+    }
+
+    function isRedeemDisabled() public returns (bool) {
+        return isOperationDisabledExt(OP_REDEEM);
+    }
+
+    function isSkimDisabled() public returns (bool) {
+        return isOperationDisabledExt(OP_SKIM);
+    }
+
+
 }

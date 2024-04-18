@@ -92,7 +92,6 @@ rule liquidations_equal_for_one {
 
     require oracleAddress != 0;
     require unitOfAccount != 0;
-    // require ltvs_configuration_assumption(e, account);
     
     address[] collaterals = getCollateralsExt(e, account);
     require collaterals.length == 1;
@@ -106,7 +105,7 @@ rule liquidations_equal_for_one {
 }
 
 
-// cex: https://prover.certora.com/output/40748/8c5b2eea4cc9452391b6739c357dbecd/?anonymousKey=a81b45f19e0a01b08f32ec2e7182479d7d5ab4ec
+// passing: https://prover.certora.com/output/65266/8b94c232c4b14e3aab917cd7e94d501c/?anonymousKey=27f680520b4d7cbb9f387563d3f1bb45de8fc9a7
 rule ltv_borrowing_lower {
     env e;
     calldataarg args;
