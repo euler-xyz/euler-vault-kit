@@ -97,7 +97,7 @@ contract ERC20Test_Actions is EVaultTestBase {
         eTST.transfer(alice, amount);
     }
 
-    function test_Transfer_ReentrancyThroughBalanceTrackerIsIgnored() public {
+    function test_Transfer_ReentrancyThroughBalanceTrackerIsNotIgnored() public {
         _mintAndDeposit(alice, 1 ether);
 
         vm.prank(alice);
@@ -109,8 +109,9 @@ contract ERC20Test_Actions is EVaultTestBase {
 
         assertEq(eTST.balanceOf(bob), 0);
         vm.prank(alice);
+        vm.expectRevert(Errors.E_Reentrancy.selector);
         eTST.transfer(bob, 0.5 ether);
-        assertEq(eTST.balanceOf(bob), 0.5 ether);
+        assertEq(eTST.balanceOf(bob), 0);
     }
 
     function test_TransferFrom_Integrity(uint256 balance, uint256 allowance, uint256 amount) public {
