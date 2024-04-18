@@ -28,7 +28,7 @@ abstract contract BalanceUtils is Base {
         vaultStorage.totalShares = vaultCache.totalShares = vaultCache.totalShares + amount;
 
         if (balanceForwarderEnabled) {
-            tryBalanceTrackerHook(account, newBalance.toUint(), false);
+            balanceTracker.balanceTrackerHook(account, newBalance.toUint(), false);
         }
 
         emit Transfer(address(0), account, amount.toUint());
@@ -55,7 +55,7 @@ abstract contract BalanceUtils is Base {
         vaultStorage.totalShares = vaultCache.totalShares = vaultCache.totalShares - amount;
 
         if (balanceForwarderEnabled) {
-            tryBalanceTrackerHook(account, newBalance.toUint(), isControlCollateralInProgress());
+            balanceTracker.balanceTrackerHook(account, newBalance.toUint(), isControlCollateralInProgress());
         }
 
         emit Transfer(account, address(0), amount.toUint());
@@ -82,11 +82,11 @@ abstract contract BalanceUtils is Base {
             vaultStorage.users[to].setBalance(newToBalance);
 
             if (fromBalanceForwarderEnabled) {
-                tryBalanceTrackerHook(from, newFromBalance.toUint(), isControlCollateralInProgress());
+                balanceTracker.balanceTrackerHook(from, newFromBalance.toUint(), isControlCollateralInProgress());
             }
 
             if (toBalanceForwarderEnabled) {
-                tryBalanceTrackerHook(to, newToBalance.toUint(), false);
+                balanceTracker.balanceTrackerHook(to, newToBalance.toUint(), false);
             }
         }
 
@@ -114,14 +114,5 @@ abstract contract BalanceUtils is Base {
             vaultStorage.users[owner].eTokenAllowance[spender] = allowance;
             emit Approval(owner, spender, allowance);
         }
-    }
-
-    function tryBalanceTrackerHook(address account, uint256 newAccountBalance, bool forfeitRecentReward)
-        private
-        returns (bool success)
-    {
-        (success,) = address(balanceTracker).call(
-            abi.encodeCall(IBalanceTracker.balanceTrackerHook, (account, newAccountBalance, forfeitRecentReward))
-        );
     }
 }
