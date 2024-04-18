@@ -4,6 +4,7 @@ pragma solidity ^0.8.0;
 
 import {IGovernance} from "../IEVault.sol";
 import {IPriceOracle} from "../../interfaces/IPriceOracle.sol";
+import {IHookTarget} from "../../interfaces/IHookTarget.sol";
 import {Base} from "../shared/Base.sol";
 import {BalanceUtils} from "../shared/BalanceUtils.sol";
 import {LTVUtils} from "../shared/LTVUtils.sol";
@@ -245,6 +246,11 @@ abstract contract GovernanceModule is IGovernance, Base, BalanceUtils, BorrowUti
 
     /// @inheritdoc IGovernance
     function setHookConfig(address newHookTarget, uint32 newHookedOps) public virtual nonReentrant governorOnly {
+        if (
+            newHookTarget != address(0)
+                && IHookTarget(newHookTarget).isHookTarget() != IHookTarget.isHookTarget.selector
+        ) revert E_NotHookTarget();
+
         vaultStorage.hookTarget = newHookTarget;
         vaultStorage.hookedOps = Flags.wrap(newHookedOps);
         emit GovSetHookConfig(newHookTarget, newHookedOps);
