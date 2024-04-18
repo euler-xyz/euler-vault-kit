@@ -151,7 +151,7 @@ abstract contract Dispatch is
             // store zero word after msg.data bytes and copy 32 - mainCalldataLength % 32 padding from it to the EVC call
             let ptr := add(164, mainCalldataLength)
             mstore(ptr, 0)
-            let result := call(gas(), _evc, callvalue(), 0, add(ptr, sub(32, mod(mainCalldataLength, 32)) ), 0, 0)
+            let result := call(gas(), _evc, callvalue(), 0, add(ptr, sub(32, mod(mainCalldataLength, 32))), 0, 0)
 
             returndatacopy(0, 0, returndatasize())
             switch result
