@@ -4,7 +4,6 @@ pragma solidity ^0.8.0;
 
 import {ConfigAmount} from "./Types.sol";
 
-
 /// @title LTVConfig
 /// @notice This packed struct is used to store LTV configuration of a collateral
 struct LTVConfig {
@@ -32,10 +31,7 @@ library LTVConfigLib {
 
     // Get current LTV of a collateral. When liquidation LTV is lowered, it is ramped down to target value over a period of time.
     function getLTV(LTVConfig memory self, bool liquidation) internal view returns (ConfigAmount) {
-        if (
-            !liquidation || block.timestamp >= self.targetTimestamp
-                || self.targetLTV >= self.originalLTV
-        ) {
+        if (!liquidation || block.timestamp >= self.targetTimestamp || self.targetLTV >= self.originalLTV) {
             return self.targetLTV;
         }
 
