@@ -3,8 +3,12 @@ using EthereumVaultConnector as evc;
 
 methods {
     // envfree
-    function getCollateralsExt(address account) external returns (address[] memory) envfree;
     function getLTVConfig(address collateral) external returns (BaseHarness.LTVConfig memory) envfree;
+    function getCollateralsExt(address account) external returns (address[] memory) envfree;
+    function isCollateralEnabledExt(address account, address market) external returns (bool) envfree;
+    function vaultIsOnlyController(address account) external returns (bool) envfree;
+    function isAccountStatusCheckDeferredExt(address account) external returns (bool) envfree;
+    function vaultIsController(address account) external returns (bool) envfree;
 
     // Inline assembly here gives the tool problems
 	function _.calculateDTokenAddress() internal => NONDET;
