@@ -7,6 +7,7 @@ import {Events} from "src/EVault/shared/Events.sol";
 import {SafeERC20Lib} from "src/EVault/shared/lib/SafeERC20Lib.sol";
 import {IAllowanceTransfer} from "permit2/src/interfaces/IAllowanceTransfer.sol";
 import {IRMMax} from "../../../../mocks/IRMMax.sol";
+import "forge-std/Test.sol";
 
 import "src/EVault/shared/types/Types.sol";
 import "src/EVault/shared/Constants.sol";
@@ -297,7 +298,7 @@ contract VaultTest_Borrow is EVaultTestBase {
     }
 
     function test_ControllerRequiredOps(address controller, uint112 amount, address account) public {
-        vm.assume(controller.code.length == 0 && uint160(controller) > 256);
+        vm.assume(controller.code.length == 0 && uint160(controller) > 256 && controller != console2.CONSOLE_ADDRESS);
         vm.assume(account != address(0) && account != controller && account != address(evc));
         vm.assume(amount > 0);
 
