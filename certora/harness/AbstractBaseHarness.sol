@@ -12,9 +12,6 @@ import "../../src/EVault/shared/Base.sol";
 // while also making function definitions sharable among harnesses via
 // AbstractBase. AbstractBaseHarness includes the shared function definitions.
 abstract contract AbstractBaseHarness is Base {
-    function getCollateralsExt(address account) public view returns (address[] memory) {
-        return getCollaterals(account);
-    }
 
     function getLTVConfig(address collateral) external view returns (LTVConfig memory) {
         return vaultStorage.ltvLookup[collateral];
@@ -24,6 +21,18 @@ abstract contract AbstractBaseHarness is Base {
         return address(loadVault().oracle) != address(0);
     }
 
+    function isAccountStatusCheckDeferredExt(address account) external view returns (bool) {
+        return isAccountStatusCheckDeferred(account);
+    }
+    
+    function getBalanceAndForwarderExt(address account) public returns (Shares, bool) {
+        return vaultStorage.users[account].getBalanceAndBalanceForwarder();
+    }
+
+
+    //--------------------------------------------------------------------------
+    // Controllers
+    //--------------------------------------------------------------------------
     function vaultIsOnlyController(address account) external view returns (bool) {
         address[] memory controllers = IEVC(evc).getControllers(account);
         return controllers.length == 1 && controllers[0] == address(this);
@@ -32,10 +41,18 @@ abstract contract AbstractBaseHarness is Base {
     function vaultIsController(address account) external view returns (bool) {
         return IEVC(evc).isControllerEnabled(account, address(this));
     }
-    
-    function getBalanceAndForwarderExt(address account) public returns (Shares, bool) {
-        return vaultStorage.users[account].getBalanceAndBalanceForwarder();
+
+    //--------------------------------------------------------------------------
+    // Collaterals
+    //--------------------------------------------------------------------------
+    function getCollateralsExt(address account) public view returns (address[] memory) {
+        return getCollaterals(account);
     }
+
+    function isCollateralEnabledExt(address account, address market) external view returns (bool) {
+        return isCollateralEnabled(account, market);
+    }
+
 
     //--------------------------------------------------------------------------
     // Operation disable checks

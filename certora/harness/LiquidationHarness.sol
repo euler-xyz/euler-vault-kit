@@ -7,8 +7,9 @@ import {IEVC} from "ethereum-vault-connector/interfaces/IEthereumVaultConnector.
 import "../../src/interfaces/IPriceOracle.sol";
 import {IERC20} from "../../src/EVault/IEVault.sol";
 import {ERC20} from "../../lib/ethereum-vault-connector/lib/openzeppelin-contracts/contracts/token/ERC20/ERC20.sol";
+import "../../certora/harness/AbstractBaseHarness.sol";
 
-contract LiquidationHarness is Liquidation {
+contract LiquidationHarness is AbstractBaseHarness, Liquidation {
 
     constructor(Integrations memory integrations) Liquidation(integrations) {}
 
@@ -16,49 +17,6 @@ contract LiquidationHarness is Liquidation {
         address account
     ) public view returns (uint256 collateralValue, uint256 liabilityValue) {
         return calculateLiquidity(loadVault(), account, getCollaterals(account), LTVType.LIQUIDATION);
-    }
-
-    function getLiquidityValue(address account, VaultCache memory vaultCache, address[] memory collaterals) public view returns (uint256 collateralValue) {
-        (collateralValue, ) = calculateLiquidity(vaultCache, account, collaterals, LTVType.LIQUIDATION);
-    }
-    
-    function getLiabilityValue(address account, VaultCache memory vaultCache, address[] memory collaterals) public view returns (uint256 liabilityValue) {
-        (,liabilityValue) = calculateLiquidity(vaultCache, account, collaterals, LTVType.LIQUIDATION);
-    }
-
-    function loadVaultExt() public returns (VaultCache memory vaultCache) {
-        return loadVault();
-    }
-
-    function initOperationExternal(uint32 operation, address accountToCheck)
-        public 
-        returns (VaultCache memory vaultCache, address account)
-    {
-        return initOperation(operation, accountToCheck);
-    }
-
-    function getCollateralsExt(address account) public view returns (address[] memory) {
-        return getCollaterals(account);
-    }
-
-    function isRecognizedCollateralExt(address collateral) external view virtual returns (bool) {
-        return isRecognizedCollateral(collateral);
-    }
-
-    function isCollateralEnabledExt(address account, address market) external view returns (bool) {
-        return isCollateralEnabled(account, market);
-    }
-
-    function isAccountStatusCheckDeferredExt(address account) external view returns (bool) {
-        return isAccountStatusCheckDeferred(account);
-    }
-
-    function validateOracleExt(VaultCache memory vaultCache) external pure {
-        validateOracle(vaultCache);
-    }
-
-    function getLiquidator() external returns (address liquidator) {
-        (, liquidator) = initOperation(OP_LIQUIDATE, CHECKACCOUNT_CALLER);
     }
 
     function calculateLiquidationExt(
@@ -71,6 +29,14 @@ contract LiquidationHarness is Liquidation {
         return calculateLiquidation(vaultCache, liquidator, violator, collateral, desiredRepay);
     }
 
+    function isRecognizedCollateralExt(address collateral) external view virtual returns (bool) {
+        return isRecognizedCollateral(collateral);
+    }
+
+    function getLiquidator() external returns (address liquidator) {
+        (, liquidator) = initOperation(OP_LIQUIDATE, CHECKACCOUNT_CALLER);
+    }
+
     function getCurrentOwedExt(VaultCache memory vaultCache, address violator) external view returns (Assets) {
         return getCurrentOwed(vaultCache, violator).toAssetsUp();
     }
@@ -80,10 +46,6 @@ contract LiquidationHarness is Liquidation {
         view
         returns (uint256 value) {
             return getCollateralValue(vaultCache, account, collateral, ltvType);
-    }
-
-    function getLTVConfig(address collateral) external view returns (LTVConfig memory) {
-        return vaultStorage.ltvLookup[collateral];
     }
 
 }
