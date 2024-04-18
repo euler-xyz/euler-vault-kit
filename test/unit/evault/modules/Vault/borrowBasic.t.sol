@@ -234,11 +234,11 @@ contract VaultTest_BorrowBasic is EVaultTestBase {
         assertEq(MAX_SANE_AMOUNT.toAssets().toOwed().toUint(), MAX_SANE_DEBT_AMOUNT);
     }
 
-    function debtExact(uint256 value) internal returns (uint256) {
+    function debtExact(uint256 value) internal pure returns (uint256) {
         return value * (2 ** 31) / (10 ** 9);
     }
 
-    function getSubAccount(address primary, uint8 subAccountId) internal returns (address) {
+    function getSubAccount(address primary, uint8 subAccountId) internal pure returns (address) {
         require(subAccountId <= 256, "invalid subAccountId");
         return address(uint160(uint160(primary) ^ subAccountId));
     }
