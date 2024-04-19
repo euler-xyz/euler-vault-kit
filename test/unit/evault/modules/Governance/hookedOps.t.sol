@@ -99,8 +99,6 @@ contract Governance_HookedOps is EVaultTestBase {
     }
 
     function testFuzz_hookedDepositMintWithdrawRedeem(
-        address hookTarget1,
-        address hookTarget2,
         uint32 hookedOps,
         address sender,
         uint256 amount,
@@ -108,8 +106,6 @@ contract Governance_HookedOps is EVaultTestBase {
         bool deposit,
         bool withdraw
     ) public {
-        vm.assume(hookTarget1.code.length == 0 && !evc.haveCommonOwner(hookTarget1, address(0)));
-        vm.assume(hookTarget2.code.length == 0 && !evc.haveCommonOwner(hookTarget2, address(0)));
         vm.assume(hookedOps & OP_VAULT_STATUS_CHECK == 0);
         vm.assume(
             sender.code.length == 0 && receiver.code.length == 0 && !evc.haveCommonOwner(sender, address(0))
@@ -134,8 +130,7 @@ contract Governance_HookedOps is EVaultTestBase {
         deposit ? eTST.deposit(amount, receiver) : eTST.mint(amount, receiver);
 
         // deploy the hook target
-        address deployedHookTarget = address(new MockHookTarget());
-        vm.etch(hookTarget1, deployedHookTarget.code);
+        address hookTarget1 = address(new MockHookTarget());
 
         vm.startPrank(address(this));
         eTST.setHookConfig(
@@ -175,7 +170,7 @@ contract Governance_HookedOps is EVaultTestBase {
         // change the hook target
         vm.startPrank(address(this));
         (, uint32 ops) = eTST.hookConfig();
-        vm.etch(hookTarget2, deployedHookTarget.code);
+        address hookTarget2 = address(new MockHookTarget());
         eTST.setHookConfig(hookTarget2, ops);
 
         // the operation succeeds which proves that it's not affected if the hook target call succeeds
@@ -199,13 +194,9 @@ contract Governance_HookedOps is EVaultTestBase {
         else assertEq(eTST.maxRedeem(sender), eTST.balanceOf(sender));
     }
 
-    function testFuzz_vaultStatusCheckHook(address hookTarget, address sender, uint256 amount, address receiver)
+    function testFuzz_vaultStatusCheckHook(address sender, uint256 amount, address receiver)
         public
     {
-        vm.assume(
-            hookTarget.code.length == 0 && !evc.haveCommonOwner(hookTarget, address(0))
-                && hookTarget != 0x000000000000000000636F6e736F6c652e6c6f67
-        );
         vm.assume(
             sender.code.length == 0 && receiver.code.length == 0 && !evc.haveCommonOwner(sender, address(0))
                 && !evc.haveCommonOwner(receiver, address(0)) && !evc.haveCommonOwner(sender, receiver)
@@ -228,8 +219,7 @@ contract Governance_HookedOps is EVaultTestBase {
         eTST.touch();
 
         // deploy the hook target
-        address deployedHookTarget = address(new MockHookTarget());
-        vm.etch(hookTarget, deployedHookTarget.code);
+        address hookTarget = address(new MockHookTarget());
 
         vm.startPrank(address(this));
         eTST.setHookConfig(hookTarget, OP_VAULT_STATUS_CHECK);
@@ -252,19 +242,16 @@ contract Governance_HookedOps is EVaultTestBase {
     }
 
     function testFuzz_hookedAllOps(
-        address hookTarget,
         uint32 hookedOps,
         address sender,
         address address1,
         address address2,
         uint256 amount
     ) public {
-        vm.assume(hookTarget.code.length == 0 && !evc.haveCommonOwner(hookTarget, address(0)));
         vm.assume(sender.code.length == 0 && !evc.haveCommonOwner(sender, address(0)));
 
         // deploy the hook target
-        address deployedHookTarget = address(new MockHookTarget());
-        vm.etch(hookTarget, deployedHookTarget.code);
+        address hookTarget = address(new MockHookTarget());
 
         // set the hooked ops
         eTST.setHookConfig(hookTarget, hookedOps);
