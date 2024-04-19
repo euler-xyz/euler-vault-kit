@@ -194,9 +194,7 @@ contract Governance_HookedOps is EVaultTestBase {
         else assertEq(eTST.maxRedeem(sender), eTST.balanceOf(sender));
     }
 
-    function testFuzz_vaultStatusCheckHook(address sender, uint256 amount, address receiver)
-        public
-    {
+    function testFuzz_vaultStatusCheckHook(address sender, uint256 amount, address receiver) public {
         vm.assume(
             sender.code.length == 0 && receiver.code.length == 0 && !evc.haveCommonOwner(sender, address(0))
                 && !evc.haveCommonOwner(receiver, address(0)) && !evc.haveCommonOwner(sender, receiver)
@@ -241,13 +239,9 @@ contract Governance_HookedOps is EVaultTestBase {
         eTST.touch();
     }
 
-    function testFuzz_hookedAllOps(
-        uint32 hookedOps,
-        address sender,
-        address address1,
-        address address2,
-        uint256 amount
-    ) public {
+    function testFuzz_hookedAllOps(uint32 hookedOps, address sender, address address1, address address2, uint256 amount)
+        public
+    {
         vm.assume(sender.code.length == 0 && !evc.haveCommonOwner(sender, address(0)));
 
         // deploy the hook target
