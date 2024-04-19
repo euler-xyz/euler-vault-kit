@@ -48,6 +48,16 @@ contract MockHookTarget is IHookTarget {
     function testExcludeFromCoverage() public pure {}
 }
 
+contract MockHookTargetReturnVoid {
+    function isHookTarget() external pure {}
+}
+
+contract MockHookTargetReturnWrongSelector {
+    function isHookTarget() external pure returns (bytes4) {
+        return bytes4(bytes32(uint256(123)));
+    }
+}
+
 contract Governance_HookedOps is EVaultTestBase {
     address notGovernor;
     address borrower;
@@ -66,6 +76,23 @@ contract Governance_HookedOps is EVaultTestBase {
         if (sender != address(0)) data = abi.encodePacked(data, sender);
 
         return data;
+    }
+
+    function test_revertWhen_wrongHookTarget() public {
+        // isHookTarget not implemented
+        address hookTarget = address(evc);
+        vm.expectRevert();
+        eTST.setHookConfig(hookTarget, OP_DEPOSIT);
+
+        // isHookTarget returns nothing
+        hookTarget = address(new MockHookTargetReturnVoid());
+        vm.expectRevert();
+        eTST.setHookConfig(hookTarget, OP_DEPOSIT);
+
+        // isHookTarget returns wrong selector
+        hookTarget = address(new MockHookTargetReturnWrongSelector());
+        vm.expectRevert(Errors.E_NotHookTarget.selector);
+        eTST.setHookConfig(hookTarget, OP_DEPOSIT);
     }
 
     function testFuzz_hookedDepositMintWithdrawRedeem(
