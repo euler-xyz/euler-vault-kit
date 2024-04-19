@@ -35,6 +35,12 @@ library SharesLib {
     function mulDiv(Shares self, uint256 multiplier, uint256 divisor) internal pure returns (Shares) {
         return TypesLib.toShares(uint256(Shares.unwrap(self)) * multiplier / divisor);
     }
+
+    function subUnchecked(Shares self, Shares b) internal pure returns (Shares) {
+        unchecked {
+            return Shares.wrap(uint112(self.toUint() - b.toUint()));
+        }
+    }
 }
 
 function addShares(Shares a, Shares b) pure returns (Shares) {

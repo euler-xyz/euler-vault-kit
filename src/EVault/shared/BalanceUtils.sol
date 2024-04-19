@@ -23,11 +23,12 @@ abstract contract BalanceUtils is Base {
         Assets assets
     ) internal virtual {
         if (account == address(0)) revert E_BadSharesReceiver();
+        UserStorage storage user = vaultStorage.users[account];
 
-        (Shares origBalance, bool balanceForwarderEnabled) = vaultStorage.users[account].getBalanceAndBalanceForwarder();
+        (Shares origBalance, bool balanceForwarderEnabled) = user.getBalanceAndBalanceForwarder();
         Shares newBalance = origBalance + amount;
 
-        vaultStorage.users[account].setBalance(newBalance);
+        user.setBalance(newBalance);
         vaultStorage.totalShares = vaultCache.totalShares = vaultCache.totalShares + amount;
 
         if (balanceForwarderEnabled) {
@@ -49,10 +50,7 @@ abstract contract BalanceUtils is Base {
         (Shares origBalance, bool balanceForwarderEnabled) = vaultStorage.users[account].getBalanceAndBalanceForwarder();
         if (origBalance < amount) revert E_InsufficientBalance();
 
-        Shares newBalance;
-        unchecked {
-            newBalance = origBalance - amount;
-        }
+        Shares newBalance = origBalance.subUnchecked(amount);
 
         vaultStorage.users[account].setBalance(newBalance);
         vaultStorage.totalShares = vaultCache.totalShares = vaultCache.totalShares - amount;
@@ -79,10 +77,7 @@ abstract contract BalanceUtils is Base {
 
             if (origFromBalance < amount) revert E_InsufficientBalance();
 
-            Shares newFromBalance;
-            unchecked {
-                newFromBalance = origFromBalance - amount;
-            }
+            Shares newFromBalance = origFromBalance.subUnchecked(amount);
             Shares newToBalance = origToBalance + amount;
 
             vaultStorage.users[from].setBalance(newFromBalance);

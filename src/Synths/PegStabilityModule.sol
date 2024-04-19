@@ -10,7 +10,7 @@ import {ESynth} from "./ESynth.sol";
 contract PegStabilityModule is EVCUtil {
     using SafeERC20 for IERC20;
 
-    uint256 public constant BPS_SCALE = 10000;
+    uint256 public constant BPS_SCALE = 100_00;
 
     ESynth public immutable synth;
     IERC20 public immutable underlying;
@@ -18,9 +18,20 @@ contract PegStabilityModule is EVCUtil {
     uint256 public immutable TO_UNDERLYING_FEE;
     uint256 public immutable TO_SYNTH_FEE;
 
+    error E_ZeroAddress();
+    error E_FeeExceedsBPS();
+
     constructor(address _evc, address _synth, address _underlying, uint256 toUnderlyingFeeBPS, uint256 toSynthFeeBPS)
-        EVCUtil(IEVC(_evc))
+        EVCUtil(_evc)
     {
+        if (toUnderlyingFeeBPS > BPS_SCALE || toSynthFeeBPS > BPS_SCALE) {
+            revert E_FeeExceedsBPS();
+        }
+
+        if (_evc == address(0) || _synth == address(0) || _underlying == address(0)) {
+            revert E_ZeroAddress();
+        }
+
         synth = ESynth(_synth);
         underlying = IERC20(_underlying);
         TO_UNDERLYING_FEE = toUnderlyingFeeBPS;

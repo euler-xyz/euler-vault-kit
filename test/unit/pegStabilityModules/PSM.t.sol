@@ -4,7 +4,7 @@ pragma solidity ^0.8.0;
 
 import "forge-std/Test.sol";
 
-import {PegStabilityModule} from "../../../src/Synths/PegStabilityModule.sol";
+import {PegStabilityModule, EVCUtil} from "../../../src/Synths/PegStabilityModule.sol";
 import {ESynth, IEVC} from "../../../src/Synths/ESynth.sol";
 import {TestERC20} from "../../mocks/TestERC20.sol";
 import {EthereumVaultConnector} from "ethereum-vault-connector/EthereumVaultConnector.sol";
@@ -73,6 +73,31 @@ contract PSMTest is Test {
         assertEq(address(psm.synth()), address(synth));
         assertEq(psm.TO_UNDERLYING_FEE(), TO_UNDERLYING_FEE);
         assertEq(psm.TO_SYNTH_FEE(), TO_SYNTH_FEE);
+    }
+
+    function testConstructorToUnderlyingFeeExceedsBPS() public {
+        vm.expectRevert(PegStabilityModule.E_FeeExceedsBPS.selector);
+        new PegStabilityModule(address(evc), address(synth), address(underlying), BPS_SCALE + 1, TO_SYNTH_FEE);
+    }
+
+    function testConstructorToSynthFeeExceedsBPS() public {
+        vm.expectRevert(PegStabilityModule.E_FeeExceedsBPS.selector);
+        new PegStabilityModule(address(evc), address(synth), address(underlying), TO_UNDERLYING_FEE, BPS_SCALE + 1);
+    }
+
+    function testConstructorEVCZeroAddress() public {
+        vm.expectRevert(EVCUtil.EVC_InvalidAddress.selector);
+        new PegStabilityModule(address(0), address(synth), address(underlying), TO_UNDERLYING_FEE, TO_SYNTH_FEE);
+    }
+
+    function testConstructorSynthZeroAddress() public {
+        vm.expectRevert(PegStabilityModule.E_ZeroAddress.selector);
+        new PegStabilityModule(address(evc), address(0), address(underlying), TO_UNDERLYING_FEE, TO_SYNTH_FEE);
+    }
+
+    function testConstructorUnderlyingZeroAddress() public {
+        vm.expectRevert(PegStabilityModule.E_ZeroAddress.selector);
+        new PegStabilityModule(address(evc), address(synth), address(0), TO_UNDERLYING_FEE, TO_SYNTH_FEE);
     }
 
     function testSwapToUnderlyingGivenIn() public {

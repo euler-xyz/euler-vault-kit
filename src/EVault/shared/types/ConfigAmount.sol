@@ -21,30 +21,22 @@ library ConfigAmountLib {
     }
 
     function validate(uint256 amount) internal pure {
-        if (amount > 1e4) revert Errors.E_InvalidConfigAmount();
+        if (amount > CONFIG_SCALE) revert Errors.E_InvalidConfigAmount();
     }
 }
 
 function gtConfigAmount(ConfigAmount a, ConfigAmount b) pure returns (bool) {
-    unchecked {
-        return a.toUint16() > b.toUint16();
-    }
+    return a.toUint16() > b.toUint16();
 }
 
 function gteConfigAmount(ConfigAmount a, ConfigAmount b) pure returns (bool) {
-    unchecked {
-        return a.toUint16() >= b.toUint16();
-    }
+    return a.toUint16() >= b.toUint16();
 }
 
 function ltConfigAmount(ConfigAmount a, ConfigAmount b) pure returns (bool) {
-    unchecked {
-        return a.toUint16() < b.toUint16();
-    }
+    return a.toUint16() < b.toUint16();
 }
 
 function lteConfigAmount(ConfigAmount a, ConfigAmount b) pure returns (bool) {
-    unchecked {
-        return a.toUint16() <= b.toUint16();
-    }
+    return a.toUint16() <= b.toUint16();
 }
