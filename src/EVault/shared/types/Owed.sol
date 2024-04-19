@@ -40,7 +40,7 @@ library OwedLib {
     }
 
     function toAssetsUpUint256(uint256 owedExact) internal pure returns (uint256) {
-        return (owedExact + (1 << INTERNAL_DEBT_PRECISION) - 1) >> INTERNAL_DEBT_PRECISION;
+        return (owedExact + (1 << INTERNAL_DEBT_PRECISION_SHIFT) - 1) >> INTERNAL_DEBT_PRECISION_SHIFT;
     }
 }
 

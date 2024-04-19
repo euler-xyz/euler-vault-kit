@@ -494,10 +494,10 @@ contract VaultTest_Borrow is EVaultTestBase {
 
         uint256 snapshot = vm.snapshot();
 
-        skip(20 days);
+        skip(30 days);
 
         // borrows increased again
-        assertApproxEqAbs(eTST.totalBorrows(), 13.71e18, 0.01e18);
+        assertApproxEqAbs(eTST.totalBorrows(), 17.64e18, 0.01e18);
         // but supply with fees now overflows, so it snaps back to initial supply
         assertEq(eTST.totalSupply(), initialSupply);
         assertEq(eTST.accumulatedFees(), 0);
@@ -512,9 +512,9 @@ contract VaultTest_Borrow is EVaultTestBase {
         assertEq(eTST.totalSupply(), newSupply);
         assertEq(eTST.accumulatedFees(), fees);
 
-        skip(20 days);
+        skip(30 days);
 
-        assertApproxEqAbs(eTST.totalBorrows(), 13.71e18, 0.01e18);
+        assertApproxEqAbs(eTST.totalBorrows(), 17.64e18, 0.01e18);
         // fees stop accruing, but are at the locked in level
         assertEq(eTST.totalSupply(), newSupply);
         assertEq(eTST.accumulatedFees(), fees);

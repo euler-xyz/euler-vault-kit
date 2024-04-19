@@ -8,13 +8,15 @@ import "src/EVault/shared/Errors.sol";
 import "../EVaultTestBase.t.sol";
 
 contract AssetTransfersHarness is AssetTransfers {
-    constructor() Base(Integrations(msg.sender, msg.sender, address(0), address(0))) {} // msg.sender has code
+    constructor() Base(Integrations(addressWithCode(), addressWithCode(), address(0), address(0))) {} // msg.sender has code
 
     function exposed_pullAssets(VaultCache memory cache, address from, Assets amount) external {
         pullAssets(cache, from, amount);
     }
 
-    function testExcludeFromCoverage() public pure {}
+    function addressWithCode() internal returns (address) {
+        return address(new Errors());
+    }
 }
 
 contract AssetTransfersTest is EVaultTestBase {
