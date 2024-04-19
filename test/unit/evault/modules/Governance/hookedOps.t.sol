@@ -57,6 +57,7 @@ contract MockHookTargetReturnWrongSelector {
     function isHookTarget() external pure returns (bytes4) {
         return bytes4("123");
     }
+
     function testExcludeFromCoverage() public pure {}
 }
 
