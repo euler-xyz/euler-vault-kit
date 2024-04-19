@@ -54,7 +54,7 @@ contract MockHookTargetReturnVoid {
 
 contract MockHookTargetReturnWrongSelector {
     function isHookTarget() external pure returns (bytes4) {
-        return bytes4(bytes32(uint256(123)));
+        return bytes4("123");
     }
 }
 
