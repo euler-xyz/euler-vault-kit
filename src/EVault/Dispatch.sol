@@ -147,7 +147,11 @@ abstract contract Dispatch is
             mstore(100, 128) // EVC.call 4th argument - msg.data, offset to the start of encoding - 128 bytes
             mstore(132, mainCalldataLength) // msg.data length without proxy metadata
             calldatacopy(164, 0, mainCalldataLength) // original calldata
-            let result := call(gas(), _evc, callvalue(), 0, add(164, mainCalldataLength), 0, 0)
+
+            // abi encoded bytes array should be zero padded so its length is a multiple of 32
+            // store zero word after msg.data bytes and round up mainCalldataLength to nearest multiple of 32
+            mstore(add(164, mainCalldataLength), 0)
+            let result := call(gas(), _evc, callvalue(), 0, add(164, and(add(mainCalldataLength, 31), not(31))), 0, 0)
 
             returndatacopy(0, 0, returndatasize())
             switch result
