@@ -7,8 +7,6 @@ import {Errors} from "src/EVault/shared/Errors.sol";
 import {IHookTarget} from "src/interfaces/IHookTarget.sol";
 import "src/EVault/shared/Constants.sol";
 
-import "forge-std/Test.sol";
-
 contract MockHookTarget is IHookTarget {
     bytes32 internal expectedDataHash;
 
@@ -110,14 +108,8 @@ contract Governance_HookedOps is EVaultTestBase {
         bool deposit,
         bool withdraw
     ) public {
-        vm.assume(
-            hookTarget1 != console2.CONSOLE_ADDRESS && hookTarget1.code.length == 0
-                && !evc.haveCommonOwner(hookTarget1, address(0))
-        );
-        vm.assume(
-            hookTarget2 != console2.CONSOLE_ADDRESS && hookTarget2.code.length == 0
-                && !evc.haveCommonOwner(hookTarget2, address(0))
-        );
+        vm.assume(hookTarget1.code.length == 0 && !evc.haveCommonOwner(hookTarget1, address(0)));
+        vm.assume(hookTarget2.code.length == 0 && !evc.haveCommonOwner(hookTarget2, address(0)));
         vm.assume(hookedOps & OP_VAULT_STATUS_CHECK == 0);
         vm.assume(
             sender.code.length == 0 && receiver.code.length == 0 && !evc.haveCommonOwner(sender, address(0))
