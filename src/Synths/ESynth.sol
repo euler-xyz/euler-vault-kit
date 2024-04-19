@@ -42,7 +42,7 @@ contract ESynth is ERC20Collateral, Ownable {
     /// @param amount The amount of tokens to mint.
     function mint(address account, uint256 amount) external nonReentrant {
         address sender = _msgSender();
-        MinterData storage minterCache = minters[sender];
+        MinterData memory minterCache = minters[sender];
 
         if (
             amount > type(uint128).max - minterCache.minted
@@ -62,7 +62,7 @@ contract ESynth is ERC20Collateral, Ownable {
     /// @param amount The amount of tokens to burn.
     function burn(address account, uint256 amount) external nonReentrant {
         address sender = _msgSender();
-        MinterData storage minterCache = minters[sender];
+        MinterData memory minterCache = minters[sender];
 
         // The allowance check should be performed if the spender is not the account with the exception of the owner burning from this contract.
         if (account != sender && !(account == address(this) && sender == owner())) {
@@ -70,7 +70,9 @@ contract ESynth is ERC20Collateral, Ownable {
         }
 
         // If burning more than minted, reset minted to 0
-        minterCache.minted = minterCache.minted > amount ? minterCache.minted - uint128(amount) : 0; // down-casting is safe because amount < minted <= max uint128
+        unchecked {
+            minterCache.minted = minterCache.minted > amount ? minterCache.minted - uint128(amount) : 0; // down-casting is safe because amount < minted <= max uint128
+        }
         minters[sender] = minterCache;
 
         _burn(account, amount);
@@ -135,7 +137,9 @@ contract ESynth is ERC20Collateral, Ownable {
     /// @return The total supply of the token.
     function totalSupply() public view override returns (uint256) {
         uint256 total = super.totalSupply();
-        for (uint256 i = 0; i < ignoredForTotalSupply.length(); i++) {
+
+        uint256 ignoredLength = ignoredForTotalSupply.length(); // cache for efficiency
+        for (uint256 i = 0; i < ignoredLength; i++) {
             total -= balanceOf(ignoredForTotalSupply.at(i));
         }
         return total;

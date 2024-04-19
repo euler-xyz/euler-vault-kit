@@ -6,6 +6,7 @@ import {EVCClient} from "./EVCClient.sol";
 import {Cache} from "./Cache.sol";
 import {ProxyUtils} from "./lib/ProxyUtils.sol";
 import {RevertBytes} from "./lib/RevertBytes.sol";
+import {AddressUtils} from "./lib/AddressUtils.sol";
 
 import {IProtocolConfig} from "../../ProtocolConfig/IProtocolConfig.sol";
 import {IBalanceTracker} from "../../interfaces/IBalanceTracker.sol";
@@ -16,9 +17,9 @@ import "./types/Types.sol";
 /// @author Euler Labs (https://www.eulerlabs.com/)
 /// @notice Base contract for EVault modules with top level modifiers and utilities
 abstract contract Base is EVCClient, Cache {
-    IProtocolConfig immutable protocolConfig;
-    IBalanceTracker immutable balanceTracker;
-    address immutable permit2;
+    IProtocolConfig internal immutable protocolConfig;
+    IBalanceTracker internal immutable balanceTracker;
+    address internal immutable permit2;
 
     struct Integrations {
         address evc;
@@ -28,7 +29,7 @@ abstract contract Base is EVCClient, Cache {
     }
 
     constructor(Integrations memory integrations) EVCClient(integrations.evc) {
-        protocolConfig = IProtocolConfig(integrations.protocolConfig);
+        protocolConfig = IProtocolConfig(AddressUtils.checkContract(integrations.protocolConfig));
         balanceTracker = IBalanceTracker(integrations.balanceTracker);
         permit2 = integrations.permit2;
     }

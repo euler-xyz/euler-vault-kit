@@ -15,6 +15,8 @@ uint256 constant PROXY_METADATA_LENGTH = 60;
 uint256 constant SECONDS_PER_YEAR = 365.2425 * 86400;
 // max interest rate accepted from IRM. 1,000,000% APY: floor(((1000000 / 100 + 1)**(1/(86400*365.2425)) - 1) * 1e27)
 uint256 constant MAX_ALLOWED_INTEREST_RATE = 291867278914945094175;
+// max valid value of the ConfigAmount custom type, signifying 100%
+uint16 constant CONFIG_SCALE = 1e4;
 
 // Account status checks special values
 

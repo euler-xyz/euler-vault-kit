@@ -12,8 +12,8 @@ interface IComponent {
 contract GenericFactory is MetaProxyDeployer {
     // Constants
 
-    uint256 constant REENTRANCYLOCK__UNLOCKED = 1;
-    uint256 constant REENTRANCYLOCK__LOCKED = 2;
+    uint256 internal constant REENTRANCYLOCK__UNLOCKED = 1;
+    uint256 internal constant REENTRANCYLOCK__LOCKED = 2;
 
     // State
 
@@ -25,9 +25,10 @@ contract GenericFactory is MetaProxyDeployer {
 
     uint256 private reentrancyLock;
 
+    mapping(address proxy => ProxyConfig) internal proxyLookup;
+
     address public upgradeAdmin;
     address public implementation;
-    mapping(address proxy => ProxyConfig) internal proxyLookup;
     address[] public proxyList;
 
     // Events
@@ -64,6 +65,8 @@ contract GenericFactory is MetaProxyDeployer {
 
     constructor(address admin) {
         emit Genesis();
+
+        if (admin == address(0)) revert E_BadAddress();
 
         reentrancyLock = REENTRANCYLOCK__UNLOCKED;
 

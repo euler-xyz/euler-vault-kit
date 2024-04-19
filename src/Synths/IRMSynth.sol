@@ -25,7 +25,13 @@ contract IRMSynth is IIRM {
 
     IRMData internal irmStorage;
 
+    error E_ZeroAddress();
+
     constructor(address synth_, address referenceAsset_, address oracle_) {
+        if (synth_ == address(0) || referenceAsset_ == address(0) || oracle_ == address(0)) {
+            revert E_ZeroAddress();
+        }
+
         synth = synth_;
         referenceAsset = referenceAsset_;
         oracle = IPriceOracle(oracle_);
