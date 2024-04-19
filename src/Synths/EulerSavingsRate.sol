@@ -63,7 +63,6 @@ contract EulerSavingsRate is EVCUtil, ERC4626 {
     /// @return A boolean indicating whether the transfer was successful.
     function transfer(address to, uint256 amount)
         public
-        virtual
         override (ERC20, IERC20)
         nonReentrant
         requireAccountStatusCheck(_msgSender())
@@ -79,13 +78,20 @@ contract EulerSavingsRate is EVCUtil, ERC4626 {
     /// @return A boolean indicating whether the transfer was successful.
     function transferFrom(address from, address to, uint256 amount)
         public
-        virtual
         override (ERC20, IERC20)
         nonReentrant
         requireAccountStatusCheck(from)
         returns (bool)
     {
         return super.transferFrom(from, to, amount);
+    }
+
+    function deposit(uint256 assets, address receiver) public override nonReentrant returns (uint256) {
+        return super.deposit(assets, receiver);
+    }
+
+    function mint(uint256 assets, address receiver) public override nonReentrant returns (uint256) {
+        return super.mint(assets, receiver);
     }
 
     function withdraw(uint256 assets, address receiver, address owner)
@@ -113,19 +119,19 @@ contract EulerSavingsRate is EVCUtil, ERC4626 {
     }
 
     function _deposit(address caller, address receiver, uint256 assets, uint256 shares) internal override {
-        super._deposit(caller, receiver, assets, shares);
         totalAssetsDeposited += assets;
+        super._deposit(caller, receiver, assets, shares);
     }
 
     function _withdraw(address caller, address receiver, address owner, uint256 assets, uint256 shares)
         internal
         override
     {
-        super._withdraw(caller, receiver, owner, assets, shares);
         totalAssetsDeposited -= assets;
+        super._withdraw(caller, receiver, owner, assets, shares);
     }
 
-    function gulp() public {
+    function gulp() public nonReentrant {
         ESRSlot memory esrSlotCache = updateInterestAndReturnESRSlotCache();
 
         uint256 assetBalance = IERC20(asset()).balanceOf(address(this));
@@ -186,7 +192,7 @@ contract EulerSavingsRate is EVCUtil, ERC4626 {
     /// @dev This function returns the account on behalf of which the current operation is being performed, which is
     /// either msg.sender or the account authenticated by the EVC.
     /// @return The address of the message sender.
-    function _msgSender() internal view virtual override (Context, EVCUtil) returns (address) {
+    function _msgSender() internal view override (Context, EVCUtil) returns (address) {
         return EVCUtil._msgSender();
     }
 }
