@@ -321,8 +321,6 @@ contract EntryPoint is Test {
             if (bytes4(reason) == EVault_Panic.selector) errors.push("EVault Panic on touch");
         }
     }
-
-    function testExcludeFromCoverage() public pure {}
 }
 
 contract EVault_SimpleCriticalChecks is EVaultTestBase {
@@ -383,6 +381,4 @@ contract EVault_SimpleCriticalChecks is EVaultTestBase {
             assertTrue(false);
         }
     }
-
-    function test_ExcludeFromCoverage() public pure {}
 }

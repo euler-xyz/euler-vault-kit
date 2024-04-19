@@ -17,8 +17,6 @@ contract AssetTransfersHarness is AssetTransfers {
     function addressWithCode() internal returns (address) {
         return address(new Errors());
     }
-
-    function testExcludeFromCoverage() public pure {}
 }
 
 contract AssetTransfersTest is EVaultTestBase {

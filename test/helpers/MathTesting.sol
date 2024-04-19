@@ -67,7 +67,4 @@ contract MathTesting {
             return int128(int256(uint256(int256(log_2(x))) * 0xB17217F7D1CF79ABC9E3B39803F2F6AF >> 128));
         }
     }
-    //------------------------------------------------------
-
-    function testExcludeFromCoverage() public pure {}
 }

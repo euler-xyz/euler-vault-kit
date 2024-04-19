@@ -22,6 +22,4 @@ contract ReentrancyAttack is IVault {
     function initialize(address) external {
         IGenericFactory(factory).createProxy(true, abi.encodePacked(asset, address(this)));
     }
-
-    function testExcludeFromCoverage() public pure {}
 }
