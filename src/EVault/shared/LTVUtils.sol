@@ -9,8 +9,8 @@ import "./types/Types.sol";
 /// @author Euler Labs (https://www.eulerlabs.com/)
 /// @notice Overridable getters for LTV configuration
 abstract contract LTVUtils is Storage {
-    function getLTV(address collateral, LTVType ltvType) internal view virtual returns (ConfigAmount) {
-        return vaultStorage.ltvLookup[collateral].getLTV(ltvType);
+    function getLTV(address collateral, bool liquidation) internal view virtual returns (ConfigAmount) {
+        return vaultStorage.ltvLookup[collateral].getLTV(liquidation);
     }
 
     function isRecognizedCollateral(address collateral) internal view virtual returns (bool) {
