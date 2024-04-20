@@ -46,6 +46,13 @@ forge test
 forge coverage
 ```
 
+### invariants tests (`/tests/invariants`)
+```sh
+make echidna # property mode
+make echidna-assert # assertion mode
+make medusa
+```
+
 ## Safety
 
 This software is **experimental** and is provided "as is" and "as available".
