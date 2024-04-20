@@ -17,8 +17,6 @@ contract ErrorThrower {
     fallback() external {
         if (bytes4(msg.data) == throwOn) revert NoGood();
     }
-
-    function testExcludeFromCoverage() public pure {}
 }
 
 contract ProductLine_Base is EVaultTestBase {

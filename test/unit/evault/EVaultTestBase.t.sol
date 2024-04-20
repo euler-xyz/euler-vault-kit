@@ -155,8 +155,6 @@ contract EVaultTestBase is AssertionsCustomTypes, Test, DeployPermit2 {
 
         return v;
     }
-
-    function test__ExcludeFromCoverage() public pure {}
 }
 
 contract MockHook is IHookTarget {
@@ -188,6 +186,4 @@ contract MockHook is IHookTarget {
             _caller := shr(96, calldataload(sub(calldatasize(), 20)))
         }
     }
-
-    function test_ExcludeFromCoverage() public pure {}
 }

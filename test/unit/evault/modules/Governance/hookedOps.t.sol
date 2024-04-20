@@ -44,21 +44,16 @@ contract MockHookTarget is IHookTarget {
 
         if (expectedDataHash == keccak256(msg.data)) revert ExpectedData();
     }
-
-    function testExcludeFromCoverage() public pure {}
 }
 
 contract MockHookTargetReturnVoid {
     function isHookTarget() external pure {}
-    function testExcludeFromCoverage() public pure {}
 }
 
 contract MockHookTargetReturnWrongSelector {
     function isHookTarget() external pure returns (bytes4) {
         return bytes4("123");
     }
-
-    function testExcludeFromCoverage() public pure {}
 }
 
 contract Governance_HookedOps is EVaultTestBase {

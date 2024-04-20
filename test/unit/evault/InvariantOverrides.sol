@@ -98,8 +98,6 @@ abstract contract FunctionOverrides is BalanceUtils, BorrowUtils {
         checkInvariants(address(0), from);
         checkInvariants(to, to);
     }
-
-    function testExcludeFromCoverage() public pure virtual {}
 }
 
 // Modules and EVault overrides.
@@ -113,8 +111,6 @@ contract BalanceForwarderOverride is BalanceForwarder, FunctionOverrides {
     {
         return FunctionOverrides.initOperation(operation, accountToCheck);
     }
-
-    function testExcludeFromCoverage() public pure override {}
 }
 
 contract BorrowingOverride is Borrowing, FunctionOverrides {
@@ -176,8 +172,6 @@ contract BorrowingOverride is Borrowing, FunctionOverrides {
     {
         FunctionOverrides.transferBorrow(vaultCache, from, to, assets);
     }
-
-    function testExcludeFromCoverage() public pure override {}
 }
 
 contract GovernanceOverride is Governance, FunctionOverrides {
@@ -239,8 +233,6 @@ contract GovernanceOverride is Governance, FunctionOverrides {
     {
         FunctionOverrides.transferBorrow(vaultCache, from, to, assets);
     }
-
-    function testExcludeFromCoverage() public pure override {}
 }
 
 contract InitializeOverride is Initialize, FunctionOverrides {
@@ -274,8 +266,6 @@ contract InitializeOverride is Initialize, FunctionOverrides {
     {
         FunctionOverrides.transferBorrow(vaultCache, from, to, assets);
     }
-
-    function testExcludeFromCoverage() public pure override {}
 }
 
 contract LiquidationOverride is Liquidation, FunctionOverrides {
@@ -337,8 +327,6 @@ contract LiquidationOverride is Liquidation, FunctionOverrides {
     {
         FunctionOverrides.transferBorrow(vaultCache, from, to, assets);
     }
-
-    function testExcludeFromCoverage() public pure override {}
 }
 
 contract RiskManagerOverride is RiskManager, FunctionOverrides {
@@ -372,8 +360,6 @@ contract RiskManagerOverride is RiskManager, FunctionOverrides {
     {
         FunctionOverrides.transferBorrow(vaultCache, from, to, assets);
     }
-
-    function testExcludeFromCoverage() public pure override {}
 }
 
 contract TokenOverride is Token, FunctionOverrides {
@@ -414,8 +400,6 @@ contract TokenOverride is Token, FunctionOverrides {
     {
         FunctionOverrides.transferBalance(from, to, amount);
     }
-
-    function testExcludeFromCoverage() public pure override {}
 }
 
 contract VaultOverride is Vault, FunctionOverrides {
@@ -456,8 +440,6 @@ contract VaultOverride is Vault, FunctionOverrides {
     {
         FunctionOverrides.transferBalance(from, to, amount);
     }
-
-    function testExcludeFromCoverage() public pure override {}
 }
 
 contract EVaultOverride is EVault, FunctionOverrides {
@@ -519,6 +501,4 @@ contract EVaultOverride is EVault, FunctionOverrides {
     {
         FunctionOverrides.transferBorrow(vaultCache, from, to, assets);
     }
-
-    function testExcludeFromCoverage() public pure override {}
 }

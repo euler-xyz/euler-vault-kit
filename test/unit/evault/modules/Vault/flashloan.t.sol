@@ -26,8 +26,6 @@ contract MockFlashloanReceiverDoesNothing is IFlashLoan, Test {
 
         assertEq(assetTSTBalance, flashloanAmount);
     }
-
-    function testExcludeFromCoverage() public pure {}
 }
 
 contract MockFlashloanReceiverReturnsFunds is IFlashLoan, Test {
@@ -37,8 +35,6 @@ contract MockFlashloanReceiverReturnsFunds is IFlashLoan, Test {
 
         IERC20(assetTSTAddress).transfer(eTSTAddress, repayAmount);
     }
-
-    function testExcludeFromCoverage() public pure {}
 }
 
 contract MockFlashloanReceiverTriesReentry is IFlashLoan {
@@ -52,8 +48,6 @@ contract MockFlashloanReceiverTriesReentry is IFlashLoan {
             IEVault(eTSTAddress).flashLoan(10e18, abi.encode(""));
         }
     }
-
-    function testExcludeFromCoverage() public pure {}
 }
 
 contract MockFlashloanReceiverTriesReadReentry is IFlashLoan {
@@ -85,8 +79,6 @@ contract MockFlashloanReceiverTriesReadReentry is IFlashLoan {
             IEVault(eTSTAddress).debtOf(address(0));
         }
     }
-
-    function testExcludeFromCoverage() public pure {}
 }
 
 contract VaultTest_Flashloan is EVaultTestBase {
