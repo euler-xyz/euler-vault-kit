@@ -17,8 +17,7 @@ contract ESRFuzzTest is ESRTest {
         vm.assume(asset.balanceOf(address(esr)) <= type(uint168).max);
         esr.gulp();
         skip(esr.INTEREST_SMEAR()); // make sure smear has passed
-        uint256 balance = asset.balanceOf(address(esr));
-        assertEq(esr.totalAssets(), balance);
+        assertEq(esr.totalAssets(), asset.balanceOf(address(esr)));
     }
 
     function testFuzz_interestAccrued_under_uint168(uint256 interestAmount, uint256 depositAmount, uint256 timePassed)
