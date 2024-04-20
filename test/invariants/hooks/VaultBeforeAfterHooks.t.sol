@@ -11,6 +11,8 @@ import {Pretty, Strings} from "../utils/Pretty.sol";
 // Test Contracts
 import {BaseHooks} from "../base/BaseHooks.t.sol";
 
+import "forge-std/console.sol";
+
 /// @title Vault Before After Hooks
 /// @notice Helper contract for before and after hooks
 /// @dev This contract is inherited by handlers
@@ -47,6 +49,8 @@ abstract contract VaultBeforeAfterHooks is BaseHooks {
         vaultVars.exchangeRateBefore = _calculateExchangeRate();
         // ERC4626
         vaultVars.totalAssetsBefore = eTST.totalAssets();
+        // Total Supply
+        vaultVars.totalSupplyBefore = eTST.totalSupply();
         // Caps
         (uint16 _supplyCap,) = eTST.caps();
         vaultVars.supplyCapBefore = AmountCap.wrap(_supplyCap).resolve();
@@ -60,6 +64,8 @@ abstract contract VaultBeforeAfterHooks is BaseHooks {
         vaultVars.exchangeRateAfter = _calculateExchangeRate();
         // ERC4626
         vaultVars.totalAssetsAfter = eTST.totalAssets();
+        // Total Supply
+        vaultVars.totalSupplyAfter = eTST.totalSupply();
         // Caps
         (uint16 _supplyCap,) = eTST.caps();
         vaultVars.supplyCapAfter = AmountCap.wrap(_supplyCap).resolve();
@@ -83,11 +89,7 @@ abstract contract VaultBeforeAfterHooks is BaseHooks {
 
     function assert_LM_INVARIANT_B() internal {
         if (eTST.isFlagSet(CFG_DONT_SOCIALIZE_DEBT)) {
-            assertGe(
-                vaultVars.exchangeRateAfter,
-                vaultVars.exchangeRateBefore,
-                LM_INVARIANT_B
-            );
+            assertGe(vaultVars.exchangeRateAfter, vaultVars.exchangeRateBefore, LM_INVARIANT_B);
         }
     }
 }

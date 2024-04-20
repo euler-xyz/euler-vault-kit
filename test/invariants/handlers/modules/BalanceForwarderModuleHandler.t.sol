@@ -32,7 +32,7 @@ contract BalanceForwarderModuleHandler is BaseHandler {
         if (success) {
             assert(true);
         }
-    } 
+    }
 
     function disableBalanceForwarder() external setup {
         bool success;

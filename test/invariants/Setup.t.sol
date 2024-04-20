@@ -43,7 +43,6 @@ contract Setup is BaseTest {
     }
 
     function _deployProtocolCore() internal {
-
         // Deploy the EVC
         evc = new EthereumVaultConnector();
 
@@ -67,8 +66,9 @@ contract Setup is BaseTest {
 
     function _deployVaults() internal {
         // Deploy the modules
-        Base.Integrations memory integrations = Base.Integrations(address(evc), address(protocolConfig), balanceTracker, permit2);
-        
+        Base.Integrations memory integrations =
+            Base.Integrations(address(evc), address(protocolConfig), balanceTracker, permit2);
+
         Dispatch.DeployedModules memory modules = Dispatch.DeployedModules({
             initialize: address(new Initialize(integrations)),
             token: address(new Token(integrations)),
@@ -80,25 +80,23 @@ contract Setup is BaseTest {
             governance: address(new Governance(integrations))
         });
 
-
         // Deploy the vault implementation
-        address evaultImpl = address(
-            new EVaultExtended(
-                integrations,
-                modules
-            )
-        );
+        address evaultImpl = address(new EVaultExtended(integrations, modules));
 
         // Deploy the vault factory and set the implementation
         factory = new GenericFactory(address(this));
         factory.setImplementation(evaultImpl);
 
         // Deploy the vaults
-        eTST = EVaultExtended(factory.createProxy(true, abi.encodePacked(address(assetTST), address(oracle), unitOfAccount)));
+        eTST = EVaultExtended(
+            factory.createProxy(true, abi.encodePacked(address(assetTST), address(oracle), unitOfAccount))
+        );
         eTST.setInterestRateModel(address(new IRMTestDefault()));
         vaults.push(address(eTST));
 
-        eTST2 = EVaultExtended(factory.createProxy(true, abi.encodePacked(address(assetTST2), address(oracle), unitOfAccount)));
+        eTST2 = EVaultExtended(
+            factory.createProxy(true, abi.encodePacked(address(assetTST2), address(oracle), unitOfAccount))
+        );
         eTST2.setInterestRateModel(address(new IRMTestDefault()));
         vaults.push(address(eTST2));
     }
@@ -113,7 +111,7 @@ contract Setup is BaseTest {
         tokens[0] = address(assetTST);
         tokens[1] = address(assetTST2);
 
-        for (uint256 i = 0; i < NUMBER_OF_ACTORS; i++) {
+        for (uint256 i; i < NUMBER_OF_ACTORS; i++) {
             // Deply actor proxies and approve system contracts
             address _actor = _setUpActor(addresses[i], tokens, vaults);
 
@@ -126,11 +124,10 @@ contract Setup is BaseTest {
         }
     }
 
-    function _setUpActor(
-        address userAddress,
-        address[] memory tokens,
-        address[] memory callers
-    ) internal returns (address actorAddress) {
+    function _setUpActor(address userAddress, address[] memory tokens, address[] memory callers)
+        internal
+        returns (address actorAddress)
+    {
         bool success;
         Actor _actor = new Actor(tokens, callers);
         actors[userAddress] = _actor;

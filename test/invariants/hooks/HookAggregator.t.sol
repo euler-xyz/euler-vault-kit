@@ -7,10 +7,7 @@ import {BorrowingBeforeAfterHooks} from "./BorrowingBeforeAfterHooks.t.sol";
 
 /// @title HookAggregator
 /// @notice Helper contract to aggregate all before / after hook contracts, inherited on each handler
-abstract contract HookAggregator is
-    VaultBeforeAfterHooks,
-    BorrowingBeforeAfterHooks
-{
+abstract contract HookAggregator is VaultBeforeAfterHooks, BorrowingBeforeAfterHooks {
     /// @notice Modular hook selector, per module
     function _before() internal {
         _vaultHooksBefore();
@@ -30,7 +27,7 @@ abstract contract HookAggregator is
     function _postConditions() internal {
         // Vault
         assert_VM_INVARIANT_B();
-        assert_LM_INVARIANT_B();//@audit breaks
+        assert_LM_INVARIANT_B();
 
         // Borrowing
         assert_I_INVARIANT_E();

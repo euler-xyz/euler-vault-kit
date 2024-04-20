@@ -10,7 +10,7 @@ import {IERC20} from "src/EVault/IEVault.sol";
 
 /// @title  TokenModuleHandler
 /// @notice Handler test contract for ERC20 contacts
-contract  TokenModuleHandler is BaseHandler {
+contract TokenModuleHandler is BaseHandler {
     ///////////////////////////////////////////////////////////////////////////////////////////////
     //                                      STATE VARIABLES                                      //
     ///////////////////////////////////////////////////////////////////////////////////////////////
@@ -32,15 +32,14 @@ contract  TokenModuleHandler is BaseHandler {
 
         address target = address(eTST);
 
-        (success, returnData) =
-            actor.proxy(target, abi.encodeWithSelector(IERC20.approve.selector, spender, amount));
+        (success, returnData) = actor.proxy(target, abi.encodeWithSelector(IERC20.approve.selector, spender, amount));
 
         if (success) {
             assert(true);
         }
     }
 
-/*     function transfer(address to, uint256 amount) external setup {
+    /*     function transfer(address to, uint256 amount) external setup {
         bool success;
         bytes memory returnData;
 
@@ -71,7 +70,7 @@ contract  TokenModuleHandler is BaseHandler {
         }
     }
 
-/*     function transferFrom(uint256 i, address to, uint256 amount) external setup {
+    /*     function transferFrom(uint256 i, address to, uint256 amount) external setup {
         bool success;
         bytes memory returnData;
 

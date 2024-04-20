@@ -10,7 +10,7 @@ import {Pretty, Strings} from "../utils/Pretty.sol";
 
 // Test Contracts
 import {BaseHooks} from "../base/BaseHooks.t.sol";
-import {ILiquidationModuleHandler} from '../handlers/interfaces/ILiquidationModuleHandler.sol';
+import {ILiquidationModuleHandler} from "../handlers/interfaces/ILiquidationModuleHandler.sol";
 
 /// @title Borrowing Before After Hooks
 /// @notice Helper contract for before and after hooks
@@ -48,7 +48,6 @@ abstract contract BorrowingBeforeAfterHooks is BaseHooks {
         // Borrow Cap
         uint256 borrowCapBefore;
         uint256 borrowCapAfter;
-
     }
 
     BorrowingVars borrowingVars;
@@ -66,7 +65,8 @@ abstract contract BorrowingBeforeAfterHooks is BaseHooks {
         // EVC
         borrowingVars.controllerEnabledBefore = evc.isControllerEnabled(address(actor), address(eTST));
         // Liquidity
-        (borrowingVars.collateralValueBefore, borrowingVars.liabilityValueBefore) = _getAccountLiquidity(address(actor), false);
+        (borrowingVars.collateralValueBefore, borrowingVars.liabilityValueBefore) =
+            _getAccountLiquidity(address(actor), false);
         // Caps
         (, uint16 _borrowCap) = eTST.caps();
         borrowingVars.borrowCapBefore = AmountCap.wrap(_borrowCap).resolve();
@@ -85,7 +85,8 @@ abstract contract BorrowingBeforeAfterHooks is BaseHooks {
         // EVC
         borrowingVars.controllerEnabledAfter = evc.isControllerEnabled(address(actor), address(eTST));
         // Liquidity
-        (borrowingVars.collateralValueAfter, borrowingVars.liabilityValueAfter) = _getAccountLiquidity(address(actor), false);
+        (borrowingVars.collateralValueAfter, borrowingVars.liabilityValueAfter) =
+            _getAccountLiquidity(address(actor), false);
         // Caps
         (, uint16 _borrowCap) = eTST.caps();
         borrowingVars.borrowCapAfter = AmountCap.wrap(_borrowCap).resolve();
@@ -96,11 +97,7 @@ abstract contract BorrowingBeforeAfterHooks is BaseHooks {
     /////////////////////////////////////////////////////////////////////////////////////////////*/
 
     function assert_I_INVARIANT_E() internal {
-        assertGe(
-            borrowingVars.interestAccumulatorAfter,
-            borrowingVars.interestAccumulatorBefore,
-            I_INVARIANT_E
-        );
+        assertGe(borrowingVars.interestAccumulatorAfter, borrowingVars.interestAccumulatorBefore, I_INVARIANT_E);
     }
 
     function assert_BM_INVARIANT_H() internal {
@@ -127,10 +124,12 @@ abstract contract BorrowingBeforeAfterHooks is BaseHooks {
     }
 
     function assert_LM_INVARIANT_D() internal {
-      if (!isAccountHealthy(borrowingVars.liabilityValueBefore, borrowingVars.collateralValueBefore)) {
-            uint256 healthScoreBefore = _getHealthScore(borrowingVars.liabilityValueBefore, borrowingVars.collateralValueBefore);
-            uint256 healthScoreAfter = _getHealthScore(borrowingVars.liabilityValueAfter, borrowingVars.collateralValueAfter);
-        
+        if (!isAccountHealthy(borrowingVars.liabilityValueBefore, borrowingVars.collateralValueBefore)) {
+            uint256 healthScoreBefore =
+                _getHealthScore(borrowingVars.liabilityValueBefore, borrowingVars.collateralValueBefore);
+            uint256 healthScoreAfter =
+                _getHealthScore(borrowingVars.liabilityValueAfter, borrowingVars.collateralValueAfter);
+
             if (healthScoreBefore > healthScoreAfter) {
                 assertEq(bytes32(msg.sig), bytes32(ILiquidationModuleHandler.liquidate.selector), LM_INVARIANT_D);
             }

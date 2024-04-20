@@ -13,7 +13,6 @@ import {StdAsserts} from "../utils/StdAsserts.sol";
 // Base
 import {BaseStorage} from "./BaseStorage.t.sol";
 
-
 /// @notice Base contract for all test contracts extends BaseStorage
 /// @dev Provides setup modifier and cheat code setup
 /// @dev inherits Storage, Testing constants assertions and utils needed for testing
@@ -54,9 +53,9 @@ abstract contract BaseTest is BaseStorage, PropertiesConstants, StdAsserts, StdU
 
     function _getAccountLiquidity(address _actor, bool flag) internal view returns (uint256, uint256) {
         if (evc.getControllers(_actor).length > 0) {
-            eTST.accountLiquidity(_actor, flag);
+            return eTST.accountLiquidity(_actor, flag);
         }
-        return (0,0);
+        return (0, 0);
     }
 
     function _makeAddr(string memory name) internal pure returns (address addr) {

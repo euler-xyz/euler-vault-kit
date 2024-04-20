@@ -23,7 +23,7 @@ contract LiquidationModuleHandler is BaseHandler {
     //                                           ACTIONS                                         //
     ///////////////////////////////////////////////////////////////////////////////////////////////
 
-    function liquidate(uint256 repayAssets, uint256 minYielBalance, uint256 i) external setup {
+    function liquidate(uint256 repayAssets, uint256 minYieldBalance, uint256 i) external setup {
         bool success;
         bytes memory returnData;
 
@@ -39,7 +39,9 @@ contract LiquidationModuleHandler is BaseHandler {
             _before();
             (success, returnData) = actor.proxy(
                 target,
-                abi.encodeWithSelector(ILiquidation.liquidate.selector, violator, collateral, repayAssets, minYielBalance)
+                abi.encodeWithSelector(
+                    ILiquidation.liquidate.selector, violator, collateral, repayAssets, minYieldBalance
+                )
             );
         }
         if (success) {

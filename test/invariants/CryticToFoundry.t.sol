@@ -4,6 +4,7 @@ pragma solidity ^0.8.19;
 // Libraries
 import "forge-std/Test.sol";
 import "forge-std/console.sol";
+import {Errors} from "src/EVault/shared/Errors.sol";
 
 // Test Contracts
 import {Invariants} from "./Invariants.t.sol";
@@ -35,8 +36,7 @@ contract CryticToFoundry is Invariants, Setup {
     //                                 BROKEN INVARIANTS REPLAY                                  //
     /////////////////////////////////////////////////////////////////////////////////////////////// 
 
-    function test_BM_INVARIANT_O_ROUNDING() public {//@audit-issue breaks because rounds debt vualt down
-        vm.skip(true);
+    function test_BM_INVARIANT_O_ROUNDING() public {// PASS
         this.depositToActor(400,93704952709166092675833692626070333629207815095066323987818791); 
         console.log("Actor: ", address(actor));
         this.enableController(3388611185579509790345271144155567529519710816754010133488659);
@@ -47,26 +47,7 @@ contract CryticToFoundry is Invariants, Setup {
         console.log("Balance before: ", eTST.balanceOf(address(actor)));
         console.log("Debt before: ", eTST.debtOf(address(actor)));
         assetTST.burn(address(actor), assetTST.balanceOf(address(actor)));
-        //this.borrowTo(1,476485543921707036124785589083935854038465196552);
-
-        for (uint256 i = 0; i < 90; i++) {
-            console.log("BORROW ################################################");
-            vm.prank(address(actor));
-            eTST.borrow(1, address(actor));
-            console.log("Balance after: ", eTST.balanceOf(address(actor)));
-            console.log("Debt after: ", eTST.debtOf(address(actor)));
-
-            console.log("REPAY ################################################");
-            vm.prank(address(actor));
-            eTST.repay(1, address(actor));
-            console.log("Balance after: ", eTST.balanceOf(address(actor)));
-            console.log("Debt after: ", eTST.debtOf(address(actor)));
-
-            console.log("WITHDRAW ################################################");
-
-        }
-        //this.borrowTo(1,476485543921707036124785589083935854038465196552);
-
+        this.borrowTo(1,476485543921707036124785589083935854038465196552);
 
         console.log("Total debt: ", eTST.totalBorrows());
         echidna_BM_INVARIANT();
@@ -92,7 +73,7 @@ contract CryticToFoundry is Invariants, Setup {
         echidna_TM_INVARIANT();
     }
 
-    function test_2TM_INVARIANT_C() public {//@audit-issue accumulatedFees is not being substracted from totalShares 
+    function test_2TM_INVARIANT_C() public {// PASS
         this.enableController(2407062037475558912132939306295090);
         this.setPrice(203119967011525001828670166106715953503737,1);
         this.loop(1716,3708107580021407217882746540472109923629499262);
@@ -110,7 +91,7 @@ contract CryticToFoundry is Invariants, Setup {
         echidna_TM_INVARIANT();
     }
 
-    function test_ERC4626_ACTIONS_INVARIANT() public {//@audit-issue maxMint should never revert
+    function test_ERC4626_ACTIONS_INVARIANT() public {// PASS
         console.log("TotalAssets: ", eTST.totalAssets());
         console.log("TotalShares", eTST.totalSupply());
         this.enableController (7301099788150748633707767049393606426279241562950386710103457664483);   
@@ -128,8 +109,8 @@ contract CryticToFoundry is Invariants, Setup {
         echidna_ERC4626_ACTIONS_INVARIANT();
     }
 
-    function test_I_INVARIANT_A() public {//@audit-issue breaks
-        vm.skip(true);
+    function test_I_INVARIANT_A() public {
+        vm.expectRevert(Errors.E_BadFee.selector);
         this.setInterestFee(101);
         echidna_I_INVARIANT();
     }
@@ -143,8 +124,7 @@ contract CryticToFoundry is Invariants, Setup {
         echidna_BM_INVARIANT();
     }
 
-    function test_BM_INVARIANT_A() public {//@audit-issue totalborrows invariant totalborrows carries more errors than per user balances
-        vm.skip(true);
+    function test_BM_INVARIANT_A() public {// PASS
         _setUpActor(USER1);
         this.enableController(7940019329826366144274892142031768413507269414922630);
         this.setPrice(12009255528033600768137352216945045496365266793106593130770692883,1);
@@ -285,7 +265,7 @@ contract CryticToFoundry is Invariants, Setup {
         echidna_TM_INVARIANT();
     }
 
-    function test_VM_INVARIANT1() public {//@audit check
+    function test_VM_INVARIANT1() public {// PASS
         _setUpBlockAndActor(15941, USER2);
         this.enableController(65987143226213886175183319384713235742055287956171498516718399508227226907932);
         this.setPrice(536074487209797201035050856521703277098472151229817426108599925962560785369, 4);
@@ -310,9 +290,7 @@ contract CryticToFoundry is Invariants, Setup {
         echidna_BASE_INVARIANT();
     }
 
-    function test_BM_INVARIANT3() public {
-        vm.skip(true);
-
+    function test_BM_INVARIANT3() public {// PASS
         _setUpBlockAndActor(12272, USER1);
         this.setLTV(113884487589860002952951511119799819009743936658790969442180828775288854748777, 40, 0);
         _setUpActor(USER2);
@@ -346,6 +324,197 @@ contract CryticToFoundry is Invariants, Setup {
             console.log("Liability Value: ", liabilityValue);
             console.log("-----------------");
         }
+        echidna_BM_INVARIANT();
+    }
+
+    function test_LM_INVARIANT_B() public {// PASS
+        _setUpBlockAndActor(24253, USER3);
+        this.setDebtSocialization(false);
+        this.mintToActor(40, 115792089237316195423570985008687907853269984665640564039457584007911240072655);
+    }
+
+    function test_BM_INVARIANT5() public {// PASS
+        _setUpBlockAndActor(12272, USER1);
+        this.setLTV(113884487589860002952951511119799819009743936658790969442180828775288854748777, 40, 0);
+        _setUpActor(USER2);
+        this.enableCollateral(61359321533616670090464847470919828791539490567821399398610379891777185889295);
+        _setUpBlockAndActor(12281, USER2);
+        this.enableController(21176976167352574707055888237761398779945424238152129202553051033751536223044);
+        _setUpBlockAndActor(13460, USER1);
+        this.setPrice(47623990069036807621229864744315512880511717210498659943999994201483491729478, 100);
+        _setUpBlockAndActor(42391, USER2);
+        this.loop(6656, 115792089237316195423570985008240606102015950752194670824766749710982583118548);
+        echidna_BM_INVARIANT();
+    }
+
+    function test_BM_INVARIANT4() public {// PASS
+        _setUpBlockAndActor(12272, USER1);
+        this.setLTV(113884487589860002952951511119799819009743936658790969442180828775288854748777, 40, 0);
+        _setUpActor(USER2);
+        this.enableCollateral(61359321533616670090464847470919828791539490567821399398610379891777185889295);
+        _setUpBlockAndActor(12281, USER2);
+        this.enableController(21176976167352574707055888237761398779945424238152129202553051033751536223044);
+        _setUpBlockAndActor(13460, USER1);
+        this.setPrice(47623990069036807621229864744315512880511717210498659943999994201483491729478, 100);
+        _setUpActor(USER2);
+        this.loop(9, 115792089237316195423570985008240606102015950752194670824766749710982583118484);
+        echidna_BM_INVARIANT();
+    }
+
+    function test_BM_INVARIANT6() public {// PASS
+        this.enableController(468322383632155574862945881956174631649161871295786712111360326257);
+        this.setPrice(726828870758264026864714326152620643619927705875320304690180955674, 11);
+        this.enableCollateral(15111);
+        this.setLTV(3456147621700665956033923462455625826034483547574136595412029999975872,1,0);
+        this.depositToActor (1,0);
+        this.borrowTo(1,304818507942225219676445155333052560942359548832832651640621508);
+        echidna_BM_INVARIANT();
+    }
+
+    function test_TM_INVARIANT_B1() public {// PASS
+        this.setLTV(72646444105010896140249531445510794379335059401176316902940832566730525333,1, 0);
+        this.enableController(76727920995346075805986660253082611215461573362058062359387778966104779);
+        this.setPrice(18274017484987942229281406421604794173269384380531735656284002919498327,31);
+        this.depositToActor (102086320,162507);
+        this.enableCollateral(106093357538464973839764110958525094882282094641942554217387777389198);
+        this.borrowTo(94684478,359189140925596108270502857324445830015961981690427474212615823204087831);
+        _delay(1062);
+        this.loop (30806,260);
+        echidna_TM_INVARIANT();
+    }
+
+    function test_echidna_VM_INVARIANT_C1() public {//@audit-issue totalSupply == 0 !=> totalAssets == 0 
+        vm.skip(true);
+        this.setLTV(161537350060562470698068789285938700031433026666990925968846691117425,1, 0);
+        this.mintToActor (2,0);
+        this.setPrice(15141093523755052381928072114906306924899029026721034293540167406168436, 12);
+        this. enableController(0);
+
+        console.log("TotalSupply: ", eTST.totalSupply());
+        console.log("TotalAssets: ", eTST.totalAssets());
+
+        this.enableCollateral(4565920164825741688803703057878134831253824142353322861254361347742);
+        this.borrowTo (1,0);
+
+        console.log("TotalSupply: ", eTST.totalSupply());
+        console.log("TotalAssets: ", eTST.totalAssets());
+
+        console.log("balanceOf: ", eTST.balanceOf(address(actor)));
+        console.log("debtOf: ", eTST.debtOf(address(actor)));
+
+        _delay(525);
+
+        console.log("----------");
+
+        console.log("TotalSupply: ", eTST.totalSupply());
+        console.log("TotalAssets: ", eTST.totalAssets());
+
+
+        console.log("balanceOf: ", eTST.balanceOf(address(actor)));
+        console.log("debtOf: ", eTST.debtOf(address(actor)));
+
+        console.log("----------");
+
+        this.deloop(2,0);
+
+        console.log("----------");
+
+        console.log("balanceOf: ", eTST.balanceOf(address(actor)));
+        console.log("debtOf: ", eTST.debtOf(address(actor)));
+
+        console.log("TotalSupply: ", eTST.totalSupply());
+        console.log("TotalAssets: ", eTST.totalAssets());
+
+        console.log("----------");
+
+/*         this.loop(2,0);
+
+        console.log("----------");
+
+        console.log("balanceOf: ", eTST.balanceOf(address(actor)));
+        console.log("debtOf: ", eTST.debtOf(address(actor)));
+
+        console.log("TotalSupply: ", eTST.totalSupply());
+        console.log("TotalAssets: ", eTST.totalAssets());
+
+        console.log("----------");
+
+        this.deloop(3,0);
+
+        console.log("----------");
+
+        console.log("balanceOf: ", eTST.balanceOf(address(actor)));
+        console.log("debtOf: ", eTST.debtOf(address(actor)));
+
+        console.log("TotalSupply: ", eTST.totalSupply());
+        console.log("TotalAssets: ", eTST.totalAssets());
+
+        console.log("----------"); */
+
+        assert_VM_INVARIANT_C();
+    }
+
+    function test_liquidate_bug() public {
+        _setUpActorAndDelay(USER3, 297507);
+        this.setLTV(115792089237316195423570985008687907853269984665640564039457584007913129639935,433,0);
+        _setUpActor(USER1);
+        this.enableController(1524785991);
+        _setUpActorAndDelay(USER1, 439556);
+        this.enableCollateral(217905055956562793374063556811130300111285293815122069343455239377127312);
+        _setUpActorAndDelay(USER3, 566039);
+        this.enableCollateral(29);
+        _setUpActorAndDelay(USER3, 209930);
+        this.enableController(1524785993);
+        _delay(271957);
+        this.liquidate(2848675,0,512882652);
+    }
+
+    function test_depositToActor_bug() public {// PASS
+        this.setPrice(0,1);
+        this.enableController (14915426056955909235945450448249579464926501795441141063845034703);
+        this.setLTV(1804231840195618435650555517191418148400545023790587635103902141215022596, 10,0);
+        this.enableCollateral(10191944320714549829463304788724380680435294253545712225788598892553430);
+        this.loop(68702,6778451088499331638632504780946916120996051624015916139354432081940282166);
+        this.setDebtSocialization(false);
+        _delay(6847);
+        this.assert_BM_INVARIANT_P();
+        this.assert_BM_INVARIANT_G();
+        this.depositToActor(2,77621934147193536615522822188877143744675248208047599569948726783);
+    }
+
+    function test_VM_INVARIANT5() public {
+        vm.skip(true);
+        this.setLTV(22366818273602115439851901107761977982005180121616743889078085180117,1,0);
+        this.mintToActor(1,0);
+        this.enableCollateral(0);
+        this.setPrice(167287376704962748125159831258059871163051958738722404000304447051,11);
+        this.enableController(0);
+        this.borrowTo(1,0);
+        _delay(1);
+        this.assert_BM_INVARIANT_P();
+        console.log("totalAssets: ", eTST.totalAssets());
+        console.log("totalSupply: ", eTST.totalSupply());
+        this.assert_BM_INVARIANT_G();
+        console.log("totalAssets: ", eTST.totalAssets());
+        console.log("totalSupply: ", eTST.totalSupply());
+        echidna_VM_INVARIANT();
+    }
+
+    function test_BM_INVARIANT2() public {
+        this.setLTV(4928164140911258518180007983958125974735619848025477191374701,1,0);
+        this.enableController(856923007128263309132381892881869186587227104865745);
+        this.setPrice(32481800912426910820104697344689416508300540223088706165503630635883, 10);
+        this.enableCollateral(6856418744684697184782054554105384170694608997133);
+        this.loop(1,0);
+        echidna_BM_INVARIANT();
+    }
+
+    function test_BM_INVARIANT7() public {
+        this.setLTV(1108761414529882035672596488633488862111302583,1,0);
+        this.enableController(29103678329368710051385488);
+        this.setPrice(40675291513600242204969450702211991997576963878828186222022,10);
+        this.enableCollateral(658636526787455111532741);
+        this.loop(1,0);
         echidna_BM_INVARIANT();
     }
 

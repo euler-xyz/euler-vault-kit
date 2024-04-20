@@ -29,8 +29,7 @@ contract GovernanceModuleHandler is BaseHandler {
         // Get one of the three actors randomly
         address target = address(eTST);
 
-        (success, returnData) =
-            actor.proxy(target, abi.encodeWithSelector(IGovernance.convertFees.selector));
+        (success, returnData) = actor.proxy(target, abi.encodeWithSelector(IGovernance.convertFees.selector));
 
         if (success) {
             assert(true);
@@ -47,7 +46,7 @@ contract GovernanceModuleHandler is BaseHandler {
     }
 
     function clearLTV(uint256 i) external {
-        address collateral = _getRandomBaseAsset(i); 
+        address collateral = _getRandomBaseAsset(i);
         //TODO make a function to select a random collateral form the ones on the deployment
 
         eTST.clearLTV(collateral);
@@ -66,7 +65,6 @@ contract GovernanceModuleHandler is BaseHandler {
         if (status) bitmask = removeConfiguration(bitmask, CFG_DONT_SOCIALIZE_DEBT);
         else bitmask = addConfiguration(bitmask, CFG_DONT_SOCIALIZE_DEBT);
         eTST.setConfigFlags(bitmask);
-        
     }
 
     function setCaps(uint16 supplyCap, uint16 borrowCap) external {
@@ -81,12 +79,12 @@ contract GovernanceModuleHandler is BaseHandler {
     ///////////////////////////////////////////////////////////////////////////////////////////////
 
     // Function to add a configuration to the bitmask
-    function addConfiguration(uint32 bitmask, uint32 configToAdd) internal pure returns (uint32){
+    function addConfiguration(uint32 bitmask, uint32 configToAdd) internal pure returns (uint32) {
         return bitmask |= configToAdd;
     }
 
     // Function to remove a configuration from the bitmask
-    function removeConfiguration(uint32 bitmask, uint32 configToRemove) internal pure returns (uint32){
+    function removeConfiguration(uint32 bitmask, uint32 configToRemove) internal pure returns (uint32) {
         return bitmask &= ~configToRemove;
     }
 }

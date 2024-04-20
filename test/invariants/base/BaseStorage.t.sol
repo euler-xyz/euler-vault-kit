@@ -4,7 +4,7 @@ pragma solidity ^0.8.19;
 // Contracts
 import {EthereumVaultConnector} from "ethereum-vault-connector/EthereumVaultConnector.sol";
 import {ProtocolConfig} from "src/ProtocolConfig/ProtocolConfig.sol";
-import 'src/EVault/shared/Constants.sol';
+import "src/EVault/shared/Constants.sol";
 
 // Mock Contracts
 import {ERC20Mock as TestERC20} from "@openzeppelin/contracts/mocks/token/ERC20Mock.sol";
@@ -33,6 +33,8 @@ abstract contract BaseStorage {
     uint256 internal constant INITIAL_ETH_BALANCE = 1e26;
     uint256 internal constant INITIAL_COLL_BALANCE = 1e21;
 
+    uint256 constant VIRTUAL_DEPOSIT_AMOUNT = 1e6;
+
     ///////////////////////////////////////////////////////////////////////////////////////////////
     //                                          ACTORS                                           //
     ///////////////////////////////////////////////////////////////////////////////////////////////
@@ -60,7 +62,7 @@ abstract contract BaseStorage {
 
     /// @notice EVC contract
     EthereumVaultConnector internal evc;
-    
+
     /// @notice Permit2 contract
     address permit2;
 
@@ -95,5 +97,5 @@ abstract contract BaseStorage {
     //                                       EXTRA VARIABLES                                     //
     ///////////////////////////////////////////////////////////////////////////////////////////////
 
-    address[] internal baseAssets; 
+    address[] internal baseAssets;
 }

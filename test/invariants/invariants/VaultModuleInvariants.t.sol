@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.19;
 // Interfaces
+
 import {IERC20} from "@openzeppelin/contracts/interfaces/IERC20.sol";
 
 // Base Contracts
@@ -9,20 +10,19 @@ import {HandlerAggregator} from "../HandlerAggregator.t.sol";
 /// @title VaultModuleInvariants
 /// @notice Implements Invariants for the protocol
 /// @dev Inherits HandlerAggregator to check actions in assertion testing mode
-abstract contract VaultModuleInvariants is HandlerAggregator {            
+abstract contract VaultModuleInvariants is HandlerAggregator {
     ///////////////////////////////////////////////////////////////////////////////////////////////
     //                                        VAULT SIMPLE                                       //
     ///////////////////////////////////////////////////////////////////////////////////////////////
 
     function assert_VM_INVARIANT_A() internal {
-        assertGe(
-            IERC20(address(eTST.asset())).balanceOf(address(eTST)),
-            eTST.cash(),
-            VM_INVARIANT_A
-        );
+        assertGe(IERC20(address(eTST.asset())).balanceOf(address(eTST)), eTST.cash(), VM_INVARIANT_A);
     }
 
     function assert_VM_INVARIANT_C() internal {
+        if (eTST.totalAssets() == 0) {
+            assertEq(eTST.totalSupply(), 0, VM_INVARIANT_C);
+        }
         if (eTST.totalSupply() == 0) {
             assertEq(eTST.totalAssets(), 0, VM_INVARIANT_C);
         }
@@ -100,7 +100,8 @@ abstract contract VaultModuleInvariants is HandlerAggregator {
     //                                      ERC4626: MINT                                        //
     ///////////////////////////////////////////////////////////////////////////////////////////////
 
-    function assert_ERC4626_MINT_INVARIANT_A(address _account) internal {//@audit-issue when exchange rate is negative maxMint reverts
+    function assert_ERC4626_MINT_INVARIANT_A(address _account) internal {
+        //@audit-issue when exchange rate is negative maxMint reverts
         try eTST.maxMint(_account) {}
         catch {
             fail(ERC4626_MINT_INVARIANT_A);
@@ -133,7 +134,7 @@ abstract contract VaultModuleInvariants is HandlerAggregator {
     //                                        DISCARDED                                          //
     ///////////////////////////////////////////////////////////////////////////////////////////////
 
-/*  function assert_VaultSimple_invariantA(address _vault) internal {
+    /*  function assert_VaultSimple_invariantA(address _vault) internal {
         uint256 totalAssets = eTST.totalAssets();
 
         assertEq(totalAssets, ghost_sumBalances[_vault], string.concat("VaultSimple_invariantA: ", vaultNames[_vault]));

@@ -22,7 +22,7 @@ contract VaultModuleHandler is BaseHandler {
     //                                           ACTIONS                                         //
     ///////////////////////////////////////////////////////////////////////////////////////////////
 
-/*     function deposit(uint256 assets, address receiver) external setup {
+    /*     function deposit(uint256 assets, address receiver) external setup {
         bool success;
         bytes memory returnData;
 
@@ -61,8 +61,7 @@ contract VaultModuleHandler is BaseHandler {
         uint256 previewedShares = eTST.previewDeposit(assets);
 
         _before();
-        (success, returnData) =
-            actor.proxy(target, abi.encodeWithSelector(IERC4626.deposit.selector, assets, receiver));
+        (success, returnData) = actor.proxy(target, abi.encodeWithSelector(IERC4626.deposit.selector, assets, receiver));
 
         if (success) {
             _after();
@@ -77,7 +76,7 @@ contract VaultModuleHandler is BaseHandler {
         }
     }
 
-/*     function mint(uint256 shares, address receiver) external setup {
+    /*     function mint(uint256 shares, address receiver) external setup {
         bool success;
         bytes memory returnData;
 
@@ -114,8 +113,7 @@ contract VaultModuleHandler is BaseHandler {
         uint256 previewedAssets = eTST.previewMint(shares);
 
         _before();
-        (success, returnData) =
-            actor.proxy(target, abi.encodeWithSelector(IERC4626.mint.selector, shares, receiver));
+        (success, returnData) = actor.proxy(target, abi.encodeWithSelector(IERC4626.mint.selector, shares, receiver));
 
         if (success) {
             _after();
@@ -139,9 +137,8 @@ contract VaultModuleHandler is BaseHandler {
         uint256 previewedShares = eTST.previewWithdraw(assets);
 
         _before();
-        (success, returnData) = actor.proxy(
-            target, abi.encodeWithSelector(IERC4626.withdraw.selector, assets, receiver, address(actor))
-        );
+        (success, returnData) =
+            actor.proxy(target, abi.encodeWithSelector(IERC4626.withdraw.selector, assets, receiver, address(actor)));
 
         if (success) {
             _after();
@@ -165,9 +162,8 @@ contract VaultModuleHandler is BaseHandler {
         uint256 previewedAssets = eTST.previewRedeem(shares);
 
         _before();
-        (success, returnData) = actor.proxy(
-            target, abi.encodeWithSelector(IERC4626.redeem.selector, shares, receiver, address(actor))
-        );
+        (success, returnData) =
+            actor.proxy(target, abi.encodeWithSelector(IERC4626.redeem.selector, shares, receiver, address(actor)));
 
         if (success) {
             _after();
@@ -193,7 +189,7 @@ contract VaultModuleHandler is BaseHandler {
 
         uint256 redeemedAssets = eTST.redeem(shares, address(this), address(this));
 
-        assertLe(redeemedAssets, _assets,ERC4626_ROUNDTRIP_INVARIANT_A);
+        assertLe(redeemedAssets, _assets, ERC4626_ROUNDTRIP_INVARIANT_A);
     }
 
     function assert_ERC4626_roundtrip_invariantB(uint256 _assets) external {
@@ -229,9 +225,7 @@ contract VaultModuleHandler is BaseHandler {
         /// @dev restore original state to not break invariants
         eTST.withdraw(depositedAssets, address(this), address(this));
 
-        assertGe(
-            depositedAssets, redeemedAssets, ERC4626_ROUNDTRIP_INVARIANT_D
-        );
+        assertGe(depositedAssets, redeemedAssets, ERC4626_ROUNDTRIP_INVARIANT_D);
     }
 
     function assert_ERC4626_roundtrip_invariantE(uint256 _shares) external {
@@ -251,9 +245,7 @@ contract VaultModuleHandler is BaseHandler {
 
         uint256 redeemedAssets = eTST.redeem(_shares, address(this), address(this));
 
-        assertLe(
-            redeemedAssets, depositedAssets, ERC4626_ROUNDTRIP_INVARIANT_F
-        );
+        assertLe(redeemedAssets, depositedAssets, ERC4626_ROUNDTRIP_INVARIANT_F);
     }
 
     function assert_ERC4626_roundtrip_invariantG(uint256 _assets) external {

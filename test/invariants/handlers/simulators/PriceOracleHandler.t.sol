@@ -5,7 +5,9 @@ import {BaseHandler} from "../../base/BaseHandler.t.sol";
 
 /// @title PriceOracleHandler
 /// @notice Handler test contract for the  PriceOracle actions
-contract PriceOracleHandler is BaseHandler {// TODO: Update this contract to match the actual implementation
+contract PriceOracleHandler is
+    BaseHandler // TODO: Update this contract to match the actual implementation
+{
     ///////////////////////////////////////////////////////////////////////////////////////////////
     //                                      STATE VARIABLES                                      //
     ///////////////////////////////////////////////////////////////////////////////////////////////
@@ -25,7 +27,7 @@ contract PriceOracleHandler is BaseHandler {// TODO: Update this contract to mat
         oracle.setPrice(baseAsset, unitOfAccount, price);
     }
 
-/*  
+    /*  
     /// @notice This function simulates changes in the interest rate model
     function setResolvedAsset(uint256 i) external {
         address vaultAddress = address(eTST);

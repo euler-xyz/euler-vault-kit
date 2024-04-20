@@ -15,14 +15,16 @@ abstract contract ProtocolAssertions is StdAsserts, BaseTest {
 
     /// @notice Checks whether the account is healthy from a BORROWING perspective
     function isAccountHealthy(address _account) internal view returns (bool) {
-        (uint256 collateralValue, uint256 liabilityValue) = _getAccountLiquidity(_account, false);/// @dev not checking for a liquidatable account, just an unhealthy one
+        (uint256 collateralValue, uint256 liabilityValue) = _getAccountLiquidity(_account, false);
+        /// @dev not checking for a liquidatable account, just an unhealthy one
         return isAccountHealthy(liabilityValue, collateralValue);
     }
 
     /// @notice Checks whether the account is healthy from a LIQUIDATION perspective
     function isAccountHealthyLiquidation(address _account) internal view returns (bool) {
-        (uint256 collateralValue, uint256 liabilityValue) = _getAccountLiquidity(_account, true);/// @dev checking for a liquidatable account, just an unhealthy one
-        return isAccountHealthy(liabilityValue, collateralValue);
+        (uint256 collateralValue, uint256 liabilityValue) = _getAccountLiquidity(_account, true);
+        /// @dev checking for a liquidatable account, just an unhealthy one
+        return isAccountHealthy(liabilityValue, collateralValue) && liabilityValue > 0;
     }
 
     /// @notice Checks whether the account is healthy

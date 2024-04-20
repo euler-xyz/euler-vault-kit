@@ -19,15 +19,15 @@ import {PriceOracleHandler} from "./handlers/simulators/PriceOracleHandler.t.sol
 
 /// @notice Helper contract to aggregate all handler contracts, inherited in BaseInvariants
 abstract contract HandlerAggregator is
-    TokenModuleHandler,// Module handlers
+    TokenModuleHandler, // Module handlers
     VaultModuleHandler,
     BorrowingModuleHandler,
     LiquidationModuleHandler,
     RiskManagerModuleHandler,
     BalanceForwarderModuleHandler,
     GovernanceModuleHandler,
-    EVCHandler,// EVC handler
-    DonationAttackHandler,// Simulator handlers
+    EVCHandler, // EVC handler
+    DonationAttackHandler, // Simulator handlers
     FlashLoanHandler,
     IRMHandler,
     PriceOracleHandler

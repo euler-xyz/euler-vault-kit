@@ -12,6 +12,7 @@ import {InterestInvariants} from "./invariants/InterestInvariants.t.sol";
 /// @notice Wrappers for the protocol invariants implemented in each invariants contract
 /// @dev recognised by Echidna when property mode is activated
 /// @dev Inherits BaseInvariants that inherits HandlerAggregator
+
 abstract contract Invariants is
     BaseInvariants,
     TokenModuleInvariants,
@@ -42,7 +43,7 @@ abstract contract Invariants is
             assert_TM_INVARIANT_B(actorAddresses[i]);
             _sumBalanceOf += eTST.balanceOf(actorAddresses[i]);
         }
-        assert_TM_INVARIANT_C(_sumBalanceOf); // @audit-issue violated
+        assert_TM_INVARIANT_C(_sumBalanceOf);
         return true;
     }
 
@@ -82,7 +83,7 @@ abstract contract Invariants is
         for (uint256 i; i < NUMBER_OF_ACTORS; i++) {
             assert_BM_INVARIANT_A(actorAddresses[i]);
             assert_BM_INVARIANT_J(actorAddresses[i]);
-            assert_BM_INVARIANT_O(actorAddresses[i]);// @audit violated
+            assert_BM_INVARIANT_O(actorAddresses[i]);
         }
         assert_BM_INVARIANT_B();
         return true;

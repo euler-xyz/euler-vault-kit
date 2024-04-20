@@ -3,6 +3,7 @@ pragma solidity ^0.8.19;
 
 // Contracts
 import {ProtocolAssertions} from "./ProtocolAssertions.t.sol";
+
 // Test Contracts
 import {InvariantsSpec} from "../InvariantsSpec.t.sol";
 
@@ -14,10 +15,10 @@ contract BaseHooks is ProtocolAssertions, InvariantsSpec {
     ///////////////////////////////////////////////////////////////////////////////////////////////
     //                                         HELPERS                                           //
     ///////////////////////////////////////////////////////////////////////////////////////////////
-    
+
     /// @notice Calculates the exchange rate for the eTST vault
     function _calculateExchangeRate() internal view returns (uint256) {
-        return eTST.totalSupply() == 0 ? 1e18 : eTST.totalAssets() / eTST.totalSupply();
+        return (eTST.totalAssets() + VIRTUAL_DEPOSIT_AMOUNT) / (eTST.totalSupply() + VIRTUAL_DEPOSIT_AMOUNT);
     }
 
     function _getHealthScore(uint256 liabilityValue, uint256 collateralValue) internal pure returns (uint256) {

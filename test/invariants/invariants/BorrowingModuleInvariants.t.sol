@@ -6,7 +6,7 @@ import "forge-std/console.sol";
 
 // Contracts
 import {ERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
-import 'src/EVault/shared/Constants.sol';
+import "src/EVault/shared/Constants.sol";
 
 // Base Contracts
 import {HandlerAggregator} from "../HandlerAggregator.t.sol";
@@ -15,42 +15,22 @@ import {HandlerAggregator} from "../HandlerAggregator.t.sol";
 /// @notice Implements Invariants for the protocol borrowing module
 /// @dev Inherits HandlerAggregator for checking actions in assertion testing mode
 abstract contract BorrowingModuleInvariants is HandlerAggregator {
-
-    function assert_BM_INVARIANT_A(
-        address _borrower
-    ) internal {
-       assertGe(
-            eTST.totalBorrows(),
-            eTST.debtOf(_borrower),
-            BM_INVARIANT_A
-        );
+    function assert_BM_INVARIANT_A(address _borrower) internal {
+        assertGe(eTST.totalBorrows(), eTST.debtOf(_borrower), BM_INVARIANT_A);
     }
 
     function assert_BM_INVARIANT_B() internal {
-        assertApproxEqAbs(
-            eTST.totalBorrows(),
-            _getDebtSum(),
-            NUMBER_OF_ACTORS,
-            BM_INVARIANT_B
-        );
+        assertApproxEqAbs(eTST.totalBorrows(), _getDebtSum(), NUMBER_OF_ACTORS, BM_INVARIANT_B);
     }
 
     function assert_BM_INVARIANT_C() internal {
         uint256 _debtSum = _getDebtSum();
         if (_debtSum == 0) {
-            assertEq(
-                eTST.totalBorrows(),
-                0,
-                BM_INVARIANT_C
-            );
+            assertEq(eTST.totalBorrows(), 0, BM_INVARIANT_C);
         }
 
         if (eTST.totalBorrows() == 0) {
-            assertEq(
-                _debtSum,
-                0,
-                BM_INVARIANT_C
-            );
+            assertEq(_debtSum, 0, BM_INVARIANT_C);
         }
     }
 
@@ -58,34 +38,25 @@ abstract contract BorrowingModuleInvariants is HandlerAggregator {
         //If debt has no decimals
         if (eTST.debtOfExact(_actor) % (1 << INTERNAL_DEBT_PRECISION_SHIFT) == 0) {
             // Debt of actor with 31 bits of precision should be equal to debt of actor exact
-            assertEq(
-                eTST.debtOf(_actor) << INTERNAL_DEBT_PRECISION_SHIFT,
-                eTST.debtOfExact(_actor),
-                BM_INVARIANT_J
-            );
+            assertEq(eTST.debtOf(_actor) << INTERNAL_DEBT_PRECISION_SHIFT, eTST.debtOfExact(_actor), BM_INVARIANT_J);
         } else {
             // If it has decimals, debtOf should be equal that debtOfExact rounded to the next integer
             assertEq(
-                eTST.debtOf(_actor),
-                (eTST.debtOfExact(_actor) >> INTERNAL_DEBT_PRECISION_SHIFT) + 1,
-                BM_INVARIANT_J
+                eTST.debtOf(_actor), (eTST.debtOfExact(_actor) >> INTERNAL_DEBT_PRECISION_SHIFT) + 1, BM_INVARIANT_J
             );
         }
     }
 
     function assert_BM_INVARIANT_O(address _actor) internal {
-        assertTrue(
-            eTST.debtOf(_actor) != 0
-                ? eTST.balanceOf(_actor) != 0
-                : true,
-            BM_INVARIANT_O
-        );
+        if (eTST.debtOf(_actor) != 0) {
+            (uint256 collateralValue,) = _getAccountLiquidity(address(actor), false);
+            assertGt(collateralValue, 0, BM_INVARIANT_O);
+        }
     }
 
     //////////////////////////////////////////////////////////////////////////////////////////////
     //                                       DISCARDED                                          //
     //////////////////////////////////////////////////////////////////////////////////////////////
-
 
     /*     function assert_BM_INVARIANT_F() internal {
         if (eTST.totalBorrows() > 0) {

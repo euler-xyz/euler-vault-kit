@@ -65,14 +65,12 @@ contract BorrowingModuleHandler is BaseHandler {
         require(eTST.debtOf(receiver) > 0, "BorrowingModuleHandler: No debt to repay");
 
         _before();
-        (success, returnData) =
-            actor.proxy(target, abi.encodeWithSelector(IBorrowing.repay.selector, assets, receiver));
+        (success, returnData) = actor.proxy(target, abi.encodeWithSelector(IBorrowing.repay.selector, assets, receiver));
 
         if (success) {
             _after();
 
             (, uint256 liabilityValueAfter) = _getAccountLiquidity(receiver, false);
-
 
             /// @dev BM_INVARIANT_D
             assertLe(liabilityValueAfter, liabilityValueBefore, BM_INVARIANT_D);
@@ -89,11 +87,11 @@ contract BorrowingModuleHandler is BaseHandler {
         address target = address(eTST);
 
         _before();
-        (success, returnData) =
-            actor.proxy(target, abi.encodeWithSelector(IBorrowing.loop.selector, amount, receiver));
+        (success, returnData) = actor.proxy(target, abi.encodeWithSelector(IBorrowing.loop.selector, amount, receiver));
 
         if (success) {
-            _increaseGhostShares(amount, address(receiver));
+            uint256 shares = abi.decode(returnData, (uint256));
+            _increaseGhostShares(shares, address(receiver));
         }
     }
 
@@ -126,8 +124,7 @@ contract BorrowingModuleHandler is BaseHandler {
         address target = address(eTST);
 
         _before();
-        (success, returnData) =
-            actor.proxy(target, abi.encodeWithSelector(IBorrowing.pullDebt.selector, from, assets));
+        (success, returnData) = actor.proxy(target, abi.encodeWithSelector(IBorrowing.pullDebt.selector, from, assets));
 
         if (success) {
             _after();
@@ -155,7 +152,10 @@ contract BorrowingModuleHandler is BaseHandler {
 
         if (eTST.totalBorrows() == 0) {
             uint256 balanceBefore = eTST.balanceOf(address(actor));
-            (success, returnData) = actor.proxy(address(eTST), abi.encodeWithSelector(IERC4626.redeem.selector, balanceBefore, address(actor), address(actor)));
+            (success, returnData) = actor.proxy(
+                address(eTST),
+                abi.encodeWithSelector(IERC4626.redeem.selector, balanceBefore, address(actor), address(actor))
+            );
             _decreaseGhostShares(balanceBefore, address(actor));
             assertTrue(success, BM_INVARIANT_G);
         }
@@ -171,7 +171,8 @@ contract BorrowingModuleHandler is BaseHandler {
             return;
         }
 
-        (success, returnData) = actor.proxy(address(eTST), abi.encodeWithSelector(IBorrowing.repay.selector, totalOwed, address(actor)));
+        (success, returnData) =
+            actor.proxy(address(eTST), abi.encodeWithSelector(IBorrowing.repay.selector, totalOwed, address(actor)));
 
         assertTrue(success, BM_INVARIANT_P);
         assertEq(eTST.debtOf(address(actor)), 0, BM_INVARIANT_P);
@@ -181,14 +182,15 @@ contract BorrowingModuleHandler is BaseHandler {
         bool success;
         bytes memory returnData;
 
-
-        uint256 debtBefore = eTST.debtOf(address(actor)); 
+        uint256 debtBefore = eTST.debtOf(address(actor));
         uint256 balanceBefore = eTST.balanceOf(address(actor));
 
-        (success, returnData) = actor.proxy(address(eTST), abi.encodeWithSelector(IBorrowing.loop.selector, amount, address(actor)));
+        (success, returnData) =
+            actor.proxy(address(eTST), abi.encodeWithSelector(IBorrowing.loop.selector, amount, address(actor)));
 
         if (success) {
-            (success, returnData) = actor.proxy(address(eTST), abi.encodeWithSelector(IBorrowing.deloop.selector, amount, address(actor)));
+            (success, returnData) =
+                actor.proxy(address(eTST), abi.encodeWithSelector(IBorrowing.deloop.selector, amount, address(actor)));
         }
 
         if (success) {
@@ -198,7 +200,7 @@ contract BorrowingModuleHandler is BaseHandler {
             assertGe(balanceBefore, balanceAfter, BM_INVARIANT_N1);
             assertLe(debtBefore, debtAfter, BM_INVARIANT_N2);
         }
- }
+    }
 
     ///////////////////////////////////////////////////////////////////////////////////////////////
     //                                         OWNER ACTIONS                                     //

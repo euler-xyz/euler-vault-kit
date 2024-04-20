@@ -30,9 +30,10 @@ abstract contract InvariantsSpec {
 
     string constant VM_INVARIANT_A = "VM_INVARIANT_A: underlying.balanceOf(vault) >= cash";
 
-    string constant VM_INVARIANT_B = "VM_INVARIANT_B: If totalSupply increases new totalSupply must be less than or equal to supply cap";
+    string constant VM_INVARIANT_B =
+        "VM_INVARIANT_B: If totalSupply increases new totalSupply must be less than or equal to supply cap";
 
-    string constant VM_INVARIANT_C = "VM_INVARIANT_C: If totalSupply == 0 <=> totalAssets == 0";
+    string constant VM_INVARIANT_C = "VM_INVARIANT_C: If totalAssets == 0 <=> totalSupply == 0";
 
     ///////////////////////////////////////////////////////////////////////////////////////////////
     //                              VAULT MODULE: ERC4626 INVARIANTS                             //
@@ -44,39 +45,46 @@ abstract contract InvariantsSpec {
 
     string constant ERC4626_ASSETS_INVARIANT_B = "ERC4626_ASSETS_INVARIANT_B: totalAssets MUST NOT revert";
 
-    string constant ERC4626_ASSETS_INVARIANT_C = "ERC4626_ASSETS_INVARIANT_C: convertToShares MUST NOT show any variations depending on the caller";
+    string constant ERC4626_ASSETS_INVARIANT_C =
+        "ERC4626_ASSETS_INVARIANT_C: convertToShares MUST NOT show any variations depending on the caller";
 
-    string constant ERC4626_ASSETS_INVARIANT_D = "ERC4626_ASSETS_INVARIANT_D: convertToAssets MUST NOT show any variations depending on the caller";
+    string constant ERC4626_ASSETS_INVARIANT_D =
+        "ERC4626_ASSETS_INVARIANT_D: convertToAssets MUST NOT show any variations depending on the caller";
 
     /// @notice DEPOSIT
 
     string constant ERC4626_DEPOSIT_INVARIANT_A = "ERC4626_DEPOSIT_INVARIANT_A: maxDeposit MUST NOT revert";
 
-    string constant ERC4626_DEPOSIT_INVARIANT_B = "ERC4626_DEPOSIT_INVARIANT_B: previewDeposit MUST return close to and no more than shares minted at deposit if called in the same transaction";
+    string constant ERC4626_DEPOSIT_INVARIANT_B =
+        "ERC4626_DEPOSIT_INVARIANT_B: previewDeposit MUST return close to and no more than shares minted at deposit if called in the same transaction";
 
     /// @notice MINT
 
     string constant ERC4626_MINT_INVARIANT_A = "ERC4626_MINT_INVARIANT_A: maxMint MUST NOT revert";
 
-    string constant ERC4626_MINT_INVARIANT_B = "ERC4626_MINT_INVARIANT_B: previewMint MUST return close to and no fewer than assets deposited at mint if called in the same transaction";
+    string constant ERC4626_MINT_INVARIANT_B =
+        "ERC4626_MINT_INVARIANT_B: previewMint MUST return close to and no fewer than assets deposited at mint if called in the same transaction";
 
     /// @notice WITHDRAW
 
     string constant ERC4626_WITHDRAW_INVARIANT_A = "ERC4626_WITHDRAW_INVARIANT_A: maxWithdraw MUST NOT revert";
 
-    string constant ERC4626_WITHDRAW_INVARIANT_B = "ERC4626_WITHDRAW_INVARIANT_B: previewWithdraw MUST return close to and no fewer than shares burned at withdraw if called in the same transaction";
+    string constant ERC4626_WITHDRAW_INVARIANT_B =
+        "ERC4626_WITHDRAW_INVARIANT_B: previewWithdraw MUST return close to and no fewer than shares burned at withdraw if called in the same transaction";
 
     /// @notice REDEEM
 
     string constant ERC4626_REDEEM_INVARIANT_A = "ERC4626_REDEEM_INVARIANT_A: maxRedeem MUST NOT revert";
 
-    string constant ERC4626_REDEEM_INVARIANT_B = "ERC4626_REDEEM_INVARIANT_B: previewRedeem MUST return close to and no more than assets redeemed at redeem if called in the same transaction";
+    string constant ERC4626_REDEEM_INVARIANT_B =
+        "ERC4626_REDEEM_INVARIANT_B: previewRedeem MUST return close to and no more than assets redeemed at redeem if called in the same transaction";
 
     /// @notice ROUNDTRIP
 
     string constant ERC4626_ROUNDTRIP_INVARIANT_A = "ERC4626_ROUNDTRIP_INVARIANT_A: redeem(deposit(a)) <= a";
 
-    string constant ERC4626_ROUNDTRIP_INVARIANT_B = "ERC4626_ROUNDTRIP_INVARIANT_B: s = deposit(a) s' = withdraw(a) s' >= s";
+    string constant ERC4626_ROUNDTRIP_INVARIANT_B =
+        "ERC4626_ROUNDTRIP_INVARIANT_B: s = deposit(a) s' = withdraw(a) s' >= s";
 
     string constant ERC4626_ROUNDTRIP_INVARIANT_C = "ERC4626_ROUNDTRIP_INVARIANT_C: deposit(redeem(s)) <= s";
 
@@ -88,7 +96,8 @@ abstract contract InvariantsSpec {
 
     string constant ERC4626_ROUNDTRIP_INVARIANT_G = "ERC4626_ROUNDTRIP_INVARIANT_G: mint(withdraw(a)) >= a";
 
-    string constant ERC4626_ROUNDTRIP_INVARIANT_H = "ERC4626_ROUNDTRIP_INVARIANT_H: s = withdraw(a) s' = deposit(a) s' <= s";
+    string constant ERC4626_ROUNDTRIP_INVARIANT_H =
+        "ERC4626_ROUNDTRIP_INVARIANT_H: s = withdraw(a) s' = deposit(a) s' <= s";
 
     ///////////////////////////////////////////////////////////////////////////////////////////////
     //                                     BORROWING MODULE                                      //
@@ -106,9 +115,11 @@ abstract contract InvariantsSpec {
 
     string constant BM_INVARIANT_F = "BM_INVARIANT_F: If theres at least one borrow, the asset.balanceOf(vault) > 0"; //TODO: Discarded
 
-    string constant BM_INVARIANT_G = "BM_INVARIANT_G: a user should always be able to withdraw all if there is no outstanding debt";
+    string constant BM_INVARIANT_G =
+        "BM_INVARIANT_G: a user should always be able to withdraw all if there is no outstanding debt";
 
-    string constant BM_INVARIANT_H = "BM_INVARIANT_H: If totalBorrows increases new totalBorrows must be less than or equal to borrow cap";
+    string constant BM_INVARIANT_H =
+        "BM_INVARIANT_H: If totalBorrows increases new totalBorrows must be less than or equal to borrow cap";
 
     string constant BM_INVARIANT_I = "BM_INVARIANT_I: Controller cannot be disabled if there is any liability";
 
@@ -118,16 +129,16 @@ abstract contract InvariantsSpec {
 
     string constant BM_INVARIANT_L = "BM_INVARIANT_L: Functions that can operate when user is unhealthy"; //TODO
 
-    string constant BM_INVARIANT_M = "BM_INVARIANT_M: Loop should get to the same state as depositing and borrowing in loop"; //TODO
+    string constant BM_INVARIANT_M =
+        "BM_INVARIANT_M: Loop should get to the same state as depositing and borrowing in loop"; //TODO
 
     string constant BM_INVARIANT_N1 = "BM_INVARIANT_N1: loop(x) => deloop(x) users shouldn't gain any asset";
 
     string constant BM_INVARIANT_N2 = "BM_INVARIANT_N2: loop(x) => deloop(x) users debt shouldn't decrease";
 
-    string constant BM_INVARIANT_O = "BM_INVARIANT_O: debt(user) != 0 => vault.balanceOf(user) != 0";
+    string constant BM_INVARIANT_O = "BM_INVARIANT_O: debt(user) != 0 => collateralValue != 0";
 
     string constant BM_INVARIANT_P = "BM_INVARIANT_P: a user can always repay debt in full";
-
 
     ///////////////////////////////////////////////////////////////////////////////////////////////
     //                                          INTEREST                                         //
@@ -153,8 +164,8 @@ abstract contract InvariantsSpec {
 
     string constant LM_INVARIANT_C = "LM_INVARIANT_C: Only a liquidation can leave a healthy account unhealthy";
 
-    string constant LM_INVARIANT_D = "LM_INVARIANT_D: Only liquidations can deteriorate health score of an already unhealthy account";
+    string constant LM_INVARIANT_D =
+        "LM_INVARIANT_D: Only liquidations can deteriorate health score of an already unhealthy account";
 
     //TODO exchangeRate > exchangeRate' -> liquidation
-
 }

@@ -22,19 +22,15 @@ contract Actor {
     }
 
     /// @notice Helper function to proxy a call to a target contract, used to avoid Tester calling contracts
-    function proxy(
-        address _target,
-        bytes memory _calldata
-    ) public returns (bool success, bytes memory returnData) {
+    function proxy(address _target, bytes memory _calldata) public returns (bool success, bytes memory returnData) {
         (success, returnData) = address(_target).call(_calldata);
     }
 
     /// @notice Helper function to proxy a call and value to a target contract, used to avoid Tester calling contracts
-    function proxy(
-        address _target,
-        bytes memory _calldata,
-        uint256 value
-    ) public returns (bool success, bytes memory returnData) {
+    function proxy(address _target, bytes memory _calldata, uint256 value)
+        public
+        returns (bool success, bytes memory returnData)
+    {
         (success, returnData) = address(_target).call{value: value}(_calldata);
     }
 

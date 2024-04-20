@@ -26,11 +26,10 @@ contract RiskManagerModuleHandler is BaseHandler {
         // Get one of the three actors randomly
         address target = address(eTST);
 
-        (success, returnData) =
-            actor.proxy(target, abi.encodeWithSelector(IRiskManager.disableController.selector));
+        (success, returnData) = actor.proxy(target, abi.encodeWithSelector(IRiskManager.disableController.selector));
 
         if (success) {
             assert(true);
         }
-    } 
+    }
 }

@@ -39,7 +39,7 @@ contract BaseHandler is HookAggregator {
 
     // VAULT MODULE
 
-    /// @notice Track of the total amount borrowed 
+    /// @notice Track of the total amount borrowed
     uint256 internal ghost_totalBorrowed;
 
     /// @notice Track of the total amount borrowed per user

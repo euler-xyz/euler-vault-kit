@@ -11,11 +11,13 @@ import "forge-std/console.sol";
 /// @notice Implements Invariants for the ERC20 functionality of the vault
 /// @dev Inherits HandlerAggregator to check actions in assertion testing mode
 abstract contract TokenModuleInvariants is HandlerAggregator {
-
     function assert_TM_INVARIANT_A() internal {
         uint256 extrabalance = eTST.balanceOf(eTST.feeReceiver()) + eTST.balanceOf(eTST.protocolFeeReceiver());
         assertApproxEqAbs(
-            eTST.totalSupply(), ghost_sumSharesBalances + eTST.accumulatedFees() + extrabalance, NUMBER_OF_ACTORS, TM_INVARIANT_A
+            eTST.totalSupply(),
+            ghost_sumSharesBalances + eTST.accumulatedFees() + extrabalance,
+            NUMBER_OF_ACTORS,
+            TM_INVARIANT_A
         );
     }
 
@@ -26,5 +28,5 @@ abstract contract TokenModuleInvariants is HandlerAggregator {
     function assert_TM_INVARIANT_C(uint256 _sumBalances) internal {
         uint256 extrabalance = eTST.balanceOf(eTST.feeReceiver()) + eTST.balanceOf(eTST.protocolFeeReceiver());
         assertEq(eTST.totalSupply(), _sumBalances + eTST.accumulatedFees() + extrabalance, TM_INVARIANT_C);
-    } 
+    }
 }
