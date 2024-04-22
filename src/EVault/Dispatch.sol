@@ -85,7 +85,7 @@ abstract contract Dispatch is
     // External function which is only callable by the EVault itself. Its purpose is to be static called by `delegateToModuleView`
     // which allows view functions to be implemented in modules, even though delegatecall cannot be directly used within
     // view functions.
-    function viewDelegate() external {
+    function viewDelegate() external payable {
         if (msg.sender != address(this)) revert E_Unauthorized();
 
         assembly {
