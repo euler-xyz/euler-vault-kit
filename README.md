@@ -43,14 +43,14 @@ forge test
 ### in `coverage` mode
 
 ```sh
-forge coverage
+./test/scripts/coverage.sh
 ```
 
 ### invariants tests (`/tests/invariants`)
 ```sh
-make echidna # property mode
-make echidna-assert # assertion mode
-make medusa
+./test/scripts/echidna.sh # property mode
+./test/scripts/echidna-assert.sh # assertion mode
+./test/scripts/medusa.sh 
 ```
 
 ## Safety
