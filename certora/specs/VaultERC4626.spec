@@ -24,8 +24,8 @@ methods {
     function decimals() external returns uint8 envfree;
     function asset() external returns address envfree;
 
-    function totalSupply() external returns uint256 envfree;
-    function balanceOf(address) external returns uint256 envfree;
+    // function totalSupply() external returns uint256 envfree;
+    // function balanceOf(address) external returns uint256 envfree; //NOT ENVFREE
     // Not implemented by EVault
     // function nonces(address) external returns uint256 envfree;
 
@@ -35,19 +35,19 @@ methods {
     function withdraw(uint256,address,address) external;
     function redeem(uint256,address,address) external;
 
-    function totalAssets() external returns uint256 envfree;
+    // function totalAssets() external returns uint256 envfree;
     function userAssets(address) external returns uint256 envfree;
-    function convertToShares(uint256) external returns uint256 envfree;
-    function convertToAssets(uint256) external returns uint256 envfree;
-    function previewDeposit(uint256) external returns uint256 envfree;
-    function previewMint(uint256) external returns uint256 envfree;
-    function previewWithdraw(uint256) external returns uint256 envfree;
-    function previewRedeem(uint256) external returns uint256 envfree;
+    // function convertToShares(uint256) external returns uint256 envfree;
+    // function convertToAssets(uint256) external returns uint256 envfree;
+    // function previewDeposit(uint256) external returns uint256 envfree;
+    // function previewMint(uint256) external returns uint256 envfree;
+    // function previewWithdraw(uint256) external returns uint256 envfree;
+    // function previewRedeem(uint256) external returns uint256 envfree;
 
-    function maxDeposit(address) external returns uint256 envfree;
-    function maxMint(address) external returns uint256 envfree;
-    function maxWithdraw(address) external returns uint256 envfree;
-    function maxRedeem(address) external returns uint256 envfree;
+    // function maxDeposit(address) external returns uint256 envfree;
+    // function maxMint(address) external returns uint256 envfree;
+    // function maxWithdraw(address) external returns uint256 envfree;
+    // function maxRedeem(address) external returns uint256 envfree;
 
     function permit(address,address,uint256,uint256,uint8,bytes32,bytes32) external;
     function DOMAIN_SEPARATOR() external returns bytes32;
@@ -57,7 +57,7 @@ methods {
     function _.transfer(address,uint256) external  => DISPATCHER(true);
     function _.transferFrom(address,address,uint256) external => DISPATCHER(true);
 
-    function ERC20a.balanceOf(address) external returns uint256 envfree;
+    // function ERC20a.balanceOf(address) external returns uint256 envfree; // NOT ENVFREE
     function ERC20a.transferFrom(address,address,uint256) external returns bool;
 }
 
@@ -68,8 +68,9 @@ methods {
 ////////////////////////////////////////////////////////////////////////////////
 
 rule conversionOfZero {
-    uint256 convertZeroShares = convertToAssets(0);
-    uint256 convertZeroAssets = convertToShares(0);
+    env e;
+    uint256 convertZeroShares = convertToAssets(e, 0);
+    uint256 convertZeroAssets = convertToShares(e, 0);
 
     assert convertZeroShares == 0,
         "converting zero shares must return zero assets";
@@ -78,45 +79,50 @@ rule conversionOfZero {
 }
 
 rule convertToAssetsWeakAdditivity() {
+    env e;
     uint256 sharesA; uint256 sharesB;
     require sharesA + sharesB < max_uint128
-         && convertToAssets(sharesA) + convertToAssets(sharesB) < to_mathint(max_uint256)
-         && convertToAssets(require_uint256(sharesA + sharesB)) < max_uint256;
-    assert convertToAssets(sharesA) + convertToAssets(sharesB) <= to_mathint(convertToAssets(require_uint256(sharesA + sharesB))),
+         && convertToAssets(e, sharesA) + convertToAssets(e, sharesB) < to_mathint(max_uint256)
+         && convertToAssets(e, require_uint256(sharesA + sharesB)) < max_uint256;
+    assert convertToAssets(e, sharesA) + convertToAssets(e, sharesB) <= to_mathint(convertToAssets(e, require_uint256(sharesA + sharesB))),
         "converting sharesA and sharesB to assets then summing them must yield a smaller or equal result to summing them then converting";
 }
 
 rule convertToSharesWeakAdditivity() {
+    env e;
     uint256 assetsA; uint256 assetsB;
     require assetsA + assetsB < max_uint128
-         && convertToAssets(assetsA) + convertToAssets(assetsB) < to_mathint(max_uint256)
-         && convertToAssets(require_uint256(assetsA + assetsB)) < max_uint256;
-    assert convertToAssets(assetsA) + convertToAssets(assetsB) <= to_mathint(convertToAssets(require_uint256(assetsA + assetsB))),
+         && convertToAssets(e, assetsA) + convertToAssets(e, assetsB) < to_mathint(max_uint256)
+         && convertToAssets(e, require_uint256(assetsA + assetsB)) < max_uint256;
+    assert convertToAssets(e, assetsA) + convertToAssets(e, assetsB) <= to_mathint(convertToAssets(e, require_uint256(assetsA + assetsB))),
         "converting assetsA and assetsB to shares then summing them must yield a smaller or equal result to summing them then converting";
 }
 
 rule conversionWeakMonotonicity {
+    env e;
     uint256 smallerShares; uint256 largerShares;
     uint256 smallerAssets; uint256 largerAssets;
 
-    assert smallerShares < largerShares => convertToAssets(smallerShares) <= convertToAssets(largerShares),
+    assert smallerShares < largerShares => convertToAssets(e, smallerShares) <= convertToAssets(e, largerShares),
         "converting more shares must yield equal or greater assets";
-    assert smallerAssets < largerAssets => convertToShares(smallerAssets) <= convertToShares(largerAssets),
+    assert smallerAssets < largerAssets => convertToShares(e, smallerAssets) <= convertToShares(e, largerAssets),
         "converting more assets must yield equal or greater shares";
 }
 
 rule conversionWeakIntegrity() {
+    env e;
     uint256 sharesOrAssets;
-    assert convertToShares(convertToAssets(sharesOrAssets)) <= sharesOrAssets,
+    assert convertToShares(e, convertToAssets(e, sharesOrAssets)) <= sharesOrAssets,
         "converting shares to assets then back to shares must return shares less than or equal to the original amount";
-    assert convertToAssets(convertToShares(sharesOrAssets)) <= sharesOrAssets,
+    assert convertToAssets(e, convertToShares(e, sharesOrAssets)) <= sharesOrAssets,
         "converting assets to shares then back to assets must return assets less than or equal to the original amount";
 }
 
 rule convertToCorrectness(uint256 amount, uint256 shares)
 {
-    assert amount >= convertToAssets(convertToShares(amount));
-    assert shares >= convertToShares(convertToAssets(shares));
+    env e;
+    assert amount >= convertToAssets(e, convertToShares(e, amount));
+    assert shares >= convertToShares(e, convertToAssets(e, shares));
 }
 
 
@@ -134,10 +140,10 @@ rule depositMonotonicity() {
     safeAssumptions(e, e.msg.sender, receiver);
 
     deposit(e, smallerAssets, receiver);
-    uint256 smallerShares = balanceOf(receiver) ;
+    uint256 smallerShares = balanceOf(e, receiver) ;
 
     deposit(e, largerAssets, receiver) at start;
-    uint256 largerShares = balanceOf(receiver) ;
+    uint256 largerShares = balanceOf(e, receiver) ;
 
     assert smallerAssets < largerAssets => smallerShares <= largerShares,
             "when supply tokens outnumber asset tokens, a larger deposit of assets must produce an equal or greater number of shares";
@@ -157,31 +163,31 @@ rule zeroDepositZeroShares(uint assets, address receiver)
 ////                    #    Valid State                                   /////
 ////////////////////////////////////////////////////////////////////////////////
 
-invariant assetsMoreThanSupply()
-    totalAssets() >= totalSupply()
+invariant assetsMoreThanSupply(env e)
+    totalAssets(e) >= totalSupply(e)
     {
-        preserved with (env e) {
+        preserved {
             require e.msg.sender != currentContract;
             address any;
             safeAssumptions(e, any , e.msg.sender);
         }
     }
 
-invariant noAssetsIfNoSupply() 
-   ( userAssets(currentContract) == 0 => totalSupply() == 0 ) &&
-    ( totalAssets() == 0 => ( totalSupply() == 0 ))
+invariant noAssetsIfNoSupply(env e) 
+   ( userAssets(currentContract) == 0 => totalSupply(e) == 0 ) &&
+    ( totalAssets(e) == 0 => ( totalSupply(e) == 0 ))
 
     {
-        preserved with (env e) {
+        preserved {
         address any;
             safeAssumptions(e, any, e.msg.sender);
         }
     }
 
-invariant noSupplyIfNoAssets()
-    noSupplyIfNoAssetsDef()     // see defition in "helpers and miscellaneous" section
+invariant noSupplyIfNoAssets(env e)
+    noSupplyIfNoAssetsDef(e)     // see defition in "helpers and miscellaneous" section
     {
-        preserved with (env e) {
+        preserved {
             safeAssumptions(e, _, e.msg.sender);
         }
     }
@@ -209,8 +215,8 @@ hook Sload Vault.PackedUserSlot val currentContract.vaultStorage.users[KEY addre
 //     require sumOfBalances >= to_mathint(val);
 // }
 
-invariant totalSupplyIsSumOfBalances()
-    to_mathint(totalSupply()) == sumOfBalances;
+invariant totalSupplyIsSumOfBalances(env e)
+    to_mathint(totalSupply(e)) == sumOfBalances;
 
 
 
@@ -222,14 +228,14 @@ invariant totalSupplyIsSumOfBalances()
 rule totalsMonotonicity() {
     method f; env e; calldataarg args;
     require e.msg.sender != currentContract; 
-    uint256 totalSupplyBefore = totalSupply();
-    uint256 totalAssetsBefore = totalAssets();
+    uint256 totalSupplyBefore = totalSupply(e);
+    uint256 totalAssetsBefore = totalAssets(e);
     address receiver;
     safeAssumptions(e, receiver, e.msg.sender);
     callReceiverFunctions(f, e, receiver);
 
-    uint256 totalSupplyAfter = totalSupply();
-    uint256 totalAssetsAfter = totalAssets();
+    uint256 totalSupplyAfter = totalSupply(e);
+    uint256 totalAssetsAfter = totalAssets(e);
     
     // possibly assert totalSupply and totalAssets must not change in opposite directions
     assert totalSupplyBefore < totalSupplyAfter  <=> totalAssetsBefore < totalAssetsAfter,
@@ -278,14 +284,14 @@ rule dustFavorsTheHouse(uint assetsIn )
         
     require e.msg.sender != currentContract;
     safeAssumptions(e,e.msg.sender,e.msg.sender);
-    uint256 totalSupplyBefore = totalSupply();
+    uint256 totalSupplyBefore = totalSupply(e);
 
-    uint balanceBefore = ERC20a.balanceOf(currentContract);
+    uint balanceBefore = ERC20a.balanceOf(e, currentContract);
 
     uint shares = deposit(e,assetsIn, e.msg.sender);
     uint assetsOut = redeem(e,shares,e.msg.sender,e.msg.sender);
 
-    uint balanceAfter = ERC20a.balanceOf(currentContract);
+    uint balanceAfter = ERC20a.balanceOf(e, currentContract);
 
     assert balanceAfter >= balanceBefore;
 }
@@ -295,10 +301,10 @@ rule dustFavorsTheHouse(uint assetsIn )
 ////////////////////////////////////////////////////////////////////////////////
 
 
-invariant vaultSolvency()
-    totalAssets() >= totalSupply()  && userAssets(currentContract) >= totalAssets()  {
-      preserved with(env e){
-            requireInvariant totalSupplyIsSumOfBalances();
+invariant vaultSolvency(env e)
+    totalAssets(e) >= totalSupply(e)  && userAssets(currentContract) >= totalAssets(e)  {
+      preserved {
+            requireInvariant totalSupplyIsSumOfBalances(e);
             require e.msg.sender != currentContract;
             require currentContract != asset(); 
         }
@@ -307,12 +313,13 @@ invariant vaultSolvency()
 
 
 rule redeemingAllValidity() { 
+    env e;
     address owner; 
-    uint256 shares; require shares == balanceOf(owner);
+    uint256 shares; require shares == balanceOf(e, owner);
     
-    env e; safeAssumptions(e, _, owner);
+    safeAssumptions(e, _, owner);
     redeem(e, shares, _, owner);
-    uint256 ownerBalanceAfter = balanceOf(owner);
+    uint256 ownerBalanceAfter = balanceOf(e, owner);
     assert ownerBalanceAfter == 0;
 }
 
@@ -333,18 +340,18 @@ filtered {
     require currentContract != contributor
          && currentContract != receiver;
 
-    require previewDeposit(assets) + balanceOf(receiver) <= max_uint256; // safe assumption because call to _mint will revert if totalSupply += amount overflows
-    require shares + balanceOf(receiver) <= max_uint256; // same as above
+    require previewDeposit(e, assets) + balanceOf(e, receiver) <= max_uint256; // safe assumption because call to _mint will revert if totalSupply += amount overflows
+    require shares + balanceOf(e, receiver) <= max_uint256; // same as above
 
     safeAssumptions(e, contributor, receiver);
 
     uint256 contributorAssetsBefore = userAssets(contributor);
-    uint256 receiverSharesBefore = balanceOf(receiver);
+    uint256 receiverSharesBefore = balanceOf(e, receiver);
 
     callContributionMethods(e, f, assets, shares, receiver);
 
     uint256 contributorAssetsAfter = userAssets(contributor);
-    uint256 receiverSharesAfter = balanceOf(receiver);
+    uint256 receiverSharesAfter = balanceOf(e, receiver);
 
     assert contributorAssetsBefore > contributorAssetsAfter <=> receiverSharesBefore < receiverSharesAfter,
         "a contributor's assets must decrease if and only if the receiver's shares increase";
@@ -381,12 +388,12 @@ filtered {
 
     safeAssumptions(e, receiver, owner);
 
-    uint256 ownerSharesBefore = balanceOf(owner);
+    uint256 ownerSharesBefore = balanceOf(e, owner);
     uint256 receiverAssetsBefore = userAssets(receiver);
 
     callReclaimingMethods(e, f, assets, shares, receiver, owner);
 
-    uint256 ownerSharesAfter = balanceOf(owner);
+    uint256 ownerSharesAfter = balanceOf(e, owner);
     uint256 receiverAssetsAfter = userAssets(receiver);
 
     assert ownerSharesBefore > ownerSharesAfter <=> receiverAssetsBefore < receiverAssetsAfter,
@@ -399,9 +406,9 @@ filtered {
 ////                        # helpers and miscellaneous                //////////
 ////////////////////////////////////////////////////////////////////////////////
 
-definition noSupplyIfNoAssetsDef() returns bool = 
-    ( userAssets(currentContract) == 0 => totalSupply() == 0 ) &&
-    ( totalAssets() == 0 => ( totalSupply() == 0 ));
+definition noSupplyIfNoAssetsDef(env e) returns bool = 
+    ( userAssets(currentContract) == 0 => totalSupply(e) == 0 ) &&
+    ( totalAssets(e) == 0 => ( totalSupply(e) == 0 ));
 
 // definition noSupplyIfNoAssetsStrongerDef() returns bool =                // fails for ERC4626BalanceOfHarness as explained in the readme
 //     ( userAssets(currentContract) == 0 => totalSupply() == 0 ) &&
@@ -410,11 +417,11 @@ definition noSupplyIfNoAssetsDef() returns bool =
 
 function safeAssumptions(env e, address receiver, address owner) {
     require currentContract != asset(); // Although this is not disallowed, we assume the contract's underlying asset is not the contract itself
-    requireInvariant totalSupplyIsSumOfBalances();
-    requireInvariant vaultSolvency();
-    requireInvariant noAssetsIfNoSupply();
-    requireInvariant noSupplyIfNoAssets();
-    requireInvariant assetsMoreThanSupply(); 
+    requireInvariant totalSupplyIsSumOfBalances(e);
+    requireInvariant vaultSolvency(e);
+    requireInvariant noAssetsIfNoSupply(e);
+    requireInvariant noSupplyIfNoAssets(e);
+    requireInvariant assetsMoreThanSupply(e); 
 
     //// # Note : we don't want to use singleBalanceBounded and singleBalanceBounded invariants 
     /* requireInvariant sumOfBalancePairsBounded(receiver, owner );
@@ -422,9 +429,9 @@ function safeAssumptions(env e, address receiver, address owner) {
     requireInvariant singleBalanceBounded(owner);
     */
     ///// # but, it safe to assume that a single balance is less than sum of balances
-    require ( (receiver != owner => balanceOf(owner) + balanceOf(receiver) <= to_mathint(totalSupply()))  && 
-                balanceOf(receiver) <= totalSupply() &&
-                balanceOf(owner) <= totalSupply());
+    require ( (receiver != owner => balanceOf(e, owner) + balanceOf(e, receiver) <= to_mathint(totalSupply(e)))  && 
+                balanceOf(e, receiver) <= totalSupply(e) &&
+                balanceOf(e, owner) <= totalSupply(e));
 }
 
 
