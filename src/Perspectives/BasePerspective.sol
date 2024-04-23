@@ -16,18 +16,19 @@ abstract contract BasePerspective is PerspectiveErrors {
         uint256 placeholder;
     }
 
+    event PerspectiveVerified(address indexed vault);
+
     uint256 private constant SIMULATION_SHIFT = 160;
     uint256 private constant SIMULATION_IN_PROGRESS = 1;
     uint256 private constant VAULT_VERIFIED = 1;
 
     IEVC internal immutable evc;
     GenericFactory internal immutable vaultFactory;
-    EnumerableSet.AddressSet private verified;
-    Transient private transientVerified;
-    Transient private transientErrors;
-    Transient private transientContext;
 
-    event PerspectiveVerified(address indexed vault);
+    EnumerableSet.AddressSet private verified;
+    mapping(address => uint256) private errors;
+    Transient private transientVerified;
+    Transient private transientContext;
 
     constructor(address evc_, address vaultFactory_) {
         evc = IEVC(evc_);
@@ -43,10 +44,12 @@ abstract contract BasePerspective is PerspectiveErrors {
 
         // if the simulation was in progress, we need to check for any property errors that may have occurred.
         // otherwise, we would have already reverted if there were any property errors
-        _requireNoPropertyErrors(vault);
+        uint256 accumulatedErrors = errors[vault];
+        if (accumulatedErrors != 0) revert PerspectiveError(address(this), vault, accumulatedErrors);
 
         // set the vault as permanently verified
-        _setPermanentStorage(vault);
+        verified.add(vault);
+        emit PerspectiveVerified(vault);
 
         return true;
     }
@@ -69,18 +72,12 @@ abstract contract BasePerspective is PerspectiveErrors {
         if (condition) return;
 
         uint256 context = _loadContext();
-        uint256 uintVault = uint160(context);
+        address contextVault = address(uint160(context));
 
         if ((context >> SIMULATION_SHIFT) == SIMULATION_IN_PROGRESS) {
-            assembly {
-                mstore(0, uintVault)
-                mstore(32, transientErrors.slot)
-                let hash := keccak256(0, 64)
-                let accumulatedErrors := tload(hash)
-                tstore(hash, or(accumulatedErrors, errorCode))
-            }
+            errors[contextVault] |= errorCode;
         } else {
-            revert PerspectiveError(address(this), address(uint160(uintVault)), errorCode);
+            revert PerspectiveError(address(this), contextVault, errorCode);
         }
     }
 
@@ -136,19 +133,6 @@ abstract contract BasePerspective is PerspectiveErrors {
         _storeContext(context);
     }
 
-    function _requireNoPropertyErrors(address vault) private view {
-        uint256 uintVault = uint160(vault);
-        uint256 accumulatedErrors;
-        assembly {
-            mstore(0, uintVault)
-            mstore(32, transientErrors.slot)
-            let hash := transientErrors.slot
-            accumulatedErrors := tload(keccak256(0, 64))
-        }
-
-        if (accumulatedErrors != 0) revert PerspectiveError(address(this), vault, accumulatedErrors);
-    }
-
     function _storeContext(uint256 value) private {
         assembly {
             tstore(transientContext.slot, value)
@@ -159,10 +143,5 @@ abstract contract BasePerspective is PerspectiveErrors {
         assembly {
             value := tload(transientContext.slot)
         }
-    }
-
-    function _setPermanentStorage(address vault) private {
-        verified.add(vault);
-        emit PerspectiveVerified(vault);
     }
 }
