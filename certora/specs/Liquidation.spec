@@ -128,6 +128,7 @@ rule getCollateralValue_borrowing_lower {
 
 }
 
+// passing (though I believe this was only introduced for debugging)
 rule calculateLiquidation_setViolator {
     env e;
     Liquidation.VaultCache vaultCache;
