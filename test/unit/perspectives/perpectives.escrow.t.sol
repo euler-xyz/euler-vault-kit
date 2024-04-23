@@ -2,7 +2,6 @@
 
 pragma solidity ^0.8.0;
 
-import {IEVC} from "ethereum-vault-connector/interfaces/IEthereumVaultConnector.sol";
 import {EscrowPerspective} from "src/Perspectives/EscrowPerspective.sol";
 import {PerspectiveErrors} from "src/Perspectives/PerspectiveErrors.sol";
 import "src/ProductLines/Escrow.sol";
@@ -18,7 +17,7 @@ contract Perspective_Escrow is EVaultTestBase, PerspectiveErrors {
 
     function setUp() public override {
         super.setUp();
-        perspective = new EscrowPerspective(address(evc), address(factory));
+        perspective = new EscrowPerspective(address(factory));
     }
 
     function test_Perspective_Escrow() public {
@@ -26,7 +25,7 @@ contract Perspective_Escrow is EVaultTestBase, PerspectiveErrors {
 
         vm.expectEmit(true, false, false, false, address(perspective));
         emit PerspectiveVerified(vault);
-        assertTrue(perspective.perspectiveVerify(vault));
+        assertTrue(perspective.perspectiveVerify(vault, true));
         assertTrue(perspective.isVerified(vault));
         assertEq(perspective.verifiedArray()[0], vault);
         assertEq(perspective.assetLookup(address(assetTST)), vault);
@@ -56,38 +55,23 @@ contract Perspective_Escrow is EVaultTestBase, PerspectiveErrors {
         // verification of the first vault is successful
         vm.expectEmit(true, false, false, false, address(perspective));
         emit PerspectiveVerified(vault1);
-        assertTrue(perspective.perspectiveVerify(vault1));
+        assertTrue(perspective.perspectiveVerify(vault1, true));
         assertEq(perspective.assetLookup(address(assetTST)), vault1);
 
         // verification of the second vault will fail due to the singleton rule
         vm.expectRevert(
             abi.encodeWithSelector(PerspectiveError.selector, address(perspective), vault2, ERROR__NOT_SINGLETON)
         );
-        perspective.perspectiveVerify(vault2);
+        perspective.perspectiveVerify(vault2, true);
 
         // verification of the third vault will fail right away due to the trailing data parameters
         vm.expectRevert(
             abi.encodeWithSelector(PerspectiveError.selector, address(perspective), vault3, ERROR__TRAILING_DATA)
         );
-        perspective.perspectiveVerify(vault3);
+        perspective.perspectiveVerify(vault3, true);
 
-        // verification of the third vault will fail right away due to the trailing data parameters even if called via batch
-        IEVC.BatchItem[] memory items = new IEVC.BatchItem[](1);
-        items[0].targetContract = address(perspective);
-        items[0].onBehalfOfAccount = address(this);
-        items[0].value = 0;
-        items[0].data = abi.encodeWithSelector(perspective.perspectiveVerify.selector, vault3);
-
+        // if fail early not requested, the third vault verification will collect all the errors and fail at the end
         vm.expectRevert(
-            abi.encodeWithSelector(PerspectiveError.selector, address(perspective), vault3, ERROR__TRAILING_DATA)
-        );
-        evc.batch(items);
-
-        // if called via batch simulation, the third vault verification will collect all the errors and fail at the end
-        (IEVC.BatchItemResult[] memory result,,) = evc.batchSimulation(items);
-        assertEq(result[0].success, false);
-        assertEq(
-            result[0].result,
             abi.encodeWithSelector(
                 PerspectiveError.selector,
                 address(perspective),
@@ -97,15 +81,12 @@ contract Perspective_Escrow is EVaultTestBase, PerspectiveErrors {
                     | ERROR__LTV_LENGTH
             )
         );
+        perspective.perspectiveVerify(vault3, false);
 
-        // if called via batch simulation, the second vault verification will collect all the errors and fail at the end
-        items[0].data = abi.encodeWithSelector(perspective.perspectiveVerify.selector, vault2);
-
-        (result,,) = evc.batchSimulation(items);
-        assertEq(result[0].success, false);
-        assertEq(
-            result[0].result,
+        // if fail early not requested, the third vault verification will collect all the errors and fail at the end
+        vm.expectRevert(
             abi.encodeWithSelector(PerspectiveError.selector, address(perspective), vault2, ERROR__NOT_SINGLETON)
         );
+        perspective.perspectiveVerify(vault2, false);
     }
 }
