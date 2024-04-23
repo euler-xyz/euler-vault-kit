@@ -64,7 +64,8 @@ contract EntryPoint is Test {
             }
         }
 
-        if (snapshot != 0) {
+        // revert the snapshot only if there are no errors
+        if (snapshot != 0 && errors.length == 0) {
             vm.revertTo(snapshot);
             snapshot = 0;
         }
