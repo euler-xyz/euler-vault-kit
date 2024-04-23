@@ -3,7 +3,6 @@
 pragma solidity ^0.8.0;
 
 import {EnumerableSet} from "openzeppelin-contracts/utils/structs/EnumerableSet.sol";
-import {IEVC} from "ethereum-vault-connector/interfaces/IEthereumVaultConnector.sol";
 import {PerspectiveErrors} from "./PerspectiveErrors.sol";
 import {IERC20} from "../EVault/IEVault.sol";
 import {GenericFactory} from "../GenericFactory/GenericFactory.sol";
@@ -18,34 +17,64 @@ abstract contract BasePerspective is PerspectiveErrors {
 
     event PerspectiveVerified(address indexed vault);
 
-    uint256 private constant SIMULATION_SHIFT = 160;
-    uint256 private constant SIMULATION_IN_PROGRESS = 1;
-    uint256 private constant VAULT_VERIFIED = 1;
+    uint256 private constant FAIL_EARLY_SHIFT = 160;
+    uint256 private constant VALUE_SET = 1;
 
-    IEVC internal immutable evc;
     GenericFactory internal immutable vaultFactory;
 
     EnumerableSet.AddressSet private verified;
     mapping(address => uint256) private errors;
+
     Transient private transientVerified;
     Transient private transientContext;
 
-    constructor(address evc_, address vaultFactory_) {
-        evc = IEVC(evc_);
+    constructor(address vaultFactory_) {
         vaultFactory = GenericFactory(vaultFactory_);
     }
 
-    function perspectiveVerify(address vault) external returns (bool) {
+    function perspectiveVerify(address vault, bool failEarly) external returns (bool) {
+        uint256 uintVault = uint160(vault);
+        uint256 uintFailEarly = failEarly ? VALUE_SET << FAIL_EARLY_SHIFT : 0;
+        bytes32 transientVerifiedHash;
+        uint256 transientVerifiedValue;
+        assembly {
+            mstore(0, uintVault)
+            mstore(32, transientVerified.slot)
+            transientVerifiedHash := keccak256(0, 64)
+            transientVerifiedValue := tload(transientVerifiedHash)
+        }
+
         // if already verified, return true
-        if (_isVerified(vault)) return true;
+        if (transientVerifiedValue == VALUE_SET || verified.contains(vault)) {
+            return true;
+        }
+
+        // optimistically assume that the vault is verified
+        assembly {
+            tstore(transientVerifiedHash, VALUE_SET)
+        }
+
+        // cache the current context
+        uint256 context = _loadContext();
+
+        // store the new context
+        _storeContext(uintFailEarly | uintVault);
 
         // perform the perspective verification
-        _perspectiveVerify(vault);
+        perspectiveVerifyInternal(vault);
 
-        // if the simulation was in progress, we need to check for any property errors that may have occurred.
+        // restore the previous context
+        _storeContext(context);
+
+        // if early fail was not requested, we need to check for any property errors that may have occurred.
         // otherwise, we would have already reverted if there were any property errors
-        uint256 accumulatedErrors = errors[vault];
-        if (accumulatedErrors != 0) revert PerspectiveError(address(this), vault, accumulatedErrors);
+        if (!failEarly) {
+            uint256 accumulatedErrors = errors[vault];
+
+            if (accumulatedErrors != 0) {
+                revert PerspectiveError(address(this), vault, accumulatedErrors);
+            }
+        }
 
         // set the vault as permanently verified
         verified.add(vault);
@@ -73,11 +102,12 @@ abstract contract BasePerspective is PerspectiveErrors {
 
         uint256 context = _loadContext();
         address contextVault = address(uint160(context));
+        bool contextFailEarly = (context >> FAIL_EARLY_SHIFT) == VALUE_SET;
 
-        if ((context >> SIMULATION_SHIFT) == SIMULATION_IN_PROGRESS) {
-            errors[contextVault] |= errorCode;
-        } else {
+        if (contextFailEarly) {
             revert PerspectiveError(address(this), contextVault, errorCode);
+        } else {
+            errors[contextVault] |= errorCode;
         }
     }
 
@@ -93,44 +123,6 @@ abstract contract BasePerspective is PerspectiveErrors {
         (bool success, bytes memory data) = address(asset).staticcall(abi.encodeWithSelector(IERC20.symbol.selector));
         if (!success) RevertBytes.revertBytes(data);
         return data.length <= 32 ? string(data) : abi.decode(data, (string));
-    }
-
-    function _isVerified(address vault) private view returns (bool) {
-        uint256 uintVault = uint160(vault);
-        uint256 value;
-        assembly {
-            mstore(0, uintVault)
-            mstore(32, transientVerified.slot)
-            value := tload(keccak256(0, 64))
-        }
-
-        return value == VAULT_VERIFIED || verified.contains(vault);
-    }
-
-    function _perspectiveVerify(address vault) private {
-        uint256 uintVault = uint160(vault);
-
-        // optimistically assume that the vault is verified
-        assembly {
-            mstore(0, uintVault)
-            mstore(32, transientVerified.slot)
-            tstore(keccak256(0, 64), VAULT_VERIFIED)
-        }
-
-        uint256 context = _loadContext();
-
-        // query the EVC to determine if the simulation is in progress and set the transient variable indicating that
-        uint256 simulationStatus = ((context >> SIMULATION_SHIFT) == SIMULATION_IN_PROGRESS)
-            || evc.isSimulationInProgress() ? (SIMULATION_IN_PROGRESS << SIMULATION_SHIFT) : 0;
-
-        // store the new context
-        _storeContext(simulationStatus | uintVault);
-
-        // perform the perspective verification
-        perspectiveVerifyInternal(vault);
-
-        // restore the previous context
-        _storeContext(context);
     }
 
     function _storeContext(uint256 value) private {

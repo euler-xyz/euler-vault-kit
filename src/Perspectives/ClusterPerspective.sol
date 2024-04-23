@@ -9,17 +9,16 @@ import {BasePerspective} from "./BasePerspective.sol";
 
 import "../EVault/shared/Constants.sol";
 
-contract EscrowPerspective is BasePerspective {
+contract ClusterPerspective is BasePerspective {
     using EnumerableSet for EnumerableSet.AddressSet;
 
     address[] public recognizedCollateralPerspectives;
 
     constructor(
-        address evc_,
         address vaultFactory_,
         address[] memory recognizedCollateralPerspectives_,
         bool thisPerspectiveRecognized_
-    ) BasePerspective(evc_, vaultFactory_) {
+    ) BasePerspective(vaultFactory_) {
         // TODO currently when checking if collaterals are recognized, we first check if the collateral is
         // recognized by the cluster perspective and only then check the recognized collateral perspectives.
         // it might be good to optimize this by checking the escrow perspective first (most likely scenario)
@@ -40,6 +39,7 @@ contract EscrowPerspective is BasePerspective {
         address asset = IEVault(vault).asset();
         address oracle = IEVault(vault).oracle();
         address unitOfAccount = IEVault(vault).unitOfAccount();
+
         testProperty(
             keccak256(config.trailingData) == keccak256(abi.encodePacked(asset, oracle, unitOfAccount)),
             ERROR__TRAILING_DATA
@@ -49,8 +49,8 @@ contract EscrowPerspective is BasePerspective {
         testProperty(!config.upgradeable, ERROR__UPGRADABILITY);
 
         // TODO cluster vaults must have oracle and unit of account recognized
-        testProperty(oracle == address(0), ERROR__ORACLE);
-        testProperty(unitOfAccount == address(0), ERROR__UNIT_OF_ACCOUNT);
+        testProperty(oracle == address(1), ERROR__ORACLE);
+        testProperty(unitOfAccount == address(2), ERROR__UNIT_OF_ACCOUNT);
 
         // verify vault configuration at the governance level
         // cluster vaults must not have a governor admin
@@ -77,7 +77,7 @@ contract EscrowPerspective is BasePerspective {
         // TODO cluster vaults must have a specific name and symbol
         testProperty(
             keccak256(abi.encode(IEVault(vault).name()))
-                == keccak256(abi.encode(string.concat("Escrow vault: ", getTokenName(asset)))),
+                == keccak256(abi.encode(string.concat("Cluster vault: ", getTokenName(asset)))),
             ERROR__NAME
         );
 
@@ -104,7 +104,7 @@ contract EscrowPerspective is BasePerspective {
             // iterate over recognized collateral perspectives to check if the collateral is recognized
             bool recognized = false;
             for (uint256 j = 0; j < recognizedCollateralPerspectives.length; ++j) {
-                try BasePerspective(recognizedCollateralPerspectives[j]).perspectiveVerify(collateral) returns (
+                try BasePerspective(recognizedCollateralPerspectives[j]).perspectiveVerify(collateral, true) returns (
                     bool result
                 ) {
                     recognized = result;

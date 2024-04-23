@@ -14,7 +14,7 @@ contract EscrowPerspective is BasePerspective {
 
     mapping(address => address) public assetLookup;
 
-    constructor(address evc_, address vaultFactory_) BasePerspective(evc_, vaultFactory_) {}
+    constructor(address vaultFactory_) BasePerspective(vaultFactory_) {}
 
     function perspectiveVerifyInternal(address vault) internal override {
         // the vault must be deployed by recognized factory
