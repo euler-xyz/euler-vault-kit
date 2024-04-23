@@ -49,22 +49,23 @@ abstract contract BasePerspective is PerspectiveErrors {
             return true;
         }
 
+        // cache the current context.
+        // store the new context.
         // optimistically assume that the vault is verified
+        uint256 cachedContext;
         assembly {
+            cachedContext := tload(transientContext.slot)
+            tstore(transientContext.slot, or(uintFailEarly, uintVault))
             tstore(transientVerifiedHash, VALUE_SET)
         }
-
-        // cache the current context
-        uint256 context = _loadContext();
-
-        // store the new context
-        _storeContext(uintFailEarly | uintVault);
 
         // perform the perspective verification
         perspectiveVerifyInternal(vault);
 
         // restore the previous context
-        _storeContext(context);
+        assembly {
+            tstore(transientContext.slot, cachedContext)
+        }
 
         // if early fail was not requested, we need to check for any property errors that may have occurred.
         // otherwise, we would have already reverted if there were any property errors
@@ -100,7 +101,11 @@ abstract contract BasePerspective is PerspectiveErrors {
     function testProperty(bool condition, uint256 errorCode) internal {
         if (condition) return;
 
-        uint256 context = _loadContext();
+        uint256 context;
+        assembly {
+            context := tload(transientContext.slot)
+        }
+
         address contextVault = address(uint160(context));
         bool contextFailEarly = (context >> FAIL_EARLY_SHIFT) == VALUE_SET;
 
@@ -123,17 +128,5 @@ abstract contract BasePerspective is PerspectiveErrors {
         (bool success, bytes memory data) = address(asset).staticcall(abi.encodeWithSelector(IERC20.symbol.selector));
         if (!success) RevertBytes.revertBytes(data);
         return data.length <= 32 ? string(data) : abi.decode(data, (string));
-    }
-
-    function _storeContext(uint256 value) private {
-        assembly {
-            tstore(transientContext.slot, value)
-        }
-    }
-
-    function _loadContext() private view returns (uint256 value) {
-        assembly {
-            value := tload(transientContext.slot)
-        }
     }
 }
