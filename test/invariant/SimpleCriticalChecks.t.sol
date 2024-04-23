@@ -24,6 +24,7 @@ contract EntryPoint is Test {
     address[] account;
     string[] errors;
 
+    uint256 snapshot;
     IEVault selectedVault;
 
     constructor(IEVault[] memory eTST_, address[] memory account_) {
@@ -35,6 +36,8 @@ contract EntryPoint is Test {
 
         account = new address[](account_.length);
         account = account_;
+
+        snapshot = vm.snapshot();
     }
 
     function getErrors() public view returns (string[] memory) {
@@ -59,6 +62,11 @@ contract EntryPoint is Test {
                     errors.push("EVault Panic on afterCall");
                 }
             }
+        }
+
+        if (snapshot != 0) {
+            vm.revertTo(snapshot);
+            snapshot = 0;
         }
     }
 
@@ -286,6 +294,9 @@ contract EntryPoint is Test {
 
         address oracle = selectedVault.oracle();
 
+        // take a snapshot to revert the price change and liquidation
+        snapshot = vm.snapshot();
+
         // set lower price for collateral so that maybe a liquidation opportunity occurs
         MockPriceOracle(oracle).setPrice(collateral, selectedVault.unitOfAccount(), 1e17);
 
@@ -294,9 +305,6 @@ contract EntryPoint is Test {
         } catch (bytes memory reason) {
             if (bytes4(reason) == EVault_Panic.selector) errors.push("EVault Panic on liquidate");
         }
-
-        // set the price back to normal
-        MockPriceOracle(oracle).setPrice(collateral, selectedVault.unitOfAccount(), 1e18);
     }
 
     function convertFees() public afterCall {
