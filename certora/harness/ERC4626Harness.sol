@@ -9,11 +9,18 @@ import "../../src/EVault/modules/Token.sol";
 contract ERC4626Harness is VaultModule, TokenModule, AbstractBaseHarness {
     constructor(Integrations memory integrations) Base(integrations) {}
 
-    // function totalAssets() public view override returns (uint256) {
-    //     return asset.balanceOf(address(this));
-    // }
+    // Linked against DummyERC20A in verification config
+    IERC20 underlying_asset;
+
+    function totalAssets() public view override returns (uint256) {
+        return underlying_asset.balanceOf(address(this));
+    }
 
     function userAssets(address user) public view returns (uint256) { // harnessed
         return IERC20(asset()).balanceOf(user);
+    }
+
+    function asset() public view override virtual returns (address) {
+        return address(underlying_asset);
     }
 }

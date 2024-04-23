@@ -8,9 +8,9 @@
 
 // reference from the spec to additional contracts used in the verification 
 
-// using DummyERC20A as ERC20a; 
-// using DummyERC20B as ERC20b; 
-using ERC4626Harness as ERC20a;
+import "Base.spec";
+using DummyERC20A as ERC20a; 
+using DummyERC20B as ERC20b; 
 
 /*
     Declaration of methods that are used in the rules. envfree indicate that
@@ -18,7 +18,6 @@ using ERC4626Harness as ERC20a;
     Methods that are not declared here are assumed to be dependent on env.
 */
 methods {
-    // ERC20 methods not in Vault. Possibly combine Vault and Token
     function name() external returns string envfree;
     function symbol() external returns string envfree;
     function decimals() external returns uint8 envfree;
@@ -53,9 +52,10 @@ methods {
     function DOMAIN_SEPARATOR() external returns bytes32;
 
     //// #ERC20 methods
-    function _.balanceOf(address) external  => DISPATCHER(true);
-    function _.transfer(address,uint256) external  => DISPATCHER(true);
-    function _.transferFrom(address,address,uint256) external => DISPATCHER(true);
+    // These are done in Base
+    // function _.balanceOf(address) external  => DISPATCHER(true);
+    // function _.transfer(address,uint256) external  => DISPATCHER(true);
+    // function _.transferFrom(address,address,uint256) external => DISPATCHER(true);
 
     // function ERC20a.balanceOf(address) external returns uint256 envfree; // NOT ENVFREE
     function ERC20a.transferFrom(address,address,uint256) external returns bool;
@@ -493,4 +493,11 @@ function callFunctionsWithReceiverAndOwner(env e, method f, uint256 assets, uint
         calldataarg args;
         f(e, args);
     }
+}
+
+rule sanity (method f) {
+    env e;
+    calldataarg args;
+    f(e, args);
+    assert false;
 }
