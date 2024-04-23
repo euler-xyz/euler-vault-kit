@@ -132,7 +132,7 @@ abstract contract BasePerspective is PerspectiveErrors {
         // perform the perspective verification
         perspectiveVerifyInternal(vault);
 
-        // restore the cached vault address
+        // restore the previous context
         _storeContext(context);
     }
 
