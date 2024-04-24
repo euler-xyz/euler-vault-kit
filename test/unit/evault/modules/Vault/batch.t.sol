@@ -173,7 +173,7 @@ contract VaultTest_Batch is EVaultTestBase {
             value: 0,
             data: abi.encodeWithSelector(
                 eTST.transferFrom.selector, getSubAccount(user1, 1), getSubAccount(user1, 2), 0.6e18
-                )
+            )
         });
         items[3] = IEVC.BatchItem({
             onBehalfOfAccount: address(0),
@@ -321,7 +321,7 @@ contract VaultTest_Batch is EVaultTestBase {
                 0,
                 bytes32("0"),
                 bytes32("0")
-                )
+            )
         });
         items[2] = IEVC.BatchItem({
             onBehalfOfAccount: user1,
