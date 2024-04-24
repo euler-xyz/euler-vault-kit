@@ -280,7 +280,6 @@ contract ERC20Test_Actions is EVaultTestBase {
         eTST.approve(alice, 0);
 
         assertEq(eTST.allowance(alice, alice), 0);
-
     }
 
     function test_Approve_RevertWhen_SelfApprovalWithMaxAmountExceedingBalance() public {

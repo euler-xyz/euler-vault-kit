@@ -41,7 +41,7 @@ contract VaultTest_Deloop is EVaultTestBase {
         skip(31 * 60);
     }
 
-    //burn with max_uint256 repays the debt in full or up to the available underlying balance
+    //deloop with max_uint256 repays the debt in full or up to the available underlying balance
     function test_deloop_withMaxRepays() public {
         eTST.setInterestRateModel(address(new IRMTestZero()));
 
@@ -74,7 +74,7 @@ contract VaultTest_Deloop is EVaultTestBase {
         // No interest was charged
         assertEq(eTST.debtOf(user2), 0.5e18);
 
-        // nothing to burn
+        // nothing to deloop
         eTST.deloop(type(uint256).max, user2);
 
         assertEq(assetTST.balanceOf(user2), 100.5e18);
@@ -100,7 +100,7 @@ contract VaultTest_Deloop is EVaultTestBase {
         assertEq(eTST.debtOf(user2), 0);
     }
 
-    //burn when owed amount is 0 is a no-op
+    //deloop when owed amount is 0 is a no-op
     function test_deloop_whenOwedAmountZero() public {
         eTST.setInterestRateModel(address(new IRMTestZero()));
 
@@ -121,7 +121,7 @@ contract VaultTest_Deloop is EVaultTestBase {
         assertEq(eTST.debtOf(user2), 0);
     }
 
-    //burn for 0 is a no-op
+    //deloop for 0 is a no-op
     function test_deloop_forZero() public {
         eTST.setInterestRateModel(address(new IRMTestZero()));
 
@@ -139,7 +139,7 @@ contract VaultTest_Deloop is EVaultTestBase {
         assertEq(eTST.balanceOf(user2), 0);
         assertEq(eTST.debtOf(user2), 0.5e18);
 
-        // burning 0 is a no-op
+        // delooping 0 is a no-op
         eTST.deloop(0, user2);
     }
 }
