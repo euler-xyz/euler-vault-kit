@@ -58,9 +58,8 @@ abstract contract AbstractBaseHarness is Base {
     // Operation disable checks
     //--------------------------------------------------------------------------
     function isOperationDisabledExt(uint32 operation) public returns (bool) {
-        // This is based on the check in callHook.
         VaultCache memory vaultCache = updateVault();
-        return vaultCache.hookedOps.isNotSet(operation);
+        return isOperationDisabled(vaultCache.hookedOps, operation);
     }
 
     function isDepositDisabled() public returns (bool) {
