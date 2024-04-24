@@ -47,12 +47,13 @@ abstract contract BalanceUtils is Base {
         Shares amount,
         Assets assets
     ) internal {
-        (Shares origBalance, bool balanceForwarderEnabled) = vaultStorage.users[account].getBalanceAndBalanceForwarder();
+        UserStorage storage user = vaultStorage.users[account];
+        (Shares origBalance, bool balanceForwarderEnabled) = user.getBalanceAndBalanceForwarder();
         if (origBalance < amount) revert E_InsufficientBalance();
 
         Shares newBalance = origBalance.subUnchecked(amount);
 
-        vaultStorage.users[account].setBalance(newBalance);
+        user.setBalance(newBalance);
         vaultStorage.totalShares = vaultCache.totalShares = vaultCache.totalShares - amount;
 
         if (balanceForwarderEnabled) {
@@ -69,19 +70,22 @@ abstract contract BalanceUtils is Base {
 
     function transferBalance(address from, address to, Shares amount) internal {
         if (!amount.isZero()) {
+            UserStorage storage userFrom = vaultStorage.users[from];
+            UserStorage storage userTo = vaultStorage.users[to];
+
             (Shares origFromBalance, bool fromBalanceForwarderEnabled) =
-                vaultStorage.users[from].getBalanceAndBalanceForwarder();
+                userFrom.getBalanceAndBalanceForwarder();
 
             (Shares origToBalance, bool toBalanceForwarderEnabled) =
-                vaultStorage.users[to].getBalanceAndBalanceForwarder();
+                userTo.getBalanceAndBalanceForwarder();
 
             if (origFromBalance < amount) revert E_InsufficientBalance();
 
             Shares newFromBalance = origFromBalance.subUnchecked(amount);
             Shares newToBalance = origToBalance + amount;
 
-            vaultStorage.users[from].setBalance(newFromBalance);
-            vaultStorage.users[to].setBalance(newToBalance);
+            userFrom.setBalance(newFromBalance);
+            userTo.setBalance(newToBalance);
 
             if (fromBalanceForwarderEnabled) {
                 balanceTracker.balanceTrackerHook(from, newFromBalance.toUint(), isControlCollateralInProgress());
@@ -106,14 +110,15 @@ abstract contract BalanceUtils is Base {
 
     function decreaseAllowance(address owner, address spender, Shares amount) internal {
         if (amount.isZero()) return;
+        UserStorage storage user = vaultStorage.users[owner];
 
-        uint256 allowance = vaultStorage.users[owner].eTokenAllowance[spender];
+        uint256 allowance = user.eTokenAllowance[spender];
         if (owner != spender && allowance != type(uint256).max) {
             if (allowance < amount.toUint()) revert E_InsufficientAllowance();
             unchecked {
                 allowance -= amount.toUint();
             }
-            vaultStorage.users[owner].eTokenAllowance[spender] = allowance;
+            user.eTokenAllowance[spender] = allowance;
             emit Approval(owner, spender, allowance);
         }
     }
