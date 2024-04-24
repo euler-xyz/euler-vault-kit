@@ -16,9 +16,9 @@ contract EscrowPerspective is BasePerspective {
 
     constructor(address vaultFactory_) BasePerspective(vaultFactory_) {}
 
-    function perspectiveVerifyInternal(address vault) internal override {
+    function perspectiveVerifyInternal(address vault, bool failEarly) internal override {
         // the vault must be deployed by recognized factory
-        testProperty(vaultFactory.isProxy(vault), ERROR__NOT_FROM_FACTORY);
+        testProperty(vaultFactory.isProxy(vault), vault, ERROR__NOT_FROM_FACTORY, failEarly);
 
         // verify vault configuration at the factory level
         GenericFactory.ProxyConfig memory config = vaultFactory.getProxyConfig(vault);
@@ -26,37 +26,39 @@ contract EscrowPerspective is BasePerspective {
         address asset = IEVault(vault).asset();
         testProperty(
             keccak256(config.trailingData) == keccak256(abi.encodePacked(asset, address(0), address(0))),
-            ERROR__TRAILING_DATA
+            vault,
+            ERROR__TRAILING_DATA,
+            failEarly
         );
 
         // escrow vaults must not be upgradeable
-        testProperty(!config.upgradeable, ERROR__UPGRADABILITY);
+        testProperty(!config.upgradeable, vault, ERROR__UPGRADABILITY, failEarly);
 
         // there can be only one escrow vault per asset (singleton check)
-        testProperty(assetLookup[asset] == address(0), ERROR__NOT_SINGLETON);
+        testProperty(assetLookup[asset] == address(0), vault, ERROR__NOT_SINGLETON, failEarly);
 
         // escrow vaults must not have an oracle or unit of account
-        testProperty(IEVault(vault).oracle() == address(0), ERROR__ORACLE);
-        testProperty(IEVault(vault).unitOfAccount() == address(0), ERROR__UNIT_OF_ACCOUNT);
+        testProperty(IEVault(vault).oracle() == address(0), vault, ERROR__ORACLE, failEarly);
+        testProperty(IEVault(vault).unitOfAccount() == address(0), vault, ERROR__UNIT_OF_ACCOUNT, failEarly);
 
         // escrow vaults must not be nested
-        testProperty(!vaultFactory.isProxy(asset), ERROR__NESTING);
+        testProperty(!vaultFactory.isProxy(asset), vault, ERROR__NESTING, failEarly);
 
         // verify vault configuration at the governance level.
         // escrow vaults must not have a governor admin, fee receiver, or interest rate model
-        testProperty(IEVault(vault).governorAdmin() == address(0), ERROR__GOVERNOR);
-        testProperty(IEVault(vault).feeReceiver() == address(0), ERROR__FEE_RECEIVER);
-        testProperty(IEVault(vault).interestRateModel() == address(0), ERROR__INTEREST_RATE_MODEL);
+        testProperty(IEVault(vault).governorAdmin() == address(0), vault, ERROR__GOVERNOR, failEarly);
+        testProperty(IEVault(vault).feeReceiver() == address(0), vault, ERROR__FEE_RECEIVER, failEarly);
+        testProperty(IEVault(vault).interestRateModel() == address(0), vault, ERROR__INTEREST_RATE_MODEL, failEarly);
 
         {
             // escrow vaults must not have supply or borrow caps
             (uint32 supplyCap, uint32 borrowCap) = IEVault(vault).caps();
-            testProperty(supplyCap == 0, ERROR__SUPPLY_CAP);
-            testProperty(borrowCap == 0, ERROR__BORROW_CAP);
+            testProperty(supplyCap == 0, vault, ERROR__SUPPLY_CAP, failEarly);
+            testProperty(borrowCap == 0, vault, ERROR__BORROW_CAP, failEarly);
 
             // escrow vaults must not have a hook target
             (address hookTarget, uint32 hookedOps) = IEVault(vault).hookConfig();
-            testProperty(hookTarget == address(0), ERROR__HOOK_TARGET);
+            testProperty(hookTarget == address(0), vault, ERROR__HOOK_TARGET, failEarly);
 
             // escrow vaults must have certain operations disabled
             testProperty(
@@ -65,12 +67,14 @@ contract EscrowPerspective is BasePerspective {
                         OP_BORROW | OP_REPAY | OP_LOOP | OP_DELOOP | OP_PULL_DEBT | OP_CONVERT_FEES | OP_LIQUIDATE
                             | OP_TOUCH
                     ),
-                ERROR__HOOKED_OPS
+                vault,
+                ERROR__HOOKED_OPS,
+                failEarly
             );
         }
 
         // escrow vaults must not have any config flags set
-        testProperty(IEVault(vault).configFlags() == 0, ERROR__CONFIG_FLAGS);
+        testProperty(IEVault(vault).configFlags() == 0, vault, ERROR__CONFIG_FLAGS, failEarly);
 
         // escrow vaults must have a specific name and symbol
         // name: "Escrow vault: <asset name>"
@@ -78,17 +82,21 @@ contract EscrowPerspective is BasePerspective {
         testProperty(
             keccak256(abi.encode(IEVault(vault).name()))
                 == keccak256(abi.encode(string.concat("Escrow vault: ", getTokenName(asset)))),
-            ERROR__NAME
+            vault,
+            ERROR__NAME,
+            failEarly
         );
 
         testProperty(
             keccak256(abi.encode(IEVault(vault).symbol()))
                 == keccak256(abi.encode(string.concat("e", getTokenSymbol(asset)))),
-            ERROR__SYMBOL
+            vault,
+            ERROR__SYMBOL,
+            failEarly
         );
 
         // escrow vaults must not have any collateral set up
-        testProperty(IEVault(vault).LTVList().length == 0, ERROR__LTV_LENGTH);
+        testProperty(IEVault(vault).LTVList().length == 0, vault, ERROR__LTV_LENGTH, failEarly);
 
         assetLookup[asset] = vault;
     }

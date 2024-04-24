@@ -25,7 +25,7 @@ contract Perspective_Escrow is EVaultTestBase, PerspectiveErrors {
 
         vm.expectEmit(true, false, false, false, address(perspective));
         emit PerspectiveVerified(vault);
-        assertTrue(perspective.perspectiveVerify(vault, true));
+        perspective.perspectiveVerify(vault, true);
         assertTrue(perspective.isVerified(vault));
         assertEq(perspective.verifiedArray()[0], vault);
         assertEq(perspective.assetLookup(address(assetTST)), vault);
@@ -55,7 +55,7 @@ contract Perspective_Escrow is EVaultTestBase, PerspectiveErrors {
         // verification of the first vault is successful
         vm.expectEmit(true, false, false, false, address(perspective));
         emit PerspectiveVerified(vault1);
-        assertTrue(perspective.perspectiveVerify(vault1, true));
+        perspective.perspectiveVerify(vault1, true);
         assertEq(perspective.assetLookup(address(assetTST)), vault1);
 
         // verification of the second vault will fail due to the singleton rule

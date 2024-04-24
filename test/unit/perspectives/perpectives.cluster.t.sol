@@ -74,8 +74,8 @@ contract Perspective_Cluster is EVaultTestBase, PerspectiveErrors {
         emit PerspectiveVerified(vaultCluster2);
         vm.expectEmit(true, false, false, false, address(clusterPerspective1));
         emit PerspectiveVerified(vaultCluster1);
-        assertTrue(clusterPerspective1.perspectiveVerify(vaultCluster1, true));
-        assertTrue(clusterPerspective1.perspectiveVerify(vaultCluster2, true));
+        clusterPerspective1.perspectiveVerify(vaultCluster1, true);
+        clusterPerspective1.perspectiveVerify(vaultCluster2, true);
         assertTrue(clusterPerspective1.isVerified(vaultCluster1));
         assertTrue(clusterPerspective1.isVerified(vaultCluster2));
         assertEq(clusterPerspective1.verifiedArray()[0], vaultCluster2);
@@ -93,7 +93,7 @@ contract Perspective_Cluster is EVaultTestBase, PerspectiveErrors {
         emit PerspectiveVerified(vaultEscrow);
         vm.expectEmit(true, false, false, false, address(clusterPerspective2));
         emit PerspectiveVerified(vaultCluster3);
-        assertTrue(clusterPerspective2.perspectiveVerify(vaultCluster3, true));
+        clusterPerspective2.perspectiveVerify(vaultCluster3, true);
         assertTrue(escrowPerspective.isVerified(vaultEscrow));
         assertTrue(clusterPerspective2.isVerified(vaultCluster3));
         assertEq(escrowPerspective.verifiedArray()[0], vaultEscrow);
@@ -109,9 +109,9 @@ contract Perspective_Cluster is EVaultTestBase, PerspectiveErrors {
         escrowPerspective.perspectiveVerify(vaultCluster3, true);
 
         // verifies that the vaults cluster 1, 2 and 3 belong to the cluster perspective 3.
-        assertTrue(clusterPerspective3.perspectiveVerify(vaultCluster1, true));
-        assertTrue(clusterPerspective3.perspectiveVerify(vaultCluster2, true));
-        assertTrue(clusterPerspective3.perspectiveVerify(vaultCluster3, true));
+        clusterPerspective3.perspectiveVerify(vaultCluster1, true);
+        clusterPerspective3.perspectiveVerify(vaultCluster2, true);
+        clusterPerspective3.perspectiveVerify(vaultCluster3, true);
 
         // revert to the initial state
         vm.revertTo(snapshot);
@@ -121,7 +121,7 @@ contract Perspective_Cluster is EVaultTestBase, PerspectiveErrors {
         IEVault(vaultCluster3).setLTV(vaultCluster2, 0, 0);
 
         // verifies that the vault cluster 3 still belongs to the cluster perspective 3, even with an additional collateral
-        assertTrue(clusterPerspective3.perspectiveVerify(vaultCluster3, true));
+        clusterPerspective3.perspectiveVerify(vaultCluster3, true);
 
         // meanwhile, other vaults got verified too
         assertTrue(clusterPerspective3.isVerified(vaultCluster3));

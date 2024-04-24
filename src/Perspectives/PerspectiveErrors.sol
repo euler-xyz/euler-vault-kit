@@ -3,7 +3,7 @@
 pragma solidity ^0.8.0;
 
 abstract contract PerspectiveErrors {
-    error PerspectiveError(address perspective, address vault, uint256 code);
+    error PerspectiveError(address perspective, address vault, uint256 codes);
 
     uint256 internal constant ERROR__NOT_FROM_FACTORY = 1 << 0;
     uint256 internal constant ERROR__TRAILING_DATA = 1 << 1;

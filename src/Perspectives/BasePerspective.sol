@@ -17,24 +17,20 @@ abstract contract BasePerspective is PerspectiveErrors {
 
     event PerspectiveVerified(address indexed vault);
 
-    uint256 private constant FAIL_EARLY_SHIFT = 160;
     uint256 private constant VALUE_SET = 1;
 
     GenericFactory internal immutable vaultFactory;
 
     EnumerableSet.AddressSet private verified;
-    mapping(address => uint256) private errors;
-
     Transient private transientVerified;
-    Transient private transientContext;
+    Transient private transientErrors;
 
     constructor(address vaultFactory_) {
         vaultFactory = GenericFactory(vaultFactory_);
     }
 
-    function perspectiveVerify(address vault, bool failEarly) external returns (bool) {
+    function perspectiveVerify(address vault, bool failEarly) external {
         uint256 uintVault = uint160(vault);
-        uint256 uintFailEarly = failEarly ? VALUE_SET << FAIL_EARLY_SHIFT : 0;
         bytes32 transientVerifiedHash;
         uint256 transientVerifiedValue;
         assembly {
@@ -45,43 +41,28 @@ abstract contract BasePerspective is PerspectiveErrors {
         }
 
         // if already verified, return true
-        if (transientVerifiedValue == VALUE_SET || verified.contains(vault)) {
-            return true;
-        }
+        if (transientVerifiedValue == VALUE_SET || verified.contains(vault)) return;
 
-        // cache the current context.
-        // store the new context.
         // optimistically assume that the vault is verified
-        uint256 cachedContext;
         assembly {
-            cachedContext := tload(transientContext.slot)
-            tstore(transientContext.slot, or(uintFailEarly, uintVault))
             tstore(transientVerifiedHash, VALUE_SET)
         }
 
         // perform the perspective verification
-        perspectiveVerifyInternal(vault);
-
-        // restore the previous context
-        assembly {
-            tstore(transientContext.slot, cachedContext)
-        }
+        perspectiveVerifyInternal(vault, failEarly);
 
         // if early fail was not requested, we need to check for any property errors that may have occurred.
         // otherwise, we would have already reverted if there were any property errors
-        if (!failEarly) {
-            uint256 accumulatedErrors = errors[vault];
-
-            if (accumulatedErrors != 0) {
-                revert PerspectiveError(address(this), vault, accumulatedErrors);
-            }
+        uint256 errors;
+        assembly {
+            errors := tload(transientErrors.slot)
         }
+
+        if (errors != 0) revert PerspectiveError(address(this), vault, errors);
 
         // set the vault as permanently verified
         verified.add(vault);
         emit PerspectiveVerified(vault);
-
-        return true;
     }
 
     function isVerified(address vault) external view returns (bool) {
@@ -96,23 +77,18 @@ abstract contract BasePerspective is PerspectiveErrors {
         return verified.values();
     }
 
-    function perspectiveVerifyInternal(address vault) internal virtual {}
+    function perspectiveVerifyInternal(address vault, bool failEarly) internal virtual {}
 
-    function testProperty(bool condition, uint256 errorCode) internal {
+    function testProperty(bool condition, address vault, uint256 errorCode, bool failEarly) internal {
         if (condition) return;
 
-        uint256 context;
-        assembly {
-            context := tload(transientContext.slot)
-        }
-
-        address contextVault = address(uint160(context));
-        bool contextFailEarly = (context >> FAIL_EARLY_SHIFT) == VALUE_SET;
-
-        if (contextFailEarly) {
-            revert PerspectiveError(address(this), contextVault, errorCode);
+        if (failEarly) {
+            revert PerspectiveError(address(this), vault, errorCode);
         } else {
-            errors[contextVault] |= errorCode;
+            assembly {
+                let errors := tload(transientErrors.slot)
+                tstore(transientErrors.slot, or(errors, errorCode))
+            }
         }
     }
 
