@@ -9,6 +9,8 @@
 // reference from the spec to additional contracts used in the verification 
 
 import "Base.spec";
+import "./GhostPow.spec";
+
 using DummyERC20A as ERC20a; 
 using DummyERC20B as ERC20b; 
 
@@ -59,6 +61,8 @@ methods {
 
     // function ERC20a.balanceOf(address) external returns uint256 envfree; // NOT ENVFREE
     function ERC20a.transferFrom(address,address,uint256) external returns bool;
+
+    function RPow.rpow(uint256 x, uint256 y, uint256 base) internal returns (uint256, bool) => CVLPow(x, y, base);
 }
 
 
