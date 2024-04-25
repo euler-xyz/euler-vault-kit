@@ -2,8 +2,8 @@
 
 pragma solidity ^0.8.0;
 
+import {IPriceOracle} from "euler-price-oracle/interfaces/IPriceOracle.sol";
 import {IERC20} from "../../IEVault.sol";
-import {IPriceOracle} from "../../../interfaces/IPriceOracle.sol";
 
 import "../Constants.sol";
 
