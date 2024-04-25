@@ -19,7 +19,7 @@ rule updateVault_no_unexpected_reverts {
     // assignment to newTotalBorrows, overflows
     // Note: MAX_SANE_AMOUNT does not work as a bound for these:
     // https://prover.certora.com/output/65266/e1aab12acdb5435d80e70e661299c504?anonymousKey=c6c63c10fa9ddb5c16b86cd2073643768d3d96e4
-    require getTotalBorrows(e) < 1152921504606846975; //max_uint60
+    require getTotalBorrows(e) < 1152921504606846975; //2**60-1
     require getInterestAcc(e) < 1152921504606846975;
     // newTotalBorrows assigment, prevent divide by zero
     require getInterestAcc(e) > 0;
