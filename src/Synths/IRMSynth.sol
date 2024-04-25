@@ -2,8 +2,8 @@
 
 pragma solidity ^0.8.0;
 
+import {IPriceOracle} from "euler-price-oracle/interfaces/IPriceOracle.sol";
 import "../InterestRateModels/IIRM.sol";
-import "../interfaces/IPriceOracle.sol";
 
 contract IRMSynth is IIRM {
     uint256 public constant TARGET_QUOTE = 1e18;

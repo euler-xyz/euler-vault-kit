@@ -2,8 +2,8 @@
 
 pragma solidity ^0.8.0;
 
+import {IPriceOracle} from "euler-price-oracle/interfaces/IPriceOracle.sol";
 import {IGovernance} from "../IEVault.sol";
-import {IPriceOracle} from "../../interfaces/IPriceOracle.sol";
 import {IHookTarget} from "../../interfaces/IHookTarget.sol";
 import {Base} from "../shared/Base.sol";
 import {BalanceUtils} from "../shared/BalanceUtils.sol";
