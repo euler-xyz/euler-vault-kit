@@ -4,7 +4,7 @@
 ghost _ghostPow(uint256, uint256, uint256) returns mathint {
     /// x^0 = 1
     axiom forall uint256 x. forall uint256 base. _ghostPow(x, 0, base) == to_mathint(base);
-    /// 0^x = 1
+    /// 0^x = 0
     axiom forall uint256 y. forall uint256 base.  _ghostPow(0, y, base) == 0;
     /// x^1 = x
     axiom forall uint256 x. forall uint256 base. _ghostPow(x, base, base) == to_mathint(x);
