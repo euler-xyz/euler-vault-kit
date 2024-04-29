@@ -33,6 +33,8 @@ import "Base.spec";
 //    return ghost_balanceForwarderFlag[userStorage_data];
 // }
 
+//passing:
+// https://prover.certora.com/output/65266/e2a397f3bb864a9eaf4eefdfd35529bc?anonymousKey=aa5dace26320fee72d3611b84d337413ac48c2da
 rule enableBalanceForwarder {
     address account;
     env e1;
@@ -44,6 +46,8 @@ rule enableBalanceForwarder {
     assert balanceForwarderEnabled(e2, account);
 }
 
+// passing:
+// https://prover.certora.com/output/65266/e2a397f3bb864a9eaf4eefdfd35529bc?anonymousKey=aa5dace26320fee72d3611b84d337413ac48c2da
 rule disableBalanceForwarder {
     address account;
     env e1;
