@@ -104,8 +104,8 @@ methods {
     function EVCClient.EVCRequireStatusChecks(address account) internal => CVLRequireStatusCheck(account);
 
     // Track if balance forwarder hook is called
-    function BalanceUtils.tryBalanceTrackerHook(address account, uint256 newAccountBalance, bool forfeitRecentReward) internal returns (bool) => 
-        CVLCalledBalanceForwarder(account, newAccountBalance);
+    function _.balanceTrackerHook(address account, uint256 newAccountBalance, bool forfeitRecentReward) external => 
+        CVLCalledBalanceForwarder(account, newAccountBalance) expect void;
 
     // Workaround for lack of ability to summarize metadata
     function Cache.loadVault() internal returns (Vault.VaultCache memory) => CVLLoadVault();
@@ -152,9 +152,8 @@ rule status_checks_scheduled (method f) filtered { f ->
 }
 
 persistent ghost bool calledForwarder;
-function CVLCalledBalanceForwarder(address account, uint256 newAccountBalance) returns bool {
+function CVLCalledBalanceForwarder(address account, uint256 newAccountBalance) {
     calledForwarder = true;
-    return true;
 }
 
 // NOTE: these rules are not parametric because they need
