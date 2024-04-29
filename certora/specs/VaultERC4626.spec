@@ -316,19 +316,14 @@ rule dustFavorsTheHouse(uint assetsIn )
     safeAssumptions(e,e.msg.sender,e.msg.sender);
     uint256 totalSupplyBefore = totalSupply(e);
 
-    uint balanceBefore = ERC20a.balanceOf(e, currentContract);
+    // uint balanceBefore = ERC20a.balanceOf(e, currentContract);
+    uint balanceBefore = currentContract.balanceOf(e, currentContract);
 
-    require balanceBefore > 0;
-    require totalSupplyBefore > 0;
-    require assetsIn > 0;
-    
-    require assetsIn < max_uint256;
     uint shares = deposit(e,assetsIn, e.msg.sender);
-    require shares < max_uint256;
     uint assetsOut = redeem(e,shares,e.msg.sender,e.msg.sender);
 
-    uint balanceAfter = ERC20a.balanceOf(e, currentContract);
-
+    // uint balanceAfter = ERC20a.balanceOf(e, currentContract);
+    uint balanceAfter = currentContract.balanceOf(e, currentContract);
     assert balanceAfter >= balanceBefore;
 }
 
