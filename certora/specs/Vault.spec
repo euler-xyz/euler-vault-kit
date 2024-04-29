@@ -99,6 +99,9 @@ This operation affects:
  - total shares balance
  - total balance of the underlying assets held by the vault
 */
+
+// all passing
+// run: https://prover.certora.com/output/65266/4e6a6aeb5af9454e87e8245498b0207d?anonymousKey=e924e53a6ff7a84beab51de18671463a166885b4
 methods {
     // Track if a check was scheduled
     function EVCClient.EVCRequireStatusChecks(address account) internal => CVLRequireStatusCheck(account);
