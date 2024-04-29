@@ -115,9 +115,9 @@ rule getCollateralValue_borrowing_lower {
 
     require LTVConfigAssumptions(e, getLTVConfig(e, collateral));
 
-    uint256 collateralValue_borrowing = getCollateralValueExt(e, vaultCache, account, collateral, Liquidation.LTVType.BORROWING);
+    uint256 collateralValue_borrowing = getCollateralValueExt(e, vaultCache, account, collateral, false);
 
-    uint256 collateralValue_liquidation = getCollateralValueExt(e, vaultCache, account, collateral, Liquidation.LTVType.LIQUIDATION);
+    uint256 collateralValue_liquidation = getCollateralValueExt(e, vaultCache, account, collateral, true);
 
     require collateralValue_liquidation > 0;
     require collateralValue_borrowing > 0;

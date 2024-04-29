@@ -13,7 +13,7 @@ contract LiquidationHarness is AbstractBaseHarness, Liquidation {
     function calculateLiquidityExternal(
         address account
     ) public view returns (uint256 collateralValue, uint256 liabilityValue) {
-        return calculateLiquidity(loadVault(), account, getCollaterals(account), LTVType.LIQUIDATION);
+        return calculateLiquidity(loadVault(), account, getCollaterals(account), true);
     }
 
     function calculateLiquidationExt(
@@ -38,11 +38,11 @@ contract LiquidationHarness is AbstractBaseHarness, Liquidation {
         return getCurrentOwed(vaultCache, violator).toAssetsUp();
     }
 
-    function getCollateralValueExt(VaultCache memory vaultCache, address account, address collateral, LTVType ltvType)
+    function getCollateralValueExt(VaultCache memory vaultCache, address account, address collateral, bool liquidation)
         external
         view
         returns (uint256 value) {
-            return getCollateralValue(vaultCache, account, collateral, ltvType);
+            return getCollateralValue(vaultCache, account, collateral, liquidation);
     }
 
 }
