@@ -141,6 +141,8 @@ rule depositMonotonicity() {
     address receiver;
     require currentContract != e.msg.sender && currentContract != receiver; 
 
+    require largerAssets < max_uint256; // amount = max_uint256 deposits the full balance and we get a CEX for that case.
+
     safeAssumptions(e, e.msg.sender, receiver);
 
     deposit(e, smallerAssets, receiver);
