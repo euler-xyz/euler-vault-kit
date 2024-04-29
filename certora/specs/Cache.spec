@@ -4,6 +4,8 @@ methods {
     // function updateVaultExt() external returns (Cache.VaultCache) envfree;
 }
 
+// passing
+// run: https://prover.certora.com/output/65266/974f262c8ca84582909b12e83849003b/?anonymousKey=b8fc04fbb6a3a2aa0cca1151da309eaea9f64252
 rule updateVault_no_unexpected_reverts {
     env e;
 

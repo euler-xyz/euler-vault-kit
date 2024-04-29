@@ -26,6 +26,8 @@ checkLiquidation must revert if:
  - price oracle is not configured
 */
 
+// run: https://prover.certora.com/output/65266/d21dd88f07684b01930ff44d737378d7/?anonymousKey=660fbbe1c86127afc78c999a9ddd58c156ac7dad
+
 import "Base.spec";
 methods {
     function isRecognizedCollateralExt(address collateral) external returns (bool) envfree;

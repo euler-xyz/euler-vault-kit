@@ -74,13 +74,15 @@ checkVaultStatus must revert if:
 
 import "Base.spec";
 
+// run: https://prover.certora.com/output/65266/4d1ba56cfd3c4aefbe2661e07fd5c95c/?anonymousKey=800abae52d40b2758c3f1f8c8a42ff82025533cd
+
 methods {
     // envfree
     function vaultIsOnlyController(address account) external returns (bool) envfree;
         
 }
 
-// timeout
+// counterexamle. 
 rule liquidations_equal_for_one {
     env e;
     calldataarg args;
@@ -134,6 +136,8 @@ rule ltv_borrowing_lower {
     
 }
 
+// Passing
+
 rule accountLiquidityMustRevert {
     env e;
     calldataarg args;
@@ -152,6 +156,7 @@ rule accountLiquidityMustRevert {
 
 }
 
+// passing
 rule accountLiquidityFullMustRevert {
     env e;
     calldataarg args;
@@ -169,6 +174,7 @@ rule accountLiquidityFullMustRevert {
     assert oracleConfigured;
 }
 
+// passing
 rule checkAccountStatusMustRevert {
     env e;
     calldataarg args;
@@ -180,6 +186,7 @@ rule checkAccountStatusMustRevert {
     assert checksInProgress;
 }
 
+// passing
 rule checkVaultStatusMustRevert {
     env e;
     calldataarg args;
