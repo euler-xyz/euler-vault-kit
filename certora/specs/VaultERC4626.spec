@@ -308,6 +308,8 @@ rule underlyingCannotChange() {
 }
 */
 
+// passing
+// run: https://prover.certora.com/output/65266/1912c053cdf8485087f2c050146c64aa/?anonymousKey=a12e3d573258a4d8136a19b612448a50f80b9a21
 rule dustFavorsTheHouse(uint assetsIn )
 {
     env e;
@@ -388,6 +390,8 @@ filtered {
         "a contributor's assets must decrease if and only if the receiver's shares increase";
 }
 
+// passing
+// run: https://prover.certora.com/output/65266/28a47dd30c6747cbbc4495de59e5f965?anonymousKey=2e86f97ff0030d5489503334c71961bb5978f331
 rule onlyContributionMethodsReduceAssets(method f) {
     address user; require user != currentContract;
     uint256 userAssetsBefore = userAssets(user);
