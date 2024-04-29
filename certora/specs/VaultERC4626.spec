@@ -60,12 +60,33 @@ methods {
     // function _.transferFrom(address,address,uint256) external => DISPATCHER(true);
 
     // function ERC20a.balanceOf(address) external returns uint256 envfree; // NOT ENVFREE
-    function ERC20a.transferFrom(address,address,uint256) external returns bool;
+    function ERC20a.transferFrom(address,address,uint256) external returns bool; // not envfree
 
     function RPow.rpow(uint256 x, uint256 y, uint256 base) internal returns (uint256, bool) => CVLPow(x, y, base);
+
+    // These are unresolved calls that havoc contract state.
+    // Most of these cause these havocs because of a low-level call 
+    // operation and are irrelevant for the rules.
+    function _.invokeHookTarget(address caller) internal => NONDET;
+    // another unresolved call that havocs all contracts
+    function _.requireVaultStatusCheck() external => NONDET;
+    function _.requireAccountAndVaultStatusCheck(address account) external => NONDET;
+    // trySafeTransferFrom cannot be summarized as NONDET (due to return type
+    // that includes bytes memory). So it is summarized as 
+    // DummyERC20a.transferFrom
+    function _.trySafeTransferFrom(address token, address from, address to, uint256 value) internal with (env e) => CVLTrySafeTransferFrom(e, from, to, value) expect (bool, bytes memory);
+    // safeTransferFrom can be made NONDET, but is summarized as transferFrom
+    // from DummyERC20a anyway.
+    function _.safeTransferFrom(address token, address from, address to, uint256 value, address permit2) internal with (env e)=> CVLTrySafeTransferFrom(e, from, to, value) expect (bool, bytes memory);
+    function _.tryBalanceTrackerHook(address account, uint256 newAccountBalance, bool forfeitRecentReward) internal => NONDET;
+
 }
 
-
+// Summarize trySafeTransferFrom as DummyERC20 transferFrom
+function CVLTrySafeTransferFrom(env e, address from, address to, uint256 value) returns (bool, bytes) {
+    bytes ret; // Ideally bytes("") if there is a way to do this
+    return (ERC20a.transferFrom(e, from, to, value), ret);
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 ////           #  asset To shares mathematical properties                  /////
@@ -297,7 +318,13 @@ rule dustFavorsTheHouse(uint assetsIn )
 
     uint balanceBefore = ERC20a.balanceOf(e, currentContract);
 
+    require balanceBefore > 0;
+    require totalSupplyBefore > 0;
+    require assetsIn > 0;
+    
+    require assetsIn < max_uint256;
     uint shares = deposit(e,assetsIn, e.msg.sender);
+    require shares < max_uint256;
     uint assetsOut = redeem(e,shares,e.msg.sender,e.msg.sender);
 
     uint balanceAfter = ERC20a.balanceOf(e, currentContract);
