@@ -308,11 +308,6 @@ contract ERC20Test_Actions is EVaultTestBase {
         assertEq(eTST.allowance(alice, getSubAccount(alice, 1)), 10);
     }
 
-    function getSubAccount(address primary, uint8 subAccountId) internal pure returns (address) {
-        require(subAccountId <= 256, "invalid subAccountId");
-        return address(uint160(uint160(primary) ^ subAccountId));
-    }
-
     function _mintAndDeposit(address user, uint256 amount) internal {
         vm.startPrank(user);
         assetTST.mint(user, amount);

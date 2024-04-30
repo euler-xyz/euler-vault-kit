@@ -105,7 +105,6 @@ contract Governance_Reserves is EVaultTestBase {
         assertApproxEqAbs(eTST.accumulatedFees(), 0.000000018e18, 0.000000001e18);
     }
 
-    //withdraw without any deposit is a no-op as amount is zero
     function test_convertFees_withoutAnyDeposit() public {
         startHoax(admin);
         protocolConfig.setVaultInterestFeeRange(address(eTST), true, 0.075e4, 1e4);

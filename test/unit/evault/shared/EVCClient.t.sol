@@ -200,6 +200,4 @@ contract VaultWithBug is EVault {
 
         return assets.toUint();
     }
-
-    function testExcludeFromCoverage() public pure {}
 }

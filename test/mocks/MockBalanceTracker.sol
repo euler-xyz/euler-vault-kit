@@ -36,6 +36,4 @@ contract MockBalanceTracker {
         reentrantCall.to = to;
         reentrantCall.data = data;
     }
-
-    function testExcludeFromCoverage() public pure {}
 }

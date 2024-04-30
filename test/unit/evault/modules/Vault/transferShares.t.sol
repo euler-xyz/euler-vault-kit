@@ -231,9 +231,4 @@ contract VaultTest_TransferShares is EVaultTestBase {
 
         assertEq(eTST.balanceOf(user1), 1000);
     }
-
-    function getSubAccount(address primary, uint8 subAccountId) internal pure returns (address) {
-        require(subAccountId <= 256, "invalid subAccountId");
-        return address(uint160(uint160(primary) ^ subAccountId));
-    }
 }

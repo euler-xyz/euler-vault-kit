@@ -214,8 +214,8 @@ contract VaultTest_Batch is EVaultTestBase {
         assertEq(evc.getCollaterals(getSubAccount(user1, 1))[0], address(eTST));
     }
 
-    //call to unknown module is permitted
-    function test_callUnknownModule() public {
+    //call to unknown contract is permitted
+    function test_callUnknownContract() public {
         IEVC.BatchItem[] memory items = new IEVC.BatchItem[](1);
         items[0] = IEVC.BatchItem({
             onBehalfOfAccount: user1,
@@ -336,10 +336,5 @@ contract VaultTest_Batch is EVaultTestBase {
         assertEq(batchItemsResult[1].success, false);
         bytes memory err = abi.encodeWithSignature("Error(string)", "permit: invalid signature");
         assertEq(batchItemsResult[1].result, err);
-    }
-
-    function getSubAccount(address primary, uint8 subAccountId) internal pure returns (address) {
-        require(subAccountId <= 256, "invalid subAccountId");
-        return address(uint160(uint160(primary) ^ subAccountId));
     }
 }

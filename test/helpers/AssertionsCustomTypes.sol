@@ -38,6 +38,4 @@ contract AssertionsCustomTypes is StdAssertions {
     function assertEq(Owed a, Owed b, string memory err) internal pure {
         assertEq(Owed.unwrap(a), Owed.unwrap(b), err);
     }
-
-    function testExcludeFromCoverage() public pure {}
 }

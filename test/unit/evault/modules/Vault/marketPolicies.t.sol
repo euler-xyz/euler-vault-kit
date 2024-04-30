@@ -840,11 +840,6 @@ contract VaultTest_MarketPolicies is EVaultTestBase {
         assertEq(eTST2.totalBorrows(), 0);
     }
 
-    function getSubAccount(address primary, uint8 subAccountId) internal pure returns (address) {
-        require(subAccountId <= 256, "invalid subAccountId");
-        return address(uint160(uint160(primary) ^ subAccountId));
-    }
-
     function onFlashLoan(bytes memory data) external {
         (address eTSTAddress, address assetTSTAddress, uint256 repayAmount) =
             abi.decode(data, (address, address, uint256));

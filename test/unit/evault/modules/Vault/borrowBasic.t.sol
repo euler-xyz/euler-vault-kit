@@ -237,9 +237,4 @@ contract VaultTest_BorrowBasic is EVaultTestBase {
     function debtExact(uint256 value) internal pure returns (uint256) {
         return value * (2 ** 31) / (10 ** 9);
     }
-
-    function getSubAccount(address primary, uint8 subAccountId) internal pure returns (address) {
-        require(subAccountId <= 256, "invalid subAccountId");
-        return address(uint160(uint160(primary) ^ subAccountId));
-    }
 }

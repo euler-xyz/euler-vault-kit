@@ -155,7 +155,10 @@ contract EVaultTestBase is AssertionsCustomTypes, Test, DeployPermit2 {
         return v;
     }
 
-    function test__ExcludeFromCoverage() public pure {}
+    function getSubAccount(address primary, uint8 subAccountId) internal pure returns (address) {
+        require(subAccountId <= 256, "invalid subAccountId");
+        return address(uint160(uint160(primary) ^ subAccountId));
+    }
 }
 
 contract MockHook {

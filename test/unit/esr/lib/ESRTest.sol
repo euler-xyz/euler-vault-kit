@@ -35,6 +35,4 @@ contract ESRTest is Test {
         esr.deposit(amount, from);
         vm.stopPrank();
     }
-
-    function testExcludeFromCoverage() public pure {}
 }

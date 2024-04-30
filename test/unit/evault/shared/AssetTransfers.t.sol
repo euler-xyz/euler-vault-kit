@@ -13,8 +13,6 @@ contract AssetTransfersHarness is AssetTransfers {
     function exposed_pullAssets(VaultCache memory cache, address from, Assets amount) external {
         pullAssets(cache, from, amount);
     }
-
-    function testExcludeFromCoverage() public pure {}
 }
 
 contract AssetTransfersTest is EVaultTestBase {
