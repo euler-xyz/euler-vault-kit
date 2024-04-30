@@ -562,7 +562,7 @@ contract VaultLiquidation_Test is EVaultTestBase {
 
         startHoax(address(this));
         eTST2.setInterestRateModel(address(new IRMTestFixed()));
-        skip(10110 * 86400);
+        skip(10110 days);
         eTST2.touch();
         eTST2.setInterestRateModel(address(new IRMTestZero()));
 

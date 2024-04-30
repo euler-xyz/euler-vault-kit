@@ -72,7 +72,7 @@ contract Governance_Reserves is EVaultTestBase {
         evc.enableController(user3, address(eTST));
         eTST.borrow(5e18, user3);
 
-        skip(30.5 * 86400);
+        skip(30.5 days);
 
         assertApproxEqAbs(eTST.debtOf(user3), 5.041955e18, 0.000001e18);
         assertApproxEqAbs(eTST.accumulatedFeesAssets(), 0.003146e18, 0.000001e18);
@@ -81,7 +81,7 @@ contract Governance_Reserves is EVaultTestBase {
         assertApproxEqAbs(eTST.maxWithdraw(user2), 10.0064681e18, 0.000001e18);
 
         // Some more interest earned:
-        skip(90 * 86400);
+        skip(90 days);
 
         assertApproxEqAbs(eTST.debtOf(user3), 5.167823e18, 0.000001e18);
         assertApproxEqAbs(eTST.accumulatedFeesAssets(), 0.012586e18, 0.000001e18);
@@ -118,7 +118,7 @@ contract Governance_Reserves is EVaultTestBase {
         assertEq(eTST.totalSupply(), 0);
         assertEq(eTST.totalAssets(), 0);
 
-        skip(30.5 * 86400);
+        skip(30.5 days);
 
         startHoax(address(this));
         eTST.setFeeReceiver(user4);

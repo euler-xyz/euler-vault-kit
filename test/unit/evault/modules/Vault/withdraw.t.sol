@@ -6,40 +6,57 @@ import {EVaultTestBase} from "../../EVaultTestBase.t.sol";
 import {Events} from "src/EVault/shared/Events.sol";
 import {SafeERC20Lib} from "src/EVault/shared/lib/SafeERC20Lib.sol";
 import {IAllowanceTransfer} from "permit2/src/interfaces/IAllowanceTransfer.sol";
+import {IEVault} from "src/EVault/IEVault.sol";
+import {TestERC20} from "../../../../mocks/TestERC20.sol";
+import {IRMTestZero} from "../../../../mocks/IRMTestZero.sol";
+import {Errors} from "src/EVault/shared/Errors.sol";
 
 import "src/EVault/shared/types/Types.sol";
 import "src/EVault/shared/Constants.sol";
 
 import "forge-std/Test.sol";
 
-contract VaultTest_withdraw is EVaultTestBase {
+contract VaultTest_Withdraw is EVaultTestBase {
     using TypesLib for uint256;
 
-    address depositor;
+    address lender;
     address borrower;
-    address borrower2;
+
+    TestERC20 assetTST3;
+    IEVault public eTST3;
 
     function setUp() public override {
         super.setUp();
 
-        depositor = makeAddr("depositor");
+        lender = makeAddr("lender");
         borrower = makeAddr("borrower");
-        borrower2 = makeAddr("borrower_2");
 
         // Setup
 
-        oracle.setPrice(address(assetTST), unitOfAccount, 1e18);
-        oracle.setPrice(address(assetTST2), unitOfAccount, 1e18);
+        assetTST3 = new TestERC20("Test TST 3", "TST3", 18, false);
+        eTST3 = IEVault(factory.createProxy(true, abi.encodePacked(address(assetTST3), address(oracle), unitOfAccount)));
 
-        eTST.setLTV(address(eTST2), 0.9e4, 0);
+        eTST.setInterestRateModel(address(new IRMTestZero()));
+        eTST2.setInterestRateModel(address(new IRMTestZero()));
+        eTST3.setInterestRateModel(address(new IRMTestZero()));
 
-        // Depositor
+        oracle.setPrice(address(eTST), unitOfAccount, 2.2e18);
+        oracle.setPrice(address(eTST2), unitOfAccount, 0.4e18);
+        oracle.setPrice(address(eTST3), unitOfAccount, 2.2e18);
 
-        startHoax(depositor);
+        eTST.setLTV(address(eTST2), 0.3e4, 0);
 
-        assetTST.mint(depositor, type(uint256).max);
+        // Lender
+
+        startHoax(lender);
+
+        assetTST.mint(lender, type(uint256).max);
         assetTST.approve(address(eTST), type(uint256).max);
-        eTST.deposit(100e18, depositor);
+        eTST.deposit(100e18, lender);
+
+        assetTST3.mint(lender, 200e18);
+        assetTST3.approve(address(eTST3), type(uint256).max);
+        eTST3.deposit(100e18, lender);
 
         // Borrower
 
@@ -65,10 +82,10 @@ contract VaultTest_withdraw is EVaultTestBase {
         vm.expectRevert(Errors.E_InsufficientCash.selector);
         eTST2.withdraw(maxWithdrawAmount + 1, borrower, borrower);
 
-        startHoax(depositor);
-        assetTST2.mint(depositor, type(uint256).max);
+        startHoax(lender);
+        assetTST2.mint(lender, type(uint256).max);
         assetTST2.approve(address(eTST2), type(uint256).max);
-        eTST2.deposit(100e18, depositor);
+        eTST2.deposit(100e18, lender);
         vm.stopPrank();
 
         startHoax(borrower);
@@ -118,10 +135,10 @@ contract VaultTest_withdraw is EVaultTestBase {
         vm.expectRevert(Errors.E_InsufficientCash.selector);
         eTST2.redeem(maxRedeemAmount + 1, borrower, borrower);
 
-        startHoax(depositor);
-        assetTST2.mint(depositor, type(uint256).max);
+        startHoax(lender);
+        assetTST2.mint(lender, type(uint256).max);
         assetTST2.approve(address(eTST2), type(uint256).max);
-        eTST2.deposit(100e18, depositor);
+        eTST2.deposit(100e18, lender);
         vm.stopPrank();
 
         startHoax(borrower);
@@ -162,23 +179,23 @@ contract VaultTest_withdraw is EVaultTestBase {
         // Configure vault as non-EVC compatible: protections on
         eTST.setConfigFlags(eTST.configFlags() & ~CFG_EVC_COMPATIBLE_ASSET);
 
-        startHoax(depositor);
-        address subacc = address(uint160(depositor) ^ 42);
+        startHoax(lender);
+        address subacc = address(uint160(lender) ^ 42);
 
-        // depositor is not known to EVC yet
-        eTST.withdraw(1, subacc, depositor);
+        // lender is not known to EVC yet
+        eTST.withdraw(1, subacc, lender);
         assertEq(assetTST.balanceOf(subacc), 1);
 
-        // depositor is registered in EVC
-        evc.enableCollateral(depositor, address(eTST));
+        // lender is registered in EVC
+        evc.enableCollateral(lender, address(eTST));
 
         // addresses within sub-accounts range revert
         vm.expectRevert(Errors.E_BadAssetReceiver.selector);
-        eTST.withdraw(1, subacc, depositor);
+        eTST.withdraw(1, subacc, lender);
 
         // address outside of sub-accounts range are accepted
-        address otherAccount = address(uint160(depositor) ^ 256);
-        eTST.withdraw(1, otherAccount, depositor);
+        address otherAccount = address(uint160(lender) ^ 256);
+        eTST.withdraw(1, otherAccount, lender);
         assertEq(assetTST.balanceOf(otherAccount), 1);
 
         vm.stopPrank();
@@ -186,9 +203,9 @@ contract VaultTest_withdraw is EVaultTestBase {
         // governance switches the protections off
         eTST.setConfigFlags(eTST.configFlags() | CFG_EVC_COMPATIBLE_ASSET);
 
-        startHoax(depositor);
+        startHoax(lender);
         // withdrawal is allowed again
-        eTST.withdraw(1, subacc, depositor);
+        eTST.withdraw(1, subacc, lender);
         assertEq(assetTST.balanceOf(subacc), 2);
     }
 
@@ -196,23 +213,23 @@ contract VaultTest_withdraw is EVaultTestBase {
         // Configure vault as non-EVC compatible: protections on
         eTST.setConfigFlags(eTST.configFlags() & ~CFG_EVC_COMPATIBLE_ASSET);
 
-        startHoax(depositor);
-        address subacc = address(uint160(depositor) ^ 42);
+        startHoax(lender);
+        address subacc = address(uint160(lender) ^ 42);
 
-        // depositor is not known to EVC yet
-        eTST.redeem(1, subacc, depositor);
+        // lender is not known to EVC yet
+        eTST.redeem(1, subacc, lender);
         assertEq(assetTST.balanceOf(subacc), 1);
 
-        // depositor is registered in EVC
-        evc.enableCollateral(depositor, address(eTST));
+        // lender is registered in EVC
+        evc.enableCollateral(lender, address(eTST));
 
         // addresses within sub-accounts range revert
         vm.expectRevert(Errors.E_BadAssetReceiver.selector);
-        eTST.redeem(1, subacc, depositor);
+        eTST.redeem(1, subacc, lender);
 
         // address outside of sub-accounts range are accepted
-        address otherAccount = address(uint160(depositor) ^ 256);
-        eTST.redeem(1, otherAccount, depositor);
+        address otherAccount = address(uint160(lender) ^ 256);
+        eTST.redeem(1, otherAccount, lender);
         assertEq(assetTST.balanceOf(otherAccount), 1);
 
         vm.stopPrank();
@@ -220,9 +237,72 @@ contract VaultTest_withdraw is EVaultTestBase {
         // governance switches the protections off
         eTST.setConfigFlags(eTST.configFlags() | CFG_EVC_COMPATIBLE_ASSET);
 
-        startHoax(depositor);
+        startHoax(lender);
         // redeem is allowed again
-        eTST.redeem(1, subacc, depositor);
+        eTST.redeem(1, subacc, lender);
         assertEq(assetTST.balanceOf(subacc), 2);
+    }
+
+    //can't withdraw deposit not entered as collateral when account unhealthy
+    function test_withdraw_accountUnhealthy() public {
+        startHoax(borrower);
+        eTST2.deposit(90e18, borrower);
+        evc.enableCollateral(borrower, address(eTST2));
+        evc.enableController(borrower, address(eTST));
+        eTST.borrow(5e18, borrower);
+
+        (uint256 collateralValue, uint256 liabilityValue) = eTST.accountLiquidity(borrower, false);
+        assertApproxEqAbs(collateralValue * 1e18 / liabilityValue, 1.09e18, 0.01e18);
+
+        // depositing but not entering collateral
+        assetTST3.mint(borrower, 10e18);
+        assetTST3.approve(address(eTST3), type(uint256).max);
+        eTST3.deposit(1e18, borrower);
+
+        // account unhealthy
+        oracle.setPrice(address(eTST), unitOfAccount, 2.5e18);
+
+        (collateralValue, liabilityValue) = eTST.accountLiquidity(borrower, false);
+        assertApproxEqAbs(collateralValue * 1e18 / liabilityValue, 0.96e18, 0.001e18);
+
+        vm.expectRevert(Errors.E_AccountLiquidity.selector);
+        eTST3.withdraw(1e18, borrower, borrower);
+    }
+
+    //max withdraw with borrow - deposit not enabled as collateral
+    function test_withdraw_depositNotEnabledAsCollateral() public {
+        startHoax(borrower);
+        eTST2.deposit(90e18, borrower);
+        evc.enableCollateral(borrower, address(eTST2));
+        evc.enableController(borrower, address(eTST));
+        eTST.borrow(5e18, borrower);
+
+        // set up liquidator to support the debt
+        startHoax(lender);
+        evc.enableController(lender, address(eTST));
+        evc.enableCollateral(lender, address(eTST2));
+        evc.enableCollateral(lender, address(eTST3));
+
+        startHoax(address(this));
+        eTST.setLTV(address(eTST3), 0.95e4, 0);
+
+        (uint256 collateralValue, uint256 liabilityValue) = eTST.accountLiquidity(borrower, false);
+        assertApproxEqAbs(collateralValue * 1e18 / liabilityValue, 1.09e18, 0.01e18);
+
+        assetTST3.mint(borrower, 100e18);
+        startHoax(borrower);
+        assetTST3.approve(address(eTST3), type(uint256).max);
+        eTST3.deposit(1e18, borrower);
+
+        assertEq(eTST3.maxRedeem(borrower), 1e18);
+
+        oracle.setPrice(address(eTST), unitOfAccount, 2.5e18);
+        oracle.setPrice(address(eTST3), unitOfAccount, 2.5e18);
+
+        (collateralValue, liabilityValue) = eTST.accountLiquidity(borrower, false);
+        assertApproxEqAbs(collateralValue * 1e18 / liabilityValue, 0.96e18, 0.001e18);
+
+        // TST3 is not enabled as collateral, so withdrawal is NOT prevented in unhealthy state
+        assertEq(eTST3.maxRedeem(borrower), 1e18);
     }
 }

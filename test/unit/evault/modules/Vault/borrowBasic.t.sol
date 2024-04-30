@@ -88,7 +88,7 @@ contract VaultTest_BorrowBasic is EVaultTestBase {
         assertEq(eTST.debtOf(borrower), 0.5e18);
 
         // Wait 1 day
-        skip(86400);
+        skip(1 days);
 
         // No interest was charged
         assertEq(eTST.debtOf(borrower), 0.5e18);

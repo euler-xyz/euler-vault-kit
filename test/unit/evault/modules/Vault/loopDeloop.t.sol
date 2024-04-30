@@ -4,6 +4,7 @@ pragma solidity ^0.8.0;
 
 import {EVaultTestBase} from "../../EVaultTestBase.t.sol";
 import {Errors} from "src/EVault/shared/Errors.sol";
+import {Events} from "src/EVault/shared/Events.sol";
 import {IEVault} from "src/EVault/IEVault.sol";
 import {TestERC20} from "../../../../mocks/TestERC20.sol";
 import {IRMTestZero} from "../../../../mocks/IRMTestZero.sol";
@@ -47,7 +48,6 @@ contract VaultTest_LoopDeloop is EVaultTestBase {
         startHoax(user2);
         assetTST.approve(address(eTST), type(uint256).max);
         assetTST2.approve(address(eTST2), type(uint256).max);
-        evc.enableCollateral(user2, address(eTST));
         evc.enableCollateral(user2, address(eTST2));
 
         startHoax(user3);
@@ -57,6 +57,7 @@ contract VaultTest_LoopDeloop is EVaultTestBase {
         evc.enableCollateral(user3, address(eTST2));
 
         assetTST.mint(user1, 100e18);
+        assetTST.mint(user2, 100e18);
         assetTST2.mint(user2, 100e18);
         assetTST2.mint(user3, 100e18);
 
@@ -106,5 +107,107 @@ contract VaultTest_LoopDeloop is EVaultTestBase {
         assertEq(eTST3.debtOf(user1), 0);
         assertEq(eTST3.totalSupply(), 1e18);
         assertEq(eTST3.totalBorrows(), 0);
+    }
+
+    //deloop for 0 is a no-op
+    function test_deloop_forZero() public {
+        startHoax(user2);
+        eTST2.deposit(40e18, user2);
+
+        assertEq(evc.getCollaterals(user2)[0], address(eTST2));
+
+        assertEq(assetTST.balanceOf(user2), 100e18);
+        assertEq(eTST.balanceOf(user2), 0);
+        assertEq(eTST.debtOf(user2), 0);
+
+        startHoax(user2);
+        evc.enableController(user2, address(eTST));
+        eTST.borrow(0.5e18, user2);
+
+        assertEq(assetTST.balanceOf(user2), 100.5e18);
+        assertEq(eTST.balanceOf(user2), 0);
+        assertEq(eTST.debtOf(user2), 0.5e18);
+
+        // delooping 0 is a no-op
+        eTST.deloop(0, user2);
+    }
+
+    //deloop when owed amount is 0 is a no-op
+    function test_deloop_whenOwedAmountZero() public {
+        assertEq(evc.getCollaterals(user2)[0], address(eTST2));
+
+        startHoax(user2);
+        eTST.deposit(1e18, user2);
+
+        assertEq(assetTST.balanceOf(user2), 99e18);
+        assertEq(eTST.balanceOf(user2), 1e18);
+        assertEq(eTST.debtOf(user2), 0);
+
+        evc.enableController(user2, address(eTST));
+        eTST.deloop(type(uint256).max, user2);
+
+        assertEq(assetTST.balanceOf(user2), 99e18);
+        assertEq(eTST.balanceOf(user2), 1e18);
+        assertEq(eTST.debtOf(user2), 0);
+    }
+
+    //deloop with max_uint256 repays the debt in full or up to the available underlying balance
+    function test_deloop_withMaxRepays() public {
+        startHoax(user2);
+        eTST2.deposit(40e18, user2);
+
+        assertEq(evc.getCollaterals(user2)[0], address(eTST2));
+
+        assertEq(assetTST.balanceOf(user2), 100e18);
+        assertEq(eTST.balanceOf(user2), 0);
+        assertEq(eTST.debtOf(user2), 0);
+
+        // Two separate borrows, .4 and .1:
+        startHoax(user2);
+        evc.enableController(user2, address(eTST));
+
+        vm.expectEmit();
+        emit Events.Transfer(address(0), user2, 0.4e18);
+        eTST.borrow(0.4e18, user2);
+        eTST.borrow(0.1e18, user2);
+
+        // Make sure the borrow market is recorded
+        assertEq(evc.getCollaterals(user2)[0], address(eTST2));
+        assertEq(evc.getControllers(user2)[0], address(eTST));
+
+        assertEq(assetTST.balanceOf(user2), 100.5e18);
+        assertEq(eTST.balanceOf(user2), 0);
+        assertEq(eTST.debtOf(user2), 0.5e18);
+
+        // Wait 1 day
+        skip(1 days);
+
+        // No interest was charged
+        assertEq(eTST.debtOf(user2), 0.5e18);
+
+        // nothing to deloop
+        eTST.deloop(type(uint256).max, user2);
+
+        assertEq(assetTST.balanceOf(user2), 100.5e18);
+        assertEq(eTST.balanceOf(user2), 0);
+        assertEq(eTST.debtOf(user2), 0.5e18);
+
+        // eVault balance is less than debt
+        eTST.deposit(0.1e18, user2);
+        eTST.deloop(type(uint256).max, user2);
+
+        assertEq(assetTST.balanceOf(user2), 100.4e18);
+        assertEq(eTST.balanceOf(user2), 0);
+        assertEq(eTST.maxWithdraw(user2), 0);
+        assertEq(eTST.debtOf(user2), 0.4e18);
+
+        // eVault balance is greater than debt
+        eTST.deposit(1e18, user2);
+        eTST.deloop(type(uint256).max, user2);
+
+        assertEq(assetTST.balanceOf(user2), 99.4e18);
+        assertEq(eTST.balanceOf(user2), 0.6e18);
+        assertEq(eTST.maxWithdraw(user2), 0.6e18);
+        assertEq(eTST.debtOf(user2), 0);
     }
 }

@@ -140,7 +140,7 @@ contract VaultTest_Liquidity is EVaultTestBase {
         eTST2.transfer(user3, 0.002e18);
     }
 
-    function test_transferDToken() public {
+    function test_pullDebt() public {
         startHoax(user2);
         evc.enableController(user2, address(eTST));
         eTST.borrow(0.1e18, user2);
@@ -170,7 +170,7 @@ contract VaultTest_Liquidity is EVaultTestBase {
         assertApproxEqAbs(collateralValues[1], (10 * 0.083 * 0.75 * 0.4) * 1e18, 0.01e18);
     }
 
-    function test_transferAllDebt() public {
+    function test_pullAllDebt() public {
         startHoax(user2);
         evc.enableController(user2, address(eTST));
         eTST.borrow(0.1e18, user2);
@@ -197,7 +197,7 @@ contract VaultTest_Liquidity is EVaultTestBase {
         eTST.accountLiquidityFull(user2, false);
     }
 
-    function test_exitMarket() public {
+    function test_disableCollateral() public {
         assertEq(evc.getCollaterals(user2).length, 2);
         assertEq(evc.getCollaterals(user2)[0], address(eTST));
         assertEq(evc.getCollaterals(user2)[1], address(eTST2));
