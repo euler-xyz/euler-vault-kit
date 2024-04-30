@@ -2,7 +2,6 @@
 
 pragma solidity ^0.8.0;
 
-import {Test, console2, stdError} from "forge-std/Test.sol";
 import {EVaultTestBase} from "../../EVaultTestBase.t.sol";
 import {IEVault} from "src/EVault/IEVault.sol";
 import {TestERC20} from "../../../../mocks/TestERC20.sol";
@@ -90,7 +89,7 @@ contract VaultTest_Decimals is EVaultTestBase {
         startHoax(user3);
         eTST3.borrow(0.3e6, user3);
         assertEq(eTST3.debtOf(user3), 0.3e6);
-        assertEq(eTST3.debtOfExact(user3), debtExact(0.3e15));
+        assertEq(eTST3.debtOfExact(user3), debtExact(0.3e6));
         assertEq(eTST3.totalBorrows(), 0.3e6);
         assertEq(assetTST3.balanceOf(user3), 0.3e6);
         assertEq(assetTST3.balanceOf(address(eTST3)), 0.5e6);
@@ -114,7 +113,7 @@ contract VaultTest_Decimals is EVaultTestBase {
         // 1 month later
         skip(2628000); // 1 month in seconds
         // 1 block later
-        assertApproxEqAbs(eTST3.debtOfExact(user3), debtExact(0.302510446617491e15), 0.0000000000000001e18);
+        assertApproxEqAbs(eTST3.debtOfExact(user3), debtExact(0.30251e6), 0.000000001e18);
         // Rounds up to 6th decimal place:
         assertEq(eTST3.debtOf(user3), 0.302511e6);
         // Does round up:
@@ -211,6 +210,6 @@ contract VaultTest_Decimals is EVaultTestBase {
     }
 
     function debtExact(uint256 value) internal pure returns (uint256) {
-        return value * (2 << INTERNAL_DEBT_PRECISION_SHIFT) / 2 / 1e9;
+        return value * (1 << INTERNAL_DEBT_PRECISION_SHIFT);
     }
 }
