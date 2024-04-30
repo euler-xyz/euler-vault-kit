@@ -1,5 +1,5 @@
 using DummyERC20A as erc20;
-// using EthereumVaultConnector as evc;
+using EthereumVaultConnector as evc;
 
 methods {
     // envfree
@@ -65,7 +65,6 @@ function LTVConfigAssumptions(env e, BaseHarness.LTVConfig ltvConfig) returns bo
         require_uint32(timeRemaining) < ltvConfig.rampDuration;
 }
 
-/*
 function actualCaller(env e) returns address {
     if(e.msg.sender == evc) {
         address onBehalf;
@@ -76,4 +75,3 @@ function actualCaller(env e) returns address {
         return e.msg.sender;
     }
 }
-*/
