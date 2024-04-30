@@ -381,6 +381,4 @@ contract EVault_SimpleCriticalChecks is EVaultTestBase {
             assertTrue(false);
         }
     }
-
-    function test_ExcludeFromCoverage() public pure {}
 }

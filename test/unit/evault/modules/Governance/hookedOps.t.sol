@@ -4,9 +4,10 @@ pragma solidity ^0.8.0;
 
 import {EVaultTestBase, EthereumVaultConnector, IEVault} from "test/unit/evault/EVaultTestBase.t.sol";
 import {Errors} from "src/EVault/shared/Errors.sol";
+import {IHookTarget} from "src/interfaces/IHookTarget.sol";
 import "src/EVault/shared/Constants.sol";
 
-contract MockHookTarget {
+contract MockHookTarget is IHookTarget {
     bytes32 internal expectedDataHash;
 
     error UnexpectedError();
@@ -15,6 +16,10 @@ contract MockHookTarget {
 
     function setExpectedDataHash(bytes32 _expectedDataHash) public {
         expectedDataHash = _expectedDataHash;
+    }
+
+    function isHookTarget() external pure override returns (bytes4) {
+        return this.isHookTarget.selector;
     }
 
     fallback() external {
@@ -41,6 +46,16 @@ contract MockHookTarget {
     }
 }
 
+contract MockHookTargetReturnVoid {
+    function isHookTarget() external pure {}
+}
+
+contract MockHookTargetReturnWrongSelector {
+    function isHookTarget() external pure returns (bytes4) {
+        return bytes4("123");
+    }
+}
+
 contract Governance_HookedOps is EVaultTestBase {
     address notGovernor;
     address borrower;
@@ -61,9 +76,24 @@ contract Governance_HookedOps is EVaultTestBase {
         return data;
     }
 
+    function test_revertWhen_wrongHookTarget() public {
+        // isHookTarget not implemented
+        address hookTarget = address(evc);
+        vm.expectRevert();
+        eTST.setHookConfig(hookTarget, OP_DEPOSIT);
+
+        // isHookTarget returns nothing
+        hookTarget = address(new MockHookTargetReturnVoid());
+        vm.expectRevert();
+        eTST.setHookConfig(hookTarget, OP_DEPOSIT);
+
+        // isHookTarget returns wrong selector
+        hookTarget = address(new MockHookTargetReturnWrongSelector());
+        vm.expectRevert(Errors.E_NotHookTarget.selector);
+        eTST.setHookConfig(hookTarget, OP_DEPOSIT);
+    }
+
     function testFuzz_hookedDepositMintWithdrawRedeem(
-        address hookTarget1,
-        address hookTarget2,
         uint32 hookedOps,
         address sender,
         uint256 amount,
@@ -71,8 +101,6 @@ contract Governance_HookedOps is EVaultTestBase {
         bool deposit,
         bool withdraw
     ) public {
-        vm.assume(hookTarget1.code.length == 0 && !evc.haveCommonOwner(hookTarget1, address(0)));
-        vm.assume(hookTarget2.code.length == 0 && !evc.haveCommonOwner(hookTarget2, address(0)));
         vm.assume(hookedOps & OP_VAULT_STATUS_CHECK == 0);
         vm.assume(
             sender.code.length == 0 && receiver.code.length == 0 && !evc.haveCommonOwner(sender, address(0))
@@ -82,7 +110,7 @@ contract Governance_HookedOps is EVaultTestBase {
 
         // set the hooked ops
         eTST.setHookConfig(
-            hookTarget1,
+            address(0),
             hookedOps | (deposit ? OP_DEPOSIT : OP_MINT) | (withdraw ? OP_WITHDRAW : OP_REDEEM) | OP_TRANSFER
         );
 
@@ -91,15 +119,21 @@ contract Governance_HookedOps is EVaultTestBase {
         assetTST.mint(sender, amount);
         assetTST.approve(address(eTST), type(uint256).max);
 
-        // if the hook taget is not a contract, the operation is considered disabled
+        // if the hook taget is zero address, the operation is considered disabled
         assertEq(deposit ? eTST.maxDeposit(receiver) : eTST.maxMint(receiver), 0);
         vm.expectRevert(Errors.E_OperationDisabled.selector);
         deposit ? eTST.deposit(amount, receiver) : eTST.mint(amount, receiver);
 
         // deploy the hook target
-        address deployedHookTarget = address(new MockHookTarget());
-        vm.etch(hookTarget1, deployedHookTarget.code);
+        address hookTarget1 = address(new MockHookTarget());
 
+        vm.startPrank(address(this));
+        eTST.setHookConfig(
+            hookTarget1,
+            hookedOps | (deposit ? OP_DEPOSIT : OP_MINT) | (withdraw ? OP_WITHDRAW : OP_REDEEM) | OP_TRANSFER
+        );
+
+        vm.startPrank(sender);
         // now the operation succeeds which proves that it's not affected if the hook target call succeeds
         assertEq(deposit ? eTST.maxDeposit(receiver) : eTST.maxMint(receiver), MAX_SANE_AMOUNT);
         deposit ? eTST.deposit(amount, receiver) : eTST.mint(amount, receiver);
@@ -131,8 +165,8 @@ contract Governance_HookedOps is EVaultTestBase {
         // change the hook target
         vm.startPrank(address(this));
         (, uint32 ops) = eTST.hookConfig();
+        address hookTarget2 = address(new MockHookTarget());
         eTST.setHookConfig(hookTarget2, ops);
-        vm.etch(hookTarget2, deployedHookTarget.code);
 
         // the operation succeeds which proves that it's not affected if the hook target call succeeds
         vm.startPrank(sender);
@@ -155,13 +189,7 @@ contract Governance_HookedOps is EVaultTestBase {
         else assertEq(eTST.maxRedeem(sender), eTST.balanceOf(sender));
     }
 
-    function testFuzz_vaultStatusCheckHook(address hookTarget, address sender, uint256 amount, address receiver)
-        public
-    {
-        vm.assume(
-            hookTarget.code.length == 0 && !evc.haveCommonOwner(hookTarget, address(0))
-                && hookTarget != 0x000000000000000000636F6e736F6c652e6c6f67
-        );
+    function testFuzz_vaultStatusCheckHook(address sender, uint256 amount, address receiver) public {
         vm.assume(
             sender.code.length == 0 && receiver.code.length == 0 && !evc.haveCommonOwner(sender, address(0))
                 && !evc.haveCommonOwner(receiver, address(0)) && !evc.haveCommonOwner(sender, receiver)
@@ -169,14 +197,14 @@ contract Governance_HookedOps is EVaultTestBase {
         amount = bound(amount, 1, type(uint64).max);
 
         // set the hooked ops
-        eTST.setHookConfig(hookTarget, OP_VAULT_STATUS_CHECK);
+        eTST.setHookConfig(address(0), OP_VAULT_STATUS_CHECK);
 
         // mint some tokens to the sender
         vm.startPrank(sender);
         assetTST.mint(sender, 2 * amount);
         assetTST.approve(address(eTST), type(uint256).max);
 
-        // if the hook taget is not a contract, any operation requesting a vault status check is considered disabled
+        // if the hook taget is zero address, any operation requesting a vault status check is considered disabled
         vm.expectRevert(Errors.E_OperationDisabled.selector);
         eTST.deposit(amount, receiver);
 
@@ -184,9 +212,12 @@ contract Governance_HookedOps is EVaultTestBase {
         eTST.touch();
 
         // deploy the hook target
-        address deployedHookTarget = address(new MockHookTarget());
-        vm.etch(hookTarget, deployedHookTarget.code);
+        address hookTarget = address(new MockHookTarget());
 
+        vm.startPrank(address(this));
+        eTST.setHookConfig(hookTarget, OP_VAULT_STATUS_CHECK);
+
+        vm.startPrank(sender);
         // now the operations succeed which proves that they're not affected if the hook target call succeeds
         eTST.deposit(amount, receiver);
         assertEq(eTST.balanceOf(receiver), amount);
@@ -203,20 +234,13 @@ contract Governance_HookedOps is EVaultTestBase {
         eTST.touch();
     }
 
-    function testFuzz_hookedAllOps(
-        address hookTarget,
-        uint32 hookedOps,
-        address sender,
-        address address1,
-        address address2,
-        uint256 amount
-    ) public {
-        vm.assume(hookTarget.code.length == 0 && !evc.haveCommonOwner(hookTarget, address(0)));
+    function testFuzz_hookedAllOps(uint32 hookedOps, address sender, address address1, address address2, uint256 amount)
+        public
+    {
         vm.assume(sender.code.length == 0 && !evc.haveCommonOwner(sender, address(0)));
 
         // deploy the hook target
-        address deployedHookTarget = address(new MockHookTarget());
-        vm.etch(hookTarget, deployedHookTarget.code);
+        address hookTarget = address(new MockHookTarget());
 
         // set the hooked ops
         eTST.setHookConfig(hookTarget, hookedOps);

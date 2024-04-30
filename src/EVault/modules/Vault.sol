@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: GPL-2.0-or-later
+// SPDX-License-Identifier: BUSL-1.1
 
 pragma solidity ^0.8.0;
 
@@ -61,7 +61,7 @@ abstract contract VaultModule is IVault, Base, AssetTransfers, BalanceUtils {
         if (isOperationDisabled(vaultCache.hookedOps, OP_MINT)) return 0;
 
         // make sure to not revert on conversion
-        uint256 shares = maxDepositInternal(vaultCache, account).toAssets().toUint256SharesDown(vaultCache);
+        uint256 shares = maxDepositInternal(vaultCache, account).toAssets().toSharesDownUint256(vaultCache);
 
         return shares < MAX_SANE_AMOUNT ? shares : MAX_SANE_AMOUNT;
     }

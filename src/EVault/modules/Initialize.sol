@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: GPL-2.0-or-later
+// SPDX-License-Identifier: BUSL-1.1
 
 pragma solidity ^0.8.0;
 
@@ -18,8 +18,8 @@ import "../shared/types/Types.sol";
 abstract contract InitializeModule is IInitialize, Base, BorrowUtils {
     using TypesLib for uint16;
 
-    uint256 constant INITIAL_INTEREST_ACCUMULATOR = 1e27; // 1 ray
-    uint16 constant DEFAULT_INTEREST_FEE = 0.1e4;
+    uint256 internal constant INITIAL_INTEREST_ACCUMULATOR = 1e27; // 1 ray
+    uint16 internal constant DEFAULT_INTEREST_FEE = 0.1e4;
 
     /// @inheritdoc IInitialize
     function initialize(address proxyCreator) public virtual reentrantOK {

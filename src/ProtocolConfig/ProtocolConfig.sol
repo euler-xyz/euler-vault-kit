@@ -23,17 +23,20 @@ contract ProtocolConfig is IProtocolConfig {
         uint16 protocolFeeShare;
     }
 
+    // max valid value of the EVault's ConfigAmount custom type, signifying 100%
+    uint16 internal constant CONFIG_SCALE = 1e4;
+
     /// @dev admin address
     address public admin;
     /// @dev protocol fee receiver, unless a vault has it configured otherwise
     address public feeReceiver;
+    /// @dev protocol fee share, except for vaults configured otherwise
+    uint16 internal protocolFeeShare;
 
     /// @dev min interest fee, except for vaults configured otherwise
     uint16 internal minInterestFee;
     /// @dev max interest fee, except for vaults configured otherwise
     uint16 internal maxInterestFee;
-    /// @dev protocol fee share, except for vaults configured otherwise
-    uint16 internal protocolFeeShare;
 
     /// @dev per-vault configuration of min/max interest fee range, takes priority over defaults
     mapping(address vault => InterestFeeRange) internal _interestFeeRanges;
@@ -53,6 +56,9 @@ contract ProtocolConfig is IProtocolConfig {
      * @param feeReceiver_ the address of the protocol fee receiver
      */
     constructor(address admin_, address feeReceiver_) {
+        if (admin_ == address(0)) revert E_InvalidAdmin();
+        if (feeReceiver_ == address(0)) revert E_InvalidReceiver();
+
         admin = admin_;
         feeReceiver = feeReceiver_;
 
@@ -134,7 +140,7 @@ contract ProtocolConfig is IProtocolConfig {
      * @param newProtocolFeeShare new protocol fee share
      */
     function setProtocolFeeShare(uint16 newProtocolFeeShare) external onlyAdmin {
-        if (newProtocolFeeShare > 1e4) revert E_InvalidConfigValue();
+        if (newProtocolFeeShare > CONFIG_SCALE) revert E_InvalidConfigValue();
 
         emit SetProtocolFeeShare(protocolFeeShare, newProtocolFeeShare);
 
@@ -148,7 +154,7 @@ contract ProtocolConfig is IProtocolConfig {
      * @param maxInterestFee_ new max interest fee
      */
     function setInterestFeeRange(uint16 minInterestFee_, uint16 maxInterestFee_) external onlyAdmin {
-        if (maxInterestFee_ > 1e4 || minInterestFee_ > maxInterestFee_) revert E_InvalidConfigValue();
+        if (maxInterestFee_ > CONFIG_SCALE || minInterestFee_ > maxInterestFee_) revert E_InvalidConfigValue();
 
         minInterestFee = minInterestFee_;
         maxInterestFee = maxInterestFee_;
@@ -169,7 +175,7 @@ contract ProtocolConfig is IProtocolConfig {
         onlyAdmin
     {
         if (vault == address(0)) revert E_InvalidVault();
-        if (maxInterestFee_ > 1e4 || minInterestFee_ > maxInterestFee_) revert E_InvalidConfigValue();
+        if (maxInterestFee_ > CONFIG_SCALE || minInterestFee_ > maxInterestFee_) revert E_InvalidConfigValue();
 
         _interestFeeRanges[vault] =
             InterestFeeRange({exists: exists_, minInterestFee: minInterestFee_, maxInterestFee: maxInterestFee_});
@@ -190,7 +196,7 @@ contract ProtocolConfig is IProtocolConfig {
         onlyAdmin
     {
         if (vault == address(0)) revert E_InvalidVault();
-        if (protocolFeeShare_ > 1e4) revert E_InvalidConfigValue();
+        if (protocolFeeShare_ > CONFIG_SCALE) revert E_InvalidConfigValue();
 
         _protocolFeeConfig[vault] =
             ProtocolFeeConfig({exists: exists_, feeReceiver: feeReceiver_, protocolFeeShare: protocolFeeShare_});

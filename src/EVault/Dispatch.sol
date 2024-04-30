@@ -13,6 +13,7 @@ import {BalanceForwarderModule} from "./modules/BalanceForwarder.sol";
 import {GovernanceModule} from "./modules/Governance.sol";
 import {RiskManagerModule} from "./modules/RiskManager.sol";
 
+import {AddressUtils} from "./shared/lib/AddressUtils.sol";
 import "./shared/Constants.sol";
 
 /// @title Dispatch
@@ -50,14 +51,14 @@ abstract contract Dispatch is
     }
 
     constructor(Integrations memory integrations, DeployedModules memory modules) Base(integrations) {
-        MODULE_INITIALIZE = modules.initialize;
-        MODULE_TOKEN = modules.token;
-        MODULE_VAULT = modules.vault;
-        MODULE_BORROWING = modules.borrowing;
-        MODULE_LIQUIDATION = modules.liquidation;
-        MODULE_RISKMANAGER = modules.riskManager;
-        MODULE_BALANCE_FORWARDER = modules.balanceForwarder;
-        MODULE_GOVERNANCE = modules.governance;
+        MODULE_INITIALIZE = AddressUtils.checkContract(modules.initialize);
+        MODULE_TOKEN = AddressUtils.checkContract(modules.token);
+        MODULE_VAULT = AddressUtils.checkContract(modules.vault);
+        MODULE_BORROWING = AddressUtils.checkContract(modules.borrowing);
+        MODULE_LIQUIDATION = AddressUtils.checkContract(modules.liquidation);
+        MODULE_RISKMANAGER = AddressUtils.checkContract(modules.riskManager);
+        MODULE_BALANCE_FORWARDER = AddressUtils.checkContract(modules.balanceForwarder);
+        MODULE_GOVERNANCE = AddressUtils.checkContract(modules.governance);
     }
 
     // Modifier proxies the function call to a module and low-level returns the result
@@ -84,7 +85,7 @@ abstract contract Dispatch is
     // External function which is only callable by the EVault itself. Its purpose is to be static called by `delegateToModuleView`
     // which allows view functions to be implemented in modules, even though delegatecall cannot be directly used within
     // view functions.
-    function viewDelegate() external {
+    function viewDelegate() external payable {
         if (msg.sender != address(this)) revert E_Unauthorized();
 
         assembly {
@@ -146,7 +147,11 @@ abstract contract Dispatch is
             mstore(100, 128) // EVC.call 4th argument - msg.data, offset to the start of encoding - 128 bytes
             mstore(132, mainCalldataLength) // msg.data length without proxy metadata
             calldatacopy(164, 0, mainCalldataLength) // original calldata
-            let result := call(gas(), _evc, callvalue(), 0, add(164, mainCalldataLength), 0, 0)
+
+            // abi encoded bytes array should be zero padded so its length is a multiple of 32
+            // store zero word after msg.data bytes and round up mainCalldataLength to nearest multiple of 32
+            mstore(add(164, mainCalldataLength), 0)
+            let result := call(gas(), _evc, callvalue(), 0, add(164, and(add(mainCalldataLength, 31), not(31))), 0, 0)
 
             returndatacopy(0, 0, returndatasize())
             switch result

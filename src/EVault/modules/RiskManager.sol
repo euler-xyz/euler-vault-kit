@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: GPL-2.0-or-later
+// SPDX-License-Identifier: BUSL-1.1
 
 pragma solidity ^0.8.0;
 
@@ -27,8 +27,7 @@ abstract contract RiskManagerModule is IRiskManager, Base, LiquidityUtils {
         validateController(account);
         address[] memory collaterals = getCollaterals(account);
 
-        return
-            calculateLiquidity(vaultCache, account, collaterals, liquidation ? LTVType.LIQUIDATION : LTVType.BORROWING);
+        return calculateLiquidity(vaultCache, account, collaterals, liquidation);
     }
 
     /// @inheritdoc IRiskManager
@@ -47,12 +46,10 @@ abstract contract RiskManagerModule is IRiskManager, Base, LiquidityUtils {
         collateralValues = new uint256[](collaterals.length);
 
         for (uint256 i; i < collaterals.length; ++i) {
-            collateralValues[i] = getCollateralValue(
-                vaultCache, account, collaterals[i], liquidation ? LTVType.LIQUIDATION : LTVType.BORROWING
-            );
+            collateralValues[i] = getCollateralValue(vaultCache, account, collaterals[i], liquidation);
         }
 
-        liabilityValue = getLiabilityValue(vaultCache, account, vaultStorage.users[account].getOwed());
+        liabilityValue = getLiabilityValue(vaultCache, account, vaultStorage.users[account].getOwed(), liquidation);
     }
 
     /// @inheritdoc IRiskManager

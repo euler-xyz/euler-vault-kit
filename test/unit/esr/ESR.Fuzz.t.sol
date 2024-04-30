@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: UNLICENSED
+// SPDX-License-Identifier: GPL-2.0-or-later
 pragma solidity ^0.8.20;
 
 import "./lib/ESRTest.sol";
@@ -14,10 +14,10 @@ contract ESRFuzzTest is ESRTest {
 
     // totalAssets should be equal to the balance after SMEAR has passed
     function invariant_totalAssetsShouldBeEqualToBalanceAfterSMEAR() public {
+        vm.assume(asset.balanceOf(address(esr)) <= type(uint168).max);
         esr.gulp();
         skip(esr.INTEREST_SMEAR()); // make sure smear has passed
-        uint256 balance = asset.balanceOf(address(esr));
-        assertEq(esr.totalAssets(), balance);
+        assertEq(esr.totalAssets(), asset.balanceOf(address(esr)));
     }
 
     function testFuzz_interestAccrued_under_uint168(uint256 interestAmount, uint256 depositAmount, uint256 timePassed)

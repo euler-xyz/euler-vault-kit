@@ -1,9 +1,11 @@
-// SPDX-License-Identifier: GPL-2.0-or-later
+// SPDX-License-Identifier: BUSL-1.1
 
 pragma solidity ^0.8.0;
 
 import {IBalanceForwarder} from "../IEVault.sol";
 import {Base} from "../shared/Base.sol";
+
+import "../shared/types/Types.sol";
 
 /// @title BalanceForwarderModule
 /// @author Euler Labs (https://www.eulerlabs.com/)
@@ -24,10 +26,12 @@ abstract contract BalanceForwarderModule is IBalanceForwarder, Base {
         if (address(balanceTracker) == address(0)) revert E_BalanceForwarderUnsupported();
 
         address account = EVCAuthenticate();
-        bool wasBalanceForwarderEnabled = vaultStorage.users[account].isBalanceForwarderEnabled();
+        UserStorage storage user = vaultStorage.users[account];
 
-        vaultStorage.users[account].setBalanceForwarder(true);
-        balanceTracker.balanceTrackerHook(account, vaultStorage.users[account].getBalance().toUint(), false);
+        bool wasBalanceForwarderEnabled = user.isBalanceForwarderEnabled();
+
+        user.setBalanceForwarder(true);
+        balanceTracker.balanceTrackerHook(account, user.getBalance().toUint(), false);
 
         if (!wasBalanceForwarderEnabled) emit BalanceForwarderStatus(account, true);
     }
@@ -37,9 +41,11 @@ abstract contract BalanceForwarderModule is IBalanceForwarder, Base {
         if (address(balanceTracker) == address(0)) revert E_BalanceForwarderUnsupported();
 
         address account = EVCAuthenticate();
-        bool wasBalanceForwarderEnabled = vaultStorage.users[account].isBalanceForwarderEnabled();
+        UserStorage storage user = vaultStorage.users[account];
 
-        vaultStorage.users[account].setBalanceForwarder(false);
+        bool wasBalanceForwarderEnabled = user.isBalanceForwarderEnabled();
+
+        user.setBalanceForwarder(false);
         balanceTracker.balanceTrackerHook(account, 0, false);
 
         if (wasBalanceForwarderEnabled) emit BalanceForwarderStatus(account, false);

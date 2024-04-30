@@ -4,6 +4,7 @@ pragma solidity ^0.8.0;
 
 import {EVault} from "src/EVault/EVault.sol";
 import {Errors} from "src/EVault/shared/Errors.sol";
+import {IHookTarget} from "src/interfaces/IHookTarget.sol";
 
 import "../EVaultTestBase.t.sol";
 
@@ -15,11 +16,15 @@ contract EVaultTest is EVault {
     }
 }
 
-contract MockHookTarget is Test {
+contract MockHookTarget is Test, IHookTarget {
     EVault eTST;
 
     function setEVault(address vault) public {
         eTST = EVault(vault);
+    }
+
+    function isHookTarget() external pure override returns (bytes4) {
+        return this.isHookTarget.selector;
     }
 
     fallback(bytes calldata data) external returns (bytes memory) {
@@ -426,11 +431,8 @@ contract ReentrancyTest is EVaultTestBase {
         eTST.setInterestFee(uint16(bound(amount1, 0, type(uint16).max)));
     }
 
-    function testFuzz_hookTargetAllowed_nonReentrantView(address hookTarget) public {
-        vm.assume(uint160(hookTarget) > 256 && hookTarget.code.length == 0);
-
-        address ht = address(new MockHookTarget());
-        vm.etch(hookTarget, ht.code);
+    function testFuzz_hookTargetAllowed_nonReentrantView() public {
+        address hookTarget = address(new MockHookTarget());
 
         eTST.setHookConfig(hookTarget, OP_TRANSFER);
         MockHookTarget(hookTarget).setEVault(address(eTST));

@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: GPL-2.0-or-later
+// SPDX-License-Identifier: BUSL-1.1
 
 pragma solidity ^0.8.0;
 
@@ -9,13 +9,9 @@ import {LiquidityUtils} from "../shared/LiquidityUtils.sol";
 import {AssetTransfers} from "../shared/AssetTransfers.sol";
 import {SafeERC20Lib} from "../shared/lib/SafeERC20Lib.sol";
 import {ProxyUtils} from "../shared/lib/ProxyUtils.sol";
+import {IFlashLoan} from "../../interfaces/IFlashLoan.sol";
 
 import "../shared/types/Types.sol";
-
-/// @notice Definition of callback method that flashLoan will invoke on your contract
-interface IFlashLoan {
-    function onFlashLoan(bytes memory data) external;
-}
 
 /// @title BorrowingModule
 /// @author Euler Labs (https://www.eulerlabs.com/)
@@ -158,6 +154,8 @@ abstract contract BorrowingModule is IBorrowing, Base, AssetTransfers, BalanceUt
 
         if (assets.isZero()) return 0;
         transferBorrow(vaultCache, from, account, assets);
+
+        emit PullDebt(from, account, assets.toUint());
 
         return assets.toUint();
     }

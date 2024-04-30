@@ -18,12 +18,7 @@ library OwedLib {
     function toAssetsUp(Owed amount) internal pure returns (Assets) {
         if (Owed.unwrap(amount) == 0) return Assets.wrap(0);
 
-        unchecked {
-            return TypesLib.toAssets(
-                (uint256(Owed.unwrap(amount)) + (1 << INTERNAL_DEBT_PRECISION_SHIFT) - 1)
-                    >> INTERNAL_DEBT_PRECISION_SHIFT
-            );
-        }
+        return TypesLib.toAssets(toAssetsUpUint256(Owed.unwrap(amount)));
     }
 
     function isDust(Owed self) internal pure returns (bool) {
@@ -36,6 +31,16 @@ library OwedLib {
 
     function mulDiv(Owed self, uint256 multiplier, uint256 divisor) internal pure returns (Owed) {
         return TypesLib.toOwed(uint256(Owed.unwrap(self)) * multiplier / divisor);
+    }
+
+    function subUnchecked(Owed self, Owed b) internal pure returns (Owed) {
+        unchecked {
+            return Owed.wrap(uint144(self.toUint() - b.toUint()));
+        }
+    }
+
+    function toAssetsUpUint256(uint256 owedExact) internal pure returns (uint256) {
+        return (owedExact + (1 << INTERNAL_DEBT_PRECISION_SHIFT) - 1) >> INTERNAL_DEBT_PRECISION_SHIFT;
     }
 }
 

@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: UNLICENSED
+// SPDX-License-Identifier: GPL-2.0-or-later
 
 pragma solidity ^0.8.13;
 
@@ -18,6 +18,21 @@ contract IRMSynthTest is Test {
         irm = new IRMSynth(SYNTH, REFERENCE_ASSET, address(oracle));
 
         oracle.setPrice(SYNTH, REFERENCE_ASSET, 1e18);
+    }
+
+    function test_IRMSynth_Constructor_SynthZeroAddress() public {
+        vm.expectRevert(IRMSynth.E_ZeroAddress.selector);
+        new IRMSynth(address(0), REFERENCE_ASSET, address(oracle));
+    }
+
+    function test_IRMSynth_Constructor_ReferenceAssetZeroAddress() public {
+        vm.expectRevert(IRMSynth.E_ZeroAddress.selector);
+        new IRMSynth(SYNTH, address(0), address(oracle));
+    }
+
+    function test_IRMSynth_Constructor_OracleZeroAddress() public {
+        vm.expectRevert(IRMSynth.E_ZeroAddress.selector);
+        new IRMSynth(SYNTH, REFERENCE_ASSET, address(0));
     }
 
     function test_IRMSynth_InitialRate() public {

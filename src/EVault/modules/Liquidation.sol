@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: GPL-2.0-or-later
+// SPDX-License-Identifier: BUSL-1.1
 
 pragma solidity ^0.8.0;
 
@@ -15,8 +15,8 @@ import "../shared/types/Types.sol";
 abstract contract LiquidationModule is ILiquidation, Base, BalanceUtils, LiquidityUtils {
     using TypesLib for uint256;
 
-    // Maximum liquidation discount that can be awarded under any conditions.
-    uint256 constant MAXIMUM_LIQUIDATION_DISCOUNT = 0.2 * 1e18;
+    // Maximum liquidation discount that can be awarded under any conditions in wad.
+    uint256 internal constant MAXIMUM_LIQUIDATION_DISCOUNT = 0.2e18;
 
     struct LiquidationCache {
         address liquidator;
@@ -117,7 +117,7 @@ abstract contract LiquidationModule is ILiquidation, Base, BalanceUtils, Liquidi
         // Check account health
 
         (uint256 liquidityCollateralValue, uint256 liquidityLiabilityValue) =
-            calculateLiquidity(vaultCache, liqCache.violator, liqCache.collaterals, LTVType.LIQUIDATION);
+            calculateLiquidity(vaultCache, liqCache.violator, liqCache.collaterals, true);
 
         // no violation
         if (liquidityCollateralValue > liquidityLiabilityValue) return liqCache;
@@ -130,7 +130,7 @@ abstract contract LiquidationModule is ILiquidation, Base, BalanceUtils, Liquidi
             discountFactor = 1e18 - MAXIMUM_LIQUIDATION_DISCOUNT;
         }
 
-        // Compute maximum yield
+        // Compute maximum yield using mid-point prices
 
         uint256 collateralBalance = IERC20(liqCache.collateral).balanceOf(liqCache.violator);
         uint256 collateralValue =
@@ -144,7 +144,6 @@ abstract contract LiquidationModule is ILiquidation, Base, BalanceUtils, Liquidi
 
         uint256 liabilityValue = liqCache.liability.toUint();
         if (address(vaultCache.asset) != vaultCache.unitOfAccount) {
-            // liquidation, in contrast to liquidity calculation, uses mid-point pricing instead of bid/ask
             liabilityValue =
                 vaultCache.oracle.getQuote(liabilityValue, address(vaultCache.asset), vaultCache.unitOfAccount);
         }

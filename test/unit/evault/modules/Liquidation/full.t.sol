@@ -1230,36 +1230,70 @@ contract VaultLiquidation_Test is EVaultTestBase {
         (uint256 collateralValue, uint256 liabilityValue) = eTST.accountLiquidity(borrower, false);
         assertApproxEqAbs(collateralValue * 1e18 / liabilityValue, 1.09e18, 0.01e18);
 
-        // regular liquidation, bid = ask = mid price
+        // Liability price increases slightly, but still healthy
+        // bid = ask = mid price
 
-        oracle.setPrice(address(assetTST), unitOfAccount, 2.5e18);
+        oracle.setPrice(address(assetTST), unitOfAccount, 2.3e18);
 
         (collateralValue, liabilityValue) = eTST.accountLiquidity(borrower, false);
         uint256 healthScore = collateralValue * 1e18 / liabilityValue;
-        assertApproxEqAbs(healthScore, 0.96e18, 0.001e18);
-        // liability price bid price changes
+        assertApproxEqAbs(healthScore, 1.043e18, 0.001e18);
 
-        oracle.setPrices(address(assetTST), unitOfAccount, 2.4e18, 2.5e18);
+        uint256 maxRepay;
+        uint256 maxYield;
 
-        // no influence
+        {
+            // accountLiquidity for liquidation purposes is identical
+
+            (uint256 collateralValueL, uint256 liabilityValueL) = eTST.accountLiquidity(borrower, true);
+            assertEq(collateralValue, collateralValueL);
+            assertEq(liabilityValue, liabilityValueL);
+
+            // Liquidation not possible
+
+            (maxRepay, maxYield) = eTST.checkLiquidation(lender, borrower, address(eTST2));
+            assertEq(maxRepay, 0);
+            assertEq(maxYield, 0);
+        }
+
+        uint256 origCollateralValue = collateralValue;
+        uint256 origLiabilityValue = liabilityValue;
+
+        // liability's bid price decreases
+
+        oracle.setPrices(address(assetTST), unitOfAccount, 2.2e18, 2.3e18);
+
+        // ... and it has no effect
+
         (uint256 newCollateralValue, uint256 newLiabilityValue) = eTST.accountLiquidity(borrower, false);
         assertEq(collateralValue, newCollateralValue);
         assertEq(liabilityValue, newLiabilityValue);
 
-        // liability ask price changes
+        // liability ask price increases
 
-        oracle.setPrices(address(assetTST), unitOfAccount, 2.5e18, 2.6e18);
+        oracle.setPrices(address(assetTST), unitOfAccount, 2.2e18, 2.4e18);
 
-        // liability valued at ask
+        // Now in borrowing mode, liability's value increases
+
         (newCollateralValue, newLiabilityValue) = eTST.accountLiquidity(borrower, false);
         assertEq(collateralValue, newCollateralValue);
         assertGt(newLiabilityValue, liabilityValue);
 
+        {
+            // But liquidation mode values are unaffected
+
+            (uint256 collateralValueL, uint256 liabilityValueL) = eTST.accountLiquidity(borrower, true);
+            assertEq(origCollateralValue, collateralValueL);
+            assertEq(origLiabilityValue, liabilityValueL);
+        }
+
         liabilityValue = newLiabilityValue;
 
-        // collateral ask price changes
+        // Now collateral's ask price increases
 
         oracle.setPrices(address(assetTST2), unitOfAccount, 0.4e18, 0.5e18);
+
+        // ... and it has no effect
 
         (newCollateralValue, newLiabilityValue) = eTST.accountLiquidity(borrower, false);
         assertEq(collateralValue, newCollateralValue);
@@ -1267,25 +1301,65 @@ contract VaultLiquidation_Test is EVaultTestBase {
 
         // collateral bid price changes
 
-        oracle.setPrices(address(assetTST2), unitOfAccount, 0.3e18, 0.4e18);
+        oracle.setPrices(address(assetTST2), unitOfAccount, 0.3e18, 0.5e18);
+
+        // Now in borrowing mode, liability's value increases
 
         (newCollateralValue, newLiabilityValue) = eTST.accountLiquidity(borrower, false);
         assertGt(collateralValue, newCollateralValue);
         assertEq(liabilityValue, newLiabilityValue);
 
+        {
+            // But liquidation mode values are unaffected
+
+            (uint256 collateralValueL, uint256 liabilityValueL) = eTST.accountLiquidity(borrower, true);
+            assertEq(origCollateralValue, collateralValueL);
+            assertEq(origLiabilityValue, liabilityValueL);
+        }
+
         collateralValue = newCollateralValue;
 
+        // Now we are in violation, since the bid/ask prices have resulted in our risk-adjusted
+        // liability value exceeding the risk-adjusted collateral value.
+
+        assertGt(liabilityValue, collateralValue);
+
+        // So, trying to borrow 1 more wei will fail:
+
+        startHoax(borrower);
+        vm.expectRevert(Errors.E_AccountLiquidity.selector);
+        eTST.borrow(1, borrower);
+
+        // But the user is not liquidatable, because mid-point prices have not changed
+
+        startHoax(address(this));
+
+        {
+            (maxRepay, maxYield) = eTST.checkLiquidation(lender, borrower, address(eTST2));
+            assertEq(maxRepay, 0);
+            assertEq(maxYield, 0);
+        }
+
+        // Now make the mid-points start to move against the user
+
+        oracle.setPrice(address(assetTST), unitOfAccount, 2.39e18);
+        oracle.setPrice(address(assetTST2), unitOfAccount, 0.301e18);
+
+        // Now these values store the liquidation mode versions:
+
+        (collateralValue, liabilityValue) = eTST.accountLiquidity(borrower, true);
+
         healthScore = collateralValue * 1e18 / liabilityValue;
-        assertApproxEqAbs(healthScore, 0.692e18, 0.001e18);
+        assertApproxEqAbs(healthScore, 0.755e18, 0.001e18);
 
         // The discount is max - 20% on mid point prices
 
-        (uint256 maxRepay, uint256 maxYield) = eTST.checkLiquidation(lender, borrower, address(eTST2));
+        (maxRepay, maxYield) = eTST.checkLiquidation(lender, borrower, address(eTST2));
 
         uint256 repayValue = oracle.getQuote(maxRepay, address(eTST), unitOfAccount);
         uint256 yieldValue = oracle.getQuote(maxYield, address(eTST2), unitOfAccount);
 
-        assertEq(yieldValue, repayValue * 1e18 / 0.8e18);
+        assertApproxEqAbs(yieldValue, repayValue * 1e18 / 0.8e18, 1);
 
         uint256 violatorsOriginalCollateral = eTST2.balanceOf(borrower);
 

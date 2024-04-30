@@ -1,9 +1,10 @@
-// SPDX-License-Identifier: GPL-2.0-or-later
+// SPDX-License-Identifier: BUSL-1.1
 
 pragma solidity ^0.8.0;
 
 import {IGovernance} from "../IEVault.sol";
 import {IPriceOracle} from "../../interfaces/IPriceOracle.sol";
+import {IHookTarget} from "../../interfaces/IHookTarget.sol";
 import {Base} from "../shared/Base.sol";
 import {BalanceUtils} from "../shared/BalanceUtils.sol";
 import {LTVUtils} from "../shared/LTVUtils.sol";
@@ -18,10 +19,16 @@ import "../shared/types/Types.sol";
 abstract contract GovernanceModule is IGovernance, Base, BalanceUtils, BorrowUtils, LTVUtils {
     using TypesLib for uint16;
 
-    // Protocol guarantees
-    uint16 constant MAX_PROTOCOL_FEE_SHARE = 0.5e4;
-    uint16 constant GUARANTEED_INTEREST_FEE_MIN = 0.1e4;
-    uint16 constant GUARANTEED_INTEREST_FEE_MAX = 1e4;
+    // Protocol guarantees for the governor
+
+    // Governor is guaranteed that the protocol fee share will not exceed this value
+    uint16 internal constant MAX_PROTOCOL_FEE_SHARE = 0.5e4;
+    // Governor is guaranteed to be able to set the interest fee to a value within a certain range.
+    // Outside this range, the interest fee must be approved by ProtocolConfig.
+    // Lower bound of the guaranteed range
+    uint16 internal constant GUARANTEED_INTEREST_FEE_MIN = 0.1e4;
+    // Higher bound of the guaranteed range
+    uint16 internal constant GUARANTEED_INTEREST_FEE_MAX = 1e4;
 
     event GovSetName(string newName);
     event GovSetSymbol(string newSymbol);
@@ -85,12 +92,12 @@ abstract contract GovernanceModule is IGovernance, Base, BalanceUtils, BorrowUti
 
     /// @inheritdoc IGovernance
     function borrowingLTV(address collateral) public view virtual reentrantOK returns (uint16) {
-        return getLTV(collateral, LTVType.BORROWING).toUint16();
+        return getLTV(collateral, false).toUint16();
     }
 
     /// @inheritdoc IGovernance
     function liquidationLTV(address collateral) public view virtual reentrantOK returns (uint16) {
-        return getLTV(collateral, LTVType.LIQUIDATION).toUint16();
+        return getLTV(collateral, true).toUint16();
     }
 
     /// @inheritdoc IGovernance
@@ -111,7 +118,7 @@ abstract contract GovernanceModule is IGovernance, Base, BalanceUtils, BorrowUti
 
     /// @inheritdoc IGovernance
     function configFlags() public view virtual reentrantOK returns (uint32) {
-        return (vaultStorage.configFlags.toUint32());
+        return vaultStorage.configFlags.toUint32();
     }
 
     /// @inheritdoc IGovernance
@@ -146,12 +153,12 @@ abstract contract GovernanceModule is IGovernance, Base, BalanceUtils, BorrowUti
         address governorReceiver = vaultStorage.feeReceiver;
 
         if (governorReceiver == address(0)) {
-            protocolFee = 1e4; // governor forfeits fees
+            protocolFee = CONFIG_SCALE; // governor forfeits fees
         } else if (protocolFee > MAX_PROTOCOL_FEE_SHARE) {
             protocolFee = MAX_PROTOCOL_FEE_SHARE;
         }
 
-        Shares governorShares = vaultCache.accumulatedFees.mulDiv(1e4 - protocolFee, 1e4);
+        Shares governorShares = vaultCache.accumulatedFees.mulDiv(CONFIG_SCALE - protocolFee, CONFIG_SCALE);
         Shares protocolShares = vaultCache.accumulatedFees - governorShares;
 
         // Decrease totalShares because increaseBalance will increase it by that total amount
@@ -204,7 +211,7 @@ abstract contract GovernanceModule is IGovernance, Base, BalanceUtils, BorrowUti
         LTVConfig memory origLTV = vaultStorage.ltvLookup[collateral];
 
         // If new LTV is higher than the previous, or the same, it should take effect immediately
-        if (newLTVAmount >= origLTV.getLTV(LTVType.LIQUIDATION) && rampDuration > 0) revert E_LTVRamp();
+        if (newLTVAmount >= origLTV.getLTV(true) && rampDuration > 0) revert E_LTVRamp();
 
         LTVConfig memory newLTV = origLTV.setLTV(newLTVAmount, rampDuration);
 
@@ -222,8 +229,11 @@ abstract contract GovernanceModule is IGovernance, Base, BalanceUtils, BorrowUti
     }
 
     /// @inheritdoc IGovernance
+    /// @dev When LTV configuration is cleared, attempt to liquidate the collateral will revert.
+    /// Clearing should only be executed when the collateral is found to be unsafe to liquidate,
+    /// because e.g. it does external calls on transfer, which would be a critical security threat.
     function clearLTV(address collateral) public virtual nonReentrant governorOnly {
-        uint16 originalLTV = getLTV(collateral, LTVType.LIQUIDATION).toUint16();
+        uint16 originalLTV = getLTV(collateral, true).toUint16();
         vaultStorage.ltvLookup[collateral].clear();
 
         emit GovSetLTV(collateral, 0, 0, 0, originalLTV);
@@ -245,6 +255,11 @@ abstract contract GovernanceModule is IGovernance, Base, BalanceUtils, BorrowUti
 
     /// @inheritdoc IGovernance
     function setHookConfig(address newHookTarget, uint32 newHookedOps) public virtual nonReentrant governorOnly {
+        if (
+            newHookTarget != address(0)
+                && IHookTarget(newHookTarget).isHookTarget() != IHookTarget.isHookTarget.selector
+        ) revert E_NotHookTarget();
+
         vaultStorage.hookTarget = newHookTarget;
         vaultStorage.hookedOps = Flags.wrap(newHookedOps);
         emit GovSetHookConfig(newHookTarget, newHookedOps);
@@ -259,11 +274,12 @@ abstract contract GovernanceModule is IGovernance, Base, BalanceUtils, BorrowUti
     /// @inheritdoc IGovernance
     function setCaps(uint16 supplyCap, uint16 borrowCap) public virtual nonReentrant governorOnly {
         AmountCap _supplyCap = AmountCap.wrap(supplyCap);
-        // Max total assets is a sum of max cash size and max total debt, both Assets type
-        if (supplyCap > 0 && _supplyCap.resolve() > 2 * MAX_SANE_AMOUNT) revert E_BadSupplyCap();
+        // The raw uint16 cap amount == 0 is a special value. See comments in AmountCap.sol
+        // Max total assets is a sum of max pool size and max total debt, both Assets type
+        if (supplyCap != 0 && _supplyCap.resolve() > 2 * MAX_SANE_AMOUNT) revert E_BadSupplyCap();
 
         AmountCap _borrowCap = AmountCap.wrap(borrowCap);
-        if (borrowCap > 0 && _borrowCap.resolve() > MAX_SANE_AMOUNT) revert E_BadBorrowCap();
+        if (borrowCap != 0 && _borrowCap.resolve() > MAX_SANE_AMOUNT) revert E_BadBorrowCap();
 
         vaultStorage.supplyCap = _supplyCap;
         vaultStorage.borrowCap = _borrowCap;

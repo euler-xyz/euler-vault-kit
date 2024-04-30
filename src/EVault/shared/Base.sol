@@ -6,6 +6,7 @@ import {EVCClient} from "./EVCClient.sol";
 import {Cache} from "./Cache.sol";
 import {ProxyUtils} from "./lib/ProxyUtils.sol";
 import {RevertBytes} from "./lib/RevertBytes.sol";
+import {AddressUtils} from "./lib/AddressUtils.sol";
 
 import {IProtocolConfig} from "../../ProtocolConfig/IProtocolConfig.sol";
 import {IBalanceTracker} from "../../interfaces/IBalanceTracker.sol";
@@ -16,9 +17,9 @@ import "./types/Types.sol";
 /// @author Euler Labs (https://www.eulerlabs.com/)
 /// @notice Base contract for EVault modules with top level modifiers and utilities
 abstract contract Base is EVCClient, Cache {
-    IProtocolConfig immutable protocolConfig;
-    IBalanceTracker immutable balanceTracker;
-    address immutable permit2;
+    IProtocolConfig internal immutable protocolConfig;
+    IBalanceTracker internal immutable balanceTracker;
+    address internal immutable permit2;
 
     struct Integrations {
         address evc;
@@ -28,7 +29,7 @@ abstract contract Base is EVCClient, Cache {
     }
 
     constructor(Integrations memory integrations) EVCClient(integrations.evc) {
-        protocolConfig = IProtocolConfig(integrations.protocolConfig);
+        protocolConfig = IProtocolConfig(AddressUtils.checkContract(integrations.protocolConfig));
         balanceTracker = IBalanceTracker(integrations.balanceTracker);
         permit2 = integrations.permit2;
     }
@@ -90,13 +91,13 @@ abstract contract Base is EVCClient, Cache {
 
     // Checks whether the operation is disabled and returns the result of the check.
     // An operation is considered disabled if a hook has been installed for it and the
-    // hook target is not a contract.
+    // hook target is zero address.
     function isOperationDisabled(Flags hookedOps, uint32 operation) internal view returns (bool) {
-        return hookedOps.isSet(operation) && vaultStorage.hookTarget.code.length == 0;
+        return hookedOps.isSet(operation) && vaultStorage.hookTarget == address(0);
     }
 
     // Checks whether a hook has been installed for the operation and if so, invokes the hook target.
-    // If the hook target is not a contract, this will revert.
+    // If the hook target is zero address, this will revert.
     function callHook(Flags hookedOps, uint32 operation, address caller) internal virtual {
         if (hookedOps.isNotSet(operation)) return;
 
@@ -113,7 +114,7 @@ abstract contract Base is EVCClient, Cache {
     function invokeHookTarget(address caller) private {
         address hookTarget = vaultStorage.hookTarget;
 
-        if (hookTarget.code.length == 0) revert E_OperationDisabled();
+        if (hookTarget == address(0)) revert E_OperationDisabled();
 
         (bool success, bytes memory data) = hookTarget.call(abi.encodePacked(msg.data, caller));
 

@@ -43,7 +43,14 @@ forge test
 ### in `coverage` mode
 
 ```sh
-forge coverage
+./test/scripts/coverage.sh
+```
+
+### invariants tests (`/tests/invariants`)
+```sh
+./test/scripts/echidna.sh # property mode
+./test/scripts/echidna-assert.sh # assertion mode
+./test/scripts/medusa.sh 
 ```
 
 ## Safety
@@ -62,4 +69,6 @@ Refer to the [whitepaper](https://docs.euler.finance/euler-vault-kit-white-paper
 
 ## License
 
-(C) Euler Labs. All rights reserved.
+(c) 2024 Euler Labs Ltd.
+
+The Euler Vault Kit code is licensed under GPL-2.0 or later except for the files in `src/EVault/modules/`, which are licensed under Business Source License 1.1 (see the file `LICENSE`). These files will be automatically re-licensed under GPL-2.0 or later on April 24th, 2029.

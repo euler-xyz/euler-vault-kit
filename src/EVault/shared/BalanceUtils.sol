@@ -23,15 +23,16 @@ abstract contract BalanceUtils is Base {
         Assets assets
     ) internal virtual {
         if (account == address(0)) revert E_BadSharesReceiver();
+        UserStorage storage user = vaultStorage.users[account];
 
-        (Shares origBalance, bool balanceForwarderEnabled) = vaultStorage.users[account].getBalanceAndBalanceForwarder();
+        (Shares origBalance, bool balanceForwarderEnabled) = user.getBalanceAndBalanceForwarder();
         Shares newBalance = origBalance + amount;
 
-        vaultStorage.users[account].setBalance(newBalance);
+        user.setBalance(newBalance);
         vaultStorage.totalShares = vaultCache.totalShares = vaultCache.totalShares + amount;
 
         if (balanceForwarderEnabled) {
-            tryBalanceTrackerHook(account, newBalance.toUint(), false);
+            balanceTracker.balanceTrackerHook(account, newBalance.toUint(), false);
         }
 
         emit Transfer(address(0), account, amount.toUint());
@@ -49,10 +50,7 @@ abstract contract BalanceUtils is Base {
         (Shares origBalance, bool balanceForwarderEnabled) = vaultStorage.users[account].getBalanceAndBalanceForwarder();
         if (origBalance < amount) revert E_InsufficientBalance();
 
-        Shares newBalance;
-        unchecked {
-            newBalance = origBalance - amount;
-        }
+        Shares newBalance = origBalance.subUnchecked(amount);
 
         vaultStorage.users[account].setBalance(newBalance);
         vaultStorage.totalShares = vaultCache.totalShares = vaultCache.totalShares - amount;
@@ -62,7 +60,7 @@ abstract contract BalanceUtils is Base {
             // which is indicated by the EVC with a collateral control in progress flag,
             // instruct the balance tracker to forfeit rewards due to the liquidated account, in order to
             // limit gas consumption, which could potentially be abused by violators to prevent liquidations.
-            tryBalanceTrackerHook(account, newBalance.toUint(), isControlCollateralInProgress());
+            balanceTracker.balanceTrackerHook(account, newBalance.toUint(), isControlCollateralInProgress());
         }
 
         emit Transfer(account, address(0), amount.toUint());
@@ -79,21 +77,18 @@ abstract contract BalanceUtils is Base {
 
             if (origFromBalance < amount) revert E_InsufficientBalance();
 
-            Shares newFromBalance;
-            unchecked {
-                newFromBalance = origFromBalance - amount;
-            }
+            Shares newFromBalance = origFromBalance.subUnchecked(amount);
             Shares newToBalance = origToBalance + amount;
 
             vaultStorage.users[from].setBalance(newFromBalance);
             vaultStorage.users[to].setBalance(newToBalance);
 
             if (fromBalanceForwarderEnabled) {
-                tryBalanceTrackerHook(from, newFromBalance.toUint(), isControlCollateralInProgress());
+                balanceTracker.balanceTrackerHook(from, newFromBalance.toUint(), isControlCollateralInProgress());
             }
 
             if (toBalanceForwarderEnabled) {
-                tryBalanceTrackerHook(to, newToBalance.toUint(), false);
+                balanceTracker.balanceTrackerHook(to, newToBalance.toUint(), false);
             }
         }
 
@@ -121,14 +116,5 @@ abstract contract BalanceUtils is Base {
             vaultStorage.users[owner].eTokenAllowance[spender] = allowance;
             emit Approval(owner, spender, allowance);
         }
-    }
-
-    function tryBalanceTrackerHook(address account, uint256 newAccountBalance, bool forfeitRecentReward)
-        private
-        returns (bool success)
-    {
-        (success,) = address(balanceTracker).call(
-            abi.encodeCall(IBalanceTracker.balanceTrackerHook, (account, newAccountBalance, forfeitRecentReward))
-        );
     }
 }

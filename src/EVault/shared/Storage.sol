@@ -9,12 +9,12 @@ import {VaultStorage, Snapshot} from "./types/Types.sol";
 /// @notice Contract that defines the EVault's data storage
 abstract contract Storage {
     /// @notice Flag indicating if the vault has been initialized
-    bool initialized;
+    bool internal initialized;
 
     /// @notice Snapshot of vault's cash and borrows created at the beginning of an operation or a batch of operations
     /// @dev The snapshot is separate from VaultStorage, because it could be implemented as transient storage
-    Snapshot snapshot;
+    Snapshot internal snapshot;
 
     /// @notice A singleton VaultStorage
-    VaultStorage vaultStorage;
+    VaultStorage internal vaultStorage;
 }

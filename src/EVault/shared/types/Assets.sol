@@ -20,10 +20,10 @@ library AssetsLib {
     }
 
     function toSharesDown(Assets amount, VaultCache memory vaultCache) internal pure returns (Shares) {
-        return TypesLib.toShares(toUint256SharesDown(amount, vaultCache));
+        return TypesLib.toShares(toSharesDownUint256(amount, vaultCache));
     }
 
-    function toUint256SharesDown(Assets amount, VaultCache memory vaultCache) internal pure returns (uint256) {
+    function toSharesDownUint256(Assets amount, VaultCache memory vaultCache) internal pure returns (uint256) {
         (uint256 totalAssets, uint256 totalShares) = ConversionHelpers.conversionTotals(vaultCache);
         unchecked {
             return amount.toUint() * totalShares / totalAssets;
@@ -40,6 +40,12 @@ library AssetsLib {
     function toOwed(Assets self) internal pure returns (Owed) {
         unchecked {
             return TypesLib.toOwed(self.toUint() << INTERNAL_DEBT_PRECISION_SHIFT);
+        }
+    }
+
+    function subUnchecked(Assets self, Assets b) internal pure returns (Assets) {
+        unchecked {
+            return Assets.wrap(uint112(self.toUint() - b.toUint()));
         }
     }
 }

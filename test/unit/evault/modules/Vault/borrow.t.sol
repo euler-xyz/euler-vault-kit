@@ -7,6 +7,7 @@ import {Events} from "src/EVault/shared/Events.sol";
 import {SafeERC20Lib} from "src/EVault/shared/lib/SafeERC20Lib.sol";
 import {IAllowanceTransfer} from "permit2/src/interfaces/IAllowanceTransfer.sol";
 import {IRMMax} from "../../../../mocks/IRMMax.sol";
+import "forge-std/Test.sol";
 
 import "src/EVault/shared/types/Types.sol";
 import "src/EVault/shared/Constants.sol";
@@ -297,7 +298,7 @@ contract VaultTest_Borrow is EVaultTestBase {
     }
 
     function test_ControllerRequiredOps(address controller, uint112 amount, address account) public {
-        vm.assume(controller.code.length == 0 && uint160(controller) > 256);
+        vm.assume(controller.code.length == 0 && uint160(controller) > 256 && controller != console2.CONSOLE_ADDRESS);
         vm.assume(account != address(0) && account != controller && account != address(evc));
         vm.assume(amount > 0);
 
@@ -455,5 +456,131 @@ contract VaultTest_Borrow is EVaultTestBase {
 
         assertTrue(tempInterestRate > origInterestRate);
         assertEq(tempInterestRate, eTST.interestRate()); // Value computed at end of batch is identical
+    }
+
+    function test_totalSharesOverflow() external {
+        eTST.setInterestRateModel(address(new IRMMax()));
+
+        startHoax(depositor);
+
+        eTST.deposit(MAX_SANE_AMOUNT - eTST.cash() - 1e18, depositor);
+
+        uint256 initialSupply = MAX_SANE_AMOUNT - 1e18;
+        // total shares is at the limit
+        assertEq(eTST.totalSupply(), initialSupply);
+        assertEq(eTST.totalAssets(), initialSupply);
+
+        startHoax(borrower);
+
+        evc.enableCollateral(borrower, address(eTST2));
+        evc.enableController(borrower, address(eTST));
+
+        eTST.borrow(5e18, borrower);
+
+        assertEq(eTST.totalSupply(), initialSupply);
+        assertEq(eTST.totalAssets(), initialSupply);
+        assertEq(eTST.totalBorrows(), 5e18);
+        assertEq(eTST.accumulatedFees(), 0);
+
+        skip(20 days);
+
+        // borrows increased
+        assertApproxEqAbs(eTST.totalBorrows(), 8.27e18, 0.01e18);
+        // and supply with fees
+        uint256 newSupply = eTST.totalSupply();
+        uint256 fees = eTST.accumulatedFees();
+        assertGt(newSupply, initialSupply);
+        assertGt(fees, 0);
+
+        uint256 snapshot = vm.snapshot();
+
+        skip(30 days);
+
+        // borrows increased again
+        assertApproxEqAbs(eTST.totalBorrows(), 17.64e18, 0.01e18);
+        // but supply with fees now overflows, so it snaps back to initial supply
+        assertEq(eTST.totalSupply(), initialSupply);
+        assertEq(eTST.accumulatedFees(), 0);
+
+        // Let's try it again, but we'll lock the fees in midway
+
+        vm.revertTo(snapshot);
+
+        // update storage
+        eTST.touch();
+        assertApproxEqAbs(eTST.totalBorrows(), 8.27e18, 0.01e18);
+        assertEq(eTST.totalSupply(), newSupply);
+        assertEq(eTST.accumulatedFees(), fees);
+
+        skip(30 days);
+
+        assertApproxEqAbs(eTST.totalBorrows(), 17.64e18, 0.01e18);
+        // fees stop accruing, but are at the locked in level
+        assertEq(eTST.totalSupply(), newSupply);
+        assertEq(eTST.accumulatedFees(), fees);
+    }
+
+    function test_totalBorrowsOverflow() external {
+        eTST.setInterestRateModel(address(new IRMMax()));
+
+        startHoax(depositor);
+
+        eTST.deposit(MAX_SANE_AMOUNT - eTST.cash(), depositor);
+
+        // stock up on collateral
+        startHoax(address(this));
+        oracle.setPrice(address(eTST2), unitOfAccount, 2e18);
+
+        startHoax(borrower);
+        eTST2.deposit(MAX_SANE_AMOUNT - eTST2.cash(), borrower);
+
+        evc.enableCollateral(borrower, address(eTST2));
+        evc.enableController(borrower, address(eTST));
+
+        eTST.borrow(MAX_SANE_AMOUNT / 2, borrower);
+
+        assertEq(eTST.totalBorrows(), MAX_SANE_AMOUNT / 2);
+
+        skip(25 days);
+
+        // total borrows increase as well as user debt
+        assertGt(eTST.totalBorrows(), MAX_SANE_AMOUNT / 2);
+        assertGt(eTST.debtOf(borrower), MAX_SANE_AMOUNT / 2);
+
+        skip(25 days);
+
+        // total borrows overflow and snap back to stored values
+        assertEq(eTST.totalBorrows(), MAX_SANE_AMOUNT / 2);
+        assertEq(eTST.debtOf(borrower), MAX_SANE_AMOUNT / 2);
+
+        // withdrawals are possible
+        startHoax(depositor);
+        uint256 balanceBefore = assetTST.balanceOf(depositor);
+        eTST.withdraw(1e18, depositor, depositor);
+        assertEq(assetTST.balanceOf(depositor), balanceBefore + 1e18);
+
+        // user can borrow more for free
+        startHoax(borrower);
+
+        eTST.borrow(10e18, borrower);
+
+        skip(1 days);
+
+        assertEq(eTST.totalBorrows(), MAX_SANE_AMOUNT / 2 + 10e18);
+        assertEq(eTST.debtOf(borrower), MAX_SANE_AMOUNT / 2 + 10e18);
+
+        // if repaid not enough to make the total borrows fit, no interest is charged
+        assetTST.approve(address(eTST), type(uint256).max);
+        eTST.repay(10e18, borrower);
+
+        assertEq(eTST.totalBorrows(), MAX_SANE_AMOUNT / 2);
+        assertEq(eTST.debtOf(borrower), MAX_SANE_AMOUNT / 2);
+
+        // if repay is large enough, all pending interest will be charged on the remainder
+
+        eTST.repay(MAX_SANE_AMOUNT / 2 - 100, borrower);
+
+        assertEq(eTST.totalBorrows(), 362);
+        assertEq(eTST.debtOf(borrower), 362);
     }
 }

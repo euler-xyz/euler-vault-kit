@@ -96,19 +96,19 @@ contract Cache is Storage, Errors {
                 / (1e4 << INTERNAL_DEBT_PRECISION_SHIFT);
 
             if (feeAssets != 0) {
-                uint256 newTotalAssets = vaultCache.cash.toUint() + (newTotalBorrows >> INTERNAL_DEBT_PRECISION_SHIFT);
+                uint256 newTotalAssets = vaultCache.cash.toUint() + OwedLib.toAssetsUpUint256(newTotalBorrows);
                 newTotalShares = newTotalAssets * newTotalShares / (newTotalAssets - feeAssets);
                 newAccumulatedFees += newTotalShares - vaultCache.totalShares.toUint();
             }
 
             // Store new values in vaultCache, only if no overflows will occur. Fees are not larger than total shares, since they are included in them.
 
-            if (newTotalShares <= MAX_SANE_AMOUNT && newTotalBorrows <= MAX_SANE_DEBT_AMOUNT) {
+            if (newTotalBorrows <= MAX_SANE_DEBT_AMOUNT) {
                 vaultCache.totalBorrows = newTotalBorrows.toOwed();
                 vaultCache.interestAccumulator = newInterestAccumulator;
                 vaultCache.lastInterestAccumulatorUpdate = uint48(block.timestamp);
 
-                if (newTotalShares != Shares.unwrap(vaultCache.totalShares)) {
+                if (newTotalShares != vaultCache.totalShares.toUint() && newTotalShares <= MAX_SANE_AMOUNT) {
                     vaultCache.accumulatedFees = newAccumulatedFees.toShares();
                     vaultCache.totalShares = newTotalShares.toShares();
                 }

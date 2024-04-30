@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: UNLICENSED
+// SPDX-License-Identifier: GPL-2.0-or-later
 pragma solidity ^0.8.13;
 
 contract MathTesting {
@@ -67,5 +67,4 @@ contract MathTesting {
             return int128(int256(uint256(int256(log_2(x))) * 0xB17217F7D1CF79ABC9E3B39803F2F6AF >> 128));
         }
     }
-    //------------------------------------------------------
 }
