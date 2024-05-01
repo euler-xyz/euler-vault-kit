@@ -10,6 +10,7 @@
 
 import "Base.spec";
 import "./GhostPow.spec";
+import "./LoadVaultSummary.spec";
 
 using DummyERC20A as ERC20a; 
 using DummyERC20B as ERC20b; 
@@ -36,8 +37,9 @@ methods {
     function withdraw(uint256,address,address) external;
     function redeem(uint256,address,address) external;
 
+
     // function totalAssets() external returns uint256 envfree;
-    function userAssets(address) external returns uint256 envfree;
+    // function userAssets(address) external returns uint256 envfree;
     // function convertToShares(uint256) external returns uint256 envfree;
     // function convertToAssets(uint256) external returns uint256 envfree;
     // function previewDeposit(uint256) external returns uint256 envfree;
@@ -123,6 +125,8 @@ rule convertToSharesWeakAdditivity() {
         "converting assetsA and assetsB to shares then summing them must yield a smaller or equal result to summing them then converting";
 }
 
+// passing
+// run: https://prover.certora.com/output/40748/614a8496d9784ba5873b9be6636d9f3e/?anonymousKey=a0622d3850471ef5d170484cbe7c5fec18646d61
 rule conversionWeakMonotonicity {
     env e;
     uint256 smallerShares; uint256 largerShares;
@@ -204,7 +208,7 @@ invariant assetsMoreThanSupply(env e)
     }
 
 invariant noAssetsIfNoSupply(env e) 
-   ( userAssets(currentContract) == 0 => totalSupply(e) == 0 ) &&
+   ( userAssets(e, currentContract) == 0 => totalSupply(e) == 0 ) &&
     ( totalAssets(e) == 0 => ( totalSupply(e) == 0 ))
 
     {
@@ -335,7 +339,7 @@ rule dustFavorsTheHouse(uint assetsIn )
 
 
 invariant vaultSolvency(env e)
-    totalAssets(e) >= totalSupply(e)  && userAssets(currentContract) >= totalAssets(e)  {
+    totalAssets(e) >= totalSupply(e)  && userAssets(e, currentContract) >= totalAssets(e)  {
       preserved {
             requireInvariant totalSupplyIsSumOfBalances(e);
             require e.msg.sender != currentContract;
@@ -378,12 +382,12 @@ filtered {
 
     safeAssumptions(e, contributor, receiver);
 
-    uint256 contributorAssetsBefore = userAssets(contributor);
+    uint256 contributorAssetsBefore = userAssets(e, contributor);
     uint256 receiverSharesBefore = balanceOf(e, receiver);
 
     callContributionMethods(e, f, assets, shares, receiver);
 
-    uint256 contributorAssetsAfter = userAssets(contributor);
+    uint256 contributorAssetsAfter = userAssets(e, contributor);
     uint256 receiverSharesAfter = balanceOf(e, receiver);
 
     assert contributorAssetsBefore > contributorAssetsAfter <=> receiverSharesBefore < receiverSharesAfter,
@@ -393,15 +397,15 @@ filtered {
 // passing
 // run: https://prover.certora.com/output/65266/28a47dd30c6747cbbc4495de59e5f965?anonymousKey=2e86f97ff0030d5489503334c71961bb5978f331
 rule onlyContributionMethodsReduceAssets(method f) {
-    address user; require user != currentContract;
-    uint256 userAssetsBefore = userAssets(user);
-
     env e; calldataarg args;
+    address user; require user != currentContract;
+    uint256 userAssetsBefore = userAssets(e, user);
+
     safeAssumptions(e, user, _);
 
     f(e, args);
 
-    uint256 userAssetsAfter = userAssets(user);
+    uint256 userAssetsAfter = userAssets(e, user);
 
     assert userAssetsBefore > userAssetsAfter =>
         (f.selector == sig:deposit(uint256,address).selector ||
@@ -409,6 +413,8 @@ rule onlyContributionMethodsReduceAssets(method f) {
         "a user's assets must not go down except on calls to contribution methods";
 }
 
+// passing
+// run: https://prover.certora.com/output/65266/8ead2419e398420286adb1f636a35249/?anonymousKey=f135ef5ad92b9e187a5df3ebce5499f693eae015
 rule reclaimingProducesAssets(method f)
 filtered {
     f -> f.selector == sig:withdraw(uint256,address,address).selector
@@ -424,12 +430,12 @@ filtered {
     safeAssumptions(e, receiver, owner);
 
     uint256 ownerSharesBefore = balanceOf(e, owner);
-    uint256 receiverAssetsBefore = userAssets(receiver);
+    uint256 receiverAssetsBefore = userAssets(e, receiver);
 
     callReclaimingMethods(e, f, assets, shares, receiver, owner);
 
     uint256 ownerSharesAfter = balanceOf(e, owner);
-    uint256 receiverAssetsAfter = userAssets(receiver);
+    uint256 receiverAssetsAfter = userAssets(e, receiver);
 
     assert ownerSharesBefore > ownerSharesAfter <=> receiverAssetsBefore < receiverAssetsAfter,
         "an owner's shares must decrease if and only if the receiver's assets increase";
@@ -442,7 +448,7 @@ filtered {
 ////////////////////////////////////////////////////////////////////////////////
 
 definition noSupplyIfNoAssetsDef(env e) returns bool = 
-    ( userAssets(currentContract) == 0 => totalSupply(e) == 0 ) &&
+    ( userAssets(e, currentContract) == 0 => totalSupply(e) == 0 ) &&
     ( totalAssets(e) == 0 => ( totalSupply(e) == 0 ));
 
 // definition noSupplyIfNoAssetsStrongerDef() returns bool =                // fails for ERC4626BalanceOfHarness as explained in the readme
