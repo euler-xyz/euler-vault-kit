@@ -23,5 +23,8 @@ contract CacheHarness is Cache {
     function getAccumulatedFees() external view returns (Shares) {
         return vaultStorage.accumulatedFees;
     }
+    function getTotalShares() external view returns (Shares) {
+        return vaultStorage.totalShares;
+    }
     
 }
