@@ -13,7 +13,7 @@ import {RPow} from "src/EVault/shared/lib/RPow.sol";
 import {IEVault} from "src/EVault/IEVault.sol";
 
 contract VaultTest_BalancesWithInterest is EVaultTestBase {
-    uint256 SECONDS_PER_YEAR = 365.2425 * 86400;
+    uint256 SECONDS_PER_YEAR = 365.2425 days;
     uint256 ONE = 1e27;
     uint256 CONFIG_SCALE = 1e4;
 
@@ -72,7 +72,7 @@ contract VaultTest_BalancesWithInterest is EVaultTestBase {
         assertEq(eTST.debtOf(user3), 1e18);
 
         // Go ahead 1 year (+ 1 second because I did it this way by accident at first, don't want to bother redoing calculations below)
-        skip(365 * 86400 + 1);
+        skip(365 days + 1);
         startHoax(address(this));
         eTST.setInterestRateModel(address(new IRMTestZero()));
 
@@ -97,7 +97,7 @@ contract VaultTest_BalancesWithInterest is EVaultTestBase {
         // Go ahead 1 year
         startHoax(address(this));
         eTST.setInterestRateModel(address(new IRMTestFixed()));
-        skip(365 * 86400);
+        skip(365 days);
         eTST.setInterestRateModel(address(new IRMTestZero()));
 
         // balanceOf calls stay the same
@@ -135,7 +135,7 @@ contract VaultTest_BalancesWithInterest is EVaultTestBase {
         assertEq(supplyAPY, 0.094239711147365655602112334e27);
 
         // Go ahead 1 year, with no reserve credits in between
-        skip(365.2425 * 86400);
+        skip(365.2425 days);
 
         eTST.touch();
         assertApproxEqAbs(uint256(eTST.totalBorrows() * 1e18 / eTST.totalSupply()), 1.094719911470713189e18, 0.01e18);
@@ -157,7 +157,7 @@ contract VaultTest_BalancesWithInterest is EVaultTestBase {
         assertApproxEqAbs(eTST.accumulatedFeesAssets(), 0.010524434607856782e18, 0.000000001e18);
 
         // Jump another year:
-        skip(365.2425 * 86400);
+        skip(365.2425 days);
 
         // More interest charged (prev balance * (1+borrowAPY)):
         assertEq(eTST.debtOf(user3), 1.221565064538646276e18);
@@ -187,7 +187,7 @@ contract VaultTest_BalancesWithInterest is EVaultTestBase {
         assertEq(supplyAPY, 0.046059133709789858497725776e27);
 
         // Go ahead 1 year
-        skip(365.2425 * 86400);
+        skip(365.2425 days);
         eTST.touch();
 
         // Same as in basic case:
@@ -205,7 +205,7 @@ contract VaultTest_BalancesWithInterest is EVaultTestBase {
         assertEq(borrowAPY, 0.105244346078570209478701625e27);
         assertEq(supplyAPY, 0.048416583057772105811320948e27);
 
-        skip(365.2425 * 86400);
+        skip(365.2425 days);
 
         // More interest charged (prev balance * (1+borrowAPY)):
         assertEq(eTST.debtOf(user3), 1.221565064538646276e18);
@@ -242,7 +242,7 @@ contract VaultTest_BalancesWithInterest is EVaultTestBase {
         assertEq(supplyAPY, 0.094239711147365655602112334e27);
 
         // Go ahead 1 year
-        skip(365.2425 * 86400);
+        skip(365.2425 days);
         eTST.touch();
 
         // Donation ignored
@@ -266,7 +266,7 @@ contract VaultTest_BalancesWithInterest is EVaultTestBase {
         eTST.borrow(1e18, user3);
 
         // Jump ahead
-        skip(365 * 86400 * 10);
+        skip((365 days) * 10);
         startHoax(address(this));
         eTST.setInterestRateModel(address(new IRMTestZero()));
 
@@ -312,7 +312,7 @@ contract VaultTest_BalancesWithInterest is EVaultTestBase {
         eTST.borrow(1e18, user3);
 
         // Jump ahead
-        skip(365 * 86400);
+        skip(365 days);
         startHoax(address(this));
         eTST.setInterestRateModel(address(new IRMTestZero()));
 
@@ -343,7 +343,7 @@ contract VaultTest_BalancesWithInterest is EVaultTestBase {
         eTST.borrow(1e18, user3);
 
         // Jump ahead
-        skip(365 * 86400 * 20);
+        skip((365 days) * 20);
         startHoax(address(this));
         eTST.setInterestRateModel(address(new IRMTestZero()));
 
@@ -386,7 +386,7 @@ contract VaultTest_BalancesWithInterest is EVaultTestBase {
         evc.enableController(user1, address(eTST));
         eTST.loop(1, user1);
 
-        skip(86400 * 20);
+        skip(20 days);
 
         balance = eTST.convertToAssets(eTST.balanceOf(user1));
 

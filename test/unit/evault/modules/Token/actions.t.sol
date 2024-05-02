@@ -255,6 +255,60 @@ contract ERC20Test_Actions is EVaultTestBase {
         eTST.approve(alice, allowance);
     }
 
+    function test_Approve_RevertWhen_SelfApprovalWithValidAmount() public {
+        _mintAndDeposit(alice, 1000);
+
+        assertEq(eTST.balanceOf(alice), 1000);
+        assertEq(eTST.allowance(alice, alice), 0);
+
+        startHoax(alice);
+        // revert on self-approve of eVault
+        vm.expectRevert(Errors.E_SelfApproval.selector);
+        eTST.approve(alice, 10);
+
+        assertEq(eTST.allowance(alice, alice), 0);
+    }
+
+    function test_Approve_RevertWhen_SelfApprovalWithZeroAmount() public {
+        _mintAndDeposit(alice, 1000);
+
+        assertEq(eTST.balanceOf(alice), 1000);
+        assertEq(eTST.allowance(alice, alice), 0);
+
+        startHoax(alice);
+        // revert on self-approve of eVault
+        vm.expectRevert(Errors.E_SelfApproval.selector);
+        eTST.approve(alice, 0);
+
+        assertEq(eTST.allowance(alice, alice), 0);
+    }
+
+    function test_Approve_RevertWhen_SelfApprovalWithMaxAmountExceedingBalance() public {
+        _mintAndDeposit(alice, 1000);
+
+        assertEq(eTST.balanceOf(alice), 1000);
+        assertEq(eTST.allowance(alice, alice), 0);
+
+        startHoax(alice);
+        // revert on self-approve of eVault
+        vm.expectRevert(Errors.E_SelfApproval.selector);
+        eTST.approve(alice, type(uint256).max);
+
+        assertEq(eTST.allowance(alice, alice), 0);
+    }
+
+    function test_Approve_ForSubAccountWithValidAmount() public {
+        _mintAndDeposit(alice, 1000);
+
+        assertEq(eTST.balanceOf(alice), 1000);
+        assertEq(eTST.allowance(alice, getSubAccount(alice, 1)), 0);
+
+        startHoax(alice);
+        eTST.approve(getSubAccount(alice, 1), 10);
+
+        assertEq(eTST.allowance(alice, getSubAccount(alice, 1)), 10);
+    }
+
     function _mintAndDeposit(address user, uint256 amount) internal {
         vm.startPrank(user);
         assetTST.mint(user, amount);

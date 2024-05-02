@@ -40,7 +40,7 @@ contract GovernanceTest_InterestFee is EVaultTestBase {
 
         uint256 amount = eTST.totalBorrows();
 
-        skip(86400 * 365);
+        skip(365 days);
 
         uint256 totalSupplyBefore = eTST.totalSupply();
         uint256 accumFees = eTST.interestFee() * (eTST.totalBorrows() - amount) / (1e4);
@@ -67,7 +67,7 @@ contract GovernanceTest_InterestFee is EVaultTestBase {
         uint16 fee = eTST.interestFee();
         uint256 totalBorrow = eTST.totalBorrows();
 
-        skip(86400 * 365);
+        skip(365 days);
 
         uint256 accumFees1 = fee * (eTST.totalBorrows() - totalBorrow) / (1e4);
 
@@ -79,7 +79,7 @@ contract GovernanceTest_InterestFee is EVaultTestBase {
         fee = eTST.interestFee();
         totalBorrow = eTST.totalBorrows();
 
-        skip(86400 * 365);
+        skip(365 days);
 
         uint256 accumFees2 = fee * (eTST.totalBorrows() - totalBorrow) / (1e4);
 
@@ -112,7 +112,7 @@ contract GovernanceTest_InterestFee is EVaultTestBase {
         assertEq(eTST.totalBorrows(), 0);
 
         borrowMany(borrowers, countBorrowers);
-        skip(86400 * 100);
+        skip(100 days);
         repayMany(borrowers, countBorrowers);
 
         uint256 totalSupplyBefore = eTST.totalSupply();
@@ -138,7 +138,7 @@ contract GovernanceTest_InterestFee is EVaultTestBase {
         assertEq(eTST.accumulatedFees(), 0);
 
         borrowMany(borrowers, countBorrowers);
-        skip(86400 * 365);
+        skip(365 days);
         repayMany(borrowers, countBorrowers);
 
         uint256 totalSupplyBefore = eTST.totalSupply();
@@ -176,7 +176,7 @@ contract GovernanceTest_InterestFee is EVaultTestBase {
         assertEq(eTST.accumulatedFees(), 0);
 
         borrowMany(borrowers, countBorrowers);
-        skip(86400 * 365);
+        skip(365 days);
         repayMany(borrowers, countBorrowers);
 
         uint256 totalSupplyBefore = eTST.totalSupply();
