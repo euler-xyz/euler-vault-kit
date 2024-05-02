@@ -105,10 +105,10 @@ abstract contract BalanceUtils is Base {
     }
 
     function decreaseAllowance(address owner, address spender, Shares amount) internal virtual {
-        if (amount.isZero()) return;
+        if (amount.isZero() || owner == spender) return;
 
         uint256 allowance = vaultStorage.users[owner].eTokenAllowance[spender];
-        if (owner != spender && allowance != type(uint256).max) {
+        if (allowance != type(uint256).max) {
             if (allowance < amount.toUint()) revert E_InsufficientAllowance();
             unchecked {
                 allowance -= amount.toUint();
