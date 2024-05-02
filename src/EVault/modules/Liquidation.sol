@@ -204,7 +204,7 @@ abstract contract LiquidationModule is ILiquidation, Base, BalanceUtils, Liquidi
             vaultCache.configFlags.isNotSet(CFG_DONT_SOCIALIZE_DEBT) && liqCache.liability > liqCache.repay
                 && checkNoCollateral(liqCache.violator, liqCache.collaterals)
         ) {
-            Assets owedRemaining = liqCache.liability - liqCache.repay;
+            Assets owedRemaining = liqCache.liability.subUnchecked(liqCache.repay);
             decreaseBorrow(vaultCache, liqCache.violator, owedRemaining);
 
             // decreaseBorrow emits Repay without any assets entering the vault. Emit Withdraw from and to zero address to cover the missing amount for offchain trackers.
