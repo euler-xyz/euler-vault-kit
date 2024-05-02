@@ -448,7 +448,8 @@ filtered {
 ////////////////////////////////////////////////////////////////////////////////
 
 definition noSupplyIfNoAssetsDef(env e) returns bool = 
-    ( userAssets(e, currentContract) == 0 => totalSupply(e) == 0 ) &&
+    // for this ERC4626 implementation balanceOf(Vault) is not the same as total assets
+    // ( userAssets(e, currentContract) == 0 => totalSupply(e) == 0 ) &&
     ( totalAssets(e) == 0 => ( totalSupply(e) == 0 ));
 
 // definition noSupplyIfNoAssetsStrongerDef() returns bool =                // fails for ERC4626BalanceOfHarness as explained in the readme
