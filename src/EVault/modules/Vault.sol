@@ -249,7 +249,10 @@ abstract contract VaultModule is IVault, Base, AssetTransfers, BalanceUtils {
         uint256 supply = totalAssetsInternal(vaultCache);
         if (supply >= vaultCache.supplyCap) return 0;
 
-        uint256 remainingSupply = vaultCache.supplyCap - supply;
+        uint256 remainingSupply;
+        unchecked {
+            remainingSupply = vaultCache.supplyCap - supply;
+        }
 
         uint256 remainingCash = MAX_SANE_AMOUNT - vaultCache.cash.toUint();
 
