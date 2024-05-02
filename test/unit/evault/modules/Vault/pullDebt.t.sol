@@ -11,7 +11,7 @@ import {TestERC20} from "../../../../mocks/TestERC20.sol";
 import {IRMTestFixed} from "../../../../mocks/IRMTestFixed.sol";
 import {IRMTestZero} from "../../../../mocks/IRMTestZero.sol";
 
-contract VaultTest_TransferDebt is EVaultTestBase {
+contract VaultTest_PullDebt is EVaultTestBase {
     address user1;
     address user2;
 
