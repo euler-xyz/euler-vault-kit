@@ -22,7 +22,7 @@ abstract contract BorrowingModule is IBorrowing, Base, AssetTransfers, BalanceUt
 
     /// @inheritdoc IBorrowing
     function totalBorrows() public view virtual nonReentrantView returns (uint256) {
-        return loadVault().totalBorrows.toAssetsUp().toUint();
+        return loadVault().totalBorrows.toAssetsDown().toUint();
     }
 
     /// @inheritdoc IBorrowing
