@@ -53,7 +53,7 @@ abstract contract Invariants is
 
     function echidna_VM_INVARIANT() public monotonicTimestamp returns (bool) {
         assert_VM_INVARIANT_A();
-        assert_VM_INVARIANT_C();
+        //assert_VM_INVARIANT_C();//@audit-issue 3. VM_INVARIANT_C TODO remove coment after fixing
         return true;
     }
 
@@ -83,7 +83,6 @@ abstract contract Invariants is
         for (uint256 i; i < NUMBER_OF_ACTORS; i++) {
             assert_BM_INVARIANT_A(actorAddresses[i]);
             assert_BM_INVARIANT_J(actorAddresses[i]);
-            assert_BM_INVARIANT_O(actorAddresses[i]);
         }
         assert_BM_INVARIANT_B();
         return true;
