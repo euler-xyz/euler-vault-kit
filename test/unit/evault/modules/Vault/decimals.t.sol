@@ -140,7 +140,7 @@ contract VaultTest_Decimals is EVaultTestBase {
     }
 
     //decimals() on e vaults should return same value as underlying
-    function test_decimals_sameValueAsUnderlying() public {
+    function test_decimals_sameValueAsUnderlying() public view {
         assertEq(assetTST3.decimals(), 6);
         assertEq(eTST3.decimals(), 6);
     }
