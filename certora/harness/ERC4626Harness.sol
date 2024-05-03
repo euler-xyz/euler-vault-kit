@@ -12,19 +12,9 @@ contract ERC4626Harness is VaultModule, TokenModule, AbstractBaseHarness {
     // Linked against DummyERC20A in verification config
     IERC20 underlying_asset;
 
-    // function totalAssets() public view override returns (uint256) {
-    //     return underlying_asset.balanceOf(address(this));
-    // }
-
     function userAssets(address user) public view returns (uint256) { // harnessed
-        return balanceOf(user);
-        // return IERC20(asset()).balanceOf(user);
-        // return vaultStorage.users[account].getBalance().toUint();
+        return IERC20(asset()).balanceOf(user);
     }
-
-    // function asset() public view override virtual returns (address) {
-    //     return address(underlying_asset);
-    // }
 
     // VaultStorage Accessors:
     function storage_lastInterestAccumulatorUpdate() public view returns (uint48) {
