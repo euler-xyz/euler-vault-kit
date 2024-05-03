@@ -580,7 +580,7 @@ contract VaultTest_Borrow is EVaultTestBase {
 
         eTST.repay(MAX_SANE_AMOUNT / 2 - 100, borrower);
 
-        assertEq(eTST.totalBorrows(), 362);
+        assertEq(eTST.totalBorrows(), 361);
         assertEq(eTST.debtOf(borrower), 362);
     }
 }

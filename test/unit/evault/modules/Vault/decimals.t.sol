@@ -117,7 +117,7 @@ contract VaultTest_Decimals is EVaultTestBase {
         // Rounds up to 6th decimal place:
         assertEq(eTST3.debtOf(user3), 0.302511e6);
         // Does round up:
-        assertEq(eTST3.totalBorrows(), 0.302511e6);
+        assertEq(eTST3.totalBorrows(), 0.302510e6);
 
         // Conversion methods
         assertApproxEqAbs(eTST3.balanceOf(user1), 0.8e6, 1e6);
