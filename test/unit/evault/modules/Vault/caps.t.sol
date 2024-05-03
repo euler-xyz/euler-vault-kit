@@ -1316,4 +1316,52 @@ contract VaultTest_Caps is EVaultTestBase {
 
         IERC20(assetTSTAddress).transfer(eTSTAddress, repayAmount);
     }
+
+    // This test verifies an edge case behaviour: When a user repays, totalAssets (cash + totalBorrows)
+    // is unaffected because the totalBorrows goes down the same amount cash goes up. If totalBorrows
+    // were to be rounded up (as in an earlier version of the code), a residual fractional borrow
+    // left after a repay could cause the totalAssets to *increase* by 1 wei, which cause an
+    // E_SupplyCapExceeded exception if the supply cap is currently exceeded.
+    function test_CanRepayWhenSupplyCapReduced() public {
+        setUpCollateral();
+        assetTST.mint(user2, 500e18);
+        eTST.setInterestRateModel(address(new IRMTestFixed()));
+
+        // Setup two borrowers:
+
+        startHoax(user1);
+        eTST.deposit(50e18, user2);
+        eTST.borrow(5e18, user1);
+        vm.stopPrank();
+
+        startHoax(user2);
+        assetTST.approve(address(eTST), type(uint256).max);
+        evc.enableController(user2, address(eTST));
+        eTST.borrow(5e18, user2);
+        vm.stopPrank();
+
+        // Set a supply cap below current supply
+
+        eTST.setCaps(uint16((0.01e2 << 6) | 18), 0);
+
+        // Jump ahead in time so some fractional interest accrues:
+
+        skip(15 * 60);
+
+        // First user repays in full:
+
+        vm.prank(user1);
+        eTST.repay(type(uint256).max, user1);
+
+        // Second user repays in 2 chunks:
+
+        startHoax(user2);
+        eTST.repay(1e18, user2);
+        eTST.repay(type(uint256).max, user2);
+        vm.stopPrank();
+
+        assertEq(eTST.debtOf(user1), 0);
+        assertEq(eTST.debtOf(user2), 0);
+        assertEq(eTST.totalBorrows(), 1); // residual dust is rounded up
+    }
 }

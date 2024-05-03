@@ -21,6 +21,12 @@ library OwedLib {
         return TypesLib.toAssets(toAssetsUpUint256(Owed.unwrap(amount)));
     }
 
+    function toAssetsDown(Owed amount) internal pure returns (Assets) {
+        if (Owed.unwrap(amount) == 0) return Assets.wrap(0);
+
+        return TypesLib.toAssets(Owed.unwrap(amount) >> INTERNAL_DEBT_PRECISION_SHIFT);
+    }
+
     function isDust(Owed self) internal pure returns (bool) {
         return Owed.unwrap(self) < (1 << INTERNAL_DEBT_PRECISION_SHIFT); // less than a minimum representable internal debt amount
     }

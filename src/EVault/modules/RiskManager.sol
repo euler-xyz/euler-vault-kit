@@ -102,7 +102,11 @@ abstract contract RiskManagerModule is IRiskManager, Base, LiquidityUtils {
             if (borrows > vaultCache.borrowCap && borrows > prevBorrows) revert E_BorrowCapExceeded();
 
             uint256 prevSupply = snapshotCash.toUint() + prevBorrows;
-            uint256 supply = totalAssetsInternal(vaultCache);
+
+            // Borrows are rounded down, because total assets could increase during repays.
+            // This could happen when repaid user debt is rounded up to assets and used to increase cash,
+            // while totalBorrows would be adjusted by only the exact debt, less than the increase in cash.
+            uint256 supply = vaultCache.cash.toUint() + vaultCache.totalBorrows.toAssetsDown().toUint();
 
             if (supply > vaultCache.supplyCap && supply > prevSupply) revert E_SupplyCapExceeded();
 
