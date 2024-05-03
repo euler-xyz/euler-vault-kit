@@ -133,6 +133,16 @@ contract ERC4626Test_ProtocolConfig is EVaultTestBase {
 
         assertEq(genericFeeReceiver, feeReceiver);
         assertEq(genericFeeShare, feeShare);
+
+        // zero out the config slot
+        vm.prank(admin);
+        protocolConfig.setVaultFeeConfig(address(eTST), false, address(0), 0);
+
+        (genericFeeReceiver, genericFeeShare) = protocolConfig.protocolFeeConfig(address(0));
+        (feeReceiver, feeShare) = protocolConfig.protocolFeeConfig(address(eTST));
+
+        assertEq(genericFeeReceiver, feeReceiver);
+        assertEq(genericFeeShare, feeShare);
     }
 
     function test_setInterestFeeRange() public {
@@ -175,7 +185,10 @@ contract ERC4626Test_ProtocolConfig is EVaultTestBase {
         protocolConfig.setVaultInterestFeeRange(address(eTST), true, 0.6e4, 0.4e4);
 
         vm.expectRevert(ProtocolConfig.E_InvalidConfigValue.selector);
-        protocolConfig.setVaultFeeConfig(address(eTST), true, address(0), 1e4 + 1);
+        protocolConfig.setVaultFeeConfig(address(eTST), true, user, 1e4 + 1);
+
+        vm.expectRevert(ProtocolConfig.E_InvalidReceiver.selector);
+        protocolConfig.setVaultFeeConfig(address(eTST), true, address(0), 1e4);
 
         // Bad vaults
 

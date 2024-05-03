@@ -196,6 +196,7 @@ contract ProtocolConfig is IProtocolConfig {
         onlyAdmin
     {
         if (vault == address(0)) revert E_InvalidVault();
+        if (exists_ && feeReceiver_ == address(0)) revert E_InvalidReceiver();
         if (protocolFeeShare_ > CONFIG_SCALE) revert E_InvalidConfigValue();
 
         _protocolFeeConfig[vault] =
