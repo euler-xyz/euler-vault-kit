@@ -1318,10 +1318,13 @@ contract VaultTest_Caps is EVaultTestBase {
     }
 
     // This test verifies an edge case behaviour: When a user repays, totalAssets (cash + totalBorrows)
-    // is unaffected because the totalBorrows goes down the same amount cash goes up. If totalBorrows
-    // were to be rounded up (as in an earlier version of the code), a residual fractional borrow
-    // left after a repay could cause the totalAssets to *increase* by 1 wei, which cause an
-    // E_SupplyCapExceeded exception if the supply cap is currently exceeded.
+    // is supposed to be unaffected because the totalBorrows goes down the same amount cash goes up.
+    // However, since the amount repaid (added to cash) is rounded up but the amount deducted from
+    // totalBorrows is precise but also rounded up when necessary, totalAssets can appear to increase
+    // by 1 wei. Because of this, a repay could cause an E_SupplyCapExceeded exception if the supply
+    // cap is currently exceeded. To prevent this, the totalAssets recorded in the snapshot uses a
+    // rounded *down* totalBorrows.
+
     function test_CanRepayWhenSupplyCapReduced() public {
         setUpCollateral();
         assetTST.mint(user2, 500e18);
