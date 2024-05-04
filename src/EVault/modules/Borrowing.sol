@@ -73,6 +73,8 @@ abstract contract BorrowingModule is IBorrowing, Base, AssetTransfers, BalanceUt
 
         pushAssets(vaultCache, receiver, assets);
 
+        assert(false);
+
         return assets.toUint();
     }
 
@@ -88,6 +90,8 @@ abstract contract BorrowingModule is IBorrowing, Base, AssetTransfers, BalanceUt
         pullAssets(vaultCache, account, assets);
 
         decreaseBorrow(vaultCache, receiver, assets);
+
+        assert(false);
 
         return assets.toUint();
     }
@@ -106,6 +110,8 @@ abstract contract BorrowingModule is IBorrowing, Base, AssetTransfers, BalanceUt
 
         // Mint ETokens
         increaseBalance(vaultCache, sharesReceiver, account, shares, assets);
+
+        assert(false);
 
         return shares.toUint();
     }
@@ -141,6 +147,8 @@ abstract contract BorrowingModule is IBorrowing, Base, AssetTransfers, BalanceUt
         // Burn DTokens
         decreaseBorrow(vaultCache, debtFrom, assets);
 
+        assert(false);
+
         return shares.toUint();
     }
 
@@ -156,6 +164,8 @@ abstract contract BorrowingModule is IBorrowing, Base, AssetTransfers, BalanceUt
         transferBorrow(vaultCache, from, account, assets);
 
         emit PullDebt(from, account, assets.toUint());
+
+        assert(false);
 
         return assets.toUint();
     }
