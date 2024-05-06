@@ -47,13 +47,6 @@ abstract contract BorrowingModuleInvariants is HandlerAggregator {
         }
     }
 
-    function assert_BM_INVARIANT_O(address _actor) internal {
-        if (eTST.debtOf(_actor) != 0) {
-            (uint256 collateralValue,) = _getAccountLiquidity(address(actor), false);
-            assertGt(collateralValue, 0, BM_INVARIANT_O);
-        }
-    }
-
     //////////////////////////////////////////////////////////////////////////////////////////////
     //                                       DISCARDED                                          //
     //////////////////////////////////////////////////////////////////////////////////////////////

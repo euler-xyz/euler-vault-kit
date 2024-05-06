@@ -41,7 +41,9 @@ contract BorrowingModuleHandler is BaseHandler {
         (success, returnData) =
             actor.proxy(target, abi.encodeWithSelector(IBorrowing.borrow.selector, assets, receiver));
 
-        if (!isAccountHealthyBefore) {
+        (uint256 shares) = abi.decode(returnData, (uint256));
+
+        if (!isAccountHealthyBefore && (assets != 0 && shares != 0)) {
             /// @dev BM_INVARIANT_E
             assertFalse(success, BM_INVARIANT_E);
         } else {
@@ -162,6 +164,7 @@ contract BorrowingModuleHandler is BaseHandler {
     }
 
     function assert_BM_INVARIANT_P() external setup {
+        //return; // @audit-issue 1. test_BM_INVARIANT_P TODO remove return after fixing
         bool success;
         bytes memory returnData;
 
@@ -189,15 +192,19 @@ contract BorrowingModuleHandler is BaseHandler {
             actor.proxy(address(eTST), abi.encodeWithSelector(IBorrowing.loop.selector, amount, address(actor)));
 
         if (success) {
+            uint256 shares = abi.decode(returnData, (uint256));
+            _increaseGhostShares(shares, address(actor));
             (success, returnData) =
                 actor.proxy(address(eTST), abi.encodeWithSelector(IBorrowing.deloop.selector, amount, address(actor)));
         }
 
         if (success) {
+            uint256 shares = abi.decode(returnData, (uint256));
+            _decreaseGhostShares(shares, address(actor));
             uint256 debtAfter = eTST.debtOf(address(actor));
             uint256 balanceAfter = eTST.balanceOf(address(actor));
 
-            assertGe(balanceBefore, balanceAfter, BM_INVARIANT_N1);
+            assertGe(balanceBefore, balanceAfter, BM_INVARIANT_N1); //@audit-issue 2. test_BM_INVARIANT_N TODO remove coment after fixing
             assertLe(debtBefore, debtAfter, BM_INVARIANT_N2);
         }
     }

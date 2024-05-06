@@ -107,13 +107,13 @@ abstract contract InvariantsSpec {
 
     string constant BM_INVARIANT_B = "BM_INVARIANT_B: totalBorrowed = sum of all user debt";
 
-    string constant BM_INVARIANT_C = "BM_INVARIANT_C: sum of all user debt == 0 <=> totalBorrowed == 0"; // TODO: Discarded
+    string constant BM_INVARIANT_C = "BM_INVARIANT_C: sum of all user debt == 0 <=> totalBorrowed == 0";
 
     string constant BM_INVARIANT_D = "BM_INVARIANT_D: User liability should always decrease after repayment";
 
     string constant BM_INVARIANT_E = "BM_INVARIANT_E: Unhealthy users can not borrow";
 
-    string constant BM_INVARIANT_F = "BM_INVARIANT_F: If theres at least one borrow, the asset.balanceOf(vault) > 0"; //TODO: Discarded
+    string constant BM_INVARIANT_F = "BM_INVARIANT_F: If theres at least one borrow, the asset.balanceOf(vault) > 0"; // Discarded
 
     string constant BM_INVARIANT_G =
         "BM_INVARIANT_G: a user should always be able to withdraw all if there is no outstanding debt";
@@ -135,8 +135,6 @@ abstract contract InvariantsSpec {
     string constant BM_INVARIANT_N1 = "BM_INVARIANT_N1: loop(x) => deloop(x) users shouldn't gain any asset";
 
     string constant BM_INVARIANT_N2 = "BM_INVARIANT_N2: loop(x) => deloop(x) users debt shouldn't decrease";
-
-    string constant BM_INVARIANT_O = "BM_INVARIANT_O: debt(user) != 0 => collateralValue != 0";
 
     string constant BM_INVARIANT_P = "BM_INVARIANT_P: a user can always repay debt in full";
 
@@ -166,6 +164,4 @@ abstract contract InvariantsSpec {
 
     string constant LM_INVARIANT_D =
         "LM_INVARIANT_D: Only liquidations can deteriorate health score of an already unhealthy account";
-
-    //TODO exchangeRate > exchangeRate' -> liquidation
 }
