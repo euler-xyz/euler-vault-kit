@@ -146,12 +146,12 @@ abstract contract GovernanceModule is IGovernance, Base, BalanceUtils, BorrowUti
         address governorReceiver = vaultStorage.feeReceiver;
 
         if (governorReceiver == address(0)) {
-            protocolFee = 1e4; // governor forfeits fees
+            protocolFee = CONFIG_SCALE; // governor forfeits fees
         } else if (protocolFee > MAX_PROTOCOL_FEE_SHARE) {
             protocolFee = MAX_PROTOCOL_FEE_SHARE;
         }
 
-        Shares governorShares = vaultCache.accumulatedFees.mulDiv(1e4 - protocolFee, 1e4);
+        Shares governorShares = vaultCache.accumulatedFees.mulDiv(CONFIG_SCALE - protocolFee, CONFIG_SCALE);
         Shares protocolShares = vaultCache.accumulatedFees - governorShares;
 
         // Decrease totalShares because increaseBalance will increase it by that total amount
