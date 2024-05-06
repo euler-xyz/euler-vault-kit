@@ -64,8 +64,6 @@ contract Governance_HookedOps is EVaultTestBase {
     }
 
     function testFuzz_hookedDepositMintWithdrawRedeem(
-        address hookTarget1,
-        address hookTarget2,
         uint32 hookedOps,
         address sender,
         uint256 amount,
@@ -73,8 +71,6 @@ contract Governance_HookedOps is EVaultTestBase {
         bool deposit,
         bool withdraw
     ) public {
-        vm.assume(hookTarget1.code.length == 0 && !evc.haveCommonOwner(hookTarget1, address(0)));
-        vm.assume(hookTarget2.code.length == 0 && !evc.haveCommonOwner(hookTarget2, address(0)));
         vm.assume(hookedOps & OP_VAULT_STATUS_CHECK == 0);
         vm.assume(
             sender.code.length == 0 && receiver.code.length == 0 && !evc.haveCommonOwner(sender, address(0))
@@ -84,7 +80,7 @@ contract Governance_HookedOps is EVaultTestBase {
 
         // set the hooked ops
         eTST.setHookConfig(
-            hookTarget1,
+            address(0),
             hookedOps | (deposit ? OP_DEPOSIT : OP_MINT) | (withdraw ? OP_WITHDRAW : OP_REDEEM) | OP_TRANSFER
         );
 
@@ -93,15 +89,21 @@ contract Governance_HookedOps is EVaultTestBase {
         assetTST.mint(sender, amount);
         assetTST.approve(address(eTST), type(uint256).max);
 
-        // if the hook taget is not a contract, the operation is considered disabled
+        // if the hook taget is zero address, the operation is considered disabled
         assertEq(deposit ? eTST.maxDeposit(receiver) : eTST.maxMint(receiver), 0);
         vm.expectRevert(Errors.E_OperationDisabled.selector);
         deposit ? eTST.deposit(amount, receiver) : eTST.mint(amount, receiver);
 
         // deploy the hook target
-        address deployedHookTarget = address(new MockHookTarget());
-        vm.etch(hookTarget1, deployedHookTarget.code);
+        address hookTarget1 = address(new MockHookTarget());
 
+        vm.startPrank(address(this));
+        eTST.setHookConfig(
+            hookTarget1,
+            hookedOps | (deposit ? OP_DEPOSIT : OP_MINT) | (withdraw ? OP_WITHDRAW : OP_REDEEM) | OP_TRANSFER
+        );
+
+        vm.startPrank(sender);
         // now the operation succeeds which proves that it's not affected if the hook target call succeeds
         assertEq(deposit ? eTST.maxDeposit(receiver) : eTST.maxMint(receiver), MAX_SANE_AMOUNT);
         deposit ? eTST.deposit(amount, receiver) : eTST.mint(amount, receiver);
@@ -133,8 +135,8 @@ contract Governance_HookedOps is EVaultTestBase {
         // change the hook target
         vm.startPrank(address(this));
         (, uint32 ops) = eTST.hookConfig();
+        address hookTarget2 = address(new MockHookTarget());
         eTST.setHookConfig(hookTarget2, ops);
-        vm.etch(hookTarget2, deployedHookTarget.code);
 
         // the operation succeeds which proves that it's not affected if the hook target call succeeds
         vm.startPrank(sender);
