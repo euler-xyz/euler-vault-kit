@@ -5,6 +5,7 @@ pragma solidity ^0.8.0;
 import {VaultCache} from "../types/VaultCache.sol";
 
 /// @title ConversionHelpers Library
+/// @custom:security-contact security@euler.xyz
 /// @author Euler Labs (https://www.eulerlabs.com/)
 /// @notice The library provides a helper function for conversions between shares and assets
 library ConversionHelpers {

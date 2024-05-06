@@ -8,6 +8,7 @@ import {Base} from "./Base.sol";
 import "./types/Types.sol";
 
 /// @title AssetTransfers
+/// @custom:security-contact security@euler.xyz
 /// @author Euler Labs (https://www.eulerlabs.com/)
 /// @notice Transfer assets into and out of the vault
 abstract contract AssetTransfers is Base {

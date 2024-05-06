@@ -17,6 +17,7 @@ struct Snapshot {
 }
 
 /// @title SnapshotLib
+/// @custom:security-contact security@euler.xyz
 /// @author Euler Labs (https://www.eulerlabs.com/)
 /// @notice Library for working with the `Snapshot` struct
 library SnapshotLib {

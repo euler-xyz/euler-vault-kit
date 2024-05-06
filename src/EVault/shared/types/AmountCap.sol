@@ -5,6 +5,7 @@ pragma solidity ^0.8.0;
 import {AmountCap} from "./Types.sol";
 
 /// @title AmountCapLib
+/// @custom:security-contact security@euler.xyz
 /// @author Euler Labs (https://www.eulerlabs.com/)
 /// @notice Library for `AmountCap` custom type
 /// @dev AmountCaps are 16-bit decimal floating point values:

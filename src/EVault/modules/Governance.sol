@@ -13,6 +13,7 @@ import {ProxyUtils} from "../shared/lib/ProxyUtils.sol";
 import "../shared/types/Types.sol";
 
 /// @title GovernanceModule
+/// @custom:security-contact security@euler.xyz
 /// @author Euler Labs (https://www.eulerlabs.com/)
 /// @notice An EVault module handling governance, including configuration and fees
 abstract contract GovernanceModule is IGovernance, Base, BalanceUtils, BorrowUtils, LTVUtils {

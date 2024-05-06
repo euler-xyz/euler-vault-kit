@@ -3,6 +3,7 @@
 pragma solidity ^0.8.0;
 
 /// @title Events
+/// @custom:security-contact security@euler.xyz
 /// @author Euler Labs (https://www.eulerlabs.com/)
 /// @notice Contract implementing EVault's events
 abstract contract Events {
