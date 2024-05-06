@@ -3,6 +3,7 @@
 pragma solidity ^0.8.0;
 
 /// @title Errors
+/// @custom:security-contact security@euler.xyz
 /// @author Euler Labs (https://www.eulerlabs.com/)
 /// @notice Contract implementing EVault's custom errors
 contract Errors {

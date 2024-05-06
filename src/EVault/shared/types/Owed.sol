@@ -6,6 +6,7 @@ import {Owed, Assets, TypesLib} from "./Types.sol";
 import "../Constants.sol";
 
 /// @title OwedLib
+/// @custom:security-contact security@euler.xyz
 /// @author Euler Labs (https://www.eulerlabs.com/)
 /// @notice Library for `Owed` custom type
 /// @dev The owed type tracks borrowed funds in asset units scaled up by shifting left INTERNAL_DEBT_PRECISION_SHIFT bits.

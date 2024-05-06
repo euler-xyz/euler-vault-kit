@@ -8,6 +8,7 @@ import {Base} from "../shared/Base.sol";
 import "../shared/types/Types.sol";
 
 /// @title BalanceForwarderModule
+/// @custom:security-contact security@euler.xyz
 /// @author Euler Labs (https://www.eulerlabs.com/)
 /// @notice An EVault module handling communication a with balance tracker contract.
 abstract contract BalanceForwarderModule is IBalanceForwarder, Base {

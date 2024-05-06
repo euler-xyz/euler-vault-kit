@@ -8,6 +8,7 @@ import {ConversionHelpers} from "../lib/ConversionHelpers.sol";
 import "../Constants.sol";
 
 /// @title AssetsLib
+/// @custom:security-contact security@euler.xyz
 /// @author Euler Labs (https://www.eulerlabs.com/)
 /// @notice Custom type `Assets` represents amounts of the vault's underlying asset
 library AssetsLib {

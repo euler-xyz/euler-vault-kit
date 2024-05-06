@@ -5,6 +5,7 @@ pragma solidity ^0.8.0;
 import {VaultStorage, Snapshot} from "./types/Types.sol";
 
 /// @title Storage
+/// @custom:security-contact security@euler.xyz
 /// @author Euler Labs (https://www.eulerlabs.com/)
 /// @notice Contract that defines the EVault's data storage
 abstract contract Storage {

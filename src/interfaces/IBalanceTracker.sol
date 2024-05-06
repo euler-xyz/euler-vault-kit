@@ -3,6 +3,7 @@
 pragma solidity >=0.8.0;
 
 /// @title IBalanceTracker
+/// @custom:security-contact security@euler.xyz
 /// @author Euler Labs (https://www.eulerlabs.com/)
 /// @notice Provides an interface for tracking the balance of accounts
 interface IBalanceTracker {

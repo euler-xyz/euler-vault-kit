@@ -19,6 +19,7 @@ struct UserStorage {
 }
 
 /// @title UserStorageLib
+/// @custom:security-contact security@euler.xyz
 /// @author Euler Labs (https://www.eulerlabs.com/)
 /// @notice Library for working with the UserStorage struct
 library UserStorageLib {

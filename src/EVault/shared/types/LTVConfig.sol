@@ -21,6 +21,7 @@ struct LTVConfig {
 }
 
 /// @title LTVConfigLib
+/// @custom:security-contact security@euler.xyz
 /// @author Euler Labs (https://www.eulerlabs.com/)
 /// @notice Library for getting and setting the LTV configurations
 library LTVConfigLib {

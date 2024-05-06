@@ -7,6 +7,7 @@ import {Errors} from "../Errors.sol";
 import "../Constants.sol";
 
 /// @title ConfigAmountLib
+/// @custom:security-contact security@euler.xyz
 /// @author Euler Labs (https://www.eulerlabs.com/)
 /// @notice Library for `ConfigAmount` custom type
 /// @dev ConfigAmounts are floating point values encoded in 16 bits with a 1e4 precision.

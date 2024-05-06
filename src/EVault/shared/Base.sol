@@ -14,6 +14,7 @@ import {IBalanceTracker} from "../../interfaces/IBalanceTracker.sol";
 import "./types/Types.sol";
 
 /// @title Base
+/// @custom:security-contact security@euler.xyz
 /// @author Euler Labs (https://www.eulerlabs.com/)
 /// @notice Base contract for EVault modules with top level modifiers and utilities
 abstract contract Base is EVCClient, Cache {

@@ -17,6 +17,7 @@ import {AddressUtils} from "./shared/lib/AddressUtils.sol";
 import "./shared/Constants.sol";
 
 /// @title Dispatch
+/// @custom:security-contact security@euler.xyz
 /// @author Euler Labs (https://www.eulerlabs.com/)
 /// @notice Contract which ties in the EVault modules and provides utilities for routing calls to modules and the EVC
 abstract contract Dispatch is

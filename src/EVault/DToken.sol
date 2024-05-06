@@ -7,6 +7,7 @@ import {Events} from "./shared/Events.sol";
 import {IERC20, IEVault} from "./IEVault.sol";
 
 /// @title DToken
+/// @custom:security-contact security@euler.xyz
 /// @author Euler Labs (https://www.eulerlabs.com/)
 /// @notice Contract implements read only ERC20 interface, and `Transfer` events, for EVault's debt
 contract DToken is IERC20, Errors, Events {

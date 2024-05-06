@@ -8,6 +8,7 @@ import {LTVUtils} from "./LTVUtils.sol";
 import "./types/Types.sol";
 
 /// @title LiquidityUtils
+/// @custom:security-contact security@euler.xyz
 /// @author Euler Labs (https://www.eulerlabs.com/)
 /// @notice Utilities for calculating account liquidity and health status
 abstract contract LiquidityUtils is BorrowUtils, LTVUtils {

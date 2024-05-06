@@ -10,6 +10,7 @@ import {ProxyUtils} from "../shared/lib/ProxyUtils.sol";
 import "../shared/types/Types.sol";
 
 /// @title TokenModule
+/// @custom:security-contact security@euler.xyz
 /// @author Euler Labs (https://www.eulerlabs.com/)
 /// @notice An EVault module handling ERC20 behaviour of vault shares
 abstract contract TokenModule is IToken, Base, BalanceUtils {
