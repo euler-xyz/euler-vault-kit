@@ -93,6 +93,8 @@ contract GenericFactory is MetaProxyDeployer {
     }
 
     constructor(address admin) {
+        if (admin == address(0)) revert E_BadAddress();
+
         emit Genesis();
 
         if (admin == address(0)) revert E_BadAddress();

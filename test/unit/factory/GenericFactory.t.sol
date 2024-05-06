@@ -40,6 +40,11 @@ contract FactoryTest is Test {
         assertEq(factory.upgradeAdmin(), upgradeAdmin);
     }
 
+    function test_RevertIfWrongAdminInConstructor() public {
+        vm.expectRevert(GenericFactory.E_BadAddress.selector);
+        new GenericFactory(address(0));
+    }
+
     function test_setImplementationSimple() public {
         vm.prank(upgradeAdmin);
         factory.setImplementation(address(1));
