@@ -79,8 +79,8 @@ abstract contract Events {
     /// @param liquidator Address executing the liquidation
     /// @param violator Address holding an unhealthy borrow
     /// @param collateral Address of the asset seized
-    /// @param repayAssets Amount of debt in assets transfered from violator to liquidator
-    /// @param yieldBalance Amount of collateral asset's balance transfered from violator to liquidator
+    /// @param repayAssets Amount of debt in assets transferred from violator to liquidator
+    /// @param yieldBalance Amount of collateral asset's balance transferred from violator to liquidator
     event Liquidate(
         address indexed liquidator,
         address indexed violator,

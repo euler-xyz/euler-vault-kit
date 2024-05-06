@@ -46,7 +46,7 @@ contract ProtocolConfig is IProtocolConfig {
     event SetInterestFeeRange(uint16 newMinInterestFee, uint16 newMaxInterestFee);
     event SetFeeReceiver(address indexed newFeeReceiver);
     event SetVaultInterestFeeRange(address indexed vault, bool exists, uint16 minInterestFee, uint16 maxInterestFee);
-    event SetFeeConfigSetting(address indexed ault, bool exists, address indexed feeReceiver, uint16 protocolFeeShare);
+    event SetFeeConfigSetting(address indexed vault, bool exists, address indexed feeReceiver, uint16 protocolFeeShare);
     event SetProtocolFeeShare(uint16 protocolFeeShare, uint16 newProtocolFeeShare);
     event SetAdmin(address indexed newAdmin);
 
@@ -148,7 +148,7 @@ contract ProtocolConfig is IProtocolConfig {
     }
 
     /**
-     * @notice set generic min intereset fee
+     * @notice set generic min interest fee
      * @dev can only be called by admin
      * @param minInterestFee_ new min interest fee
      * @param maxInterestFee_ new max interest fee
