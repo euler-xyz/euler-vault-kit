@@ -67,13 +67,16 @@ abstract contract Events {
 
     /// @notice Increase account's debt
     /// @param account Address adding liability
+    /// @param previousDebt Amount of debt the account had before the borrow, including accrued interest
     /// @param assets Amount of debt added in assets
-    event Borrow(address indexed account, uint256 assets);
+    event Borrow(address indexed account, uint256 previousDebt, uint256 assets);
 
     /// @notice Decrease account's debt
     /// @param account Address repaying the debt
+    /// @param previousDebt Amount of debt the account had before the repay, including accrued interest
     /// @param assets Amount of debt removed in assets
-    event Repay(address indexed account, uint256 assets);
+    event Repay(address indexed account, uint256 previousDebt, uint256 assets);
+
 
     /// @notice Liquidate unhealthy account
     /// @param liquidator Address executing the liquidation

@@ -46,12 +46,12 @@ abstract contract BorrowUtils is Base {
         (Owed owed, Owed prevOwed) = loadUserBorrow(vaultCache, account);
 
         Owed amount = assets.toOwed();
-        owed = owed + amount;
+        Owed newOwed = owed + amount;
 
-        setUserBorrow(vaultCache, account, owed);
+        setUserBorrow(vaultCache, account, newOwed);
         vaultStorage.totalBorrows = vaultCache.totalBorrows = vaultCache.totalBorrows + amount;
 
-        logBorrowChange(account, prevOwed, owed);
+        logBorrow(account, prevOwed, owed, newOwed);
     }
 
     function decreaseBorrow(VaultCache memory vaultCache, address account, Assets amount) internal virtual {
@@ -66,7 +66,7 @@ abstract contract BorrowUtils is Base {
         vaultStorage.totalBorrows = vaultCache.totalBorrows =
             vaultCache.totalBorrows > owedExact ? vaultCache.totalBorrows - owedExact + owedRemaining : owedRemaining;
 
-        logBorrowChange(account, prevOwed, owedRemaining);
+        logRepay(account, prevOwed, owed.toOwed(), owedRemaining);
     }
 
     function transferBorrow(VaultCache memory vaultCache, address from, address to, Assets assets) internal virtual {
@@ -83,15 +83,14 @@ abstract contract BorrowUtils is Base {
 
         if (amount > fromOwed) revert E_InsufficientBalance();
 
-        fromOwed = fromOwed.subUnchecked(amount);
+        Owed newfromOwed = fromOwed.subUnchecked(amount);
+        Owed newToOwed = toOwed + amount;
 
-        toOwed = toOwed + amount;
+        setUserBorrow(vaultCache, from, newfromOwed);
+        setUserBorrow(vaultCache, to, newToOwed);
 
-        setUserBorrow(vaultCache, from, fromOwed);
-        setUserBorrow(vaultCache, to, toOwed);
-
-        logBorrowChange(from, fromOwedPrev, fromOwed);
-        logBorrowChange(to, toOwedPrev, toOwed);
+        logRepay(from, fromOwedPrev, fromOwed, newfromOwed);
+        logBorrow(to, toOwedPrev, toOwed, newToOwed);
     }
 
     function computeInterestRate(VaultCache memory vaultCache) internal virtual returns (uint256) {
@@ -153,17 +152,27 @@ abstract contract BorrowUtils is Base {
         }
     }
 
-    function logBorrowChange(address account, Owed prevOwed, Owed owed) private {
-        address dTokenAddress = calculateDTokenAddress();
+    function logBorrow(address account, Owed prevOwed, Owed owed, Owed newOwed) private {
+        Assets owedAssets = owed.toAssetsUp();
+        uint256 change = newOwed.toAssetsUp().subUnchecked(owedAssets).toUint();
+        emit Borrow(account, owedAssets.toUint(), change);
 
+        address dTokenAddress = calculateDTokenAddress();
+        change = newOwed.toAssetsUp().subUnchecked(prevOwed.toAssetsUp()).toUint();
+        DToken(dTokenAddress).emitTransfer(address(0), account, change);
+    }
+
+    function logRepay(address account, Owed prevOwed, Owed owed, Owed newOwed) private {
+        Assets owedAssets = owed.toAssetsUp();
+        uint256 change = owedAssets.subUnchecked(newOwed.toAssetsUp()).toUint();
+        emit Repay(account, owedAssets.toUint(), change);
+
+        address dTokenAddress = calculateDTokenAddress();
         if (owed > prevOwed) {
-            uint256 change = owed.toAssetsUp().subUnchecked(prevOwed.toAssetsUp()).toUint();
-            emit Borrow(account, change);
+            change = owed.toAssetsUp().subUnchecked(prevOwed.toAssetsUp()).toUint();
             DToken(dTokenAddress).emitTransfer(address(0), account, change);
         } else if (prevOwed > owed) {
-            uint256 change = prevOwed.toAssetsUp().subUnchecked(owed.toAssetsUp()).toUint();
-
-            emit Repay(account, change);
+            change = prevOwed.toAssetsUp().subUnchecked(owed.toAssetsUp()).toUint();
             DToken(dTokenAddress).emitTransfer(account, address(0), change);
         }
     }
