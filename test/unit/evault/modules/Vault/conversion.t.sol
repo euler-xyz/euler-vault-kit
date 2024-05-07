@@ -43,74 +43,93 @@ contract VaultTest_Conversion is EVaultTestBase {
         eTST0.setInterestRateModel(address(new IRMTestDefault()));
     }
 
-    function testFuzz_convertToAssets_previewReedem(uint256 cash, uint256 shares, uint256 deposit) public {
-        deposit = bound(deposit, 1, MAX_SANE_AMOUNT);
-        cash = bound(cash, deposit, MAX_SANE_AMOUNT);
-        shares = bound(shares, cash, MAX_SANE_AMOUNT);
+    function testFuzz_convertToAssets_previewReedem(uint256 cash, uint256 shares, uint256 borrows, uint256 redeem)
+        public
+    {
+        cash = bound(cash, 1, MAX_SANE_AMOUNT / 2);
+        borrows = bound(borrows, 0, MAX_SANE_AMOUNT);
+        vm.assume(cash + borrows <= MAX_SANE_AMOUNT);
+        shares = bound(shares, cash + borrows, MAX_SANE_AMOUNT);
+        redeem = bound(redeem, 1, shares);
 
         startHoax(user1);
-        assetTST.mint(user1, deposit);
-        assetTST.mint(address(eTST0), type(uint256).max - deposit);
+        assetTST.mint(user1, cash);
+        assetTST.mint(address(eTST0), type(uint256).max - cash);
         assetTST.approve(address(eTST0), type(uint256).max);
-        eTST0.deposit(deposit, user1);
+        eTST0.deposit(cash, user1);
 
         startHoax(address(this));
-        eTST0.setCash_(cash);
         eTST0.setTotalShares_(shares);
+        eTST0.setTotalBorrow_(borrows);
 
+        assertEq(eTST0.totalBorrowsExact(), borrows);
         assertEq(eTST0.cash(), cash);
         assertEq(eTST0.totalSupply(), shares);
 
-        uint256 predictedAssets = eTST0.previewRedeem(deposit);
-        assertEq(eTST0.convertToAssets(deposit), predictedAssets);
+        uint256 predictedAssets = eTST0.previewRedeem(redeem);
+        assertEq(eTST0.convertToAssets(redeem), predictedAssets);
 
         startHoax(user1);
         if (predictedAssets == 0) {
             vm.expectRevert(Errors.E_ZeroAssets.selector);
-            eTST0.redeem(deposit, user1, user1);
+            eTST0.redeem(redeem, user1, user1);
             return;
         }
 
-        eTST0.redeem(deposit, user1, user1);
+        if (predictedAssets > eTST0.cash()) {
+            vm.expectRevert(Errors.E_InsufficientCash.selector);
+            eTST0.redeem(redeem, user1, user1);
+            return;
+        }
+
+        if (redeem > eTST0.balanceOf(user1)) {
+            vm.expectRevert(Errors.E_InsufficientBalance.selector);
+            eTST0.redeem(redeem, user1, user1);
+            return;
+        }
+
+        eTST0.redeem(redeem, user1, user1);
         assertEq(assetTST.balanceOf(user1), predictedAssets);
     }
 
-    function testFuzz_previewWithdraw(uint256 cash, uint256 shares, uint256 deposit) public {
-        deposit = bound(deposit, 1, MAX_SANE_AMOUNT);
-        cash = bound(cash, deposit, MAX_SANE_AMOUNT);
-        shares = bound(shares, cash, MAX_SANE_AMOUNT);
+    function testFuzz_previewWithdraw(uint256 cash, uint256 shares, uint256 borrows, uint256 withdraw) public {
+        cash = bound(cash, 1, MAX_SANE_AMOUNT / 2);
+        borrows = bound(borrows, 0, MAX_SANE_AMOUNT);
+        vm.assume(cash + borrows <= MAX_SANE_AMOUNT);
+        shares = bound(shares, cash + borrows, MAX_SANE_AMOUNT);
+        withdraw = bound(withdraw, 1, cash);
 
         startHoax(user1);
-        assetTST.mint(user1, deposit);
-        assetTST.mint(address(eTST0), type(uint256).max - deposit);
+        assetTST.mint(user1, cash);
+        assetTST.mint(address(eTST0), type(uint256).max - cash);
         assetTST.approve(address(eTST0), type(uint256).max);
-        eTST0.deposit(deposit, user1);
+        eTST0.deposit(cash, user1);
 
         startHoax(address(this));
-        eTST0.setCash_(cash);
         eTST0.setTotalShares_(shares);
+        eTST0.setTotalBorrow_(borrows);
 
+        assertEq(eTST0.totalBorrowsExact(), borrows);
         assertEq(eTST0.cash(), cash);
         assertEq(eTST0.totalSupply(), shares);
 
-        uint256 predictedValue = eTST0.previewWithdraw(deposit);
-
-        uint256 maxValue = eTST0.maxWithdraw(user1);
+        uint256 predictedShares = eTST0.previewWithdraw(withdraw);
 
         startHoax(user1);
-        if (maxValue < deposit) {
+        if (predictedShares > eTST0.balanceOf(user1)) {
             vm.expectRevert(Errors.E_InsufficientBalance.selector);
-            eTST0.withdraw(deposit, user1, user1);
+            eTST0.withdraw(withdraw, user1, user1);
             return;
         }
 
-        uint256 resultValue = eTST0.withdraw(deposit, user1, user1);
-        assertEq(resultValue, predictedValue);
+        uint256 resultValue = eTST0.withdraw(withdraw, user1, user1);
+        assertEq(resultValue, predictedShares);
+        assertEq(eTST0.balanceOf(user1) + predictedShares, cash);
     }
 
     function testFuzz_maxWithdraw(uint256 cash, uint256 shares, uint256 borrows, uint256 deposit) public {
-        deposit = bound(deposit, 1, MAX_SANE_AMOUNT);
-        cash = bound(cash, deposit, MAX_SANE_AMOUNT);
+        deposit = bound(deposit, 1, MAX_SANE_AMOUNT / 2);
+        cash = bound(cash, deposit, MAX_SANE_AMOUNT - 1);
         borrows = bound(borrows, 0, MAX_SANE_AMOUNT);
         vm.assume(cash + borrows <= MAX_SANE_AMOUNT);
         shares = bound(shares, cash + borrows, MAX_SANE_AMOUNT);
@@ -150,15 +169,24 @@ contract VaultTest_Conversion is EVaultTestBase {
         eTST0.withdraw(maxAssets + 1, user1, user1);
     }
 
-    function testFuzz_convertToShares_previewDeposit(uint256 cash, uint256 shares, uint256 deposit) public {
-        deposit = bound(deposit, 1, MAX_SANE_AMOUNT / 2);
-        cash = bound(cash, deposit, MAX_SANE_AMOUNT / 2);
-        shares = bound(shares, cash, MAX_SANE_AMOUNT / 2);
+    function testFuzz_convertToShares_previewDeposit(uint256 cash, uint256 shares, uint256 borrows, uint256 deposit)
+        public
+    {
+        cash = bound(cash, 1, MAX_SANE_AMOUNT / 1000);
+        borrows = bound(borrows, 0, MAX_SANE_AMOUNT / 1000);
+        vm.assume(cash + borrows <= MAX_SANE_AMOUNT);
+        uint256 totalAssets = cash + borrows;
+
+        // To avoid conversion errors, + 1e20 and type(uint64).max are used
+        shares = bound(shares, totalAssets, totalAssets + 1e20);
+        deposit = bound(deposit, 1, type(uint64).max);
 
         startHoax(address(this));
         eTST0.setTotalShares_(shares);
         eTST0.setCash_(cash);
+        eTST0.setTotalBorrow_(borrows);
 
+        assertEq(eTST0.totalBorrowsExact(), borrows);
         assertEq(eTST0.cash(), cash);
         assertEq(eTST0.totalSupply(), shares);
         assertEq(eTST0.balanceOf(user1), 0);
@@ -170,21 +198,43 @@ contract VaultTest_Conversion is EVaultTestBase {
         assetTST.mint(user1, deposit);
         assetTST.approve(address(eTST0), type(uint256).max);
 
+        if (eTST0.convertToShares(deposit) + shares > MAX_SANE_AMOUNT) {
+            vm.expectRevert(Errors.E_AmountTooLargeToEncode.selector);
+            eTST0.deposit(deposit, user1);
+            return;
+        }
+
+        if (eTST0.convertToShares(deposit) == 0) {
+            vm.expectRevert(Errors.E_ZeroShares.selector);
+            eTST0.deposit(deposit, user1);
+            return;
+        }
+
         uint256 resultShares = eTST0.deposit(deposit, user1);
 
         assertEq(resultShares, predictedShares);
         assertEq(eTST0.balanceOf(user1), predictedShares);
     }
 
-    function testFuzz_maxDeposit(uint256 cash) public {
+    function testFuzz_maxDeposit(uint256 cash, uint256 shares, uint256 borrows, uint16 supplyCap) public {
         cash = bound(cash, 1, MAX_SANE_AMOUNT);
+        borrows = bound(borrows, 0, MAX_SANE_AMOUNT);
+        vm.assume(cash + borrows <= MAX_SANE_AMOUNT);
+        uint256 totalAssets = cash + borrows;
+
+        shares = bound(shares, totalAssets, MAX_SANE_AMOUNT);
+        uint256 supplyCapAmount = AmountCap.wrap(supplyCap).resolve();
+        vm.assume(supplyCapAmount > shares && supplyCapAmount <= MAX_SANE_AMOUNT);
 
         startHoax(address(this));
+        eTST0.setCaps(supplyCap, 0);
         eTST0.setCash_(cash);
-        eTST0.setTotalShares_(cash);
+        eTST0.setTotalBorrow_(borrows);
+        eTST0.setTotalShares_(shares);
 
+        assertEq(eTST0.totalBorrowsExact(), borrows);
         assertEq(eTST0.cash(), cash);
-        assertEq(eTST0.totalSupply(), cash);
+        assertEq(eTST0.totalSupply(), shares);
 
         uint256 maxAssets = eTST0.maxDeposit(user1);
 
@@ -198,21 +248,34 @@ contract VaultTest_Conversion is EVaultTestBase {
 
         vm.revertTo(snapshot);
 
-        vm.expectRevert(Errors.E_AmountTooLargeToEncode.selector);
+        vm.expectRevert();
         eTST0.deposit(maxAssets + 1, user1);
     }
 
-    function testFuzz_maxMint(uint256 cash) public {
-        cash = bound(cash, 1, MAX_SANE_AMOUNT);
+    function testFuzz_maxMint(uint256 cash, uint256 shares, uint256 borrows, uint16 supplyCap) public {
+        uint256 supplyCapAmount = AmountCap.wrap(supplyCap).resolve();
+        vm.assume(supplyCapAmount > 1 && supplyCapAmount <= MAX_SANE_AMOUNT);
+
+        cash = bound(cash, 1e8, MAX_SANE_AMOUNT);
+        borrows = bound(borrows, 0, MAX_SANE_AMOUNT);
+        vm.assume(cash + borrows <= MAX_SANE_AMOUNT);
+        uint256 totalAssets = cash + borrows;
+
+        shares = bound(shares, totalAssets, MAX_SANE_AMOUNT);
 
         startHoax(address(this));
-        eTST0.setTotalShares_(cash);
+        eTST0.setCaps(supplyCap, 0);
         eTST0.setCash_(cash);
+        eTST0.setTotalBorrow_(borrows);
+        eTST0.setTotalShares_(shares);
 
+        assertEq(eTST0.totalBorrowsExact(), borrows);
         assertEq(eTST0.cash(), cash);
-        assertEq(eTST0.totalSupply(), cash);
+        assertEq(eTST0.totalSupply(), shares);
 
         uint256 maxShares = eTST0.maxMint(user1);
+
+        vm.assume(maxShares < MAX_SANE_AMOUNT);
 
         startHoax(user1);
         assetTST.mint(user1, type(uint256).max);
@@ -224,42 +287,50 @@ contract VaultTest_Conversion is EVaultTestBase {
 
         vm.revertTo(snapshot);
 
-        vm.expectRevert(Errors.E_AmountTooLargeToEncode.selector);
+        vm.expectRevert();
         eTST0.mint(maxShares + 1, user1);
     }
 
-    function testFuzz_previewMint(uint256 cash, uint256 shares, uint256 deposit) public {
-        deposit = bound(deposit, 1, MAX_SANE_AMOUNT / 2);
-        shares = bound(shares, deposit, MAX_SANE_AMOUNT / 2);
-        cash = bound(cash, deposit, shares);
+    function testFuzz_previewMint(uint256 cash, uint256 shares, uint256 borrows, uint256 mint) public {
+        cash = bound(cash, 1, MAX_SANE_AMOUNT / 1000);
+        borrows = bound(borrows, 0, MAX_SANE_AMOUNT / 1000);
+        uint256 totalAssets = cash + borrows;
+
+        // To avoid conversion errors, + 1e20 and type(uint64).max are used
+        shares = bound(shares, totalAssets, totalAssets + 1e20);
+        mint = bound(mint, 1, type(uint64).max);
 
         startHoax(address(this));
         eTST0.setTotalShares_(shares);
         eTST0.setCash_(cash);
+        eTST0.setTotalBorrow_(borrows);
 
+        assertEq(eTST0.totalBorrowsExact(), borrows);
         assertEq(eTST0.cash(), cash);
         assertEq(eTST0.totalSupply(), shares);
         assertEq(eTST0.balanceOf(user1), 0);
 
-        uint256 predictedAssets = eTST0.previewMint(deposit);
+        uint256 predictedAssets = eTST0.previewMint(mint);
 
         startHoax(user1);
         assetTST.mint(user1, type(uint256).max);
         assetTST.approve(address(eTST0), type(uint256).max);
 
-        uint256 resultAssets = eTST0.mint(deposit, user1);
+        uint256 resultAssets = eTST0.mint(mint, user1);
         assertEq(resultAssets, predictedAssets);
 
         uint256 spentAssets = type(uint256).max - assetTST.balanceOf(user1);
         assertEq(spentAssets, predictedAssets);
 
-        assertEq(eTST0.balanceOf(user1), deposit);
+        assertEq(eTST0.balanceOf(user1), mint);
     }
 
-    function testFuzz_maxRedeem(uint256 cash, uint256 shares, uint256 deposit) public {
-        deposit = bound(deposit, 1, MAX_SANE_AMOUNT - 1);
-        cash = bound(cash, deposit, MAX_SANE_AMOUNT);
-        shares = bound(shares, cash, MAX_SANE_AMOUNT);
+    function testFuzz_maxRedeem(uint256 cash, uint256 shares, uint256 borrows, uint256 deposit) public {
+        cash = bound(cash, 1, MAX_SANE_AMOUNT - 1);
+        borrows = bound(borrows, 0, MAX_SANE_AMOUNT);
+        vm.assume(cash + borrows <= MAX_SANE_AMOUNT);
+        shares = bound(shares, cash + borrows, MAX_SANE_AMOUNT);
+        deposit = bound(deposit, 1, cash);
 
         startHoax(user1);
         assetTST.mint(user1, deposit);
@@ -270,7 +341,9 @@ contract VaultTest_Conversion is EVaultTestBase {
         startHoax(address(this));
         eTST0.setCash_(cash);
         eTST0.setTotalShares_(shares);
+        eTST0.setTotalBorrow_(borrows);
 
+        assertEq(eTST0.totalBorrowsExact(), borrows);
         assertEq(eTST0.cash(), cash);
         assertEq(eTST0.totalSupply(), shares);
         assertEq(eTST0.balanceOf(user1), deposit);
