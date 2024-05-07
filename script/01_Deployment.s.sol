@@ -5,8 +5,7 @@ pragma solidity ^0.8.19;
 import "forge-std/Script.sol";
 import {Utils} from "./Utils.s.sol";
 import {EthereumVaultConnector} from "ethereum-vault-connector/EthereumVaultConnector.sol";
-//import {StakingFreeRewardStreams} from "reward-streams/StakingFreeRewardStreams.sol";
-//import {IEVC} from "reward-streams/StakingFreeRewardStreams.sol";
+import {TrackingRewardStreams} from "reward-streams/TrackingRewardStreams.sol";
 import {DeployPermit2} from "permit2/test/utils/DeployPermit2.sol";
 import {ProtocolConfig} from "../src/ProtocolConfig/ProtocolConfig.sol";
 import {Base} from "../src/EVault/shared/Base.sol";
@@ -24,7 +23,6 @@ import {EVault} from "../src/EVault/EVault.sol";
 import {EVaultLens} from "../src/lens/EVaultLens.sol";
 import {MockPriceOracle} from "../test/mocks/MockPriceOracle.sol";
 import {IRMTestDefault} from "../test/mocks/IRMTestDefault.sol";
-import {MockBalanceTracker} from "../test/mocks/MockBalanceTracker.sol";
 import {TestERC20} from "../test/mocks/TestERC20.sol";
 
 struct ConfigIntegrations {
@@ -133,7 +131,7 @@ contract DeploymentIntegrations is Utils {
         integrations.protocolConfig = address(new ProtocolConfig(admin, feeReceiver));
 
         // deploy the reward streams contract
-        integrations.balanceTracker = address(new MockBalanceTracker());
+        integrations.balanceTracker = address(new TrackingRewardStreams(integrations.evc, 10 days));
 
         // assign permit2 address
         integrations.permit2 = PERMIT2_ADDRESS;

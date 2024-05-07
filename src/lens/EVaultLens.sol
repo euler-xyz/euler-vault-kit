@@ -4,7 +4,7 @@ pragma solidity ^0.8.0;
 
 import {IAllowanceTransfer} from "permit2/src/interfaces/IAllowanceTransfer.sol";
 import {IEVC} from "ethereum-vault-connector/interfaces/IEthereumVaultConnector.sol";
-//import {IRewardStreams} from "reward-streams/interfaces/IRewardStreams.sol";
+import {IRewardStreams} from "reward-streams/interfaces/IRewardStreams.sol";
 import {IEVault} from "../EVault/IEVault.sol";
 import {IIRM, IRMLinearKink} from "../InterestRateModels/IRMLinearKink.sol";
 import {IPriceOracle} from "../interfaces/IPriceOracle.sol";
@@ -30,7 +30,7 @@ contract EVaultLens {
 
         result.evcAccountInfo = getEVCAccountInfo(IEVault(vault).EVC(), account);
         result.vaultAccountInfo = getVaultAccountInfo(account, vault);
-        //result.accountRewardInfo = getRewardAccountInfo(account, vault);
+        result.accountRewardInfo = getRewardAccountInfo(account, vault);
 
         return result;
     }
@@ -48,17 +48,18 @@ contract EVaultLens {
         uint256 collateralsLength = result.evcAccountInfo.enabledCollaterals.length;
 
         result.vaultAccountInfo = new VaultAccountInfo[](controllersLength + collateralsLength);
-        //result.accountRewardInfo = new AccountRewardInfo[](controllersLength + collateralsLength);
+        result.accountRewardInfo = new AccountRewardInfo[](controllersLength + collateralsLength);
 
         for (uint256 i = 0; i < controllersLength; ++i) {
             result.vaultAccountInfo[i] = getVaultAccountInfo(account, result.evcAccountInfo.enabledControllers[i]);
-            //result.accountRewardInfo[i] = getRewardAccountInfo(account, result.evcAccountInfo.enabledControllers[i]);
+            result.accountRewardInfo[i] = getRewardAccountInfo(account, result.evcAccountInfo.enabledControllers[i]);
         }
 
         for (uint256 i = 0; i < collateralsLength; ++i) {
             result.vaultAccountInfo[controllersLength + i] =
                 getVaultAccountInfo(account, result.evcAccountInfo.enabledCollaterals[i]);
-            //result.accountRewardInfo[controllersLength + i] = getRewardAccountInfo(account, result.evcAccountInfo.enabledCollaterals[i]);
+            result.accountRewardInfo[controllersLength + i] =
+                getRewardAccountInfo(account, result.evcAccountInfo.enabledCollaterals[i]);
         }
 
         return result;
@@ -315,7 +316,7 @@ contract EVaultLens {
 
         return result;
     }
-    /*
+
     function getRewardAccountInfo(address account, address vault) public view returns (AccountRewardInfo memory) {
         AccountRewardInfo memory result;
 
@@ -348,12 +349,12 @@ contract EVaultLens {
         return result;
     }
 
-    function getRewardInfo(address vault, address reward, uint256 numberOfEpochs)
+    function getRewardVaultInfo(address vault, address reward, uint256 numberOfEpochs)
         public
         view
-        returns (RewardInfo memory)
+        returns (VaultRewardInfo memory)
     {
-        RewardInfo memory result;
+        VaultRewardInfo memory result;
 
         result.timestamp = block.timestamp;
         result.blockNumber = block.number;
@@ -374,38 +375,39 @@ contract EVaultLens {
         result.epochInfoUpcoming = new RewardAmountInfo[](numberOfEpochs);
 
         for (uint256 i; i < 2 * numberOfEpochs; ++i) {
+            uint48 epoch = uint48(result.currentEpoch - numberOfEpochs + i);
+
             if (i < numberOfEpochs) {
                 uint256 index = i;
-                result.epochInfoPrevious[index].epoch = result.currentEpoch - numberOfEpochs + i;
 
-                result.epochInfoPrevious[index].epochStart = IRewardStreams(result.balanceTracker)
-                    .getEpochStartTimestamp(uint48(result.epochInfoPrevious[index].epoch));
+                result.epochInfoPrevious[index].epoch = epoch;
 
-                result.epochInfoPrevious[index].epochEnd = IRewardStreams(result.balanceTracker)
-                    .getEpochEndTimestamp(uint48(result.epochInfoPrevious[index].epoch));
+                result.epochInfoPrevious[index].epochStart =
+                    IRewardStreams(result.balanceTracker).getEpochStartTimestamp(epoch);
 
-                result.epochInfoPrevious[index].rewardAmount = IRewardStreams(result.balanceTracker).rewardAmount(
-                    vault, reward, uint48(result.epochInfoPrevious[index].epoch)
-                );
+                result.epochInfoPrevious[index].epochEnd =
+                    IRewardStreams(result.balanceTracker).getEpochEndTimestamp(epoch);
+
+                result.epochInfoPrevious[index].rewardAmount =
+                    IRewardStreams(result.balanceTracker).rewardAmount(vault, reward, epoch);
             } else {
                 uint256 index = i - numberOfEpochs;
-                result.epochInfoUpcoming[index].epoch = result.currentEpoch - numberOfEpochs + i;
 
-                result.epochInfoUpcoming[index].epochStart = IRewardStreams(result.balanceTracker)
-                    .getEpochStartTimestamp(uint48(result.epochInfoUpcoming[index].epoch));
+                result.epochInfoUpcoming[index].epoch = epoch;
 
-                result.epochInfoUpcoming[index].epochEnd = IRewardStreams(result.balanceTracker)
-                    .getEpochEndTimestamp(uint48(result.epochInfoUpcoming[index].epoch));
+                result.epochInfoUpcoming[index].epochStart =
+                    IRewardStreams(result.balanceTracker).getEpochStartTimestamp(epoch);
 
-                result.epochInfoUpcoming[index].rewardAmount = IRewardStreams(result.balanceTracker).rewardAmount(
-                    vault, reward, uint48(result.epochInfoUpcoming[index].epoch)
-                );
+                result.epochInfoUpcoming[index].epochEnd =
+                    IRewardStreams(result.balanceTracker).getEpochEndTimestamp(epoch);
+
+                result.epochInfoUpcoming[index].rewardAmount =
+                    IRewardStreams(result.balanceTracker).rewardAmount(vault, reward, epoch);
             }
         }
 
         return result;
     }
-    */
 
     function getVaultInterestRateModelInfo(address vault, uint256[] memory cash, uint256[] memory borrows)
         public
