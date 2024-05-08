@@ -23,7 +23,7 @@ interface IERC20 {
     /// @notice Vault share token (eToken) symbol, ie "eDAI"
     function symbol() external view returns (string memory);
 
-    /// @notice Decimals, always normalised to 18
+    /// @notice Decimals, the same as the asset's or 18 if the asset doesn't implement `decimals()`
     function decimals() external view returns (uint8);
 
     /// @notice Sum of all eToken balances

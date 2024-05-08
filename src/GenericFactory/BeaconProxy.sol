@@ -2,6 +2,11 @@
 
 pragma solidity ^0.8.0;
 
+/// @title BeaconProxy
+/// @custom:security-contact security@euler.xyz
+/// @author Euler Labs (https://www.eulerlabs.com/)
+/// @notice A proxy contract, forwarding all calls to an implementation contract, fetched from a beacon
+/// @dev The proxy attaches up to 128 bytes of metadata to the delegated call data.
 contract BeaconProxy {
     // ERC-1967 beacon address slot. bytes32(uint256(keccak256('eip1967.proxy.beacon')) - 1)
     bytes32 internal constant BEACON_SLOT = 0xa3f0ad74e5423aebfd80d3ef4346578335a9a72aeaee59ff6cb3582b35133d50;

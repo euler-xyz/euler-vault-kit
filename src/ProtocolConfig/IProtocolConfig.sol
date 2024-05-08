@@ -2,6 +2,12 @@
 
 pragma solidity >=0.8.0;
 
+/**
+ * @title IProtocolConfig
+ * @custom:security-contact security@euler.xyz
+ * @author Euler Labs (https://www.eulerlabs.com/)
+ * @notice Interface of the contract centralizing the protocol's (DAO's) configuration for all the EVault deployments
+ */
 interface IProtocolConfig {
     /**
      * @notice check if a vault's interest fee is valid
