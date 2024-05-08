@@ -48,6 +48,9 @@ contract PegStabilityModule is EVCUtil {
 
     function swapToUnderlyingGivenIn(uint256 amountIn, address receiver) external returns (uint256) {
         uint256 amountOut = quoteToUnderlyingGivenIn(amountIn);
+        if(amountIn == 0 || amountOut == 0) {
+            return 0;
+        }
 
         synth.burn(_msgSender(), amountIn);
         underlying.safeTransfer(receiver, amountOut);
@@ -57,6 +60,9 @@ contract PegStabilityModule is EVCUtil {
 
     function swapToUnderlyingGivenOut(uint256 amountOut, address receiver) external returns (uint256) {
         uint256 amountIn = quoteToUnderlyingGivenOut(amountOut);
+        if(amountIn == 0 || amountOut == 0) {
+            return 0;
+        }
 
         synth.burn(_msgSender(), amountIn);
         underlying.safeTransfer(receiver, amountOut);
@@ -66,6 +72,9 @@ contract PegStabilityModule is EVCUtil {
 
     function swapToSynthGivenIn(uint256 amountIn, address receiver) external returns (uint256) {
         uint256 amountOut = quoteToSynthGivenIn(amountIn);
+        if(amountIn == 0 || amountOut == 0) {
+            return 0;
+        }
 
         underlying.safeTransferFrom(_msgSender(), address(this), amountIn);
         synth.mint(receiver, amountOut);
@@ -75,6 +84,9 @@ contract PegStabilityModule is EVCUtil {
 
     function swapToSynthGivenOut(uint256 amountOut, address receiver) external returns (uint256) {
         uint256 amountIn = quoteToSynthGivenOut(amountOut);
+        if(amountIn == 0 || amountOut == 0) {
+            return 0;
+        }
 
         underlying.safeTransferFrom(_msgSender(), address(this), amountIn);
         synth.mint(receiver, amountOut);
