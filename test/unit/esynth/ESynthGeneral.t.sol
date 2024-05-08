@@ -5,9 +5,12 @@ import {ESynthTest} from "./lib/ESynthTest.sol";
 import {stdError} from "forge-std/Test.sol";
 import {Errors} from "src/EVault/shared/Errors.sol";
 import {ESynth} from "src/Synths/ESynth.sol";
+import {MockWrongEVC} from "test/mocks/MockWrongEVC.sol";
 
 contract ESynthGeneralTest is ESynthTest {
     uint128 constant MAX_ALLOWED = type(uint128).max;
+
+    MockWrongEVC public wrongEVC = new MockWrongEVC();
 
     error ERC20InsufficientAllowance(address spender, uint256 allowance, uint256 needed);
 
@@ -118,5 +121,13 @@ contract ESynthGeneralTest is ESynthTest {
         esynth.mint(address(esynth), amount);
         esynth.allocate(address(eTST), amount);
         esynth.deallocate(address(eTST), amount);
+    }
+
+    function test_AllocateInCompatibleVault() public {
+        uint256 amount = 100e18;
+        esynth.setCapacity(address(this), MAX_ALLOWED);
+        esynth.mint(address(esynth), amount);
+        vm.expectRevert(ESynth.E_NotEVCCompatible.selector);
+        esynth.allocate(address(wrongEVC), amount);
     }
 }
