@@ -46,7 +46,13 @@ abstract contract VaultModule is IVault, Base, AssetTransfers, BalanceUtils {
     function maxDeposit(address account) public view virtual nonReentrantView returns (uint256) {
         VaultCache memory vaultCache = loadVault();
 
-        return isOperationDisabled(vaultCache.hookedOps, OP_DEPOSIT) ? 0 : maxDepositInternal(vaultCache, account);
+        if (isOperationDisabled(vaultCache.hookedOps, OP_DEPOSIT)) return 0;
+
+        uint256 assets = maxDepositInternal(vaultCache, account);
+        uint256 shares = assets.toAssets().toSharesDownUint256(vaultCache);
+        uint256 remainingShares = MAX_SANE_AMOUNT - vaultCache.totalShares.toUint();
+
+        return shares < remainingShares ? assets : remainingShares.toShares().toAssetsDown(vaultCache).toUint();
     }
 
     /// @inheritdoc IERC4626
@@ -62,8 +68,9 @@ abstract contract VaultModule is IVault, Base, AssetTransfers, BalanceUtils {
 
         // make sure to not revert on conversion
         uint256 shares = maxDepositInternal(vaultCache, account).toAssets().toSharesDownUint256(vaultCache);
+        uint256 remainingShares = MAX_SANE_AMOUNT - vaultCache.totalShares.toUint();
 
-        return shares < MAX_SANE_AMOUNT ? shares : MAX_SANE_AMOUNT;
+        return shares < remainingShares ? shares : remainingShares;
     }
 
     /// @inheritdoc IERC4626
