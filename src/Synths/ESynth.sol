@@ -45,6 +45,11 @@ contract ESynth is ERC20Collateral, Ownable {
         address sender = _msgSender();
         MinterData storage minterCache = minters[sender];
 
+        // Return early if the amount is 0 to prevent emitting possible spam events.
+        if (amount == 0) {
+            return;
+        }
+
         if (
             amount > type(uint128).max - minterCache.minted
                 || minterCache.capacity < uint256(minterCache.minted) + amount
