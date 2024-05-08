@@ -6,7 +6,6 @@ import "../InterestRateModels/IIRM.sol";
 import "../interfaces/IPriceOracle.sol";
 
 contract IRMSynth is IIRM {
-    uint256 public constant TARGET_QUOTE = 1e18;
     uint216 internal constant SECONDS_PER_YEAR = 365.2425 * 86400; // Gregorian calendar
     uint216 public constant MAX_RATE = 1e27 * 1.5 / SECONDS_PER_YEAR; // 150% APR
     uint216 public constant BASE_RATE = 1e27 * 0.005 / SECONDS_PER_YEAR; // 0.5% APR
@@ -17,6 +16,7 @@ contract IRMSynth is IIRM {
     address public immutable synth;
     address public immutable referenceAsset;
     IPriceOracle public immutable oracle;
+    uint256 public immutable targetQuote;
 
     struct IRMData {
         uint40 lastUpdated;
@@ -28,7 +28,7 @@ contract IRMSynth is IIRM {
     error E_ZeroAddress();
     error E_InvalidQuote();
 
-    constructor(address synth_, address referenceAsset_, address oracle_) {
+    constructor(address synth_, address referenceAsset_, address oracle_, uint256 targetQuoute_) {
         if (synth_ == address(0) || referenceAsset_ == address(0) || oracle_ == address(0)) {
             revert E_ZeroAddress();
         }
@@ -42,6 +42,7 @@ contract IRMSynth is IIRM {
         synth = synth_;
         referenceAsset = referenceAsset_;
         oracle = IPriceOracle(oracle_);
+        targetQuote = targetQuoute_;
 
         irmStorage = IRMData({lastUpdated: uint40(block.timestamp), lastRate: BASE_RATE});
     }
@@ -80,7 +81,7 @@ contract IRMSynth is IIRM {
 
         updated = true;
 
-        if (quote < TARGET_QUOTE) {
+        if (quote < targetQuote) {
             // If the quote is less than the target, increase the rate
             rate = rate * ADJUST_FACTOR / ADJUST_ONE;
         } else {
