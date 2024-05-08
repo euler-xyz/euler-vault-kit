@@ -105,6 +105,7 @@ contract GenericFactory is MetaProxyDeployer {
     /// @notice A permissionless funtion to deploy new proxies
     /// @param upgradeable If true, the proxy will be an instance of the BeaconProxy. If false, a minimal meta proxy will be deployed
     /// @param trailingData Metadata to be attached to every call passing through the new proxy
+    /// @return The address of the new proxy
     function createProxy(bool upgradeable, bytes memory trailingData) external nonReentrant returns (address) {
         if (implementation == address(0)) revert E_Implementation();
 
@@ -161,11 +162,13 @@ contract GenericFactory is MetaProxyDeployer {
 
     /// @notice Check if an address is a proxy deployed with this factory
     /// @param proxy Address to check
+    /// @return True if the address is a proxy
     function isProxy(address proxy) external view returns (bool) {
         return proxyLookup[proxy].implementation != address(0);
     }
 
     /// @notice Fetch the length of the deployed proxies list
+    /// @return The length of the proxy list array
     function getProxyListLength() external view returns (uint256) {
         return proxyList.length;
     }
@@ -173,6 +176,7 @@ contract GenericFactory is MetaProxyDeployer {
     /// @notice Get a slice of the deployed proxies array
     /// @param start Start index of the slice
     /// @param end End index of the slice
+    /// @return An array containing the slice of the proxy list
     function getProxyListSlice(uint256 start, uint256 end) external view returns (address[] memory list) {
         if (end == type(uint256).max) end = proxyList.length;
         if (end < start || end > proxyList.length) revert E_BadQuery();
