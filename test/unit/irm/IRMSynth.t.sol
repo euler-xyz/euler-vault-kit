@@ -15,9 +15,9 @@ contract IRMSynthTest is Test {
 
     function setUp() public {
         oracle = new MockPriceOracle();
-        irm = new IRMSynth(SYNTH, REFERENCE_ASSET, address(oracle));
-
         oracle.setPrice(SYNTH, REFERENCE_ASSET, 1e18);
+
+        irm = new IRMSynth(SYNTH, REFERENCE_ASSET, address(oracle));
     }
 
     function test_IRMSynth_Constructor_SynthZeroAddress() public {
@@ -33,6 +33,12 @@ contract IRMSynthTest is Test {
     function test_IRMSynth_Constructor_OracleZeroAddress() public {
         vm.expectRevert(IRMSynth.E_ZeroAddress.selector);
         new IRMSynth(SYNTH, REFERENCE_ASSET, address(0));
+    }
+
+    function test_IRMSynth_Constructor_InvalidQuote() public {
+        MockPriceOracle invalidOracle = new MockPriceOracle();
+        vm.expectRevert(IRMSynth.E_InvalidQuote.selector);
+        new IRMSynth(SYNTH, REFERENCE_ASSET, address(invalidOracle));
     }
 
     function test_IRMSynth_InitialRate() public {
