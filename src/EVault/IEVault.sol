@@ -18,39 +18,49 @@ interface IInitialize {
 /// @notice Interface of the EVault's Initialize module
 interface IERC20 {
     /// @notice Vault share token (eToken) name, ie "Euler Vault: DAI"
+    /// @return The name of the eToken
     function name() external view returns (string memory);
 
     /// @notice Vault share token (eToken) symbol, ie "eDAI"
+    /// @return The symbol of the eToken
     function symbol() external view returns (string memory);
 
     /// @notice Decimals, the same as the asset's or 18 if the asset doesn't implement `decimals()`
+    /// @return The decimals of the eToken
     function decimals() external view returns (uint8);
 
     /// @notice Sum of all eToken balances
+    /// @return The total supply of the eToken
     function totalSupply() external view returns (uint256);
 
     /// @notice Balance of a particular account, in eTokens
+    /// @param account Address to query
+    /// @return The balance of the account
     function balanceOf(address account) external view returns (uint256);
 
     /// @notice Retrieve the current allowance
     /// @param holder The account holding the eTokens
     /// @param spender Trusted address
+    /// @return The allowance from holder for spender
     function allowance(address holder, address spender) external view returns (uint256);
 
     /// @notice Transfer eTokens to another address
     /// @param to Recipient account
     /// @param amount In shares.
+    /// @return True if transfer succeeded
     function transfer(address to, uint256 amount) external returns (bool);
 
     /// @notice Transfer eTokens from one address to another
     /// @param from This address must've approved the to address
     /// @param to Recipient account
     /// @param amount In shares
+    /// @return True if transfer succeeded
     function transferFrom(address from, address to, uint256 amount) external returns (bool);
 
     /// @notice Allow spender to access an amount of your eTokens
     /// @param spender Trusted address
     /// @param amount Use max uint for "infinite" allowance
+    /// @return True if approval succeeded
     function approve(address spender, uint256 amount) external returns (bool);
 }
 
@@ -60,25 +70,34 @@ interface IToken is IERC20 {
     /// @notice Transfer the full eToken balance of an address to another
     /// @param from This address must've approved the to address
     /// @param to Recipient account
+    /// @return True if transfer succeeded
     function transferFromMax(address from, address to) external returns (bool);
 }
 
 /// @title IERC4626
 /// @notice Interface of an ERC4626 vault
 interface IERC4626 {
-    /// @notice Vault underlying asset
+    /// @notice Vault's underlying asset
+    /// @return The vault's underlying asset
     function asset() external view returns (address);
 
-    /// @notice Total amount of managed assets
+    /// @notice Total amount of managed assets, cash and borrows
+    /// @return The total amount of assets
     function totalAssets() external view returns (uint256);
 
     /// @notice Calculate amount of assets corresponding to the requested shares amount
+    /// @param shares Amount of shares to convert
+    /// @return The amount of assets
     function convertToAssets(uint256 shares) external view returns (uint256);
 
     /// @notice Calculate amount of shares corresponding to the requested assets amount
+    /// @param assets Amount of assets to convert
+    /// @return The amount of shares
     function convertToShares(uint256 assets) external view returns (uint256);
 
     /// @notice Fetch the maximum amount of assets a user can deposit
+    /// @param account Address to query
+    /// @return The max amount of assets the account can deposit
     function maxDeposit(address account) external view returns (uint256);
 
     /// @notice Calculate an amount of shares that would be created by depositing assets
@@ -87,6 +106,8 @@ interface IERC4626 {
     function previewDeposit(uint256 assets) external view returns (uint256);
 
     /// @notice Fetch the maximum amount of shares a user can mint
+    /// @param account Address to query
+    /// @return The max amount of shares the account can mint
     function maxMint(address account) external view returns (uint256);
 
     /// @notice Calculate an amount of assets that would be required to mint requested amount of shares
@@ -145,13 +166,16 @@ interface IERC4626 {
 /// @title IVault
 /// @notice Interface of the EVault's Vault module
 interface IVault is IERC4626 {
-    /// @notice Balance of the fees accumulator, in eTokens
+    /// @notice Balance of the fees accumulator, in shares
+    /// @return The accumulated fees in shares
     function accumulatedFees() external view returns (uint256);
 
     /// @notice Balance of the fees accumulator, in underlying units
+    /// @return The accumulated fees in asset units
     function accumulatedFeesAssets() external view returns (uint256);
 
     /// @notice Address of the original vault creator
+    /// @return The address of the creator
     function creator() external view returns (address);
 
     /// @notice Creates shares for the receiver, from excess asset balances of the vault (not accounted for in `cash`)
@@ -166,18 +190,25 @@ interface IVault is IERC4626 {
 /// @notice Interface of the EVault's Borrowing module
 interface IBorrowing {
     /// @notice Sum of all outstanding debts, in underlying units (increases as interest is accrued)
+    /// @return The total borrows in asset units
     function totalBorrows() external view returns (uint256);
 
     /// @notice Sum of all outstanding debts, in underlying units scaled up by shifting INTERNAL_DEBT_PRECISION_SHIFT bits
+    /// @return The total borrows in internal debt precision
     function totalBorrowsExact() external view returns (uint256);
 
     /// @notice Balance of vault assets as tracked by deposits/withdrawals and borrows/repays
+    /// @return The amount of assets the vault tracks as current direct holdings
     function cash() external view returns (uint256);
 
     /// @notice Debt owed by a particular account, in underlying units
+    /// @param account Address to query
+    /// @return The debt of the account in asset units
     function debtOf(address account) external view returns (uint256);
 
     /// @notice Debt owed by a particular account, in underlying units scaled up by shifting INTERNAL_DEBT_PRECISION_SHIFT bits
+    /// @param account Address to query
+    /// @return The debt of the account in internal precision
     function debtOfExact(address account) external view returns (uint256);
 
     /// @notice Retrieves the current interest rate for an asset
@@ -188,7 +219,8 @@ interface IBorrowing {
     /// @return An opaque accumulator that increases as interest is accrued
     function interestAccumulator() external view returns (uint256);
 
-    /// @notice Address of the sidecar DToken
+    /// @notice Returns an address of the sidecar DToken
+    /// @return The address of the DToken
     function dToken() external view returns (address);
 
     /// @notice Transfer underlying tokens from the vault to the sender, and increase sender's debt
@@ -298,9 +330,12 @@ interface IRiskManager is IEVCVault {
 /// @notice Interface of the EVault's BalanceForwarder module
 interface IBalanceForwarder {
     /// @notice Retrieve the address of rewards contract, tracking changes in account's balances
+    /// @return The balance tracker address
     function balanceTrackerAddress() external view returns (address);
 
     /// @notice Retrieves boolean indicating if the account opted in to forward balance changes to the rewards contract
+    /// @param account Address to query
+    /// @return True if balance forwarder is enabled
     function balanceForwarderEnabled(address account) external view returns (bool);
 
     /// @notice Enables balance forwarding for the authenticated account
@@ -318,9 +353,11 @@ interface IBalanceForwarder {
 /// @notice Interface of the EVault's Governance module
 interface IGovernance {
     /// @notice Retrieves the address of the governor
+    /// @return The governor address
     function governorAdmin() external view returns (address);
 
     /// @notice Retrieves address of the governance fee receiver
+    /// @return The fee receiver address
     function feeReceiver() external view returns (address);
 
     /// @notice Retrieves the interest fee in effect for the vault
@@ -332,6 +369,7 @@ interface IGovernance {
     function interestRateModel() external view returns (address);
 
     /// @notice Retrieves the ProtocolConfig address
+    /// @return The protocol config address
     function protocolConfigAddress() external view returns (address);
 
     /// @notice Retrieves the protocol fee share
@@ -339,19 +377,26 @@ interface IGovernance {
     function protocolFeeShare() external view returns (uint256);
 
     /// @notice Retrieves the address which will receive protocol's fees
+    /// @notice The protocol fee receiver address
     function protocolFeeReceiver() external view returns (address);
 
     /// @notice Retrieves supply and borrow caps in AmountCap format
+    /// @return supplyCap The supply cap in AmountCap format
+    /// @return borrowCap The borrow cap in AmountCap format
     function caps() external view returns (uint16 supplyCap, uint16 borrowCap);
 
     /// @notice Retrieves regular LTV, set for the collateral, which is used to determine the health of the account
+    /// @param collateral The address of the collateral to query
+    /// @return Borrowing LTV in 1e4 scale
     function borrowingLTV(address collateral) external view returns (uint16);
 
     /// @notice Retrieves current ramped value of LTV, which is used to determine liquidation penalty
+    /// @param collateral The address of the collateral to query
+    /// @return Liquidation LTV in 1e4 scale
     function liquidationLTV(address collateral) external view returns (uint16);
 
     /// @notice Retrieves LTV detailed config for a collateral
-    /// @param collateral Collateral asset
+    /// @param collateral The address of the collateral to query
     /// @return targetTimestamp the timestamp when the ramp ends
     /// @return targetLTV current regular LTV or target LTV that the ramped LTV will reach after ramp is over
     /// @return rampDuration ramp duration in seconds
@@ -366,37 +411,48 @@ interface IGovernance {
     /// @dev Returned assets could have the ltv disabled (set to zero)
     function LTVList() external view returns (address[] memory);
 
-    /// @notice Retrieves a hook target and a bitmask indicating which operations call the hook target.
-    function hookConfig() external view returns (address, uint32);
+    /// @notice Retrieves a hook target and a bitmask indicating which operations call the hook target
+    /// @return hookTarget Address of the hook target contract
+    /// @return hookedOps Bitmask with operations that should call the hooks. See Constants.sol for a list of operations
+    function hookConfig() external view returns (address hookTarget, uint32 hookedOps);
 
-    /// @notice Retrieves a bitmask indicating enabled config flags.
+    /// @notice Retrieves a bitmask indicating enabled config flags
+    /// @return Bitmask with config flags enabled
     function configFlags() external view returns (uint32);
 
     /// @notice Address of EthereumVaultConnector contract
+    /// @return The EVC address
     function EVC() external view returns (address);
 
     /// @notice Retrieves a reference asset used for liquidity calculations
+    /// @return The address of the reference asset
     function unitOfAccount() external view returns (address);
 
     /// @notice Retrieves the address of the oracle contract
+    /// @return The address of the oracle
     function oracle() external view returns (address);
 
     /// @notice Retrieves the Permit2 contract address
+    /// @return The address of the Permit2 contract
     function permit2Address() external view returns (address);
 
     /// @notice Splits accrued fees balance according to protocol fee share and transfers shares to the governor fee receiver and protocol fee receiver
     function convertFees() external;
 
     /// @notice Set a new eToken name
+    /// @param newName The new name
     function setName(string calldata newName) external;
 
     /// @notice Set a new eToken symbol
+    /// @param newSymbol The new symbol
     function setSymbol(string calldata newSymbol) external;
 
     /// @notice Set a new governor address
+    /// @param newGovernorAdmin The new governor address
     function setGovernorAdmin(address newGovernorAdmin) external;
 
     /// @notice Set a new governor fee receiver address
+    /// @param newFeeReceiver The new fee receiver address
     function setFeeReceiver(address newFeeReceiver) external;
 
     /// @notice Set a new LTV config
@@ -406,23 +462,29 @@ interface IGovernance {
     function setLTV(address collateral, uint16 ltv, uint32 rampDuration) external;
 
     /// @notice Completely clears LTV configuratrion, signalling the collateral is not considered safe to liquidate anymore
-    /// @param collateral Address of collateral
+    /// @param collateral Address of the collateral
     function clearLTV(address collateral) external;
 
     /// @notice Set a new interest rate model contract
-    /// @param newModel Address of the contract
+    /// @param newModel The new IRM address
     function setInterestRateModel(address newModel) external;
 
     /// @notice Set a new hook target and a new bitmap indicating which operations should call the hook target. Operations are defined in Constants.sol
+    /// @param newHookTarget The new hook target address
+    /// @param newHookedOps Bitmask with the new hooked operations
     function setHookConfig(address newHookTarget, uint32 newHookedOps) external;
 
     /// @notice Set new bitmap indicating which config flags should be enabled. Flags are defined in Constants.sol
+    /// @param newConfigFlags Bitmask with the new config flags
     function setConfigFlags(uint32 newConfigFlags) external;
 
     /// @notice Set new supply and borrow caps in AmountCap format
+    /// @param supplyCap The new supply cap in AmountCap fromat
+    /// @param borrowCap The new borrow cap in AmountCap fromat
     function setCaps(uint16 supplyCap, uint16 borrowCap) external;
 
     /// @notice Set a new interest fee
+    /// @param newFee The new interest fee
     function setInterestFee(uint16 newFee) external;
 }
 
