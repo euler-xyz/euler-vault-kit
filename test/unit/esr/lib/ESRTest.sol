@@ -17,7 +17,7 @@ contract ESRTest is Test {
     string public constant NAME = "Euler Savings Rate";
     string public constant SYMBOL = "ESR";
 
-    function setUp() public {
+    function setUp() public virtual {
         asset = new MockToken();
         evc = new EVC();
         esr = new EulerSavingsRate(evc, address(asset), NAME, SYMBOL);
