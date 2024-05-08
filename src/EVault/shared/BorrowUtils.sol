@@ -28,11 +28,13 @@ abstract contract BorrowUtils is Base {
 
     function loadUserBorrow(VaultCache memory vaultCache, address account)
         private
-        view
         returns (Owed newOwed, Owed prevOwed)
     {
         prevOwed = vaultStorage.users[account].getOwed();
         newOwed = getCurrentOwed(vaultCache, account, prevOwed);
+
+        Owed interest = newOwed.subUnchecked(prevOwed);
+        if (!interest.isZero()) emit InterestAccrued(account, interest.toAssetsUp().toUint());
     }
 
     function setUserBorrow(VaultCache memory vaultCache, address account, Owed newOwed) private {
@@ -51,7 +53,8 @@ abstract contract BorrowUtils is Base {
         setUserBorrow(vaultCache, account, owed);
         vaultStorage.totalBorrows = vaultCache.totalBorrows = vaultCache.totalBorrows + amount;
 
-        logBorrowChange(account, prevOwed, owed);
+        emit Borrow(account, amount.toAssetsUp().toUint());
+        logDToken(account, prevOwed, owed);
     }
 
     function decreaseBorrow(VaultCache memory vaultCache, address account, Assets amount) internal virtual {
@@ -66,7 +69,8 @@ abstract contract BorrowUtils is Base {
         vaultStorage.totalBorrows = vaultCache.totalBorrows =
             vaultCache.totalBorrows > owedExact ? vaultCache.totalBorrows - owedExact + owedRemaining : owedRemaining;
 
-        logBorrowChange(account, prevOwed, owedRemaining);
+        emit Repay(account, amount.toUint());
+        logDToken(account, prevOwed, owedRemaining);
     }
 
     function transferBorrow(VaultCache memory vaultCache, address from, address to, Assets assets) internal virtual {
@@ -90,8 +94,10 @@ abstract contract BorrowUtils is Base {
         setUserBorrow(vaultCache, from, fromOwed);
         setUserBorrow(vaultCache, to, toOwed);
 
-        logBorrowChange(from, fromOwedPrev, fromOwed);
-        logBorrowChange(to, toOwedPrev, toOwed);
+        emit Repay(from, amount.toAssetsUp().toUint());
+        emit Borrow(to, amount.toAssetsUp().toUint());
+        logDToken(from, fromOwedPrev, fromOwed);
+        logDToken(to, toOwedPrev, toOwed);
     }
 
     function computeInterestRate(VaultCache memory vaultCache) internal virtual returns (uint256) {
@@ -153,17 +159,14 @@ abstract contract BorrowUtils is Base {
         }
     }
 
-    function logBorrowChange(address account, Owed prevOwed, Owed owed) private {
+    function logDToken(address account, Owed prevOwed, Owed owed) private {
         address dTokenAddress = calculateDTokenAddress();
 
         if (owed > prevOwed) {
             uint256 change = owed.toAssetsUp().subUnchecked(prevOwed.toAssetsUp()).toUint();
-            emit Borrow(account, change);
             DToken(dTokenAddress).emitTransfer(address(0), account, change);
         } else if (prevOwed > owed) {
             uint256 change = prevOwed.toAssetsUp().subUnchecked(owed.toAssetsUp()).toUint();
-
-            emit Repay(account, change);
             DToken(dTokenAddress).emitTransfer(account, address(0), change);
         }
     }
