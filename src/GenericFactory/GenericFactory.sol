@@ -6,7 +6,7 @@ import {BeaconProxy} from "./BeaconProxy.sol";
 import {MetaProxyDeployer} from "./MetaProxyDeployer.sol";
 
 /// @title IComponent
-/// @notice Minimal interface which must be implemented by the contract deployed by the factory 
+/// @notice Minimal interface which must be implemented by the contract deployed by the factory
 interface IComponent {
     /// @notice Function replacing the constructor in proxied contracts
     /// @param creator The new contract's creator address
@@ -50,7 +50,7 @@ contract GenericFactory is MetaProxyDeployer {
     address[] public proxyList;
 
     // Events
-    
+
     /// @notice The factory is created
     event Genesis();
 
