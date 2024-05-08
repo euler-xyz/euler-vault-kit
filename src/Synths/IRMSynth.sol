@@ -26,10 +26,17 @@ contract IRMSynth is IIRM {
     IRMData internal irmStorage;
 
     error E_ZeroAddress();
+    error E_InvalidQuote();
 
     constructor(address synth_, address referenceAsset_, address oracle_) {
         if (synth_ == address(0) || referenceAsset_ == address(0) || oracle_ == address(0)) {
             revert E_ZeroAddress();
+        }
+
+        // Ensure the oracle works with the given synth and reference asset
+        uint256 testQuote = IPriceOracle(oracle_).getQuote(1e18, synth_, referenceAsset_);
+        if(testQuote == 0) {
+            revert E_InvalidQuote();
         }
 
         synth = synth_;
