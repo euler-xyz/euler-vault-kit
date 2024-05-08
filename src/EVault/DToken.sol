@@ -21,31 +21,38 @@ contract DToken is IERC20, Errors, Events {
     // ERC20 interface
 
     /// @notice The debt token (dToken) name
+    /// @return The dToken name
     function name() external view returns (string memory) {
         return string.concat("Debt token of ", IEVault(eVault).name());
     }
 
     /// @notice The debt token (dToken) symbol
+    /// @return The dToken symbol
     function symbol() external view returns (string memory) {
         return string.concat(IEVault(eVault).symbol(), "-DEBT");
     }
 
     /// @notice Decimals of the dToken, same as EVault's
+    /// @return The dToken decimals
     function decimals() external view returns (uint8) {
         return IEVault(eVault).decimals();
     }
 
-    /// @notice Total supply of the DToken
+    /// @notice Return total supply of the DToken
+    /// @return The dToken total supply
     function totalSupply() external view returns (uint256) {
         return IEVault(eVault).totalBorrows();
     }
 
     /// @notice Balance of a particular account, in dTokens
+    /// @param owner The account to query
+    /// @return The balance of the account
     function balanceOf(address owner) external view returns (uint256) {
         return IEVault(eVault).debtOf(owner);
     }
 
     /// @notice Retrieve the current allowance
+    /// @return The allowance
     /// @dev Approvals are not supported by the dToken
     function allowance(address, address) external pure returns (uint256) {
         return 0;
