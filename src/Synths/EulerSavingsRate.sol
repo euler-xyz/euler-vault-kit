@@ -119,7 +119,7 @@ contract EulerSavingsRate is EVCUtil, ERC4626 {
     }
 
     function _deposit(address caller, address receiver, uint256 assets, uint256 shares) internal override {
-        totalAssetsDeposited += assets;
+        totalAssetsDeposited = totalAssetsDeposited + assets;
         super._deposit(caller, receiver, assets, shares);
     }
 
@@ -127,7 +127,7 @@ contract EulerSavingsRate is EVCUtil, ERC4626 {
         internal
         override
     {
-        totalAssetsDeposited -= assets;
+        totalAssetsDeposited = totalAssetsDeposited - assets;
         super._withdraw(caller, receiver, owner, assets, shares);
     }
 
@@ -157,7 +157,7 @@ contract EulerSavingsRate is EVCUtil, ERC4626 {
         // write esrSlotCache back to storage in a single SSTORE
         esrSlot = esrSlotCache;
         // Move interest accrued to totalAssetsDeposited
-        totalAssetsDeposited += accruedInterest;
+        totalAssetsDeposited = totalAssetsDeposited + accruedInterest;
 
         return esrSlotCache;
     }
