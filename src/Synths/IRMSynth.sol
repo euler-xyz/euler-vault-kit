@@ -35,7 +35,7 @@ contract IRMSynth is IIRM {
 
         // Ensure the oracle works with the given synth and reference asset
         uint256 testQuote = IPriceOracle(oracle_).getQuote(1e18, synth_, referenceAsset_);
-        if(testQuote == 0) {
+        if (testQuote == 0) {
             revert E_InvalidQuote();
         }
 

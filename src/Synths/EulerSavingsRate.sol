@@ -164,7 +164,7 @@ contract EulerSavingsRate is EVCUtil, ERC4626 {
 
     function maxRedeem(address owner) public view override returns (uint256) {
         // Max redeem can potentially be 0 if there is a liability
-        if(evc.getControllers(owner).length > 0) {
+        if (evc.getControllers(owner).length > 0) {
             return 0;
         }
 
@@ -173,7 +173,7 @@ contract EulerSavingsRate is EVCUtil, ERC4626 {
 
     function maxWithdraw(address owner) public view override returns (uint256) {
         // Max withdraw can potentially be 0 if there is a liability
-        if(evc.getControllers(owner).length > 0) {
+        if (evc.getControllers(owner).length > 0) {
             return 0;
         }
 
