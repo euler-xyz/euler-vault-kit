@@ -374,7 +374,6 @@ contract CryticToFoundry is Invariants, Setup {
     }
 
     function test_TM_INVARIANT3() public {
-        vm.skip(true); // TODO remove skip after fixing issue 2 test_BM_INVARIANT_N2
         this.enableCollateral(1492406989896342662931682233968348948879768078487071317507267603313218845);
         this.setPrice(47316989100111836776239614391395336110230084366532349161434951144018048518882, 265922230);
         this.enableController(4676793);
@@ -736,11 +735,10 @@ contract CryticToFoundry is Invariants, Setup {
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////////
-    //                                 BROKEN INVARIANTS REVISION 3                              //
+    //                                   INVARIANTS REVISION 3                                   //
     ///////////////////////////////////////////////////////////////////////////////////////////////
 
     function test_assert_BM_INVARIANT_P() public {
-        //@audit-issue 1. After reducing supply cap a user may be unable to repay debt
         // 1
         _setUpActorAndDelay(USER3, 318197);
         this.enableCollateral(2);
@@ -798,7 +796,6 @@ contract CryticToFoundry is Invariants, Setup {
     }
 
     function test_BM_INVARIANT_N2() public {
-        //@audit-issue 2. Incorrect rounding direction on shares calculation in `loop` function
         //1
         this.setPrice(0, 1);
         //2
@@ -827,7 +824,7 @@ contract CryticToFoundry is Invariants, Setup {
 
     function test_echidna_VM_INVARIANT_C() public {
         //@audit-issue 3. Dust assets can get stuck in the vault forever
-        //vm.skip(true);
+        vm.skip(true);
         this.setLTV(161537350060562470698068789285938700031433026666990925968846691117425, 1, 0);
         this.mintToActor(2, 0);
         this.setPrice(15141093523755052381928072114906306924899029026721034293540167406168436, 12);

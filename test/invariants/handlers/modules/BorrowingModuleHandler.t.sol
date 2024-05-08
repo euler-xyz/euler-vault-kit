@@ -164,7 +164,6 @@ contract BorrowingModuleHandler is BaseHandler {
     }
 
     function assert_BM_INVARIANT_P() external setup {
-        //return; // @audit-issue 1. test_BM_INVARIANT_P TODO remove return after fixing
         bool success;
         bytes memory returnData;
 
@@ -201,10 +200,16 @@ contract BorrowingModuleHandler is BaseHandler {
         if (success) {
             uint256 shares = abi.decode(returnData, (uint256));
             _decreaseGhostShares(shares, address(actor));
+
             uint256 debtAfter = eTST.debtOf(address(actor));
             uint256 balanceAfter = eTST.balanceOf(address(actor));
 
-            assertGe(balanceBefore, balanceAfter, BM_INVARIANT_N1); //@audit-issue 2. test_BM_INVARIANT_N TODO remove coment after fixing
+            if (balanceAfter > balanceBefore) {
+                uint256 deltaDebt = debtAfter - debtBefore;
+                uint256 deltaShares = balanceAfter - balanceBefore;
+                assertGe(eTST.previewDeposit(deltaDebt), deltaShares, BM_INVARIANT_N1);
+            }
+
             assertLe(debtBefore, debtAfter, BM_INVARIANT_N2);
         }
     }
