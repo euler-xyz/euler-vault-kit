@@ -186,7 +186,7 @@ contract EulerSavingsRate is EVCUtil, ERC4626 {
 
     function interestAccruedFromCache(ESRSlot memory esrSlotCache) internal view returns (uint256) {
         // If distribution ended, full amount is accrued
-        if (block.timestamp > esrSlotCache.interestSmearEnd) {
+        if (block.timestamp >= esrSlotCache.interestSmearEnd) {
             return esrSlotCache.interestLeft;
         }
 
