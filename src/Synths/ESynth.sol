@@ -22,6 +22,7 @@ contract ESynth is ERC20Collateral, Ownable {
     event MinterCapacitySet(address indexed minter, uint256 capacity);
 
     error E_CapacityReached();
+    error E_NotEVCCompatible();
 
     constructor(IEVC evc_, string memory name_, string memory symbol_)
         ERC20Collateral(evc_, name_, symbol_)
@@ -81,6 +82,9 @@ contract ESynth is ERC20Collateral, Ownable {
     /// @param vault The vault to deposit the cash in.
     /// @param amount The amount of cash to deposit.
     function allocate(address vault, uint256 amount) external onlyOwner {
+        if (IEVault(vault).EVC() != address(evc)) {
+            revert E_NotEVCCompatible();
+        }
         ignoredForTotalSupply.add(vault);
         _approve(address(this), vault, amount, true);
         IEVault(vault).deposit(amount, address(this));
