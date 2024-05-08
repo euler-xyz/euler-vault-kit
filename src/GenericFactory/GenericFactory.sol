@@ -176,7 +176,7 @@ contract GenericFactory is MetaProxyDeployer {
     /// @notice Get a slice of the deployed proxies array
     /// @param start Start index of the slice
     /// @param end End index of the slice
-    /// @return An array containing the slice of the proxy list
+    /// @return list An array containing the slice of the proxy list
     function getProxyListSlice(uint256 start, uint256 end) external view returns (address[] memory list) {
         if (end == type(uint256).max) end = proxyList.length;
         if (end < start || end > proxyList.length) revert E_BadQuery();
