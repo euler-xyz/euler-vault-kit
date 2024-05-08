@@ -27,5 +27,5 @@ interface IPriceOracle {
     function getQuotes(uint256 inAmount, address base, address quote)
         external
         view
-    returns (uint256 bidOutAmount, uint256 askOutAmount);
+        returns (uint256 bidOutAmount, uint256 askOutAmount);
 }
