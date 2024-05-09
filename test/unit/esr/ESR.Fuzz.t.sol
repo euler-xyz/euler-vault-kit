@@ -23,7 +23,6 @@ contract ESRFuzzTest is ESRTest {
     function test_x() external {
         // asset.mint(0xD3250086887Bc60489b9ed1b65d8eF670eb430BA, 3);
 
-
         // vm.startPrank(0xD3250086887Bc60489b9ed1b65d8eF670eb430BA);
         // asset.approve(address(esr), 3);
 
