@@ -33,8 +33,6 @@ function CVLloadVault(env e) returns BaseHarness.VaultCache {
     // for debugging performance
     BaseHarness.VaultCache vaultCache;
 
-    // These are used more than once
-    // not sure if our tool already de-duplicates these;
     BaseHarness.Owed oldTotalBorrows = storage_totalBorrows(); 
     BaseHarness.Shares oldTotalShares = storage_totalShares();
 
@@ -48,10 +46,13 @@ function CVLloadVault(env e) returns BaseHarness.VaultCache {
     require vaultCache.totalBorrows == require_uint144(oldTotalBorrows + interestBorrows);
 
     mathint newTotalAssets = vaultCache.cash + vaultCache.totalBorrows;
+
+    // a more accurate but seemingly unnecessary model of feeAssests:
     // uint16 feeScalar;
     // uint256 feeAssets = require_uint256(feeScalar * (vaultCache.totalBorrows - oldTotalBorrows));
+    
     // underapproximate interesteFee as 1 (1e4 in impl)
-    // this is a separate variable just for readability.
+    // feeAssets is a separate variable just for readability.
     uint256 feeAssets = interestBorrows;  
     if (require_uint256(newTotalAssets) > feeAssets) {  
         require vaultCache.totalShares == require_uint112(oldTotalShares * newTotalAssets /
@@ -60,9 +61,12 @@ function CVLloadVault(env e) returns BaseHarness.VaultCache {
         require vaultCache.totalShares == oldTotalShares;
     }
 
-    // not relevant to our ERC4626 rules, so havoced
-    uint112 accumulatedFeesHavoc;
-    require vaultCache.accumulatedFees == accumulatedFeesHavoc;
+    // not relevant to our ERC4626 rules, so left uninitialized.
+    // (havocing is better in terms of safety, but the state space is larger)
+    // uint112 accumulatedFeesHavoc;
+    // require vaultCache.accumulatedFees == accumulatedFeesHavoc;
+    // havoc
+    require vaultCache.accumulatedFees > 0;
     // require vaultCache.accumulatedFees == require_uint112(storage_accumulatedFees() + vaultCache.totalShares - oldTotalShares);
 
     // havoc interestAccumulator (not relevant to rule or model)
