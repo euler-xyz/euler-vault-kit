@@ -61,12 +61,9 @@ function CVLloadVault(env e) returns BaseHarness.VaultCache {
         require vaultCache.totalShares == oldTotalShares;
     }
 
-    // not relevant to our ERC4626 rules, so left uninitialized.
-    // (havocing is better in terms of safety, but the state space is larger)
-    // uint112 accumulatedFeesHavoc;
-    // require vaultCache.accumulatedFees == accumulatedFeesHavoc;
-    // havoc
-    require vaultCache.accumulatedFees > 0;
+    // havoc vaultCache.accumulatedFees
+    uint112 accumulatedFeesHavoc;
+    require vaultCache.accumulatedFees == accumulatedFeesHavoc;
     // require vaultCache.accumulatedFees == require_uint112(storage_accumulatedFees() + vaultCache.totalShares - oldTotalShares);
 
     // havoc interestAccumulator (not relevant to rule or model)
