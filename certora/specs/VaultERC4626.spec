@@ -64,7 +64,11 @@ methods {
     // function ERC20a.balanceOf(address) external returns uint256 envfree; // NOT ENVFREE
     function ERC20a.transferFrom(address,address,uint256) external returns bool; // not envfree
 
+
     function RPow.rpow(uint256 x, uint256 y, uint256 base) internal returns (uint256, bool) => CVLPow(x, y, base);
+
+    // See comment near CVLgetCurrentOnBehalfOfAccount definition.
+    function _.getCurrentOnBehalfOfAccount(address controller) external => CVLgetCurrentOnBehalfOfAccount(controller) expect (address, bool);
 
     // These are unresolved calls that havoc contract state.
     // Most of these cause these havocs because of a low-level call 
@@ -82,6 +86,16 @@ methods {
     function _.safeTransferFrom(address token, address from, address to, uint256 value, address permit2) internal with (env e)=> CVLTrySafeTransferFrom(e, from, to, value) expect (bool, bytes memory);
     function _.tryBalanceTrackerHook(address account, uint256 newAccountBalance, bool forfeitRecentReward) internal => NONDET;
 
+}
+
+// This is not in the scene for this config, so we just want it to be
+// an uninterpreted function rather than NONDET so that
+// we get the same value when this is called for different parts
+ghost CVLgetCurrentOnBehalfOfAccountAddr(address) returns address;
+ghost CVLgetCurrentOnBehalfOfAccountBool(address) returns bool;
+function CVLgetCurrentOnBehalfOfAccount(address addr) returns (address, bool) {
+    return (CVLgetCurrentOnBehalfOfAccountAddr(addr),
+        CVLgetCurrentOnBehalfOfAccountBool(addr));
 }
 
 // Summarize trySafeTransferFrom as DummyERC20 transferFrom
@@ -372,7 +386,13 @@ filtered {
 }
 {
     env e; uint256 assets; uint256 shares;
-    address contributor; require contributor == e.msg.sender;
+    address contributor;
+
+    // need to minimize these
+    require actualCaller(e) == contributor;
+    require contributor == CVLgetCurrentOnBehalfOfAccountAddr(0);
+    require actualCallerCheckController(e) == contributor;
+
     address receiver;
     require currentContract != contributor
          && currentContract != receiver;
