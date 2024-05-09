@@ -77,7 +77,6 @@ abstract contract Events {
     /// @param assets Amount of debt removed in assets
     event Repay(address indexed account, uint256 previousDebt, uint256 assets);
 
-
     /// @notice Liquidate unhealthy account
     /// @param liquidator Address executing the liquidation
     /// @param violator Address holding an unhealthy borrow

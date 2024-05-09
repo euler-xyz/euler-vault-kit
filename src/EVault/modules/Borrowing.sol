@@ -57,7 +57,7 @@ abstract contract BorrowingModule is IBorrowing, Base, AssetTransfers, BalanceUt
 
     /// @inheritdoc IBorrowing
     function dToken() public view virtual reentrantOK returns (address) {
-        return calculateDTokenAddress();
+        return address(getDToken());
     }
 
     /// @inheritdoc IBorrowing

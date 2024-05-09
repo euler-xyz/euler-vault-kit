@@ -51,7 +51,7 @@ abstract contract BorrowUtils is Base {
         setUserBorrow(vaultCache, account, newOwed);
         vaultStorage.totalBorrows = vaultCache.totalBorrows = vaultCache.totalBorrows + amount;
 
-        logBorrow(account, prevOwed, owed, newOwed);
+        logBorrowChange(account, prevOwed, owed, newOwed);
     }
 
     function decreaseBorrow(VaultCache memory vaultCache, address account, Assets amount) internal virtual {
@@ -66,7 +66,7 @@ abstract contract BorrowUtils is Base {
         vaultStorage.totalBorrows = vaultCache.totalBorrows =
             vaultCache.totalBorrows > owedExact ? vaultCache.totalBorrows - owedExact + owedRemaining : owedRemaining;
 
-        logRepay(account, prevOwed, owed.toOwed(), owedRemaining);
+        logBorrowChange(account, prevOwed, owed.toOwed(), owedRemaining);
     }
 
     function transferBorrow(VaultCache memory vaultCache, address from, address to, Assets assets) internal virtual {
@@ -89,8 +89,8 @@ abstract contract BorrowUtils is Base {
         setUserBorrow(vaultCache, from, newfromOwed);
         setUserBorrow(vaultCache, to, newToOwed);
 
-        logRepay(from, fromOwedPrev, fromOwed, newfromOwed);
-        logBorrow(to, toOwedPrev, toOwed, newToOwed);
+        logBorrowChange(from, fromOwedPrev, fromOwed, newfromOwed);
+        logBorrowChange(to, toOwedPrev, toOwed, newToOwed);
     }
 
     function computeInterestRate(VaultCache memory vaultCache) internal virtual returns (uint256) {
@@ -138,7 +138,7 @@ abstract contract BorrowUtils is Base {
         return newInterestRate;
     }
 
-    function calculateDTokenAddress() internal view virtual returns (address dToken) {
+    function getDToken() internal view virtual returns (DToken dToken) {
         // inspired by https://github.com/Vectorized/solady/blob/229c18cfcdcd474f95c30ad31b0f7d428ee8a31a/src/utils/CREATE3.sol#L82-L90
         assembly ("memory-safe") {
             mstore(0x14, address())
@@ -152,28 +152,29 @@ abstract contract BorrowUtils is Base {
         }
     }
 
-    function logBorrow(address account, Owed prevOwed, Owed owed, Owed newOwed) private {
-        Assets owedAssets = owed.toAssetsUp();
-        uint256 change = newOwed.toAssetsUp().subUnchecked(owedAssets).toUint();
-        emit Borrow(account, owedAssets.toUint(), change);
+    function logBorrowChange(address account, Owed prevOwed, Owed owed, Owed newOwed) private {
+        (bool increased, uint256 amount) = debtDiff(owed, newOwed);
+        if (amount > 0) {
+            if (increased) {
+                emit Borrow(account, owed.toAssetsUp().toUint(), amount);
+            } else {
+                emit Repay(account, owed.toAssetsUp().toUint(), amount);
+            }
+        }
 
-        address dTokenAddress = calculateDTokenAddress();
-        change = newOwed.toAssetsUp().subUnchecked(prevOwed.toAssetsUp()).toUint();
-        DToken(dTokenAddress).emitTransfer(address(0), account, change);
+        (increased, amount) = debtDiff(prevOwed, newOwed);
+        if (amount > 0) {
+            if (increased) {
+                getDToken().emitTransfer(address(0), account, amount);
+            } else {
+                getDToken().emitTransfer(account, address(0), amount);
+            }
+        }
     }
 
-    function logRepay(address account, Owed prevOwed, Owed owed, Owed newOwed) private {
-        Assets owedAssets = owed.toAssetsUp();
-        uint256 change = owedAssets.subUnchecked(newOwed.toAssetsUp()).toUint();
-        emit Repay(account, owedAssets.toUint(), change);
-
-        address dTokenAddress = calculateDTokenAddress();
-        if (owed > prevOwed) {
-            change = owed.toAssetsUp().subUnchecked(prevOwed.toAssetsUp()).toUint();
-            DToken(dTokenAddress).emitTransfer(address(0), account, change);
-        } else if (prevOwed > owed) {
-            change = prevOwed.toAssetsUp().subUnchecked(owed.toAssetsUp()).toUint();
-            DToken(dTokenAddress).emitTransfer(account, address(0), change);
-        }
+    function debtDiff(Owed a, Owed b) internal pure returns (bool increased, uint256 amount) {
+        return b > a
+            ? (true, b.toAssetsUp().subUnchecked(a.toAssetsUp()).toUint())
+            : (false, a.toAssetsUp().subUnchecked(b.toAssetsUp()).toUint());
     }
 }
