@@ -16,10 +16,6 @@ contract EVaultHarness is EVault {
         vaultStorage.cash = Assets.wrap(uint112(value));
     }
 
-    function setTotalBorrow_(uint256 value) public {
-        vaultStorage.totalBorrows = Owed.wrap(uint144(value));
-    }
-
     function setTotalShares_(uint256 value) public {
         vaultStorage.totalShares = Shares.wrap(uint112(value));
     }
