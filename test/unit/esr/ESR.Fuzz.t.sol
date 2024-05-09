@@ -20,6 +20,20 @@ contract ESRFuzzTest is ESRTest {
         assertEq(esr.totalAssets(), asset.balanceOf(address(esr)));
     }
 
+    function test_x() external {
+        // asset.mint(0xD3250086887Bc60489b9ed1b65d8eF670eb430BA, 3);
+
+
+        // vm.startPrank(0xD3250086887Bc60489b9ed1b65d8eF670eb430BA);
+        // asset.approve(address(esr), 3);
+
+        esr.mint(3, 0xC47f02e47EeCd24a3D449eFf1343bb3e8F1ca21A);
+
+        esr.gulp();
+        skip(esr.INTEREST_SMEAR()); // make sure smear has passed
+        assertEq(esr.totalAssets(), asset.balanceOf(address(esr)));
+    }
+
     function testFuzz_interestAccrued_under_uint168(uint256 interestAmount, uint256 depositAmount, uint256 timePassed)
         public
     {

@@ -54,7 +54,7 @@ jobs:
             - name: Run foundry tests
               # --ast tests enables inline configs to work https://github.com/foundry-rs/foundry/issues/7310#issuecomment-1978088200
               run: |
-                  forge test -vv --gas-report --ast 
+                  forge test -vv --gas-report
               id: test
 
     overrides:
@@ -70,7 +70,7 @@ jobs:
             - name: Run foundry overrides test mode
               # --ast tests enables inline configs to work https://github.com/foundry-rs/foundry/issues/7310#issuecomment-1978088200
               run: |
-                  DEPLOY_OVERRIDES=true forge test -vv --gas-report --ast 
+                  DEPLOY_OVERRIDES=true forge test -vv --gas-report
               id: overrides
 
     coverage:
