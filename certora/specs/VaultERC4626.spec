@@ -379,6 +379,7 @@ rule redeemingAllValidity() {
 ////               # stakeholder properties  (Risk Analysis )         //////////
 ////////////////////////////////////////////////////////////////////////////////
 
+// passing. run: https://prover.certora.com/output/65266/48a3074474f1475baf13fe3cb9602567/?anonymousKey=9111d29e8d8ed721825b12f083128af396e5e814
 rule contributingProducesShares(method f)
 filtered {
     f -> f.selector == sig:deposit(uint256,address).selector
