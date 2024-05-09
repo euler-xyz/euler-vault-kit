@@ -43,6 +43,12 @@ library AssetsLib {
         }
     }
 
+    function addUnchecked(Assets self, Assets b) internal pure returns (Assets) {
+        unchecked {
+            return Assets.wrap(uint112(self.toUint() + b.toUint()));
+        }
+    }
+
     function subUnchecked(Assets self, Assets b) internal pure returns (Assets) {
         unchecked {
             return Assets.wrap(uint112(self.toUint() - b.toUint()));
