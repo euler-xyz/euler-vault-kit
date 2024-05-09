@@ -46,13 +46,10 @@ abstract contract VaultModule is IVault, Base, AssetTransfers, BalanceUtils {
     function maxDeposit(address account) public view virtual nonReentrantView returns (uint256) {
         VaultCache memory vaultCache = loadVault();
 
-        if (isOperationDisabled(vaultCache.hookedOps, OP_DEPOSIT)) return 0;
+        // make sure to not revert on conversion
+        uint256 assets = maxMintInternal(vaultCache, account).toShares().toAssetsDown(vaultCache).toUint();
 
-        uint256 assets = maxDepositInternal(vaultCache, account);
-        uint256 shares = assets.toAssets().toSharesDownUint256(vaultCache);
-        uint256 remainingShares = MAX_SANE_AMOUNT - vaultCache.totalShares.toUint();
-
-        return shares < remainingShares ? assets : remainingShares.toShares().toAssetsDown(vaultCache).toUint();
+        return isOperationDisabled(vaultCache.hookedOps, OP_DEPOSIT) ? 0 : assets;
     }
 
     /// @inheritdoc IERC4626
@@ -64,13 +61,7 @@ abstract contract VaultModule is IVault, Base, AssetTransfers, BalanceUtils {
     function maxMint(address account) public view virtual nonReentrantView returns (uint256) {
         VaultCache memory vaultCache = loadVault();
 
-        if (isOperationDisabled(vaultCache.hookedOps, OP_MINT)) return 0;
-
-        // make sure to not revert on conversion
-        uint256 shares = maxDepositInternal(vaultCache, account).toAssets().toSharesDownUint256(vaultCache);
-        uint256 remainingShares = MAX_SANE_AMOUNT - vaultCache.totalShares.toUint();
-
-        return shares < remainingShares ? shares : remainingShares;
+        return isOperationDisabled(vaultCache.hookedOps, OP_MINT) ? 0 : maxMintInternal(vaultCache, account);
     }
 
     /// @inheritdoc IERC4626
@@ -252,15 +243,19 @@ abstract contract VaultModule is IVault, Base, AssetTransfers, BalanceUtils {
         return max;
     }
 
-    function maxDepositInternal(VaultCache memory vaultCache, address) private pure returns (uint256) {
+    function maxMintInternal(VaultCache memory vaultCache, address) private pure returns (uint256) {
         uint256 supply = totalAssetsInternal(vaultCache);
         if (supply >= vaultCache.supplyCap) return 0;
 
         uint256 remainingSupply = vaultCache.supplyCap - supply;
-
         uint256 remainingCash = MAX_SANE_AMOUNT - vaultCache.cash.toUint();
 
-        return remainingCash < remainingSupply ? remainingCash : remainingSupply;
+        uint256 assets = remainingCash < remainingSupply ? remainingCash : remainingSupply;
+
+        uint256 shares = assets.toAssets().toSharesDownUint256(vaultCache);
+        uint256 remainingShares = MAX_SANE_AMOUNT - vaultCache.totalShares.toUint();
+
+        return shares < remainingShares ? shares : remainingShares;
     }
 }
 
