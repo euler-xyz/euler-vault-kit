@@ -23,6 +23,7 @@ abstract contract LiquidationModule is ILiquidation, Base, BalanceUtils, Liquidi
         address violator;
         address collateral;
         address[] collaterals;
+        bool liquidationAllowed;
         Assets liability;
         Assets repay;
         uint256 yieldBalance;
@@ -72,7 +73,7 @@ abstract contract LiquidationModule is ILiquidation, Base, BalanceUtils, Liquidi
 
         liqCache.repay = Assets.wrap(0);
         liqCache.yieldBalance = 0;
-        liqCache.liability = getCurrentOwed(vaultCache, violator).toAssetsUp();
+        (liqCache.liability, liqCache.liquidationAllowed) = getCurrentOwedAndLiquidationAllowed(vaultCache, violator);
         liqCache.collaterals = getCollaterals(violator);
 
         // Checks
@@ -168,6 +169,10 @@ abstract contract LiquidationModule is ILiquidation, Base, BalanceUtils, Liquidi
     function executeLiquidation(VaultCache memory vaultCache, LiquidationCache memory liqCache, uint256 minYieldBalance)
         private
     {
+        // Check liquidation allowed
+
+        if (!liqCache.liquidationAllowed) revert(); //TODO custom error
+
         // Check minimum yield.
 
         if (minYieldBalance > liqCache.yieldBalance) revert E_MinYield();

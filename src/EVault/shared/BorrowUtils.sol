@@ -26,6 +26,17 @@ abstract contract BorrowUtils is Base {
         return getCurrentOwed(vaultCache, account, vaultStorage.users[account].getOwed());
     }
 
+    function getCurrentOwedAndLiquidationAllowed(VaultCache memory vaultCache, address account)
+        internal
+        view
+        returns (Assets, bool)
+    {
+        UserStorage storage user = vaultStorage.users[account];
+        (Owed owed, bool liquidationAllowed) = user.getOwedAndLiqudiationAllowed();
+
+        return (getCurrentOwed(vaultCache, account, owed).toAssetsUp(), liquidationAllowed);
+    }
+
     function loadUserBorrow(VaultCache memory vaultCache, address account)
         private
         view
@@ -38,7 +49,7 @@ abstract contract BorrowUtils is Base {
     function setUserBorrow(VaultCache memory vaultCache, address account, Owed newOwed) private {
         UserStorage storage user = vaultStorage.users[account];
 
-        user.setOwed(newOwed);
+        user.setOwedAndStampRemainder(newOwed);
         user.interestAccumulator = vaultCache.interestAccumulator;
     }
 
