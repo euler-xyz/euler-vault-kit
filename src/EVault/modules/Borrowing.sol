@@ -98,6 +98,11 @@ abstract contract BorrowingModule is IBorrowing, Base, AssetTransfers, BalanceUt
 
         Assets assets = amount.toAssets();
         if (assets.isZero()) return 0;
+
+        // The debt and shares minted should match the current exchange rate from shares to assets.
+        // First round the requested amount up to shares, to avoid zero shares.
+        // Next convert back to assets, again rounding up the debt in favor of the vault.
+        // As a result the amount of debt minted can be greater than amount requested.
         Shares shares = assets.toSharesUp(vaultCache);
         assets = shares.toAssetsUp(vaultCache);
 

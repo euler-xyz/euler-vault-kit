@@ -208,6 +208,7 @@ interface IBorrowing {
     /// @param sharesReceiver Account to receive the created shares
     /// @return Amount of shares created
     /// @dev Equivalent to looping borrows and deposits
+    /// @dev The amount requested will be adjusted up when creating debt, to precisely match the exchange rate with shares minted
     function loop(uint256 amount, address sharesReceiver) external returns (uint256);
 
     /// @notice Pay off liability with shares ("self-repay")
