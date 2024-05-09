@@ -20,11 +20,11 @@ abstract contract HookAggregator is VaultBeforeAfterHooks, BorrowingBeforeAfterH
         _borrowingHooksAfter();
 
         // Postconditions
-        _postConditions();
+        _checkPostConditions();
     }
 
     /// @notice Postconditions for the handlers
-    function _postConditions() internal {
+    function _checkPostConditions() internal {
         // Vault
         assert_VM_INVARIANT_B();
         assert_LM_INVARIANT_B();

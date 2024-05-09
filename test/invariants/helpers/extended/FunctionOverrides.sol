@@ -2,21 +2,26 @@
 
 pragma solidity ^0.8.0;
 
-import {Base} from "src/EVault/shared/Base.sol";
+// Contracts
 import {BalanceUtils} from "src/EVault/shared/BalanceUtils.sol";
 import {BorrowUtils} from "src/EVault/shared/BorrowUtils.sol";
-
 import "src/EVault/shared/types/Types.sol";
 
-// Abstract contract to override functions and check invariants.
-abstract contract FunctionOverrides is BalanceUtils, BorrowUtils {
+// Utils
+import "test/invariants/InvariantsSpec.t.sol";
+import "test/invariants/utils/StdAsserts.sol";
+
+/// @notice Abstract contract to override functions and check internal invariants.
+abstract contract FunctionOverrides is BalanceUtils, BorrowUtils, StdAsserts, InvariantsSpec {
     uint32 internal constant INIT_OPERATION_FLAG = 1 << 31;
 
-    function checkInvariants(address checkedAccount, address controllerEnabled) internal view {
-        assert(Flags.unwrap(vaultStorage.hookedOps) & INIT_OPERATION_FLAG != 0);
-        assert(evc.isVaultStatusCheckDeferred(address(this)));
-        assert(checkedAccount == address(0) || evc.isAccountStatusCheckDeferred(checkedAccount));
-        assert(controllerEnabled == address(0) || evc.isControllerEnabled(controllerEnabled, address(this)));
+    /// @notice Internal invariants for low level operations
+    /// @dev Similar to Postconditions but checked internally within the transaction
+    function checkInvariants(address checkedAccount, address controllerEnabled) internal {
+        assertTrue(Flags.unwrap(vaultStorage.hookedOps) & INIT_OPERATION_FLAG != 0, INTERNAL_INVARIANT_A);
+        assertTrue(evc.isVaultStatusCheckDeferred(address(this)), INTERNAL_INVARIANT_B);
+        assertTrue(checkedAccount == address(0) || evc.isAccountStatusCheckDeferred(checkedAccount), INTERNAL_INVARIANT_C);
+        assertTrue(controllerEnabled == address(0) || evc.isControllerEnabled(controllerEnabled, address(this)), INTERNAL_INVARIANT_D);
     }
 
     function initOperation(uint32 operation, address accountToCheck)

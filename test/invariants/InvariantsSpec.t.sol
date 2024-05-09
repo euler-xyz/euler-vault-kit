@@ -15,6 +15,18 @@ abstract contract InvariantsSpec {
     string constant BASE_INVARIANT_B = "BASE_INVARIANT_B: snapshot should be reseted after every action";
 
     ///////////////////////////////////////////////////////////////////////////////////////////////
+    //                          INTERNAL INVARIANTS: LOW-LEVEL FUNCTIONS                         //
+    ///////////////////////////////////////////////////////////////////////////////////////////////
+
+    string constant INTERNAL_INVARIANT_A = "INTERNAL_INVARIANT_A: initOperation is called in low-level functions";
+
+    string constant INTERNAL_INVARIANT_B = "INTERNAL_INVARIANT_B: vault status check is deferred in low-level functions";
+
+    string constant INTERNAL_INVARIANT_C = "INTERNAL_INVARIANT_C: account status check is deferred if needed";
+
+    string constant INTERNAL_INVARIANT_D = "INTERNAL_INVARIANT_D: controller is enabled if needed";
+
+    ///////////////////////////////////////////////////////////////////////////////////////////////
     //                                       TOKEN MODULE                                        //
     ///////////////////////////////////////////////////////////////////////////////////////////////
 
