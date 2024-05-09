@@ -75,3 +75,15 @@ function actualCaller(env e) returns address {
         return e.msg.sender;
     }
 }
+
+function actualCallerCheckController(env e) returns address {
+    if(e.msg.sender == evc) {
+        address onBehalf;
+        bool unused;
+        // Similar to EVCAuthenticateDeferred when checkController is true.
+        onBehalf, unused = evc.getCurrentOnBehalfOfAccount(e, currentContract);
+        return onBehalf;
+    } else {
+        return e.msg.sender;
+    }
+}
