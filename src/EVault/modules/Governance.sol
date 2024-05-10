@@ -260,6 +260,8 @@ abstract contract GovernanceModule is IGovernance, Base, BalanceUtils, BorrowUti
                 && IHookTarget(newHookTarget).isHookTarget() != IHookTarget.isHookTarget.selector
         ) revert E_NotHookTarget();
 
+        if (newHookedOps >= OP_MAX_VALUE) revert E_NotSupported();
+
         vaultStorage.hookTarget = newHookTarget;
         vaultStorage.hookedOps = Flags.wrap(newHookedOps);
         emit GovSetHookConfig(newHookTarget, newHookedOps);
@@ -267,6 +269,8 @@ abstract contract GovernanceModule is IGovernance, Base, BalanceUtils, BorrowUti
 
     /// @inheritdoc IGovernance
     function setConfigFlags(uint32 newConfigFlags) public virtual nonReentrant governorOnly {
+        if (newConfigFlags >= CFG_MAX_VALUE) revert E_NotSupported();
+
         vaultStorage.configFlags = Flags.wrap(newConfigFlags);
         emit GovSetConfigFlags(newConfigFlags);
     }
