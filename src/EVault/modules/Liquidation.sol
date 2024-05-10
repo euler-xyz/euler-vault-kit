@@ -142,13 +142,7 @@ abstract contract LiquidationModule is ILiquidation, Base, BalanceUtils, Liquidi
             return liqCache;
         }
 
-        uint256 liabilityValue = liqCache.liability.toUint();
-        if (address(vaultCache.asset) != vaultCache.unitOfAccount) {
-            liabilityValue =
-                vaultCache.oracle.getQuote(liabilityValue, address(vaultCache.asset), vaultCache.unitOfAccount);
-        }
-
-        uint256 maxRepayValue = liabilityValue;
+        uint256 maxRepayValue = liquidityLiabilityValue;
         uint256 maxYieldValue = maxRepayValue * 1e18 / discountFactor;
 
         // Limit yield to borrower's available collateral, and reduce repay if necessary
@@ -159,7 +153,7 @@ abstract contract LiquidationModule is ILiquidation, Base, BalanceUtils, Liquidi
             maxYieldValue = collateralValue;
         }
 
-        liqCache.repay = (maxRepayValue * liqCache.liability.toUint() / liabilityValue).toAssets();
+        liqCache.repay = (maxRepayValue * liqCache.liability.toUint() / liquidityLiabilityValue).toAssets();
         liqCache.yieldBalance = maxYieldValue * collateralBalance / collateralValue;
 
         return liqCache;
