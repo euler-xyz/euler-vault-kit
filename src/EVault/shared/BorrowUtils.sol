@@ -91,7 +91,12 @@ abstract contract BorrowUtils is Base {
         vaultStorage.users[to].setOwed(toOwed);
 
         logRepay(from, assets, fromOwedPrev.toAssetsUp(), fromOwed.toAssetsUp());
-        logBorrow(to, assets, toOwedPrev.toAssetsUp(), toOwed.toAssetsUp());
+
+        // with small fractional debt amounts the interest calculation could be negative in `logBorrow`
+        Assets toPrevAssets = toOwedPrev.toAssetsUp();
+        Assets toAssets = toOwed.toAssetsUp();
+        if (assets + toPrevAssets > toAssets) assets = toAssets - toPrevAssets;
+        logBorrow(to, assets, toPrevAssets, toAssets);
     }
 
     function computeInterestRate(VaultCache memory vaultCache) internal virtual returns (uint256) {
