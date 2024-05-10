@@ -7,7 +7,9 @@ interface IVault {
 }
 
 interface IGenericFactory {
-    function createProxy(bool upgradeable, bytes memory trailingData) external returns (address);
+    function createProxy(address desiredImplementation, bool upgradeable, bytes memory trailingData)
+        external
+        returns (address);
 }
 
 contract ReentrancyAttack is IVault {
@@ -20,6 +22,6 @@ contract ReentrancyAttack is IVault {
     }
 
     function initialize(address) external {
-        IGenericFactory(factory).createProxy(true, abi.encodePacked(asset, address(this)));
+        IGenericFactory(factory).createProxy(address(0), true, abi.encodePacked(asset, address(this)));
     }
 }
