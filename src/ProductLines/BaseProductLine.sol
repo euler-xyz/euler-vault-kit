@@ -60,8 +60,9 @@ abstract contract BaseProductLine {
         internal
         returns (IEVault)
     {
-        address newVault =
-            GenericFactory(vaultFactory).createProxy(upgradeable, abi.encodePacked(asset, oracle, unitOfAccount));
+        address newVault = GenericFactory(vaultFactory).createProxy(
+            address(0), upgradeable, abi.encodePacked(asset, oracle, unitOfAccount)
+        );
 
         vaultLookup[newVault] = true;
         vaultList.push(newVault);
