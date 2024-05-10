@@ -81,8 +81,8 @@ methods {
     // that includes bytes memory). So it is summarized as 
     // DummyERC20a.transferFrom
     function _.trySafeTransferFrom(address token, address from, address to, uint256 value) internal with (env e) => CVLTrySafeTransferFrom(e, from, to, value) expect (bool, bytes memory);
-    // safeTransferFrom can be made NONDET, but is summarized as transferFrom
-    // from DummyERC20a anyway.
+    // safeTransferFrom is summarized as transferFrom
+    // from DummyERC20a to avoid dealing with the low-level `call`
     function _.safeTransferFrom(address token, address from, address to, uint256 value, address permit2) internal with (env e)=> CVLTrySafeTransferFrom(e, from, to, value) expect (bool, bytes memory);
     function _.tryBalanceTrackerHook(address account, uint256 newAccountBalance, bool forfeitRecentReward) internal => NONDET;
 
@@ -203,6 +203,11 @@ rule zeroDepositZeroShares(uint assets, address receiver)
     env e;
     
     uint shares = deposit(e,assets, receiver);
+    // In this Vault, max_uint256 as an argument will transfer all assets
+    // to the vault. This precondition rules out the case where
+    // the depositor calls deposit with a blance of 0 in the underlying
+    // asset and gives max_uint256 as the shares.
+    require assets < max_uint256;
 
     assert shares == 0 <=> assets == 0;
 }
@@ -564,3 +569,10 @@ rule sanity (method f) {
     f(e, args);
     assert false;
 }
+
+// rule vaultCacheSanity (method f) {
+//     env e;
+//     BaseHarness.VaultCache vaultCache;
+//     CVLInitVaultCache(e, vaultCache);
+//     assert false;
+// }
