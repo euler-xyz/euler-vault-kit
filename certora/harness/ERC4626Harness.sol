@@ -26,11 +26,11 @@ contract ERC4626Harness is VaultModule, TokenModule, AbstractBaseHarness {
     function storage_cash() public view returns (Assets) {
         return vaultStorage.cash;
     }
-    function storage_supplyCap() public view returns (AmountCap) {
-        return vaultStorage.supplyCap;
+    function storage_supplyCap() public view returns (uint256) {
+        return vaultStorage.supplyCap.resolve();
     }
-    function storage_borrowCap() public view returns (AmountCap) {
-        return vaultStorage.borrowCap;
+    function storage_borrowCap() public view returns (uint256) {
+        return vaultStorage.borrowCap.resolve();
     }
     // reentrancyLocked seems not direclty used in loadVault
     function storage_hookedOps() public view returns (Flags) {
