@@ -30,7 +30,9 @@ contract VaultTest_Liquidity is EVaultTestBase {
 
         assetTST3 = new TestERC20("Test TST 3", "TST3", 18, false);
 
-        eTST3 = IEVault(factory.createProxy(true, abi.encodePacked(address(assetTST3), address(oracle), unitOfAccount)));
+        eTST3 = IEVault(
+            factory.createProxy(address(0), true, abi.encodePacked(address(assetTST3), address(oracle), unitOfAccount))
+        );
 
         startHoax(address(this));
         eTST.setInterestRateModel(address(new IRMTestZero()));
