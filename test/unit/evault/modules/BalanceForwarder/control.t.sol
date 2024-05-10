@@ -68,7 +68,7 @@ contract BalanceForwarderTest_Control is EVaultTestBase {
     }
 
     function test_Enable_RevertsWhen_NoBalanceTracker() public {
-        vm.expectRevert(Errors.E_BalanceForwarderUnsupported.selector);
+        vm.expectRevert(Errors.E_NotSupported.selector);
         vm.prank(alice);
         eTSTNoTracker.enableBalanceForwarder();
     }
@@ -109,7 +109,7 @@ contract BalanceForwarderTest_Control is EVaultTestBase {
     }
 
     function test_Disable_RevertsWhen_NoBalanceTracker() public {
-        vm.expectRevert(Errors.E_BalanceForwarderUnsupported.selector);
+        vm.expectRevert(Errors.E_NotSupported.selector);
         vm.prank(alice);
         eTSTNoTracker.disableBalanceForwarder();
     }
