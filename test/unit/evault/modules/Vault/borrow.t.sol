@@ -732,15 +732,14 @@ contract VaultTest_Borrow is EVaultTestBase {
         // more accrued. Small debt fractions are in storage of both accounts and will be accrued currently
         assertEq(owedTo1e5(eTST.debtOfExact(borrower2)), 2.00823e5);
 
-        // now borrower2 in LogBorrow would receiveamount = 2, prevOwed = 3, owed = 4. 
+        // now borrower2 in LogBorrow would receiveamount = 2, prevOwed = 3, owed = 4.
         // Amount is adjusted to 1 and interest accrued is 0, so no event is emitted
-        vm.recordLogs(); 
+        vm.recordLogs();
         vm.expectEmit();
         emit Events.Borrow(borrower2, 1);
         eTST.pullDebt(2, borrower);
 
         assertEq(vm.getRecordedLogs().length, 11); // InterestAccrued would be the 12th event
-
     }
 
     function owedTo1e5(uint256 debt) internal pure returns (uint256) {
