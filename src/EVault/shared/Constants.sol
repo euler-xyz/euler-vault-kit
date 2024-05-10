@@ -43,11 +43,13 @@ uint32 constant OP_LIQUIDATE = 1 << 12;
 uint32 constant OP_FLASHLOAN = 1 << 13;
 uint32 constant OP_TOUCH = 1 << 14;
 uint32 constant OP_VAULT_STATUS_CHECK = 1 << 15;
+uint32 constant OP_MAX_VALUE = 1 << 16;
 
 // Config Flags
 
 uint32 constant CFG_DONT_SOCIALIZE_DEBT = 1 << 0;
 uint32 constant CFG_EVC_COMPATIBLE_ASSET = 1 << 1;
+uint32 constant CFG_MAX_VALUE = 1 << 2;
 
 // EVC authentication
 

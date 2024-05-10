@@ -101,6 +101,7 @@ contract Governance_HookedOps is EVaultTestBase {
         bool deposit,
         bool withdraw
     ) public {
+        hookedOps = uint32(bound(hookedOps, 0, OP_MAX_VALUE - 1));
         vm.assume(hookedOps & OP_VAULT_STATUS_CHECK == 0);
         vm.assume(
             sender.code.length == 0 && receiver.code.length == 0 && !evc.haveCommonOwner(sender, address(0))
@@ -237,6 +238,7 @@ contract Governance_HookedOps is EVaultTestBase {
     function testFuzz_hookedAllOps(uint32 hookedOps, address sender, address address1, address address2, uint256 amount)
         public
     {
+        hookedOps = uint32(bound(hookedOps, 0, OP_MAX_VALUE - 1));
         vm.assume(sender.code.length == 0 && !evc.haveCommonOwner(sender, address(0)));
 
         // deploy the hook target

@@ -139,7 +139,7 @@ contract EVaultTestBase is AssertionsCustomTypes, Test, DeployPermit2 {
         eTST.setInterestRateModel(address(new IRMTestDefault()));
 
         eTST2 = IEVault(coreProductLine.createVault(address(assetTST2), address(oracle), unitOfAccount));
-        eTST.setInterestRateModel(address(new IRMTestDefault()));
+        eTST2.setInterestRateModel(address(new IRMTestDefault()));
     }
 
     address internal SYNTH_VAULT_HOOK_TARGET = address(new MockHook());

@@ -181,10 +181,10 @@ contract MockHookTarget is Test, IHookTarget {
         eTST.setInterestRateModel(account1);
 
         vm.expectRevert(Errors.E_Reentrancy.selector);
-        eTST.setHookConfig(account1, uint32(bound(amount2, 0, type(uint32).max)));
+        eTST.setHookConfig(account1, uint32(bound(amount2, 0, OP_MAX_VALUE - 1)));
 
         vm.expectRevert(Errors.E_Reentrancy.selector);
-        eTST.setConfigFlags(uint32(bound(amount2, 0, type(uint32).max)));
+        eTST.setConfigFlags(uint32(bound(amount2, 0, CFG_MAX_VALUE - 1)));
 
         vm.expectRevert(Errors.E_Reentrancy.selector);
         eTST.setCaps(uint16(bound(amount1, 0, type(uint16).max)), uint16(bound(amount2, 0, type(uint16).max)));
@@ -419,10 +419,10 @@ contract ReentrancyTest is EVaultTestBase {
         eTST.setInterestRateModel(account1);
 
         vm.expectRevert(Errors.E_Reentrancy.selector);
-        eTST.setHookConfig(account1, uint32(bound(amount2, 0, type(uint32).max)));
+        eTST.setHookConfig(account1, uint32(bound(amount2, 0, OP_MAX_VALUE - 1)));
 
         vm.expectRevert(Errors.E_Reentrancy.selector);
-        eTST.setConfigFlags(uint32(bound(amount2, 0, type(uint32).max)));
+        eTST.setConfigFlags(uint32(bound(amount2, 0, CFG_MAX_VALUE - 1)));
 
         vm.expectRevert(Errors.E_Reentrancy.selector);
         eTST.setCaps(uint16(bound(amount1, 0, type(uint16).max)), uint16(bound(amount2, 0, type(uint16).max)));
