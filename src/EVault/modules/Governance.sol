@@ -35,7 +35,12 @@ abstract contract GovernanceModule is IGovernance, Base, BalanceUtils, BorrowUti
     event GovSetGovernorAdmin(address indexed newGovernorAdmin);
     event GovSetFeeReceiver(address indexed newFeeReceiver);
     event GovSetLTV(
-        address indexed collateral, uint48 targetTimestamp, uint16 targetLTV, uint32 rampDuration, uint16 originalLTV
+        address indexed collateral,
+        uint48 targetTimestamp,
+        uint16 targetLiquidationLTV,
+        uint16 originalLiquidationLTV,
+        uint32 rampDuration,
+        uint16 borrowLTV
     );
     event GovSetInterestRateModel(address interestRateModel);
     event GovSetHookConfig(address indexed newHookTarget, uint32 newHookedOps);
@@ -101,9 +106,21 @@ abstract contract GovernanceModule is IGovernance, Base, BalanceUtils, BorrowUti
     }
 
     /// @inheritdoc IGovernance
-    function LTVFull(address collateral) public view virtual reentrantOK returns (uint48, uint16, uint32, uint16) {
+    function LTVFull(address collateral)
+        public
+        view
+        virtual
+        reentrantOK
+        returns (uint48, uint16, uint16, uint32, uint16)
+    {
         LTVConfig memory ltv = vaultStorage.ltvLookup[collateral];
-        return (ltv.targetTimestamp, ltv.targetLTV.toUint16(), ltv.rampDuration, ltv.originalLTV.toUint16());
+        return (
+            ltv.targetTimestamp,
+            ltv.targetLiquidationLTV.toUint16(),
+            ltv.originalLiquidationLTV.toUint16(),
+            ltv.rampDuration,
+            ltv.borrowLTV.toUint16()
+        );
     }
 
     /// @inheritdoc IGovernance
@@ -203,17 +220,27 @@ abstract contract GovernanceModule is IGovernance, Base, BalanceUtils, BorrowUti
     }
 
     /// @inheritdoc IGovernance
-    function setLTV(address collateral, uint16 ltv, uint32 rampDuration) public virtual nonReentrant governorOnly {
+    function setLTV(address collateral, uint16 targetLiquidationLTV, uint32 rampDuration, uint16 borrowLTV)
+        public
+        virtual
+        nonReentrant
+        governorOnly
+    {
         // self-collateralization is not allowed
         if (collateral == address(this)) revert E_InvalidLTVAsset();
 
-        ConfigAmount newLTVAmount = ltv.toConfigAmount();
+        ConfigAmount newTargetLiquidationLTV = targetLiquidationLTV.toConfigAmount();
         LTVConfig memory origLTV = vaultStorage.ltvLookup[collateral];
 
-        // If new LTV is higher than the previous, or the same, it should take effect immediately
-        if (newLTVAmount >= origLTV.getLTV(true) && rampDuration > 0) revert E_LTVRamp();
+        // If the new target LTV is higher than the previous, or the same, it should take effect immediately
+        if (newTargetLiquidationLTV >= origLTV.getLTV(true) && rampDuration > 0) revert E_LTVRamp();
 
-        LTVConfig memory newLTV = origLTV.setLTV(newLTVAmount, rampDuration);
+        ConfigAmount newBorrowLTV = borrowLTV.toConfigAmount();
+
+        // The borrow LTV must be lower than or equal to the the target liquidation LTV
+        if (newBorrowLTV > newTargetLiquidationLTV) revert E_LTVBorrow();
+
+        LTVConfig memory newLTV = origLTV.setLTV(newTargetLiquidationLTV, rampDuration, newBorrowLTV);
 
         vaultStorage.ltvLookup[collateral] = newLTV;
 
@@ -222,9 +249,10 @@ abstract contract GovernanceModule is IGovernance, Base, BalanceUtils, BorrowUti
         emit GovSetLTV(
             collateral,
             newLTV.targetTimestamp,
-            newLTV.targetLTV.toUint16(),
+            newLTV.targetLiquidationLTV.toUint16(),
+            newLTV.originalLiquidationLTV.toUint16(),
             newLTV.rampDuration,
-            newLTV.originalLTV.toUint16()
+            newLTV.borrowLTV.toUint16()
         );
     }
 
@@ -236,7 +264,7 @@ abstract contract GovernanceModule is IGovernance, Base, BalanceUtils, BorrowUti
         uint16 originalLTV = getLTV(collateral, true).toUint16();
         vaultStorage.ltvLookup[collateral].clear();
 
-        emit GovSetLTV(collateral, 0, 0, 0, originalLTV);
+        emit GovSetLTV(collateral, 0, originalLTV, 0, 0, 0);
     }
 
     /// @inheritdoc IGovernance

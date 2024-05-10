@@ -7,15 +7,17 @@ import {ConfigAmount} from "./Types.sol";
 /// @title LTVConfig
 /// @notice This packed struct is used to store LTV configuration of a collateral
 struct LTVConfig {
-    // Packed slot: 6 + 2 + 4 + 2 + 1 = 15
+    // Packed slot: 6 + 2 + 2 + 4 + 2 + 1 = 17
     // The timestamp when the new liquidation LTV ramping is finished
     uint48 targetTimestamp;
-    // The value of fully converged LTV value
-    ConfigAmount targetLTV;
+    // The value of fully converged liquidation LTV value
+    ConfigAmount targetLiquidationLTV;
+    // The previous liquidation LTV value, from which the ramping begun
+    ConfigAmount originalLiquidationLTV;
     // The time it takes the liquidation LTV to converge with borrowing LTV
     uint32 rampDuration;
-    // The previous liquidation LTV value, from which the ramping begun
-    ConfigAmount originalLTV;
+    // The value of LTV for borrow purposes
+    ConfigAmount borrowLTV;
     // A flag indicating the configuration was initialized for the collateral
     bool initialized;
 }
@@ -31,14 +33,18 @@ library LTVConfigLib {
 
     // Get current LTV of a collateral. When liquidation LTV is lowered, it is ramped down to target value over a period of time.
     function getLTV(LTVConfig memory self, bool liquidation) internal view returns (ConfigAmount) {
-        if (!liquidation || block.timestamp >= self.targetTimestamp || self.targetLTV >= self.originalLTV) {
-            return self.targetLTV;
+        if (!liquidation) {
+            return self.borrowLTV;
         }
 
-        uint256 currentLTV = self.originalLTV.toUint16();
+        if (block.timestamp >= self.targetTimestamp || self.targetLiquidationLTV >= self.originalLiquidationLTV) {
+            return self.targetLiquidationLTV;
+        }
+
+        uint256 currentLTV = self.originalLiquidationLTV.toUint16();
 
         unchecked {
-            uint256 targetLTV = self.targetLTV.toUint16();
+            uint256 targetLTV = self.targetLiquidationLTV.toUint16();
             uint256 timeRemaining = self.targetTimestamp - block.timestamp;
 
             // targetLTV < originalLTV and timeRemaining < rampDuration
@@ -48,24 +54,27 @@ library LTVConfigLib {
         return ConfigAmount.wrap(uint16(currentLTV));
     }
 
-    function setLTV(LTVConfig memory self, ConfigAmount targetLTV, uint32 rampDuration)
-        internal
-        view
-        returns (LTVConfig memory newLTV)
-    {
+    function setLTV(
+        LTVConfig memory self,
+        ConfigAmount targetLiquidationLTV,
+        uint32 rampDuration,
+        ConfigAmount borrowLTV
+    ) internal view returns (LTVConfig memory newLTV) {
         newLTV.targetTimestamp = uint48(block.timestamp + rampDuration);
-        newLTV.targetLTV = targetLTV;
+        newLTV.targetLiquidationLTV = targetLiquidationLTV;
+        newLTV.originalLiquidationLTV = self.getLTV(true);
         newLTV.rampDuration = rampDuration;
-        newLTV.originalLTV = self.getLTV(true);
+        newLTV.borrowLTV = borrowLTV;
         newLTV.initialized = true;
     }
 
     // When LTV is cleared, the collateral can't be liquidated, as it's deemed unsafe
     function clear(LTVConfig storage self) internal {
         self.targetTimestamp = 0;
-        self.targetLTV = ConfigAmount.wrap(0);
+        self.targetLiquidationLTV = ConfigAmount.wrap(0);
+        self.originalLiquidationLTV = ConfigAmount.wrap(0);
         self.rampDuration = 0;
-        self.originalLTV = ConfigAmount.wrap(0);
+        self.borrowLTV = ConfigAmount.wrap(0);
     }
 }
 
