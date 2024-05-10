@@ -5,8 +5,8 @@ methods {
 
     function storage_lastInterestAccumulatorUpdate() external returns (uint48) envfree;
     function storage_cash() external returns (BaseHarness.Assets) envfree;
-    function storage_supplyCap() external returns (BaseHarness.AmountCap) envfree;
-    function storage_borrowCap() external returns (BaseHarness.AmountCap) envfree;
+    function storage_supplyCap() external returns (uint256) envfree;
+    function storage_borrowCap() external returns (uint256) envfree;
     function storage_hookedOps() external returns (BaseHarness.Flags) envfree;
     function storage_snapshotInitialized() external returns (bool) envfree;
     function storage_totalShares() external returns (BaseHarness.Shares) envfree;
@@ -74,11 +74,11 @@ function CVLInitVaultCache(env e, BaseHarness.VaultCache vaultCache) returns boo
     }
 
     // unmodified values
-    require vaultCache.supplyCap == assert_uint256(storage_supplyCap());
-    require vaultCache.borrowCap == assert_uint256(storage_borrowCap());
+    // require vaultCache.supplyCap == storage_supplyCap();
+    // require vaultCache.borrowCap == storage_borrowCap();
     require vaultCache.hookedOps == storage_hookedOps();
     require vaultCache.configFlags == storage_configFlags();
-    require vaultCache.snapshotInitialized == storage_snapshotInitialized();
+    // require vaultCache.snapshotInitialized == storage_snapshotInitialized();
 
     // either of these cause a vacuity failure ...
     // require vaultCache.asset == erc20;

@@ -85,6 +85,7 @@ methods {
     // from DummyERC20a to avoid dealing with the low-level `call`
     function _.safeTransferFrom(address token, address from, address to, uint256 value, address permit2) internal with (env e)=> CVLTrySafeTransferFrom(e, from, to, value) expect (bool, bytes memory);
     function _.tryBalanceTrackerHook(address account, uint256 newAccountBalance, bool forfeitRecentReward) internal => NONDET;
+    function _.balanceTrackerHook(address account, uint256 newAccountBalance, bool forfeitRecentReward) external => NONDET;
 
 }
 
@@ -268,6 +269,7 @@ hook Sload Vault.PackedUserSlot val currentContract.vaultStorage.users[KEY addre
 //     require sumOfBalances >= to_mathint(val);
 // }
 
+// passing: https://prover.certora.com/output/65266/c4edfe162c2a447795ebf8ceb1318e28?anonymousKey=3dd660707318d77990a4ad7b404dc1b290f78e75
 invariant totalSupplyIsSumOfBalances(env e)
     to_mathint(totalSupply(e)) == sumOfBalances;
 
