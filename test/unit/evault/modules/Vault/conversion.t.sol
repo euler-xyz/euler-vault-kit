@@ -333,12 +333,6 @@ contract VaultTest_Conversion is EVaultTestBase {
 
         vm.revertTo(snapshot);
 
-        if (maxAssets >= eTST0.cash()) {
-            vm.expectRevert(Errors.E_InsufficientCash.selector);
-            eTST0.withdraw(maxAssets + 1, user1, user1);
-            return;
-        }
-
         vm.expectRevert(Errors.E_InsufficientBalance.selector);
         eTST0.withdraw(maxAssets + 1, user1, user1);
     }
@@ -532,12 +526,6 @@ contract VaultTest_Conversion is EVaultTestBase {
         eTST0.redeem(maxValue, user1, user1);
 
         vm.revertTo(snapshot);
-
-        if (predictedAssets >= eTST0.cash()) {
-            vm.expectRevert(Errors.E_InsufficientCash.selector);
-            eTST0.redeem(maxValue + 1, user1, user1);
-            return;
-        }
 
         vm.expectRevert(Errors.E_InsufficientBalance.selector);
         eTST0.redeem(maxValue + 1, user1, user1);
