@@ -115,6 +115,86 @@ contract VaultTest_Conversion is EVaultTestBase {
         eTST0.mint(1, user1);
     }
 
+    function test_maxDeposit_canUnderEstimate() public {
+        startHoax(user1);
+        assetTST.mint(user1, type(uint256).max);
+        assetTST.approve(address(eTST0), type(uint256).max);
+
+        // with exchange rate == 1, maxDeposit is exact
+        eTST0.setCash_(1e18);
+        eTST0.setTotalShares_(1e18);
+
+        uint256 snapshot = vm.snapshot();
+
+        uint256 max = eTST0.maxDeposit(user1);
+        eTST0.deposit(max, user1);
+
+        vm.expectRevert();
+        eTST0.deposit(1, user1);
+
+        vm.revertTo(snapshot);
+
+        // with exchange rates > 1, it can underestimate
+        eTST0.setCash_(1.5e18);
+        eTST0.setTotalShares_(1e18);
+
+        snapshot = vm.snapshot();
+
+        max = eTST0.maxDeposit(user1);
+        eTST0.deposit(max, user1);
+
+        vm.revertTo(snapshot);
+        snapshot = vm.snapshot();
+
+        // can deposit more than maxDeposit
+        eTST0.deposit(max + 1, user1);
+
+        vm.revertTo(snapshot);
+        snapshot = vm.snapshot();
+
+        uint256 realMax = MAX_SANE_AMOUNT - 1.5e18;
+        eTST0.deposit(realMax, user1);
+
+        vm.revertTo(snapshot);
+        snapshot = vm.snapshot();
+
+        vm.expectRevert();
+        eTST0.deposit(realMax + 1, user1);
+
+        assertEq(realMax - max, 1);
+
+        vm.revertTo(snapshot);
+
+        // with exchange rates < 1, it can underestimate
+        eTST0.setCash_(1e18);
+        eTST0.setTotalShares_(1.5e18);
+
+        snapshot = vm.snapshot();
+
+        max = eTST0.maxDeposit(user1);
+        eTST0.deposit(max, user1);
+
+        vm.revertTo(snapshot);
+        snapshot = vm.snapshot();
+
+        // can deposit more than maxDeposit
+        eTST0.deposit(max + 1, user1);
+
+        vm.revertTo(snapshot);
+        snapshot = vm.snapshot();
+
+        realMax = eTST0.previewMint(eTST0.maxMint(user1) + 1) - 1;
+        eTST0.deposit(realMax, user1);
+
+        vm.revertTo(snapshot);
+        snapshot = vm.snapshot();
+
+        vm.expectRevert();
+        eTST0.deposit(realMax + 1, user1);
+
+        assertEq(realMax - max, 1);
+    }
+
     function testFuzz_convertToAssets_previewReedem(uint256 cash, uint256 shares, uint256 borrows, uint256 redeem)
         public
     {
@@ -197,6 +277,28 @@ contract VaultTest_Conversion is EVaultTestBase {
         uint256 resultValue = eTST0.withdraw(withdraw, user1, user1);
         assertEq(resultValue, predictedShares);
         assertEq(eTST0.balanceOf(user1) + predictedShares, cash);
+    }
+
+    function testFuzz_roundTripConversions(uint256 cash, uint256 shares, uint256 borrows, uint256 assets) public {
+        assets = bound(assets, 1, MAX_SANE_AMOUNT / 2);
+        cash = bound(cash, assets, MAX_SANE_AMOUNT - 1);
+        borrows = bound(borrows, 0, MAX_SANE_AMOUNT);
+        vm.assume(cash + borrows <= MAX_SANE_AMOUNT);
+        shares = bound(shares, cash + borrows, MAX_SANE_AMOUNT);
+
+        eTST0.setTotalShares_(shares);
+        eTST0.setTotalBorrow_(borrows);
+        eTST0.setCash_(cash);
+
+        // assets
+        uint256 amount = assets;
+        uint256 roundTrip = eTST0.previewMint(eTST0.previewWithdraw(amount));
+        assertLe(amount, roundTrip);
+
+        // shares
+        amount = eTST.convertToShares(assets);
+        roundTrip = eTST0.previewDeposit(eTST0.previewRedeem(amount));
+        assertGe(amount, roundTrip);
     }
 
     function testFuzz_maxWithdraw(uint256 cash, uint256 shares, uint256 borrows, uint256 deposit) public {
@@ -314,14 +416,7 @@ contract VaultTest_Conversion is EVaultTestBase {
         assetTST.mint(user1, type(uint256).max);
         assetTST.approve(address(eTST0), type(uint256).max);
 
-        uint256 snapshot = vm.snapshot();
-
         eTST0.deposit(maxAssets, user1);
-
-        vm.revertTo(snapshot);
-
-        vm.expectRevert();
-        eTST0.deposit(maxAssets + 1, user1);
     }
 
     function testFuzz_maxMint(uint256 cash, uint256 shares, uint256 borrows, uint16 supplyCap) public {
