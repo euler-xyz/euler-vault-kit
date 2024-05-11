@@ -352,20 +352,20 @@ interface IGovernance {
 
     /// @notice Retrieves LTV detailed config for a collateral
     /// @param collateral Collateral asset
-    /// @return targetTimestamp the timestamp when the ramp ends
+    /// @return borrowLTV current borrow LTV for originating positions
     /// @return targetLiquidationLTV target liquidation LTV that the ramped LTV will reach after ramp is over
     /// @return originalLiqudationLTV previous liquidation LTV value, where the ramp starts
+    /// @return targetTimestamp the timestamp when the ramp ends
     /// @return rampDuration ramp duration in seconds
-    /// @return borrowLTV current regular LTV for originating positions
     function LTVFull(address collateral)
         external
         view
         returns (
-            uint48 targetTimestamp,
+            uint16 borrowLTV,
             uint16 targetLiquidationLTV,
             uint16 originalLiqudationLTV,
-            uint32 rampDuration,
-            uint16 borrowLTV
+            uint48 targetTimestamp,
+            uint32 rampDuration
         );
 
     /// @notice Retrieves a list of collaterals with configured LTVs
@@ -408,10 +408,10 @@ interface IGovernance {
 
     /// @notice Set a new LTV config
     /// @param collateral Address of collateral to set LTV for
+    /// @param borrowLTV New borrow LTV for originating positions in 1e4 scale
     /// @param targetLiquidationLTV New target liquidation LTV in 1e4 scale
     /// @param rampDuration Ramp duration in seconds
-    /// @param borrowLTV New regular LTV in 1e4 scale
-    function setLTV(address collateral, uint16 targetLiquidationLTV, uint32 rampDuration, uint16 borrowLTV) external;
+    function setLTV(address collateral, uint16 borrowLTV, uint16 targetLiquidationLTV, uint32 rampDuration) external;
 
     /// @notice Completely clears LTV configuratrion, signalling the collateral is not considered safe to liquidate anymore
     /// @param collateral Address of collateral

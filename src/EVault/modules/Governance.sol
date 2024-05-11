@@ -36,11 +36,11 @@ abstract contract GovernanceModule is IGovernance, Base, BalanceUtils, BorrowUti
     event GovSetFeeReceiver(address indexed newFeeReceiver);
     event GovSetLTV(
         address indexed collateral,
-        uint48 targetTimestamp,
+        uint16 borrowLTV,
         uint16 targetLiquidationLTV,
         uint16 originalLiquidationLTV,
-        uint32 rampDuration,
-        uint16 borrowLTV
+        uint48 targetTimestamp,
+        uint32 rampDuration
     );
     event GovSetInterestRateModel(address interestRateModel);
     event GovSetHookConfig(address indexed newHookTarget, uint32 newHookedOps);
@@ -111,15 +111,15 @@ abstract contract GovernanceModule is IGovernance, Base, BalanceUtils, BorrowUti
         view
         virtual
         reentrantOK
-        returns (uint48, uint16, uint16, uint32, uint16)
+        returns (uint16, uint16, uint16, uint48, uint32)
     {
         LTVConfig memory ltv = vaultStorage.ltvLookup[collateral];
         return (
-            ltv.targetTimestamp,
+            ltv.borrowLTV.toUint16(),
             ltv.targetLiquidationLTV.toUint16(),
             ltv.originalLiquidationLTV.toUint16(),
-            ltv.rampDuration,
-            ltv.borrowLTV.toUint16()
+            ltv.targetTimestamp,
+            ltv.rampDuration
         );
     }
 
@@ -220,7 +220,7 @@ abstract contract GovernanceModule is IGovernance, Base, BalanceUtils, BorrowUti
     }
 
     /// @inheritdoc IGovernance
-    function setLTV(address collateral, uint16 targetLiquidationLTV, uint32 rampDuration, uint16 borrowLTV)
+    function setLTV(address collateral, uint16 borrowLTV, uint16 targetLiquidationLTV, uint32 rampDuration)
         public
         virtual
         nonReentrant
@@ -229,18 +229,18 @@ abstract contract GovernanceModule is IGovernance, Base, BalanceUtils, BorrowUti
         // self-collateralization is not allowed
         if (collateral == address(this)) revert E_InvalidLTVAsset();
 
+        ConfigAmount newBorrowLTV = borrowLTV.toConfigAmount();
         ConfigAmount newTargetLiquidationLTV = targetLiquidationLTV.toConfigAmount();
+
+        // The borrow LTV must be lower than or equal to the the target liquidation LTV
+        if (newBorrowLTV > newTargetLiquidationLTV) revert E_LTVBorrow();
+
         LTVConfig memory origLTV = vaultStorage.ltvLookup[collateral];
 
         // If the new target LTV is higher than the previous, or the same, it should take effect immediately
         if (newTargetLiquidationLTV >= origLTV.getLTV(true) && rampDuration > 0) revert E_LTVRamp();
 
-        ConfigAmount newBorrowLTV = borrowLTV.toConfigAmount();
-
-        // The borrow LTV must be lower than or equal to the the target liquidation LTV
-        if (newBorrowLTV > newTargetLiquidationLTV) revert E_LTVBorrow();
-
-        LTVConfig memory newLTV = origLTV.setLTV(newTargetLiquidationLTV, rampDuration, newBorrowLTV);
+        LTVConfig memory newLTV = origLTV.setLTV(newBorrowLTV, newTargetLiquidationLTV, rampDuration);
 
         vaultStorage.ltvLookup[collateral] = newLTV;
 
@@ -248,11 +248,11 @@ abstract contract GovernanceModule is IGovernance, Base, BalanceUtils, BorrowUti
 
         emit GovSetLTV(
             collateral,
-            newLTV.targetTimestamp,
+            newLTV.borrowLTV.toUint16(),
             newLTV.targetLiquidationLTV.toUint16(),
             newLTV.originalLiquidationLTV.toUint16(),
-            newLTV.rampDuration,
-            newLTV.borrowLTV.toUint16()
+            newLTV.targetTimestamp,
+            newLTV.rampDuration
         );
     }
 
@@ -264,7 +264,7 @@ abstract contract GovernanceModule is IGovernance, Base, BalanceUtils, BorrowUti
         uint16 originalLTV = getLTV(collateral, true).toUint16();
         vaultStorage.ltvLookup[collateral].clear();
 
-        emit GovSetLTV(collateral, 0, originalLTV, 0, 0, 0);
+        emit GovSetLTV(collateral, 0, 0, originalLTV, 0, 0);
     }
 
     /// @inheritdoc IGovernance

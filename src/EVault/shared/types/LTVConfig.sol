@@ -7,17 +7,17 @@ import {ConfigAmount} from "./Types.sol";
 /// @title LTVConfig
 /// @notice This packed struct is used to store LTV configuration of a collateral
 struct LTVConfig {
-    // Packed slot: 6 + 2 + 2 + 4 + 2 + 1 = 17
-    // The timestamp when the new liquidation LTV ramping is finished
-    uint48 targetTimestamp;
+    // Packed slot: 2 + 2 + 2 + 6 + 4 + 1 = 17
+    // The value of LTV for borrow purposes
+    ConfigAmount borrowLTV;
     // The value of fully converged liquidation LTV value
     ConfigAmount targetLiquidationLTV;
     // The previous liquidation LTV value, from which the ramping begun
     ConfigAmount originalLiquidationLTV;
+    // The timestamp when the new liquidation LTV ramping is finished
+    uint48 targetTimestamp;
     // The time it takes the liquidation LTV to converge with borrowing LTV
     uint32 rampDuration;
-    // The value of LTV for borrow purposes
-    ConfigAmount borrowLTV;
     // A flag indicating the configuration was initialized for the collateral
     bool initialized;
 }
@@ -56,25 +56,25 @@ library LTVConfigLib {
 
     function setLTV(
         LTVConfig memory self,
+        ConfigAmount borrowLTV,
         ConfigAmount targetLiquidationLTV,
-        uint32 rampDuration,
-        ConfigAmount borrowLTV
+        uint32 rampDuration
     ) internal view returns (LTVConfig memory newLTV) {
-        newLTV.targetTimestamp = uint48(block.timestamp + rampDuration);
+        newLTV.borrowLTV = borrowLTV;
         newLTV.targetLiquidationLTV = targetLiquidationLTV;
         newLTV.originalLiquidationLTV = self.getLTV(true);
+        newLTV.targetTimestamp = uint48(block.timestamp + rampDuration);
         newLTV.rampDuration = rampDuration;
-        newLTV.borrowLTV = borrowLTV;
         newLTV.initialized = true;
     }
 
     // When LTV is cleared, the collateral can't be liquidated, as it's deemed unsafe
     function clear(LTVConfig storage self) internal {
-        self.targetTimestamp = 0;
+        self.borrowLTV = ConfigAmount.wrap(0);
         self.targetLiquidationLTV = ConfigAmount.wrap(0);
         self.originalLiquidationLTV = ConfigAmount.wrap(0);
+        self.targetTimestamp = 0;
         self.rampDuration = 0;
-        self.borrowLTV = ConfigAmount.wrap(0);
     }
 }
 
