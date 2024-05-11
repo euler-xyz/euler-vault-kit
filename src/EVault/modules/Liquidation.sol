@@ -116,15 +116,15 @@ abstract contract LiquidationModule is ILiquidation, Base, BalanceUtils, Liquidi
     {
         // Check account health
 
-        (uint256 liquidityCollateralValue, uint256 liquidityLiabilityValue) =
+        (uint256 liquidityCollateralValue, uint256 liabilityValue) =
             calculateLiquidity(vaultCache, liqCache.violator, liqCache.collaterals, true);
 
         // no violation
-        if (liquidityCollateralValue > liquidityLiabilityValue) return liqCache;
+        if (liquidityCollateralValue > liabilityValue) return liqCache;
 
         // Compute discount
 
-        uint256 discountFactor = liquidityCollateralValue * 1e18 / liquidityLiabilityValue; // discountFactor = health score = 1 - discount
+        uint256 discountFactor = liquidityCollateralValue * 1e18 / liabilityValue; // discountFactor = health score = 1 - discount
 
         if (discountFactor < 1e18 - MAXIMUM_LIQUIDATION_DISCOUNT) {
             discountFactor = 1e18 - MAXIMUM_LIQUIDATION_DISCOUNT;
@@ -142,7 +142,7 @@ abstract contract LiquidationModule is ILiquidation, Base, BalanceUtils, Liquidi
             return liqCache;
         }
 
-        uint256 maxRepayValue = liquidityLiabilityValue;
+        uint256 maxRepayValue = liabilityValue;
         uint256 maxYieldValue = maxRepayValue * 1e18 / discountFactor;
 
         // Limit yield to borrower's available collateral, and reduce repay if necessary
@@ -153,7 +153,7 @@ abstract contract LiquidationModule is ILiquidation, Base, BalanceUtils, Liquidi
             maxYieldValue = collateralValue;
         }
 
-        liqCache.repay = (maxRepayValue * liqCache.liability.toUint() / liquidityLiabilityValue).toAssets();
+        liqCache.repay = (maxRepayValue * liqCache.liability.toUint() / liabilityValue).toAssets();
         liqCache.yieldBalance = maxYieldValue * collateralBalance / collateralValue;
 
         return liqCache;
