@@ -223,7 +223,7 @@ abstract contract VaultModule is IVault, Base, AssetTransfers, BalanceUtils {
         pushAssets(vaultCache, receiver, assets);
     }
 
-    function maxRedeemInternal(address owner) internal view returns (Shares) {
+    function maxRedeemInternal(address owner) private view returns (Shares) {
         Shares max = vaultStorage.users[owner].getBalance();
         if (max.isZero()) return Shares.wrap(0);
 
