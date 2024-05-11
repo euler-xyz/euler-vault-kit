@@ -227,7 +227,6 @@ abstract contract VaultModule is IVault, Base, AssetTransfers, BalanceUtils {
 
     function maxRedeemInternal(address owner) internal view returns (Shares) {
         Shares max = vaultStorage.users[owner].getBalance();
-        if (max.isZero()) return Shares.wrap(0);
 
         // If account has borrows, withdrawal might be reverted by the controller during account status checks.
         // The collateral vault has no way to verify or enforce the behaviour of the controller, which the account owner
@@ -235,7 +234,7 @@ abstract contract VaultModule is IVault, Base, AssetTransfers, BalanceUtils {
         // under-estimate the return amount to zero.
         // Integrators who handle borrowing should implement custom logic to work with the particular controllers
         // they want to support.
-        if (isCollateralEnabled(owner, address(this)) && hasControllerEnabled(owner)) return Shares.wrap(0);
+        if (max.isZero() || hasControllerEnabled(owner)) return Shares.wrap(0);
 
         VaultCache memory vaultCache = loadVault();
 
