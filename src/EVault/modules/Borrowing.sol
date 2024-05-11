@@ -93,11 +93,11 @@ abstract contract BorrowingModule is IBorrowing, Base, AssetTransfers, BalanceUt
     }
 
     /// @inheritdoc IBorrowing
-    function loop(uint256 amount, address sharesReceiver) public virtual nonReentrant returns (uint256) {
+    function loop(uint256 amount, address sharesReceiver) public virtual nonReentrant returns (uint256, uint256) {
         (VaultCache memory vaultCache, address account) = initOperation(OP_LOOP, CHECKACCOUNT_CALLER);
 
         Assets assets = amount.toAssets();
-        if (assets.isZero()) return 0;
+        if (assets.isZero()) return (0, 0);
 
         // The debt and shares minted should match the current exchange rate from shares to assets.
         // First round the requested amount up to shares, to avoid zero shares.
@@ -112,15 +112,15 @@ abstract contract BorrowingModule is IBorrowing, Base, AssetTransfers, BalanceUt
         // Mint ETokens
         increaseBalance(vaultCache, sharesReceiver, account, shares, assets);
 
-        return shares.toUint();
+        return (shares.toUint(), assets.toUint());
     }
 
     /// @inheritdoc IBorrowing
-    function deloop(uint256 amount, address debtFrom) public virtual nonReentrant returns (uint256) {
+    function deloop(uint256 amount, address debtFrom) public virtual nonReentrant returns (uint256, uint256) {
         (VaultCache memory vaultCache, address account) = initOperation(OP_DELOOP, CHECKACCOUNT_CALLER);
 
         Assets owed = getCurrentOwed(vaultCache, debtFrom).toAssetsUp();
-        if (owed.isZero()) return 0;
+        if (owed.isZero()) return (0, 0);
 
         Assets assets;
         Shares shares;
@@ -133,7 +133,7 @@ abstract contract BorrowingModule is IBorrowing, Base, AssetTransfers, BalanceUt
             shares = assets.toSharesUp(vaultCache);
         }
 
-        if (assets.isZero()) return 0;
+        if (assets.isZero()) return (0, 0);
 
         if (assets > owed) {
             assets = owed;
@@ -146,7 +146,7 @@ abstract contract BorrowingModule is IBorrowing, Base, AssetTransfers, BalanceUt
         // Burn DTokens
         decreaseBorrow(vaultCache, debtFrom, assets);
 
-        return shares.toUint();
+        return (shares.toUint(), assets.toUint());
     }
 
     /// @inheritdoc IBorrowing
