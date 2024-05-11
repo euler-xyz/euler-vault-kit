@@ -45,11 +45,10 @@ abstract contract VaultModule is IVault, Base, AssetTransfers, BalanceUtils {
     /// @inheritdoc IERC4626
     function maxDeposit(address account) public view virtual nonReentrantView returns (uint256) {
         VaultCache memory vaultCache = loadVault();
+        if (isOperationDisabled(vaultCache.hookedOps, OP_DEPOSIT)) return 0;
 
-        // make sure to not revert on conversion
-        uint256 assets = maxMintInternal(vaultCache, account).toShares().toAssetsDown(vaultCache).toUint();
-
-        return isOperationDisabled(vaultCache.hookedOps, OP_DEPOSIT) ? 0 : assets;
+        // The result may underestimate due to rounding
+        return maxMintInternal(vaultCache, account).toShares().toAssetsDown(vaultCache).toUint();
     }
 
     /// @inheritdoc IERC4626
@@ -60,8 +59,9 @@ abstract contract VaultModule is IVault, Base, AssetTransfers, BalanceUtils {
     /// @inheritdoc IERC4626
     function maxMint(address account) public view virtual nonReentrantView returns (uint256) {
         VaultCache memory vaultCache = loadVault();
+        if (isOperationDisabled(vaultCache.hookedOps, OP_MINT)) return 0;
 
-        return isOperationDisabled(vaultCache.hookedOps, OP_MINT) ? 0 : maxMintInternal(vaultCache, account);
+        return maxMintInternal(vaultCache, account);
     }
 
     /// @inheritdoc IERC4626
@@ -245,17 +245,19 @@ abstract contract VaultModule is IVault, Base, AssetTransfers, BalanceUtils {
 
     function maxMintInternal(VaultCache memory vaultCache, address) private pure returns (uint256) {
         uint256 supply = totalAssetsInternal(vaultCache);
-        if (supply >= vaultCache.supplyCap) return 0;
+        if (supply >= vaultCache.supplyCap) return 0; // over supply cap already
 
-        uint256 remainingSupply = vaultCache.supplyCap - supply;
-        uint256 remainingCash = MAX_SANE_AMOUNT - vaultCache.cash.toUint();
+        // limit to supply cap
+        uint256 max = vaultCache.supplyCap - supply;
 
-        uint256 assets = remainingCash < remainingSupply ? remainingCash : remainingSupply;
+        // limit to cash remaining space
+        uint256 limit = MAX_SANE_AMOUNT - vaultCache.cash.toUint();
+        max = limit < max ? limit : max;
 
-        uint256 shares = assets.toAssets().toSharesDownUint256(vaultCache);
-        uint256 remainingShares = MAX_SANE_AMOUNT - vaultCache.totalShares.toUint();
-
-        return shares < remainingShares ? shares : remainingShares;
+        // limit to total shares remaining space
+        max = max.toAssets().toSharesDownUint256(vaultCache);
+        limit = MAX_SANE_AMOUNT - vaultCache.totalShares.toUint();
+        return limit < max ? limit : max;
     }
 }
 
