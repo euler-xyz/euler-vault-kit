@@ -33,7 +33,6 @@ contract Errors {
     error E_ZeroShares();
     error E_Unauthorized();
     error E_CheckUnauthorized();
-    error E_BalanceForwarderUnsupported();
     error E_NotSupported();
     error E_EmptyError();
     error E_BadBorrowCap();
