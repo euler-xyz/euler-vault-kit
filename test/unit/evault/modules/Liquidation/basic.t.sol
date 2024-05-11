@@ -70,6 +70,7 @@ contract LiquidationUnitTest is EVaultTestBase {
         evc.enableController(borrower, address(eTST));
 
         eTST.borrow(5e18, borrower);
+        skip(1);
         assertEq(assetTST.balanceOf(borrower), 5e18);
         vm.stopPrank();
 
@@ -114,6 +115,7 @@ contract LiquidationUnitTest is EVaultTestBase {
         evc.enableController(borrower, address(eTST));
 
         eTST.borrow(5e18, borrower);
+        skip(1);
         assertEq(assetTST.balanceOf(borrower), 5e18);
         vm.stopPrank();
 
@@ -139,6 +141,7 @@ contract LiquidationUnitTest is EVaultTestBase {
         evc.enableController(borrower, address(eTST));
 
         eTST.borrow(5e18, borrower);
+        skip(1);
         assertEq(assetTST.balanceOf(borrower), 5e18);
         vm.stopPrank();
 
@@ -164,6 +167,7 @@ contract LiquidationUnitTest is EVaultTestBase {
         evc.enableController(borrower, address(eTST));
 
         eTST.borrow(5e18, borrower);
+        skip(1);
         assertEq(assetTST.balanceOf(borrower), 5e18);
         vm.stopPrank();
 

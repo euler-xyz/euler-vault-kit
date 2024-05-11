@@ -265,6 +265,7 @@ contract VaultTest_Nested is EVaultTestBase {
 
         assetTST2.approve(address(eTST2), type(uint256).max);
 
+        skip(1);
         (uint256 maxRepay, uint256 yield) = eTSTNested.checkLiquidation(liquidator, borrower, address(eTST2));
 
         // liquidate nested liability

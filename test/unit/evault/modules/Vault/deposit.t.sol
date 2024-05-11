@@ -175,6 +175,7 @@ contract VaultTest_Deposit is EVaultTestBase {
         eTST2.deposit(100e18, user);
         evc.enableController(user, address(eTST));
         evc.enableCollateral(user, address(eTST2));
+        skip(1);
 
         eTST.liquidate(user1, address(eTST2), type(uint256).max, 0);
 
