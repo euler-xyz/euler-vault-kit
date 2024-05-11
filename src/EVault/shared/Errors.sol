@@ -26,6 +26,7 @@ contract Errors {
     error E_ControllerDisabled();
     error E_CollateralDisabled();
     error E_ViolatorLiquidityDeferred();
+    error E_SameBlockLiquidation();
     error E_ExcessiveRepayAmount();
     error E_MinYield();
     error E_BadAddress();

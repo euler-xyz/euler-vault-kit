@@ -88,6 +88,8 @@ abstract contract LiquidationModule is ILiquidation, Base, BalanceUtils, Liquidi
         // Violator's health check must not be deferred, meaning no prior operations on violator's account
         // would possibly be forgiven after the enforced collateral transfer to the liquidator
         if (isAccountStatusCheckDeferred(violator)) revert E_ViolatorLiquidityDeferred();
+        // Liquidation can't happen if violator was healthy in this block, in order to prevent flashloan attacks
+        if (getLastAccountStatusCheckTimestamp(violator) == block.timestamp) revert E_SameBlockLiquidation();
 
         // Violator has no liabilities, liquidation is a no-op
         if (liqCache.liability.isZero()) return liqCache;
