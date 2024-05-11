@@ -82,7 +82,7 @@ abstract contract Base is EVCClient, Cache {
         // For this reason, the snapshot is disabled if both caps are disabled.
         if (
             !vaultCache.snapshotInitialized
-                && (vaultCache.supplyCap < type(uint256).max || vaultCache.borrowCap < type(uint256).max)
+                && !(vaultCache.supplyCap == type(uint256).max && vaultCache.borrowCap == type(uint256).max)
         ) {
             vaultStorage.snapshotInitialized = vaultCache.snapshotInitialized = true;
             snapshot.set(vaultCache.cash, vaultCache.totalBorrows.toAssetsUp());
