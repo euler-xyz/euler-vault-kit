@@ -127,9 +127,10 @@ abstract contract LiquidationModule is ILiquidation, Base, BalanceUtils, Liquidi
         uint256 discountFactor = liquidityCollateralValue * DFS / liquidityLiabilityValue; // discountFactor = health score = 1 - discount
         {
             uint256 minDiscountFactor;
-            unchecked { // discount <= config scale, so discount factor >= 0
+            unchecked {
+                // discount <= config scale, so discount factor >= 0
                 minDiscountFactor = DFS - DFS * vaultStorage.maxLiquidationDiscount.toUint16() / CONFIG_SCALE;
-            } 
+            }
             if (discountFactor < minDiscountFactor) discountFactor = minDiscountFactor;
         }
 
