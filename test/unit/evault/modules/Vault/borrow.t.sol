@@ -739,7 +739,7 @@ contract VaultTest_Borrow is EVaultTestBase {
         emit Events.Borrow(borrower2, 1);
         eTST.pullDebt(2, borrower);
 
-        assertEq(vm.getRecordedLogs().length, 11); // InterestAccrued would be the 12th event
+        assertEq(vm.getRecordedLogs().length, 10); // InterestAccrued would be the 11th event
     }
 
     function owedTo1e5(uint256 debt) internal pure returns (uint256) {
