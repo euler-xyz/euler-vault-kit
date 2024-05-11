@@ -180,12 +180,14 @@ abstract contract GovernanceModule is IGovernance, Base, BalanceUtils, BorrowUti
 
     /// @inheritdoc IGovernance
     function setName(string calldata newName) public virtual nonReentrant governorOnly {
+        if (bytes(vaultStorage.name).length > 0) revert E_AlreadySet();
         vaultStorage.name = newName;
         emit GovSetName(newName);
     }
 
     /// @inheritdoc IGovernance
     function setSymbol(string calldata newSymbol) public virtual nonReentrant governorOnly {
+        if (bytes(vaultStorage.symbol).length > 0) revert E_AlreadySet();
         vaultStorage.symbol = newSymbol;
         emit GovSetSymbol(newSymbol);
     }

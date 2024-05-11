@@ -52,4 +52,5 @@ contract Errors {
     error E_BadSharesReceiver();
     error E_LTVRamp();
     error E_NotHookTarget();
+    error E_AlreadySet();
 }
