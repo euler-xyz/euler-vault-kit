@@ -15,8 +15,8 @@ import "../shared/types/Types.sol";
 abstract contract LiquidationModule is ILiquidation, Base, BalanceUtils, LiquidityUtils {
     using TypesLib for uint256;
 
-    // Maximum liquidation discount that can be awarded under any conditions in wad.
-    uint256 internal constant MAXIMUM_LIQUIDATION_DISCOUNT = 0.2e18;
+    // precision of the discount factor (discount factor scale)
+    uint256 internal constant DFS = 1e18;
 
     struct LiquidationCache {
         address liquidator;
@@ -124,10 +124,10 @@ abstract contract LiquidationModule is ILiquidation, Base, BalanceUtils, Liquidi
 
         // Compute discount
 
-        uint256 discountFactor = liquidityCollateralValue * 1e18 / liquidityLiabilityValue; // discountFactor = health score = 1 - discount
-
-        if (discountFactor < 1e18 - MAXIMUM_LIQUIDATION_DISCOUNT) {
-            discountFactor = 1e18 - MAXIMUM_LIQUIDATION_DISCOUNT;
+        uint256 discountFactor = liquidityCollateralValue * DFS / liquidityLiabilityValue; // discountFactor = health score = 1 - discount
+        {
+            uint256 minDiscountFactor = DFS - DFS * vaultStorage.maxLiquidationDiscount.toUint16() / CONFIG_SCALE;
+            if (discountFactor < minDiscountFactor) discountFactor = minDiscountFactor;
         }
 
         // Compute maximum yield using mid-point prices
@@ -149,13 +149,13 @@ abstract contract LiquidationModule is ILiquidation, Base, BalanceUtils, Liquidi
         }
 
         uint256 maxRepayValue = liabilityValue;
-        uint256 maxYieldValue = maxRepayValue * 1e18 / discountFactor;
+        uint256 maxYieldValue = maxRepayValue * DFS / discountFactor;
 
         // Limit yield to borrower's available collateral, and reduce repay if necessary
         // This can happen when borrower has multiple collaterals and seizing all of this one won't bring the violator back to solvency
 
         if (collateralValue < maxYieldValue) {
-            maxRepayValue = collateralValue * discountFactor / 1e18;
+            maxRepayValue = collateralValue * discountFactor / DFS;
             maxYieldValue = collateralValue;
         }
 
