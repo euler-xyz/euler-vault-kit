@@ -45,10 +45,11 @@ abstract contract VaultModule is IVault, Base, AssetTransfers, BalanceUtils {
     /// @inheritdoc IERC4626
     function maxDeposit(address account) public view virtual nonReentrantView returns (uint256) {
         VaultCache memory vaultCache = loadVault();
-        if (isOperationDisabled(vaultCache.hookedOps, OP_DEPOSIT)) return 0;
 
         // The result may underestimate due to rounding
-        return maxMintInternal(vaultCache, account).toShares().toAssetsDown(vaultCache).toUint();
+        return isOperationDisabled(vaultCache.hookedOps, OP_DEPOSIT)
+            ? 0
+            : maxMintInternal(vaultCache, account).toAssetsDown(vaultCache).toUint();
     }
 
     /// @inheritdoc IERC4626
@@ -59,9 +60,8 @@ abstract contract VaultModule is IVault, Base, AssetTransfers, BalanceUtils {
     /// @inheritdoc IERC4626
     function maxMint(address account) public view virtual nonReentrantView returns (uint256) {
         VaultCache memory vaultCache = loadVault();
-        if (isOperationDisabled(vaultCache.hookedOps, OP_MINT)) return 0;
 
-        return maxMintInternal(vaultCache, account);
+        return isOperationDisabled(vaultCache.hookedOps, OP_MINT) ? 0 : maxMintInternal(vaultCache, account).toUint();
     }
 
     /// @inheritdoc IERC4626
@@ -243,9 +243,9 @@ abstract contract VaultModule is IVault, Base, AssetTransfers, BalanceUtils {
         return max;
     }
 
-    function maxMintInternal(VaultCache memory vaultCache, address) private pure returns (uint256) {
+    function maxMintInternal(VaultCache memory vaultCache, address) private pure returns (Shares) {
         uint256 supply = totalAssetsInternal(vaultCache);
-        if (supply >= vaultCache.supplyCap) return 0; // over supply cap already
+        if (supply >= vaultCache.supplyCap) return Shares.wrap(0); // at or over the supply cap already
 
         // limit to supply cap
         uint256 max = vaultCache.supplyCap - supply;
@@ -257,7 +257,8 @@ abstract contract VaultModule is IVault, Base, AssetTransfers, BalanceUtils {
         // limit to total shares remaining space
         max = max.toAssets().toSharesDownUint256(vaultCache);
         limit = MAX_SANE_AMOUNT - vaultCache.totalShares.toUint();
-        return limit < max ? limit : max;
+
+        return (limit < max ? limit : max).toShares();
     }
 }
 
