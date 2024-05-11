@@ -83,7 +83,7 @@ abstract contract Base is EVCClient, Cache {
         // The snapshot is cleared during the vault status check hence the vault status check must not be forgiven.
         if (
             !vaultCache.snapshotInitialized
-                && (vaultCache.supplyCap < type(uint256).max || vaultCache.borrowCap < type(uint256).max)
+                && !(vaultCache.supplyCap == type(uint256).max && vaultCache.borrowCap == type(uint256).max)
         ) {
             vaultStorage.snapshotInitialized = vaultCache.snapshotInitialized = true;
             snapshot.set(vaultCache.cash, vaultCache.totalBorrows.toAssetsUp());
