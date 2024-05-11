@@ -1383,6 +1383,7 @@ contract VaultLiquidation_Test is EVaultTestBase {
         IEVault eTSTx =
             IEVault(factory.createProxy(true, abi.encodePacked(address(assetTST), address(oracle), address(assetTST))));
         eTSTx.setLTV(address(eTST2), 0.95e4, 0);
+        eTSTx.setMaxLiquidationDiscount(0.2e4);
 
         oracle.setPrice(address(assetTST2), address(assetTST), 0.5e18);
 

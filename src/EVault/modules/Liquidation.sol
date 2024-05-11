@@ -15,9 +15,6 @@ import "../shared/types/Types.sol";
 abstract contract LiquidationModule is ILiquidation, Base, BalanceUtils, LiquidityUtils {
     using TypesLib for uint256;
 
-    // precision of the discount factor (discount factor scale)
-    uint256 internal constant DFS = 1e18;
-
     struct LiquidationCache {
         address liquidator;
         address violator;
@@ -124,12 +121,12 @@ abstract contract LiquidationModule is ILiquidation, Base, BalanceUtils, Liquidi
 
         // Compute discount
 
-        uint256 discountFactor = liquidityCollateralValue * DFS / liquidityLiabilityValue; // discountFactor = health score = 1 - discount
+        uint256 discountFactor = liquidityCollateralValue * 1e18 / liquidityLiabilityValue; // discountFactor = health score = 1 - discount
         {
             uint256 minDiscountFactor;
             unchecked {
                 // discount <= config scale, so discount factor >= 0
-                minDiscountFactor = DFS - DFS * vaultStorage.maxLiquidationDiscount.toUint16() / CONFIG_SCALE;
+                minDiscountFactor = 1e18 - uint256(1e18) * vaultStorage.maxLiquidationDiscount.toUint16() / CONFIG_SCALE;
             }
             if (discountFactor < minDiscountFactor) discountFactor = minDiscountFactor;
         }
@@ -153,13 +150,13 @@ abstract contract LiquidationModule is ILiquidation, Base, BalanceUtils, Liquidi
         }
 
         uint256 maxRepayValue = liabilityValue;
-        uint256 maxYieldValue = maxRepayValue * DFS / discountFactor;
+        uint256 maxYieldValue = maxRepayValue * 1e18 / discountFactor;
 
         // Limit yield to borrower's available collateral, and reduce repay if necessary
         // This can happen when borrower has multiple collaterals and seizing all of this one won't bring the violator back to solvency
 
         if (collateralValue < maxYieldValue) {
-            maxRepayValue = collateralValue * discountFactor / DFS;
+            maxRepayValue = collateralValue * discountFactor / 1e18;
             maxYieldValue = collateralValue;
         }
 
