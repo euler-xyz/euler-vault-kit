@@ -37,6 +37,8 @@ abstract contract GovernanceModule is IGovernance, Base, BalanceUtils, BorrowUti
     event GovSetLTV(
         address indexed collateral, uint48 targetTimestamp, uint16 targetLTV, uint32 rampDuration, uint16 originalLTV
     );
+    /// @notice Set a maximum liquidation discount
+    /// @param newLiquidationDiscount The new maximum liquidation discount in 1e4 scale
     event GovSetMaxLiquidationDiscount(uint16 newLiquidationDiscount);
     event GovSetInterestRateModel(address interestRateModel);
     event GovSetHookConfig(address indexed newHookTarget, uint32 newHookedOps);
