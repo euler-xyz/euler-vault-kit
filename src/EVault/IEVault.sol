@@ -365,6 +365,10 @@ interface IGovernance {
     /// @dev The list can have duplicates. Returned assets could have the ltv disabled (set to zero)
     function LTVList() external view returns (address[] memory);
 
+    /// @notice Retrieves liquidation cool off time, which must elapse after successful account status check before account can be liquidated
+    /// @return The liquidation cool off time in seconds
+    function liquidationCoolOffTime() external view returns (uint16);
+
     /// @notice Retrieves a hook target and a bitmask indicating which operations call the hook target.
     function hookConfig() external view returns (address, uint32);
 
@@ -407,6 +411,10 @@ interface IGovernance {
     /// @notice Completely clears LTV configuratrion, signalling the collateral is not considered safe to liquidate anymore
     /// @param collateral Address of collateral
     function clearLTV(address collateral) external;
+
+    /// @notice Retrieves liquidation cool off time, which must elapse after successful account status check before account can be liquidated
+    /// @param newCoolOffTime The new liquidation cool off time in seconds
+    function setLiquidationCoolOffTime(uint16 newCoolOffTime) external;
 
     /// @notice Set a new interest rate model contract
     /// @param newModel Address of the contract

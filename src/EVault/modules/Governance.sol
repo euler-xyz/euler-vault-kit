@@ -38,6 +38,9 @@ abstract contract GovernanceModule is IGovernance, Base, BalanceUtils, BorrowUti
         address indexed collateral, uint48 targetTimestamp, uint16 targetLTV, uint32 rampDuration, uint16 originalLTV
     );
     event GovSetInterestRateModel(address interestRateModel);
+    /// @notice Set a new liqiuidation cool off time, which must elapse after successful account status check before account can be liquidated
+    /// @param newCoolOffTime The new liquidation cool off time in seconds
+    event GovSetLiquidationCoolOffTime(uint16 newCoolOffTime);
     event GovSetHookConfig(address indexed newHookTarget, uint32 newHookedOps);
     event GovSetConfigFlags(uint32 newConfigFlags);
     event GovSetCaps(uint16 newSupplyCap, uint16 newBorrowCap);
@@ -109,6 +112,11 @@ abstract contract GovernanceModule is IGovernance, Base, BalanceUtils, BorrowUti
     /// @inheritdoc IGovernance
     function LTVList() public view virtual reentrantOK returns (address[] memory) {
         return vaultStorage.ltvList;
+    }
+
+    /// @inheritdoc IGovernance
+    function liquidationCoolOffTime() public view virtual reentrantOK returns (uint16) {
+        return vaultStorage.liquidationCoolOffTime;
     }
 
     /// @inheritdoc IGovernance
@@ -237,6 +245,12 @@ abstract contract GovernanceModule is IGovernance, Base, BalanceUtils, BorrowUti
         vaultStorage.ltvLookup[collateral].clear();
 
         emit GovSetLTV(collateral, 0, 0, 0, originalLTV);
+    }
+
+    /// @inheritdoc IGovernance
+    function setLiquidationCoolOffTime(uint16 newCoolOffTime) public virtual nonReentrant governorOnly {
+        vaultStorage.liquidationCoolOffTime = newCoolOffTime;
+        emit GovSetLiquidationCoolOffTime(newCoolOffTime);
     }
 
     /// @inheritdoc IGovernance

@@ -57,6 +57,8 @@ contract VaultLiquidation_Test is EVaultTestBase {
         eTST.setLTV(address(eWETH), 0.3e4, 0);
         eTST.setLTV(address(eTST2), 0.3e4, 0);
 
+        eTST.setLiquidationCoolOffTime(0);
+
         oracle.setPrice(address(assetTST), unitOfAccount, 2.2e18);
         oracle.setPrice(address(assetTST2), unitOfAccount, 0.4e18);
         oracle.setPrice(address(assetTST3), unitOfAccount, 2.2e18);
@@ -124,7 +126,6 @@ contract VaultLiquidation_Test is EVaultTestBase {
 
         startHoax(borrower);
         evc.enableController(borrower, address(eTST));
-        skip(1);
 
         startHoax(lender);
         vm.expectRevert(Errors.E_CollateralDisabled.selector);
@@ -133,7 +134,6 @@ contract VaultLiquidation_Test is EVaultTestBase {
         // User healthy:
         startHoax(borrower);
         eTST.borrow(5e18, borrower);
-        skip(1);
 
         startHoax(lender);
         vm.expectRevert(Errors.E_ExcessiveRepayAmount.selector);
@@ -200,7 +200,6 @@ contract VaultLiquidation_Test is EVaultTestBase {
         vm.stopPrank();
         vm.prank(borrower);
         evc.enableCollateral(borrower, address(eTST3));
-        skip(1);
 
         startHoax(address(this));
 
@@ -290,7 +289,6 @@ contract VaultLiquidation_Test is EVaultTestBase {
         startHoax(borrower);
         evc.enableController(borrower, address(eTST));
         eTST.borrow(5e18, borrower);
-        skip(1);
 
         startHoax(address(this));
         eTST.setLTV(address(eTST3), 0.95e4, 0);
@@ -331,7 +329,6 @@ contract VaultLiquidation_Test is EVaultTestBase {
 
         startHoax(borrower);
         evc.enableController(borrower, address(eTST));
-        skip(1);
 
         oracle.setPrice(address(assetTST), unitOfAccount, 2.5e18);
 
@@ -374,7 +371,6 @@ contract VaultLiquidation_Test is EVaultTestBase {
         startHoax(borrower);
         evc.enableController(borrower, address(eTST));
         eTST.borrow(17e18, borrower);
-        skip(1);
 
         oracle.setPrice(address(assetTST), unitOfAccount, 2.7e18);
 
@@ -416,7 +412,6 @@ contract VaultLiquidation_Test is EVaultTestBase {
         assetWETH.approve(address(eWETH), type(uint256).max);
         eWETH.deposit(1e18, borrower);
         evc.enableCollateral(borrower, address(eWETH));
-        skip(1);
 
         (uint256 collateralValue, uint256 liabilityValue) = eTST.accountLiquidity(borrower, false);
         assertApproxEqAbs(collateralValue * 1e18 / liabilityValue, 1.39e18, 0.01e18);
@@ -463,7 +458,6 @@ contract VaultLiquidation_Test is EVaultTestBase {
         startHoax(borrower);
         evc.enableController(borrower, address(eTST));
         eTST.borrow(5e18, borrower);
-        skip(1);
 
         startHoax(address(this));
 
@@ -515,7 +509,6 @@ contract VaultLiquidation_Test is EVaultTestBase {
         evc.enableCollateral(borrower2, address(eTST4));
         evc.enableController(borrower2, address(eTST));
         eTST.borrow(20e18, borrower2);
-        skip(1);
 
         (uint256 collateralValue, uint256 liabilityValue) = eTST.accountLiquidity(borrower2, false);
         assertApproxEqAbs(collateralValue * 1e18 / liabilityValue, 1.08e18, 0.01e18);
@@ -639,7 +632,6 @@ contract VaultLiquidation_Test is EVaultTestBase {
         startHoax(borrower);
         evc.enableController(borrower, address(eTST));
         eTST.borrow(17e18, borrower);
-        skip(1);
 
         startHoax(bystander);
         evc.enableController(bystander, address(eTST));
@@ -679,7 +671,6 @@ contract VaultLiquidation_Test is EVaultTestBase {
         evc.enableCollateral(borrower, address(eTST3));
         // just 1 wei
         eTST3.deposit(1, borrower);
-        skip(1);
 
         oracle.setPrice(address(assetTST), unitOfAccount, 2.7e18);
 
@@ -714,7 +705,6 @@ contract VaultLiquidation_Test is EVaultTestBase {
         evc.enableCollateral(borrower, address(eTST3));
         evc.enableController(borrower, address(eTST));
         eTST.borrow(5e18, borrower);
-        skip(1);
 
         startHoax(address(this));
         eTST.setLTV(address(eTST3), 0.95e4, 0);
@@ -834,7 +824,6 @@ contract VaultLiquidation_Test is EVaultTestBase {
         evc.enableCollateral(borrower, address(eTST3));
         evc.enableController(borrower, address(eTST));
         eTST.borrow(5e18, borrower);
-        skip(1);
 
         startHoax(address(this));
         eTST.setLTV(address(eTST2), 0, 0);
@@ -887,7 +876,6 @@ contract VaultLiquidation_Test is EVaultTestBase {
         eTST2.deposit(45, borrower);
 
         eTST.borrow(2, borrower);
-        skip(1);
 
         (uint256 collateralValue, uint256 liabilityValue) = eTST.accountLiquidity(borrower, false);
         assertEq(collateralValue * 1e18 / liabilityValue, 1.25e18);
@@ -954,7 +942,6 @@ contract VaultLiquidation_Test is EVaultTestBase {
         oracle.setPrice(address(assetTST2), unitOfAccount, 15e18);
 
         eTST.borrow(3000, borrower);
-        skip(1);
         (uint256 collateralValue, uint256 liabilityValue) = eTST.accountLiquidity(borrower, false);
         assertApproxEqAbs(collateralValue * 1e18 / liabilityValue, 1.33e18, 0.01e18);
 
@@ -997,7 +984,6 @@ contract VaultLiquidation_Test is EVaultTestBase {
         startHoax(borrower);
         evc.enableController(borrower, address(eTST));
         eTST.borrow(5e18, borrower);
-        skip(1);
         // set up liquidator to support the debt
         startHoax(lender);
         evc.enableController(lender, address(eTST));
@@ -1239,7 +1225,6 @@ contract VaultLiquidation_Test is EVaultTestBase {
         startHoax(borrower);
         evc.enableController(borrower, address(eTST));
         eTST.borrow(5e18, borrower);
-        skip(1);
 
         startHoax(address(this));
         eTST.setLTV(address(eTST3), 0.95e4, 0);
@@ -1451,7 +1436,27 @@ contract VaultLiquidation_Test is EVaultTestBase {
         assertEq(eTST2.balanceOf(borrower), violatorsOriginalCollateral - maxYield);
     }
 
-    function test_sameBlockLiquidation() public {
+    function test_setCoolOff() public {
+        // only admin
+        startHoax(lender);
+        vm.expectRevert(Errors.E_Unauthorized.selector);
+        eTST.setLiquidationCoolOffTime(1);
+
+        startHoax(address(this));
+        eTST.setLiquidationCoolOffTime(1);
+        assertEq(eTST.liquidationCoolOffTime(), 1);
+
+        eTST.setLiquidationCoolOffTime(1 hours);
+        assertEq(eTST.liquidationCoolOffTime(), 1 hours);
+
+        eTST.setLiquidationCoolOffTime(type(uint16).max);
+        assertEq(eTST.liquidationCoolOffTime(), type(uint16).max);
+
+        eTST.setLiquidationCoolOffTime(0);
+        assertEq(eTST.liquidationCoolOffTime(), 0);
+    }
+
+    function test_liquidationWithcoolOff() public {
         // set up liquidator to support the debt
         startHoax(lender);
         evc.enableController(lender, address(eTST));
@@ -1480,16 +1485,57 @@ contract VaultLiquidation_Test is EVaultTestBase {
         uint256 healthScore = collateralValue * 1e18 / liabilityValue;
         assertApproxEqAbs(healthScore, 0.96e18, 0.001e18);
 
-        vm.expectRevert(Errors.E_SameBlockLiquidation.selector);
+        uint256 snapshot = vm.snapshot();
+
+        // 1 second
+        startHoax(address(this));
+        eTST.setLiquidationCoolOffTime(1 seconds);
+
+        vm.expectRevert(Errors.E_LiquidationCoolOff.selector);
         eTST.checkLiquidation(lender, borrower, address(eTST2));
 
         startHoax(lender);
-        vm.expectRevert(Errors.E_SameBlockLiquidation.selector);
+        vm.expectRevert(Errors.E_LiquidationCoolOff.selector);
         eTST.liquidate(borrower, address(eTST2), type(uint256).max, 0);
 
         // can liquidate one second later
         skip(1);
+        (uint256 maxRepay,) = eTST.checkLiquidation(lender, borrower, address(eTST2));
+        eTST.liquidate(borrower, address(eTST2), maxRepay, 0);
+
+        vm.revertTo(snapshot);
+
+        // 30 seconds
+        startHoax(address(this));
+        eTST.setLiquidationCoolOffTime(30 seconds);
+        startHoax(lender);
+
+        vm.expectRevert(Errors.E_LiquidationCoolOff.selector);
+        eTST.checkLiquidation(lender, borrower, address(eTST2));
+
+        vm.expectRevert(Errors.E_LiquidationCoolOff.selector);
         eTST.liquidate(borrower, address(eTST2), type(uint256).max, 0);
+
+        // not yet
+        skip(15);
+        vm.expectRevert(Errors.E_LiquidationCoolOff.selector);
+        eTST.checkLiquidation(lender, borrower, address(eTST2));
+
+        vm.expectRevert(Errors.E_LiquidationCoolOff.selector);
+        eTST.liquidate(borrower, address(eTST2), type(uint256).max, 0);
+
+        // not yet
+        skip(14);
+        vm.expectRevert(Errors.E_LiquidationCoolOff.selector);
+        eTST.checkLiquidation(lender, borrower, address(eTST2));
+
+        vm.expectRevert(Errors.E_LiquidationCoolOff.selector);
+        eTST.liquidate(borrower, address(eTST2), type(uint256).max, 0);
+
+        // can liquidate after cool off
+        skip(1);
+        (maxRepay,) = eTST.checkLiquidation(lender, borrower, address(eTST2));
+        eTST.liquidate(borrower, address(eTST2), maxRepay, 0);
     }
 
     function getRiskAdjustedValue(uint256 amount, uint256 price, uint256 factor) public pure returns (uint256) {
