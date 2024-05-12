@@ -344,7 +344,7 @@ interface IGovernance {
     /// @notice Retrieves supply and borrow caps in AmountCap format
     function caps() external view returns (uint16 supplyCap, uint16 borrowCap);
 
-    /// @notice Retrieves the borrow LTV of the collateral, which is used to determine if the account is healthy when originating position
+    /// @notice Retrieves the borrow LTV of the collateral, which is used to determine if the account is healthy when originating a position
     function LTVBorrow(address collateral) external view returns (uint16);
 
     /// @notice Retrieves the current liquidation LTV, which is used to determine if the account is eligible for liquidation
