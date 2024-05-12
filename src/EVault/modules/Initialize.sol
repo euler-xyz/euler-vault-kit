@@ -20,6 +20,7 @@ abstract contract InitializeModule is IInitialize, Base, BorrowUtils {
 
     uint256 internal constant INITIAL_INTEREST_ACCUMULATOR = 1e27; // 1 ray
     uint16 internal constant DEFAULT_INTEREST_FEE = 0.1e4;
+    uint16 internal constant DEFAULT_LIQUIDATION_COOL_OFF_TIME = 1 seconds;
 
     /// @inheritdoc IInitialize
     function initialize(address proxyCreator) public virtual reentrantOK {
@@ -44,6 +45,7 @@ abstract contract InitializeModule is IInitialize, Base, BorrowUtils {
         vaultStorage.lastInterestAccumulatorUpdate = uint48(block.timestamp);
         vaultStorage.interestAccumulator = INITIAL_INTEREST_ACCUMULATOR;
         vaultStorage.interestFee = DEFAULT_INTEREST_FEE.toConfigAmount();
+        vaultStorage.liquidationCoolOffTime = DEFAULT_LIQUIDATION_COOL_OFF_TIME;
         vaultStorage.creator = vaultStorage.governorAdmin = proxyCreator;
 
         snapshot.reset();
