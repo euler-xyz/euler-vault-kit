@@ -207,7 +207,7 @@ interface IBorrowing {
     /// @param amount In asset units
     /// @param sharesReceiver Account to receive the created shares
     /// @return shares Amount of shares created
-    /// @return assets Amount of assets borrowed
+    /// @return assets Amount of debt created in assets
     /// @dev Equivalent to looping borrows and deposits
     /// @dev The amount requested will be adjusted up when creating debt, to precisely match the exchange rate with shares minted
     function loop(uint256 amount, address sharesReceiver) external returns (uint256 shares, uint256 assets);
@@ -216,7 +216,7 @@ interface IBorrowing {
     /// @param amount In asset units (use max uint256 to repay the debt in full or up to the available underlying balance)
     /// @param debtFrom Account to remove debt from by burning sender's shares
     /// @return shares Amount of shares burned
-    /// @return assets Amount of assets repaid
+    /// @return assets Amount of debt removed in assets
     /// @dev Equivalent to withdrawing and repaying
     function deloop(uint256 amount, address debtFrom) external returns (uint256 shares, uint256 assets);
 
