@@ -344,26 +344,26 @@ interface IGovernance {
     /// @notice Retrieves supply and borrow caps in AmountCap format
     function caps() external view returns (uint16 supplyCap, uint16 borrowCap);
 
-    /// @notice Retrieves regular LTV, set for the collateral, which is used to determine the health of the account
-    function borrowingLTV(address collateral) external view returns (uint16);
+    /// @notice Retrieves the borrow LTV of the collateral, which is used to determine if the account is healthy when originating position
+    function LTVBorrow(address collateral) external view returns (uint16);
 
-    /// @notice Retrieves current ramped value of LTV, which is used to determine liquidation penalty
-    function liquidationLTV(address collateral) external view returns (uint16);
+    /// @notice Retrieves the current liquidation LTV, which is used to determine if the account is eligible for liquidation
+    function LTVLiquidation(address collateral) external view returns (uint16);
 
-    /// @notice Retrieves LTV detailed config for a collateral
+    /// @notice Retrieves LTV configuration for the collateral
     /// @param collateral Collateral asset
-    /// @return borrowLTV current borrow LTV for originating positions
-    /// @return targetLiquidationLTV target liquidation LTV that the ramped LTV will reach after ramp is over
-    /// @return originalLiqudationLTV previous liquidation LTV value, where the ramp starts
-    /// @return targetTimestamp the timestamp when the ramp ends
-    /// @return rampDuration ramp duration in seconds
+    /// @return borrowLTV The current value of borrow LTV for originating positions
+    /// @return liquidationLTV The value of fully converged liquidation LTV
+    /// @return initialLiquidationLTV The initial value of the liquidation LTV, when the ramp began
+    /// @return targetTimestamp The timestamp when the liquidation LTV is considered fully converged
+    /// @return rampDuration The time it takes for the liquidation LTV to converge from the initial value to the fully converged value
     function LTVFull(address collateral)
         external
         view
         returns (
             uint16 borrowLTV,
-            uint16 targetLiquidationLTV,
-            uint16 originalLiqudationLTV,
+            uint16 liquidationLTV,
+            uint16 initialLiquidationLTV,
             uint48 targetTimestamp,
             uint32 rampDuration
         );
@@ -409,9 +409,9 @@ interface IGovernance {
     /// @notice Set a new LTV config
     /// @param collateral Address of collateral to set LTV for
     /// @param borrowLTV New borrow LTV for originating positions in 1e4 scale
-    /// @param targetLiquidationLTV New target liquidation LTV in 1e4 scale
+    /// @param liquidationLTV New liquidation LTV after ramp ends in 1e4 scale
     /// @param rampDuration Ramp duration in seconds
-    function setLTV(address collateral, uint16 borrowLTV, uint16 targetLiquidationLTV, uint32 rampDuration) external;
+    function setLTV(address collateral, uint16 borrowLTV, uint16 liquidationLTV, uint32 rampDuration) external;
 
     /// @notice Completely clears LTV configuratrion, signalling the collateral is not considered safe to liquidate anymore
     /// @param collateral Address of collateral

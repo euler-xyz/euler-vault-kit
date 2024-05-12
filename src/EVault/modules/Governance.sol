@@ -37,8 +37,8 @@ abstract contract GovernanceModule is IGovernance, Base, BalanceUtils, BorrowUti
     event GovSetLTV(
         address indexed collateral,
         uint16 borrowLTV,
-        uint16 targetLiquidationLTV,
-        uint16 originalLiquidationLTV,
+        uint16 liquidationLTV,
+        uint16 initialLiquidationLTV,
         uint48 targetTimestamp,
         uint32 rampDuration
     );
@@ -96,12 +96,12 @@ abstract contract GovernanceModule is IGovernance, Base, BalanceUtils, BorrowUti
     }
 
     /// @inheritdoc IGovernance
-    function borrowingLTV(address collateral) public view virtual reentrantOK returns (uint16) {
+    function LTVBorrow(address collateral) public view virtual reentrantOK returns (uint16) {
         return getLTV(collateral, false).toUint16();
     }
 
     /// @inheritdoc IGovernance
-    function liquidationLTV(address collateral) public view virtual reentrantOK returns (uint16) {
+    function LTVLiquidation(address collateral) public view virtual reentrantOK returns (uint16) {
         return getLTV(collateral, true).toUint16();
     }
 
@@ -116,8 +116,8 @@ abstract contract GovernanceModule is IGovernance, Base, BalanceUtils, BorrowUti
         LTVConfig memory ltv = vaultStorage.ltvLookup[collateral];
         return (
             ltv.borrowLTV.toUint16(),
-            ltv.targetLiquidationLTV.toUint16(),
-            ltv.originalLiquidationLTV.toUint16(),
+            ltv.liquidationLTV.toUint16(),
+            ltv.initialLiquidationLTV.toUint16(),
             ltv.targetTimestamp,
             ltv.rampDuration
         );
@@ -220,7 +220,7 @@ abstract contract GovernanceModule is IGovernance, Base, BalanceUtils, BorrowUti
     }
 
     /// @inheritdoc IGovernance
-    function setLTV(address collateral, uint16 borrowLTV, uint16 targetLiquidationLTV, uint32 rampDuration)
+    function setLTV(address collateral, uint16 borrowLTV, uint16 liquidationLTV, uint32 rampDuration)
         public
         virtual
         nonReentrant
@@ -230,27 +230,27 @@ abstract contract GovernanceModule is IGovernance, Base, BalanceUtils, BorrowUti
         if (collateral == address(this)) revert E_InvalidLTVAsset();
 
         ConfigAmount newBorrowLTV = borrowLTV.toConfigAmount();
-        ConfigAmount newTargetLiquidationLTV = targetLiquidationLTV.toConfigAmount();
+        ConfigAmount newLiquidationLTV = liquidationLTV.toConfigAmount();
 
-        // The borrow LTV must be lower than or equal to the the target liquidation LTV
-        if (newBorrowLTV > newTargetLiquidationLTV) revert E_LTVBorrow();
+        // The borrow LTV must be lower than or equal to the the converged liquidation LTV
+        if (newBorrowLTV > newLiquidationLTV) revert E_LTVBorrow();
 
-        LTVConfig memory origLTV = vaultStorage.ltvLookup[collateral];
+        LTVConfig memory currentLTV = vaultStorage.ltvLookup[collateral];
 
-        // If the new target LTV is higher than the previous, or the same, it should take effect immediately
-        if (newTargetLiquidationLTV >= origLTV.getLTV(true) && rampDuration > 0) revert E_LTVRamp();
+        // If the new liquidation LTV is higher or the same than the previous, it should take effect immediately
+        if (newLiquidationLTV >= currentLTV.getLTV(true) && rampDuration > 0) revert E_LTVLiquidation();
 
-        LTVConfig memory newLTV = origLTV.setLTV(newBorrowLTV, newTargetLiquidationLTV, rampDuration);
+        LTVConfig memory newLTV = currentLTV.setLTV(newBorrowLTV, newLiquidationLTV, rampDuration);
 
         vaultStorage.ltvLookup[collateral] = newLTV;
 
-        if (!origLTV.initialized) vaultStorage.ltvList.push(collateral);
+        if (!currentLTV.initialized) vaultStorage.ltvList.push(collateral);
 
         emit GovSetLTV(
             collateral,
             newLTV.borrowLTV.toUint16(),
-            newLTV.targetLiquidationLTV.toUint16(),
-            newLTV.originalLiquidationLTV.toUint16(),
+            newLTV.liquidationLTV.toUint16(),
+            newLTV.initialLiquidationLTV.toUint16(),
             newLTV.targetTimestamp,
             newLTV.rampDuration
         );
