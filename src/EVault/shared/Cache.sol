@@ -76,42 +76,54 @@ contract Cache is Storage, Errors {
             uint256 interestRate = vaultStorage.interestRate;
 
             uint256 newInterestAccumulator = vaultCache.interestAccumulator;
+            uint256 newTotalBorrows = vaultCache.totalBorrows.toUint();
 
             unchecked {
+                uint256 intermediate;
                 (uint256 multiplier, bool overflow) = RPow.rpow(interestRate + 1e27, deltaT, 1e27);
 
                 // if exponentiation or accumulator update overflows, keep the old accumulator
                 if (!overflow) {
-                    uint256 intermediate = newInterestAccumulator * multiplier;
+                    intermediate = newInterestAccumulator * multiplier;
                     if (newInterestAccumulator == intermediate / multiplier) {
                         newInterestAccumulator = intermediate / 1e27;
                     }
                 }
-            }
 
-            uint256 newTotalBorrows =
-                vaultCache.totalBorrows.toUint() * newInterestAccumulator / vaultCache.interestAccumulator;
-            uint256 newAccumulatedFees = vaultCache.accumulatedFees.toUint();
-            uint256 newTotalShares = vaultCache.totalShares.toUint();
-            uint256 feeAssets = (newTotalBorrows - vaultCache.totalBorrows.toUint()) * interestFee.toUint16()
-                / (1e4 << INTERNAL_DEBT_PRECISION_SHIFT);
-
-            if (feeAssets != 0) {
-                uint256 newTotalAssets = vaultCache.cash.toUint() + OwedLib.toAssetsUpUint256(newTotalBorrows);
-                newTotalShares = newTotalAssets * newTotalShares / (newTotalAssets - feeAssets);
-                newAccumulatedFees += newTotalShares - vaultCache.totalShares.toUint();
+                intermediate = newTotalBorrows * newInterestAccumulator;
+                if (newTotalBorrows == intermediate / newInterestAccumulator) {
+                    newTotalBorrows = intermediate / vaultCache.interestAccumulator;
+                }
             }
 
             // Store new values in vaultCache, only if no overflows will occur. Fees are not larger than total shares, since they are included in them.
 
             if (newTotalBorrows <= MAX_SANE_DEBT_AMOUNT) {
-                vaultCache.totalBorrows = newTotalBorrows.toOwed();
+                Owed newTotalBorrowsOwed = newTotalBorrows.toOwed();
+
+                // record fees before totalBorrows update
+                Owed feeOwed =
+                    (newTotalBorrowsOwed - vaultCache.totalBorrows).mulDiv(interestFee.toUint16(), CONFIG_SCALE);
+
+                vaultCache.totalBorrows = newTotalBorrowsOwed;
                 vaultCache.interestAccumulator = newInterestAccumulator;
                 vaultCache.lastInterestAccumulatorUpdate = uint48(block.timestamp);
 
-                if (newTotalShares != vaultCache.totalShares.toUint() && newTotalShares <= MAX_SANE_AMOUNT) {
-                    vaultCache.accumulatedFees = newAccumulatedFees.toShares();
-                    vaultCache.totalShares = newTotalShares.toShares();
+                // Charge fees on accrued interest
+
+                if (!feeOwed.isZero()) {
+                    // fee shares should be minted as if fees on interest were deposited as assets, after the rest of interest was added to total assets
+                    // temporarily remove `feeOwed` from total borrows in the cache to mint fee shares at correct exchange rate
+                    vaultCache.totalBorrows = vaultCache.totalBorrows.subUnchecked(feeOwed);
+                    Shares newShares = feeOwed.toAssetsDown().toSharesDown(vaultCache);
+                    vaultCache.totalBorrows = newTotalBorrowsOwed;
+
+                    uint256 newTotalShares = vaultCache.totalShares.toUint() + newShares.toUint();
+                    if (newTotalShares <= MAX_SANE_AMOUNT) {
+                        vaultCache.totalShares = newTotalShares.toShares();
+                        // accumulated fees <= total shares <= MAX_SANE_AMOUNT, because they are included in them
+                        vaultCache.accumulatedFees = vaultCache.accumulatedFees + newShares;
+                    }
                 }
             }
         }

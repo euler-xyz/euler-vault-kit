@@ -119,7 +119,7 @@ contract EulerSavingsRate is EVCUtil, ERC4626 {
     }
 
     function _deposit(address caller, address receiver, uint256 assets, uint256 shares) internal override {
-        totalAssetsDeposited += assets;
+        totalAssetsDeposited = totalAssetsDeposited + assets;
         super._deposit(caller, receiver, assets, shares);
     }
 
@@ -127,7 +127,7 @@ contract EulerSavingsRate is EVCUtil, ERC4626 {
         internal
         override
     {
-        totalAssetsDeposited -= assets;
+        totalAssetsDeposited = totalAssetsDeposited - assets;
         super._withdraw(caller, receiver, owner, assets, shares);
     }
 
@@ -157,9 +157,27 @@ contract EulerSavingsRate is EVCUtil, ERC4626 {
         // write esrSlotCache back to storage in a single SSTORE
         esrSlot = esrSlotCache;
         // Move interest accrued to totalAssetsDeposited
-        totalAssetsDeposited += accruedInterest;
+        totalAssetsDeposited = totalAssetsDeposited + accruedInterest;
 
         return esrSlotCache;
+    }
+
+    function maxRedeem(address owner) public view override returns (uint256) {
+        // Max redeem can potentially be 0 if there is a liability
+        if (evc.getControllers(owner).length > 0) {
+            return 0;
+        }
+
+        return super.maxRedeem(owner);
+    }
+
+    function maxWithdraw(address owner) public view override returns (uint256) {
+        // Max withdraw can potentially be 0 if there is a liability
+        if (evc.getControllers(owner).length > 0) {
+            return 0;
+        }
+
+        return super.maxWithdraw(owner);
     }
 
     function interestAccrued() public view returns (uint256) {
@@ -168,7 +186,7 @@ contract EulerSavingsRate is EVCUtil, ERC4626 {
 
     function interestAccruedFromCache(ESRSlot memory esrSlotCache) internal view returns (uint256) {
         // If distribution ended, full amount is accrued
-        if (block.timestamp > esrSlotCache.interestSmearEnd) {
+        if (block.timestamp >= esrSlotCache.interestSmearEnd) {
             return esrSlotCache.interestLeft;
         }
 
