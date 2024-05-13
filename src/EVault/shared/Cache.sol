@@ -108,7 +108,7 @@ contract Cache is Storage, Errors {
 
                 if (!feeOwed.isZero()) {
                     // fee shares should be minted as if fees on interest were deposited as assets, after the rest of interest was added to total assets
-                    // temporarily remove `feeAssets` from total borrows in the cache to mint fee shares at correct exchange rate
+                    // temporarily remove `feeOwed` from total borrows in the cache to mint fee shares at correct exchange rate
                     vaultCache.totalBorrows = vaultCache.totalBorrows.subUnchecked(feeOwed);
                     Shares newShares = feeOwed.toAssetsDown().toSharesDown(vaultCache);
                     vaultCache.totalBorrows = newTotalBorrowsOwed;
