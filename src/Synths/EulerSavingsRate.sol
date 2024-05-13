@@ -55,7 +55,7 @@ contract EulerSavingsRate is EVCUtil, ERC4626 {
     }
 
     constructor(IEVC _evc, address _asset, string memory _name, string memory _symbol)
-        EVCUtil(address(_evc))
+        EVCUtil(_evc)
         ERC4626(IERC20(_asset))
         ERC20(_name, _symbol)
     {
