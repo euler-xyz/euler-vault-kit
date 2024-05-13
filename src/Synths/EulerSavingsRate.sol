@@ -115,7 +115,6 @@ contract EulerSavingsRate is EVCUtil, ERC4626 {
     function _deposit(address caller, address receiver, uint256 assets, uint256 shares) internal override {
         totalAssetsDeposited = totalAssetsDeposited + assets;
         super._deposit(caller, receiver, assets, shares);
-        totalAssetsDeposited += assets;
     }
 
     function _withdraw(address caller, address receiver, address owner, uint256 assets, uint256 shares)
@@ -124,7 +123,6 @@ contract EulerSavingsRate is EVCUtil, ERC4626 {
     {
         totalAssetsDeposited = totalAssetsDeposited - assets;
         super._withdraw(caller, receiver, owner, assets, shares);
-        totalAssetsDeposited -= assets;
     }
 
     function gulp() public {
