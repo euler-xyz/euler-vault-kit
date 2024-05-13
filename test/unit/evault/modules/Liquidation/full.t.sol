@@ -57,8 +57,6 @@ contract VaultLiquidation_Test is EVaultTestBase {
         eTST.setLTV(address(eWETH), 0.3e4, 0);
         eTST.setLTV(address(eTST2), 0.3e4, 0);
 
-        eTST.setLiquidationCoolOffTime(0);
-
         oracle.setPrice(address(assetTST), unitOfAccount, 2.2e18);
         oracle.setPrice(address(assetTST2), unitOfAccount, 0.4e18);
         oracle.setPrice(address(assetTST3), unitOfAccount, 2.2e18);
