@@ -120,6 +120,8 @@ rule conversionOfZero {
         "converting zero assets must return zero shares";
 }
 
+// passing
+// run: https://prover.certora.com/output/65266/e7e04c3291f843ba9fe0b81ea9a1f949/?anonymousKey=1828bc78fcb1ed87cf33d17878823becfad2ca23
 rule convertToAssetsWeakAdditivity() {
     env e;
     uint256 sharesA; uint256 sharesB;
@@ -130,6 +132,8 @@ rule convertToAssetsWeakAdditivity() {
         "converting sharesA and sharesB to assets then summing them must yield a smaller or equal result to summing them then converting";
 }
 
+// passing
+// run: https://prover.certora.com/output/65266/3bd31b8e066543fc8097a0ffce93ee41/?anonymousKey=5b8d2876fecf3d8af7a550e203faa4d58bbedf5c
 rule convertToSharesWeakAdditivity() {
     env e;
     uint256 assetsA; uint256 assetsB;
@@ -153,6 +157,8 @@ rule conversionWeakMonotonicity {
         "converting more assets must yield equal or greater shares";
 }
 
+// passing
+// run: https://prover.certora.com/output/65266/302371dbde0246a28808b078c2164615/?anonymousKey=9759cd932017c8a142c5e1c4d6fa312b4ef94ae3
 rule conversionWeakIntegrity() {
     env e;
     uint256 sharesOrAssets;
@@ -198,7 +204,7 @@ rule depositMonotonicity() {
             "when supply tokens outnumber asset tokens, a larger deposit of assets must produce an equal or greater number of shares";
 }
 
-
+//run: https://prover.certora.com/output/65266/8d021eab19f945cd86a3ef904b0aa6dc/?anonymousKey=bd4cc32f9af86278b0eceaae2316ea3e385c1cdf
 rule zeroDepositZeroShares(uint assets, address receiver)
 {
     env e;
@@ -269,7 +275,7 @@ hook Sload Vault.PackedUserSlot val currentContract.vaultStorage.users[KEY addre
 //     require sumOfBalances >= to_mathint(val);
 // }
 
-// passing: https://prover.certora.com/output/65266/c4edfe162c2a447795ebf8ceb1318e28?anonymousKey=3dd660707318d77990a4ad7b404dc1b290f78e75
+// passing: https://prover.certora.com/output/65266/de3636d287d2473294463c07263fc11e/?anonymousKey=ac8f74e6c5c1298f0954a21fafd41cccf32b9ffb
 invariant totalSupplyIsSumOfBalances(env e)
     to_mathint(totalSupply(e)) == sumOfBalances;
 
@@ -279,7 +285,7 @@ invariant totalSupplyIsSumOfBalances(env e)
 ////                    #     State Transition                             /////
 ////////////////////////////////////////////////////////////////////////////////
 
-
+//run: https://prover.certora.com/output/65266/3ef25c98a7e34422bcf177d853662b5f/?anonymousKey=ca43e967a607a404f34b39c70f6517e90dac0902
 rule totalsMonotonicity() {
     method f; env e; calldataarg args;
     require e.msg.sender != currentContract; 
