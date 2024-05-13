@@ -128,7 +128,7 @@ contract EulerSavingsRate is EVCUtil, ERC4626 {
     /// @param receiver The account to mint the shares to.
     /// @return The amount of assets spend.
     function mint(uint256 shares, address receiver) public override nonReentrant returns (uint256) {
-        return super.mint(assets, receiver);
+        return super.mint(shares, receiver);
     }
 
     /// @notice Deposits a certain amount of assets to the vault.
@@ -140,7 +140,7 @@ contract EulerSavingsRate is EVCUtil, ERC4626 {
         override
         nonReentrant
         requireAccountStatusCheck(owner)
-        returns (uint256 shares)
+        returns (uint256)
     {
         // Move interest to totalAssets
         updateInterestAndReturnESRSlotCache();
@@ -156,7 +156,7 @@ contract EulerSavingsRate is EVCUtil, ERC4626 {
         override
         nonReentrant
         requireAccountStatusCheck(owner)
-        returns (uint256 assets)
+        returns (uint256)
     {
         // Move interest to totalAssets
         updateInterestAndReturnESRSlotCache();
@@ -216,28 +216,6 @@ contract EulerSavingsRate is EVCUtil, ERC4626 {
         _totalAssets = _totalAssets + accruedInterest;
 
         return esrSlotCache;
-    }
-
-    /// @notice Returns the maximum amount of assets that can be redeemed by an account.
-    /// @dev Will return 0 if the account has a controller.
-    function maxRedeem(address owner) public view override returns (uint256) {
-        // Max redeem can potentially be 0 if there is a liability
-        if (evc.getControllers(owner).length > 0) {
-            return 0;
-        }
-
-        return super.maxRedeem(owner);
-    }
-
-    /// @notice Returns the maximum amount of assets that can be withdrawn by an account.
-    /// @dev Will return 0 if the account has a controller.
-    function maxWithdraw(address owner) public view override returns (uint256) {
-        // Max withdraw can potentially be 0 if there is a liability
-        if (evc.getControllers(owner).length > 0) {
-            return 0;
-        }
-
-        return super.maxWithdraw(owner);
     }
 
     /// @notice Returns the amount of interest accrued.
