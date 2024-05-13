@@ -41,7 +41,7 @@ contract VaultTest_BorrowBasic is EVaultTestBase {
         skip(31 * 60);
 
         startHoax(address(this));
-        eTST.setLTV(address(eTST2), 0.21e4, 0);
+        eTST.setLTV(address(eTST2), 0.21e4, 0.21e4, 0);
     }
 
     function test_borrow_noInterest() public {

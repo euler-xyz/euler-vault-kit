@@ -31,8 +31,8 @@ contract VaultTest_Caps is EVaultTestBase {
         assetTST3 = new TestERC20("Test TST 3", "TST3", 18, false);
         eTST3 = IEVault(factory.createProxy(true, abi.encodePacked(address(assetTST3), address(oracle), unitOfAccount)));
 
-        eTST.setLTV(address(eTST2), 0.3e4, 0);
-        eTST.setLTV(address(eTST3), 1e4, 0);
+        eTST.setLTV(address(eTST2), 0.3e4, 0.3e4, 0);
+        eTST.setLTV(address(eTST3), 1e4, 1e4, 0);
 
         oracle.setPrice(address(eTST), unitOfAccount, 0.01e18);
         oracle.setPrice(address(eTST2), unitOfAccount, 0.083e18);
@@ -505,7 +505,7 @@ contract VaultTest_Caps is EVaultTestBase {
     }
 
     function setUpCollateral() internal {
-        eTST.setLTV(address(eTST2), 1e4, 0);
+        eTST.setLTV(address(eTST2), 1e4, 1e4, 0);
 
         vm.startPrank(user1);
         assetTST2.mint(user1, type(uint256).max);
@@ -1040,7 +1040,7 @@ contract VaultTest_Caps is EVaultTestBase {
         eTST.deposit(10e18, user1);
 
         startHoax(address(this));
-        eTST2.setLTV(address(eTST), 1e4, 0);
+        eTST2.setLTV(address(eTST), 1e4, 1e4, 0);
         oracle.setPrice(address(eTST2), unitOfAccount, 0.01e18);
 
         assertEq(eTST.totalSupply(), 10e18);

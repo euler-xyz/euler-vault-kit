@@ -25,7 +25,7 @@ contract Governance_PauseOps is EVaultTestBase {
         liquidator1 = makeAddr("liquidator1");
         liquidator2 = makeAddr("liquidator2");
         // ----------------- Setup vaults --------------------
-        eTST.setLTV(address(eTST2), 0.9e4, 0);
+        eTST.setLTV(address(eTST2), 0.9e4, 0.9e4, 0);
         oracle.setPrice(address(assetTST), unitOfAccount, 1e18);
         oracle.setPrice(address(assetTST2), unitOfAccount, 1e18);
         // ----------------- Setup depositor -----------------

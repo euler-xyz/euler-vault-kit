@@ -169,7 +169,7 @@ contract DTokenTest is EVaultTestBase {
     }
 
     function setUpCollateral() internal {
-        eTST.setLTV(address(eTST2), 1e4, 0);
+        eTST.setLTV(address(eTST2), 1e4, 1e4, 0);
 
         vm.startPrank(user);
         assetTST2.mint(user, type(uint256).max);

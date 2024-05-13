@@ -337,8 +337,8 @@ contract EVault_SimpleCriticalChecks is EVaultTestBase {
         oracle.setPrice(address(eTST), unitOfAccount, 1e18);
         oracle.setPrice(address(eTST2), unitOfAccount, 1e18);
 
-        eTST.setLTV(address(eTST2), 0.9e4, 0);
-        eTST2.setLTV(address(eTST), 0.5e4, 0);
+        eTST.setLTV(address(eTST2), 0.9e4, 0.9e4, 0);
+        eTST2.setLTV(address(eTST), 0.5e4, 0.5e4, 0);
 
         // accounts
 

@@ -44,7 +44,7 @@ contract Governance_Reserves is EVaultTestBase {
         eTST2.deposit(50e18, user4);
 
         startHoax(address(this));
-        eTST.setLTV(address(eTST2), 0.3e4, 0);
+        eTST.setLTV(address(eTST2), 0.3e4, 0.3e4, 0);
 
         oracle.setPrice(address(eTST), unitOfAccount, 0.1e18);
         oracle.setPrice(address(eTST2), unitOfAccount, 0.2e18);
