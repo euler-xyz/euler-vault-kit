@@ -201,6 +201,8 @@ contract EVault is Dispatch {
 
     function LTVList() public view virtual override useView(MODULE_GOVERNANCE) returns (address[] memory) {}
 
+    function maxLiquidationDiscount() public view virtual override useView(MODULE_GOVERNANCE) returns (uint16) {}
+
     function hookConfig() public view virtual override useView(MODULE_GOVERNANCE) returns (address, uint32) {}
 
     function configFlags() public view virtual override useView(MODULE_GOVERNANCE) returns (uint32) {}
@@ -229,6 +231,8 @@ contract EVault is Dispatch {
     function setLTV(address collateral, uint16 borrowLTV, uint16 liquidationLTV, uint32 rampDuration) public virtual override use(MODULE_GOVERNANCE) {}
 
     function clearLTV(address collateral) public virtual override use(MODULE_GOVERNANCE) {}
+
+    function setMaxLiquidationDiscount(uint16 newDiscount) public virtual override use(MODULE_GOVERNANCE) {}
 
     function setInterestRateModel(address newModel) public virtual override use(MODULE_GOVERNANCE) {}
 

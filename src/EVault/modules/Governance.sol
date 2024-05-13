@@ -42,6 +42,9 @@ abstract contract GovernanceModule is IGovernance, Base, BalanceUtils, BorrowUti
         uint48 targetTimestamp,
         uint32 rampDuration
     );
+    /// @notice Set a maximum liquidation discount
+    /// @param newLiquidationDiscount The new maximum liquidation discount in 1e4 scale
+    event GovSetMaxLiquidationDiscount(uint16 newLiquidationDiscount);
     event GovSetInterestRateModel(address interestRateModel);
     event GovSetHookConfig(address indexed newHookTarget, uint32 newHookedOps);
     event GovSetConfigFlags(uint32 newConfigFlags);
@@ -126,6 +129,11 @@ abstract contract GovernanceModule is IGovernance, Base, BalanceUtils, BorrowUti
     /// @inheritdoc IGovernance
     function LTVList() public view virtual reentrantOK returns (address[] memory) {
         return vaultStorage.ltvList;
+    }
+
+    /// @inheritdoc IGovernance
+    function maxLiquidationDiscount() public view virtual reentrantOK returns (uint16) {
+        return vaultStorage.maxLiquidationDiscount.toUint16();
     }
 
     /// @inheritdoc IGovernance
@@ -265,6 +273,12 @@ abstract contract GovernanceModule is IGovernance, Base, BalanceUtils, BorrowUti
         vaultStorage.ltvLookup[collateral].clear();
 
         emit GovSetLTV(collateral, 0, 0, originalLTV, 0, 0);
+    }
+
+    /// @inheritdoc IGovernance
+    function setMaxLiquidationDiscount(uint16 newDiscount) public virtual nonReentrant governorOnly {
+        vaultStorage.maxLiquidationDiscount = newDiscount.toConfigAmount();
+        emit GovSetMaxLiquidationDiscount(newDiscount);
     }
 
     /// @inheritdoc IGovernance

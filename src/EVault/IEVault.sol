@@ -373,6 +373,10 @@ interface IGovernance {
     /// @dev The list can have duplicates. Returned assets could have the ltv disabled (set to zero)
     function LTVList() external view returns (address[] memory);
 
+    /// @notice Retrieves the maximum liquidation discount
+    /// @return The maximum liquidation discount in 1e4 scale
+    function maxLiquidationDiscount() external view returns (uint16);
+
     /// @notice Retrieves a hook target and a bitmask indicating which operations call the hook target.
     function hookConfig() external view returns (address, uint32);
 
@@ -416,6 +420,10 @@ interface IGovernance {
     /// @notice Completely clears LTV configuratrion, signalling the collateral is not considered safe to liquidate anymore
     /// @param collateral Address of collateral
     function clearLTV(address collateral) external;
+
+    /// @notice Set a new maximum liquidation discount
+    /// @param newDiscount New maximum liquidation discount in 1e4 scale
+    function setMaxLiquidationDiscount(uint16 newDiscount) external;
 
     /// @notice Set a new interest rate model contract
     /// @param newModel Address of the contract

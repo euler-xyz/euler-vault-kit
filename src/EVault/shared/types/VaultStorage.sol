@@ -32,9 +32,11 @@ struct VaultStorage {
     // Sum of all user debts
     Owed totalBorrows;
 
-    // Packed slot 14 + 4 = 18
+    // Packed slot 14 + 2 + 4 = 20
     // Interest fees accrued since the last fee conversion
     Shares accumulatedFees;
+    // Maximum liquidation discount
+    ConfigAmount maxLiquidationDiscount;
     // A bitfield of vault configuration options
     Flags configFlags;
 
