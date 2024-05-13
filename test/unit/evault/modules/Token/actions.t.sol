@@ -97,6 +97,17 @@ contract ERC20Test_Actions is EVaultTestBase {
         eTST.transfer(alice, amount);
     }
 
+    function test_Transfer_RevertsWhen_ToAddressZero(uint256 balance, uint256 amount) public {
+        amount = bound(amount, 1, MAX_SANE_AMOUNT);
+        balance = bound(balance, amount, MAX_SANE_AMOUNT);
+
+        _mintAndDeposit(alice, balance);
+
+        vm.expectRevert(Errors.E_BadSharesReceiver.selector);
+        vm.prank(alice);
+        eTST.transfer(address(0), amount);
+    }
+
     function test_Transfer_ReentrancyThroughBalanceTrackerIsNotIgnored() public {
         _mintAndDeposit(alice, 1 ether);
 
@@ -201,6 +212,32 @@ contract ERC20Test_Actions is EVaultTestBase {
         eTST.transferFrom(alice, alice, amount);
     }
 
+    function test_TransferFrom_RevertsWhen_ToAddressZero(uint256 balance, uint256 amount) public {
+        amount = bound(amount, 1, MAX_SANE_AMOUNT);
+        balance = bound(balance, amount, MAX_SANE_AMOUNT);
+
+        _mintAndDeposit(alice, balance);
+
+        vm.expectRevert(Errors.E_BadSharesReceiver.selector);
+        vm.prank(alice);
+        eTST.transferFrom(alice, address(0), amount);
+    }
+
+    function test_TransferFrom_RevertsWhen_FromSpecialAddress(uint256 balance, uint256 amount) public {
+        amount = bound(amount, 1, MAX_SANE_AMOUNT);
+        balance = bound(balance, amount, MAX_SANE_AMOUNT);
+
+        _mintAndDeposit(alice, balance);
+
+        vm.expectRevert(Errors.E_BadSharesOwner.selector);
+        vm.prank(alice);
+        eTST.transferFrom(CHECKACCOUNT_NONE, alice, amount);
+
+        vm.expectRevert(Errors.E_BadSharesOwner.selector);
+        vm.prank(alice);
+        eTST.transferFrom(CHECKACCOUNT_CALLER, alice, amount);
+    }
+
     function test_TransferFromMax_Integrity(uint256 balance) public {
         balance = bound(balance, 1, MAX_SANE_AMOUNT);
 
@@ -214,6 +251,30 @@ contract ERC20Test_Actions is EVaultTestBase {
         assertTrue(success);
         assertEq(eTST.balanceOf(alice), 0);
         assertEq(eTST.balanceOf(bob), balance);
+    }
+
+    function test_TransferFromMax_RevertsWhen_ToAddressZero(uint256 balance) public {
+        balance = bound(balance, 0, MAX_SANE_AMOUNT);
+
+        _mintAndDeposit(alice, balance);
+
+        vm.expectRevert(Errors.E_BadSharesReceiver.selector);
+        vm.prank(alice);
+        eTST.transferFromMax(alice, address(0));
+    }
+
+    function test_TransferFromMax_RevertsWhen_FromSpecialAddress(uint256 balance) public {
+        balance = bound(balance, 0, MAX_SANE_AMOUNT);
+
+        _mintAndDeposit(alice, balance);
+
+        vm.expectRevert(Errors.E_BadSharesOwner.selector);
+        vm.prank(alice);
+        eTST.transferFromMax(CHECKACCOUNT_NONE, alice);
+
+        vm.expectRevert(Errors.E_BadSharesOwner.selector);
+        vm.prank(alice);
+        eTST.transferFromMax(CHECKACCOUNT_CALLER, alice);
     }
 
     function test_Approve_Integrity(uint256 allowance) public {

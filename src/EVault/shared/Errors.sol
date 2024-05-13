@@ -49,6 +49,7 @@ contract Errors {
     error E_NoPriceOracle();
     error E_InvalidConfigAmount();
     error E_BadAssetReceiver();
+    error E_BadSharesOwner();
     error E_BadSharesReceiver();
     error E_LTVRamp();
     error E_NotHookTarget();

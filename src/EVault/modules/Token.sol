@@ -48,17 +48,32 @@ abstract contract TokenModule is IToken, Base, BalanceUtils {
     }
 
     /// @inheritdoc IERC20
-    function transfer(address to, uint256 amount) public virtual reentrantOK returns (bool) {
-        return transferFrom(address(0), to, amount);
+    function transfer(address to, uint256 amount) public virtual nonReentrant returns (bool) {
+        return transferFromInternal(address(0), to, amount);
     }
 
     /// @inheritdoc IToken
-    function transferFromMax(address from, address to) public virtual reentrantOK returns (bool) {
-        return transferFrom(from, to, vaultStorage.users[from].getBalance().toUint());
+    function transferFromMax(address from, address to) public virtual nonReentrant returns (bool) {
+        validateTransferFromAccount(from);
+        return transferFromInternal(from, to, vaultStorage.users[from].getBalance().toUint());
     }
 
     /// @inheritdoc IERC20
     function transferFrom(address from, address to, uint256 amount) public virtual nonReentrant returns (bool) {
+        validateTransferFromAccount(from);
+        return transferFromInternal(from, to, amount);
+    }
+
+    /// @inheritdoc IERC20
+    function approve(address spender, uint256 amount) public virtual nonReentrant returns (bool) {
+        address account = EVCAuthenticate();
+
+        setAllowance(account, spender, amount);
+
+        return true;
+    }
+
+    function transferFromInternal(address from, address to, uint256 amount) private returns (bool) {
         (, address account) = initOperation(OP_TRANSFER, from == address(0) ? CHECKACCOUNT_CALLER : from);
 
         if (from == address(0)) from = account;
@@ -72,13 +87,8 @@ abstract contract TokenModule is IToken, Base, BalanceUtils {
         return true;
     }
 
-    /// @inheritdoc IERC20
-    function approve(address spender, uint256 amount) public virtual nonReentrant returns (bool) {
-        address account = EVCAuthenticate();
-
-        setAllowance(account, spender, amount);
-
-        return true;
+    function validateTransferFromAccount(address from) private pure {
+        if (from == CHECKACCOUNT_NONE || from == CHECKACCOUNT_CALLER) revert E_BadSharesOwner();
     }
 }
 
