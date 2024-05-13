@@ -12,6 +12,8 @@ import {TestERC20} from "../../../../mocks/TestERC20.sol";
 import {IRMTestFixed} from "../../../../mocks/IRMTestFixed.sol";
 import {IRMTestZero} from "../../../../mocks/IRMTestZero.sol";
 
+import "forge-std/Test.sol";
+
 contract VaultLiquidation_Test is EVaultTestBase {
     address lender;
     address borrower;
@@ -1431,6 +1433,205 @@ contract VaultLiquidation_Test is EVaultTestBase {
         // violator:
         assertEq(eTSTx.debtOf(borrower), 0);
         assertEq(eTST2.balanceOf(borrower), violatorsOriginalCollateral - maxYield);
+    }
+
+    function test_borrowingVsLiquidationLTV() public {
+        startHoax(borrower);
+        evc.enableController(borrower, address(eTST));
+        eTST.borrow(5e18, borrower);
+
+        // set up liquidator to support the debt
+        startHoax(lender);
+        eTST2.deposit(200e18, lender);
+
+        evc.enableController(lender, address(eTST));
+        evc.enableCollateral(lender, address(eTST3));
+        evc.enableCollateral(lender, address(eTST2));
+
+        // set liquidation LTV higher than borrowing
+
+        startHoax(address(this));
+        eTST.setLTV(address(eTST2), 0.3e4, 0.5e4, 0);
+        startHoax(borrower);
+
+        // account is healthy in both modes, able to borrow more, no liquidation
+
+        (uint256 collateralValue, uint256 liabilityValue) = eTST.accountLiquidity(borrower, false);
+        uint256 healthScore = collateralValue * 1e18 / liabilityValue;
+        assertApproxEqAbs(healthScore, 1.09e18, 0.01e18);
+
+        (collateralValue, liabilityValue) = eTST.accountLiquidity(borrower, true);
+        healthScore = collateralValue * 1e18 / liabilityValue;
+        assertApproxEqAbs(healthScore, 1.81e18, 0.01e18);
+
+        eTST.borrow(0.0001e18, borrower);
+
+        (uint256 maxRepay, uint256 maxYield) = eTST.checkLiquidation(lender, borrower, address(eTST2));
+        assertEq(maxRepay, 0);
+        assertEq(maxYield, 0);
+
+        // collateral price moves against the borrower, account still healthy in both modes
+
+        oracle.setPrice(address(assetTST2), unitOfAccount, 0.39e18);
+
+        (collateralValue, liabilityValue) = eTST.accountLiquidity(borrower, false);
+        healthScore = collateralValue * 1e18 / liabilityValue;
+        assertApproxEqAbs(healthScore, 1.06e18, 0.01e18);
+
+        (collateralValue, liabilityValue) = eTST.accountLiquidity(borrower, true);
+        healthScore = collateralValue * 1e18 / liabilityValue;
+        assertApproxEqAbs(healthScore, 1.77e18, 0.01e18);
+
+        eTST.borrow(0.0001e18, borrower);
+
+        (maxRepay, maxYield) = eTST.checkLiquidation(lender, borrower, address(eTST2));
+        assertEq(maxRepay, 0);
+        assertEq(maxYield, 0);
+
+        // collateral price drops further, account can't borrow any more, but can't be liquidated either
+
+        oracle.setPrice(address(assetTST2), unitOfAccount, 0.35e18);
+
+        (collateralValue, liabilityValue) = eTST.accountLiquidity(borrower, false);
+        healthScore = collateralValue * 1e18 / liabilityValue;
+        assertApproxEqAbs(healthScore, 0.95e18, 0.01e18); // NOT HEALTHY
+
+        (collateralValue, liabilityValue) = eTST.accountLiquidity(borrower, true);
+        healthScore = collateralValue * 1e18 / liabilityValue;
+        assertApproxEqAbs(healthScore, 1.59e18, 0.01e18); // HEALTHY
+
+        vm.expectRevert(Errors.E_AccountLiquidity.selector);
+        eTST.borrow(0.0001e18, borrower);
+
+        (maxRepay, maxYield) = eTST.checkLiquidation(lender, borrower, address(eTST2));
+        assertEq(maxRepay, 0);
+        assertEq(maxYield, 0);
+
+        // liquidation is no-op
+        uint256 collateralBefore = eTST2.balanceOf(borrower);
+        uint256 debtBefore = eTST.debtOf(borrower);
+        startHoax(lender);
+        eTST.liquidate(borrower, address(eTST2), type(uint256).max, 0);
+        startHoax(borrower);
+        assertEq(collateralBefore, eTST2.balanceOf(borrower));
+        assertEq(debtBefore, eTST.debtOf(borrower));
+
+        // price drops further, now liquidation is possible
+
+        oracle.setPrice(address(assetTST2), unitOfAccount, 0.2e18);
+
+        (collateralValue, liabilityValue) = eTST.accountLiquidity(borrower, false);
+        healthScore = collateralValue * 1e18 / liabilityValue;
+        assertApproxEqAbs(healthScore, 0.54e18, 0.01e18);
+
+        (collateralValue, liabilityValue) = eTST.accountLiquidity(borrower, true);
+        healthScore = collateralValue * 1e18 / liabilityValue;
+        assertApproxEqAbs(healthScore, 0.9e18, 0.01e18);
+
+        vm.expectRevert(Errors.E_AccountLiquidity.selector);
+        eTST.borrow(0.0001e18, borrower);
+
+        (maxRepay, maxYield) = eTST.checkLiquidation(lender, borrower, address(eTST2));
+        assertGt(maxRepay, 0);
+        assertGt(maxYield, 0);
+
+        // liquidation can be performed
+        uint256 snapshot = vm.snapshot();
+        collateralBefore = eTST2.balanceOf(borrower);
+        debtBefore = eTST.debtOf(borrower);
+        startHoax(lender);
+        eTST.liquidate(borrower, address(eTST2), type(uint256).max, 0);
+        startHoax(borrower);
+
+        assertEq(collateralBefore, eTST2.balanceOf(borrower) + maxYield);
+        assertEq(debtBefore, eTST.debtOf(borrower) + maxRepay);
+
+        // bonus according to liquidation LTV health score
+
+        uint256 yieldAssets = eTST2.convertToAssets(maxYield);
+        uint256 valYield = oracle.getQuote(yieldAssets, address(eTST2), unitOfAccount);
+        uint256 valRepay = oracle.getQuote(maxRepay, address(assetTST), unitOfAccount);
+
+        assertApproxEqAbs(valRepay, valYield * healthScore / 1e18, 0.000000001e18);
+
+        vm.revertTo(snapshot);
+
+        // price drops further, liquidation bonus follows liquidation health score
+
+        oracle.setPrice(address(assetTST2), unitOfAccount, 0.19e18);
+
+        (collateralValue, liabilityValue) = eTST.accountLiquidity(borrower, false);
+        healthScore = collateralValue * 1e18 / liabilityValue;
+        assertApproxEqAbs(healthScore, 0.51e18, 0.01e18);
+
+        (collateralValue, liabilityValue) = eTST.accountLiquidity(borrower, true);
+        healthScore = collateralValue * 1e18 / liabilityValue;
+        assertApproxEqAbs(healthScore, 0.86e18, 0.01e18);
+
+        vm.expectRevert(Errors.E_AccountLiquidity.selector);
+        eTST.borrow(0.0001e18, borrower);
+
+        (maxRepay, maxYield) = eTST.checkLiquidation(lender, borrower, address(eTST2));
+        assertGt(maxRepay, 0);
+        assertGt(maxYield, 0);
+
+        snapshot = vm.snapshot();
+        collateralBefore = eTST2.balanceOf(borrower);
+        debtBefore = eTST.debtOf(borrower);
+        startHoax(lender);
+        eTST.liquidate(borrower, address(eTST2), type(uint256).max, 0);
+        startHoax(borrower);
+
+        assertEq(collateralBefore, eTST2.balanceOf(borrower) + maxYield);
+        assertEq(debtBefore, eTST.debtOf(borrower) + maxRepay);
+
+        // bonus grows with health score
+
+        yieldAssets = eTST2.convertToAssets(maxYield);
+        valYield = oracle.getQuote(yieldAssets, address(eTST2), unitOfAccount);
+        valRepay = oracle.getQuote(maxRepay, address(assetTST), unitOfAccount);
+
+        assertApproxEqAbs(valRepay, valYield * healthScore / 1e18, 0.000000001e18);
+
+        vm.revertTo(snapshot);
+
+        // discount maxes out
+
+        oracle.setPrice(address(assetTST2), unitOfAccount, 0.15e18);
+
+        (collateralValue, liabilityValue) = eTST.accountLiquidity(borrower, false);
+        healthScore = collateralValue * 1e18 / liabilityValue;
+        assertApproxEqAbs(healthScore, 0.4e18, 0.01e18);
+
+        (collateralValue, liabilityValue) = eTST.accountLiquidity(borrower, true);
+        healthScore = collateralValue * 1e18 / liabilityValue;
+        assertApproxEqAbs(healthScore, 0.68e18, 0.01e18);
+
+        vm.expectRevert(Errors.E_AccountLiquidity.selector);
+        eTST.borrow(0.0001e18, borrower);
+
+        (maxRepay, maxYield) = eTST.checkLiquidation(lender, borrower, address(eTST2));
+        assertGt(maxRepay, 0);
+        assertGt(maxYield, 0);
+
+        snapshot = vm.snapshot();
+        collateralBefore = eTST2.balanceOf(borrower);
+        debtBefore = eTST.debtOf(borrower);
+        startHoax(lender);
+        eTST.liquidate(borrower, address(eTST2), type(uint256).max, 0);
+        startHoax(borrower);
+
+        assertEq(collateralBefore, eTST2.balanceOf(borrower) + maxYield);
+        assertEq(debtBefore, eTST.debtOf(borrower) + maxRepay);
+
+        yieldAssets = eTST2.convertToAssets(maxYield);
+        valYield = oracle.getQuote(yieldAssets, address(eTST2), unitOfAccount);
+        valRepay = oracle.getQuote(maxRepay, address(assetTST), unitOfAccount);
+
+        // max discount
+        assertApproxEqAbs(valRepay, valYield * (1e18 - 0.2e18) / 1e18, 0.000000001e18);
+
+        vm.revertTo(snapshot);
     }
 
     function getRiskAdjustedValue(uint256 amount, uint256 price, uint256 factor) public pure returns (uint256) {
