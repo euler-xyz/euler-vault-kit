@@ -19,10 +19,6 @@ library ConfigAmountLib {
     function toUint16(ConfigAmount self) internal pure returns (uint16) {
         return ConfigAmount.unwrap(self);
     }
-
-    function validate(uint256 amount) internal pure {
-        if (amount > CONFIG_SCALE) revert Errors.E_InvalidConfigAmount();
-    }
 }
 
 function gtConfigAmount(ConfigAmount a, ConfigAmount b) pure returns (bool) {

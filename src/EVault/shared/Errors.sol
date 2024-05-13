@@ -47,7 +47,7 @@ contract Errors {
     error E_BorrowCapExceeded();
     error E_InvalidLTVAsset();
     error E_NoPriceOracle();
-    error E_InvalidConfigAmount();
+    error E_ConfigAmountTooLargeToEncode();
     error E_BadAssetReceiver();
     error E_BadSharesReceiver();
     error E_LTVRamp();
