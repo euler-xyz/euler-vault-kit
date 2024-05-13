@@ -1662,7 +1662,7 @@ contract VaultLiquidation_Test is EVaultTestBase {
         eTST.borrow(5e18, borrower);
 
         startHoax(address(this));
-        eTST.setLTV(address(eTST3), 0.95e4, 0);
+        eTST.setLTV(address(eTST3), 0.95e4, 0.95e4, 0);
 
         // enable collateral with no deposit to verify accountLiquidityFull behavior
         vm.stopPrank();
@@ -1909,7 +1909,7 @@ contract VaultLiquidation_Test is EVaultTestBase {
         eTST.borrow(5e18, borrower);
 
         startHoax(address(this));
-        eTST.setLTV(address(eTST3), 0.95e4, 0);
+        eTST.setLTV(address(eTST3), 0.95e4, 0.95e4, 0);
 
         vm.stopPrank();
         vm.prank(borrower);
