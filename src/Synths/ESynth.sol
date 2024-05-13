@@ -70,6 +70,10 @@ contract ESynth is ERC20Collateral, Ownable {
         address sender = _msgSender();
         MinterData storage minterCache = minters[sender];
 
+        if (amount == 0) {
+            return;
+        }
+
         // The allowance check should be performed if the spender is not the account with the exception of the owner burning from this contract.
         if (burnFrom != sender && !(burnFrom == address(this) && sender == owner())) {
             _spendAllowance(burnFrom, sender, amount);
