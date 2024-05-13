@@ -77,11 +77,6 @@ contract IRMSynth is IIRM {
 
         uint256 quote = oracle.getQuote(quoteAmount, synth, referenceAsset);
 
-        // If the quote is 0, return the last rate
-        if (quote == 0) {
-            return (rate, updated);
-        }
-
         updated = true;
 
         if (quote < targetQuote) {
