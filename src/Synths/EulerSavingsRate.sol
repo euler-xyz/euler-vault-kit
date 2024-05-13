@@ -14,7 +14,7 @@ import {EVCUtil} from "ethereum-vault-connector/utils/EVCUtil.sol";
 /// @notice EulerSavingsRate is a ERC4626-compatible vault which allows users to deposit the underlying asset and receive
 /// interest in the form of the same underlying asset. On withdraw, redeem and transfers, the account status checks must be
 /// requested for the account which health might be negatively affected. Thanks to that, the shares of the EulerSavingsRate
-///vault might be used as collateral by other EVC-compatible vaults.
+/// vault might be used as collateral by other EVC-compatible vaults.
 /// @dev Do NOT use with fee on transfer tokens
 /// @dev Do NOT use with rebasing tokens
 contract EulerSavingsRate is EVCUtil, ERC4626 {

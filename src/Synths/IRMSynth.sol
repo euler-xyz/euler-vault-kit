@@ -46,7 +46,7 @@ contract IRMSynth is IIRM {
         targetQuote = targetQuoute_;
         quoteAmount = 10 ** IERC20(synth_).decimals();
 
-        // Ensure the oracle works with the given synth and reference asset
+        // Refusing to proceed with worthless asset
         uint256 testQuote = IPriceOracle(oracle_).getQuote(quoteAmount, synth_, referenceAsset_);
         if (testQuote == 0) {
             revert E_InvalidQuote();
