@@ -23,7 +23,7 @@ contract IRMSynthTest is Test {
         irm = new IRMSynth(synth, REFERENCE_ASSET, address(oracle), TARGET_QUOTE);
     }
 
-    function test_IRMSynth_Constructor_SynthZeroAddress() public view {
+    function test_IRMSynth_Constructor_SynthZeroAddress() public {
         vm.expectRevert(IRMSynth.E_ZeroAddress.selector);
         new IRMSynth(address(0), REFERENCE_ASSET, address(oracle), TARGET_QUOTE);
     }
