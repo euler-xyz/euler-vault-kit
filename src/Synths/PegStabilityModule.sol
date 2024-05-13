@@ -95,18 +95,18 @@ contract PegStabilityModule is EVCUtil {
     }
 
     function quoteToUnderlyingGivenIn(uint256 amountIn) public view returns (uint256) {
-        return amountIn * (BPS_SCALE - TO_UNDERLYING_FEE) / BPS_SCALE * conversionPrice / PRICE_SCALE;
+        return amountIn * (BPS_SCALE - TO_UNDERLYING_FEE) * conversionPrice / BPS_SCALE / PRICE_SCALE;
     }
 
     function quoteToUnderlyingGivenOut(uint256 amountOut) public view returns (uint256) {
-        return amountOut * BPS_SCALE / (BPS_SCALE - TO_UNDERLYING_FEE) * PRICE_SCALE / conversionPrice;
+        return amountOut * BPS_SCALE * PRICE_SCALE / (BPS_SCALE - TO_UNDERLYING_FEE) / conversionPrice;
     }
 
     function quoteToSynthGivenIn(uint256 amountIn) public view returns (uint256) {
-        return amountIn * (BPS_SCALE - TO_SYNTH_FEE) / BPS_SCALE * PRICE_SCALE / conversionPrice;
+        return amountIn * (BPS_SCALE - TO_SYNTH_FEE) * PRICE_SCALE / BPS_SCALE / conversionPrice;
     }
 
     function quoteToSynthGivenOut(uint256 amountOut) public view returns (uint256) {
-        return amountOut * BPS_SCALE / (BPS_SCALE - TO_SYNTH_FEE) * conversionPrice / PRICE_SCALE;
+        return amountOut * BPS_SCALE * conversionPrice / (BPS_SCALE - TO_SYNTH_FEE) / PRICE_SCALE;
     }
 }
