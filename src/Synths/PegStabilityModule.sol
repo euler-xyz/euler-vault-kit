@@ -7,6 +7,14 @@ import {IERC20} from "openzeppelin-contracts/token/ERC20/IERC20.sol";
 import {SafeERC20} from "openzeppelin-contracts/token/ERC20/utils/SafeERC20.sol";
 import {ESynth} from "./ESynth.sol";
 
+/// @title PegStabilityModule
+/// @author Euler Labs (https://www.eulerlabs.com/)
+/// @notice The PegStabilityModule is granted minting rights on the ESynth and must allow slippage-free conversion from
+/// and to the underlying asset as per configured conversionPrice. On deployment, the fee for swaps to synthetic asset
+/// and to underlying asset are defined. These fees must accrue to the PegStabilityModule contract and can not be withdrawn,
+/// serving as a permanent reserve to support the peg. Swapping to the synthetic asset is possible up to the minting cap
+/// granted for the PegStabilityModule in the ESynth. Swapping to the underlying asset is possible up to the amount of
+/// the underlying asset held by the PegStabilityModule.
 contract PegStabilityModule is EVCUtil {
     using SafeERC20 for IERC20;
 

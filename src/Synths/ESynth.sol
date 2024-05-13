@@ -8,6 +8,11 @@ import {IEVC, EVCUtil} from "ethereum-vault-connector/utils/EVCUtil.sol";
 import {ERC20Collateral, ERC20, Context} from "./ERC20Collateral.sol";
 import {IEVault} from "../EVault/IEVault.sol";
 
+/// @title ESynth
+/// @author Euler Labs (https://www.eulerlabs.com/)
+/// @notice ESynth is an ERC20-compatible token with the EVC support which, thanks to relying on the EVC authentication
+/// and requesting the account status checks on token transfers and burns, allows it to be used as collateral in other
+/// vault. It is meant to be used as an underlying asset of the synthetic asset vault.
 contract ESynth is ERC20Collateral, Ownable {
     using EnumerableSet for EnumerableSet.AddressSet;
 

@@ -9,8 +9,14 @@ import {ERC4626} from "openzeppelin-contracts/token/ERC20/extensions/ERC4626.sol
 import {IEVC} from "ethereum-vault-connector/interfaces/IEthereumVaultConnector.sol";
 import {EVCUtil} from "ethereum-vault-connector/utils/EVCUtil.sol";
 
-// @note Do NOT use with fee on transfer tokens
-// @note Do NOT use with rebasing tokens
+/// @title EulerSavingsRate
+/// @author Euler Labs (https://www.eulerlabs.com/)
+/// @notice EulerSavingsRate is a ERC4626-compatible vault which allows users to deposit the underlying asset and receive
+/// interest in the form of the same underlying asset. On withdraw, redeem and transfers, the account status checks must be
+/// requested for the account which health might be negatively affected. Thanks to that, the shares of the EulerSavingsRate
+///vault might be used as collateral by other EVC-compatible vaults.
+/// @dev Do NOT use with fee on transfer tokens
+/// @dev Do NOT use with rebasing tokens
 contract EulerSavingsRate is EVCUtil, ERC4626 {
     using Math for uint256;
 
