@@ -4,6 +4,7 @@ pragma solidity ^0.8.0;
 
 import "../InterestRateModels/IIRM.sol";
 import "../interfaces/IPriceOracle.sol";
+import {IERC20} from "../EVault/IEVault.sol";
 
 contract IRMSynth is IIRM {
     uint216 internal constant SECONDS_PER_YEAR = 365.2425 * 86400; // Gregorian calendar
@@ -17,6 +18,7 @@ contract IRMSynth is IIRM {
     address public immutable referenceAsset;
     IPriceOracle public immutable oracle;
     uint256 public immutable targetQuote;
+    uint256 public immutable quoteAmount;
 
     struct IRMData {
         uint40 lastUpdated;
@@ -33,16 +35,17 @@ contract IRMSynth is IIRM {
             revert E_ZeroAddress();
         }
 
-        // Ensure the oracle works with the given synth and reference asset
-        uint256 testQuote = IPriceOracle(oracle_).getQuote(1e18, synth_, referenceAsset_);
-        if (testQuote == 0) {
-            revert E_InvalidQuote();
-        }
-
         synth = synth_;
         referenceAsset = referenceAsset_;
         oracle = IPriceOracle(oracle_);
         targetQuote = targetQuoute_;
+        quoteAmount = 10 ** IERC20(synth_).decimals();
+
+        // Ensure the oracle works with the given synth and reference asset
+        uint256 testQuote = IPriceOracle(oracle_).getQuote(quoteAmount, synth_, referenceAsset_);
+        if (testQuote == 0) {
+            revert E_InvalidQuote();
+        }
 
         irmStorage = IRMData({lastUpdated: uint40(block.timestamp), lastRate: BASE_RATE});
     }
@@ -72,7 +75,7 @@ contract IRMSynth is IIRM {
             return (rate, updated);
         }
 
-        uint256 quote = oracle.getQuote(1e18, synth, referenceAsset);
+        uint256 quote = oracle.getQuote(quoteAmount, synth, referenceAsset);
 
         // If the quote is 0, return the last rate
         if (quote == 0) {
