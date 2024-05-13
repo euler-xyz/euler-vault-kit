@@ -30,7 +30,7 @@ contract PegStabilityModule is EVCUtil {
         uint256 toUnderlyingFeeBPS,
         uint256 toSynthFeeBPS,
         uint256 _conversionPrice
-    ) EVCUtil(_evc) {
+    ) EVCUtil(IEVC(_evc)) {
         if (toUnderlyingFeeBPS >= BPS_SCALE || toSynthFeeBPS >= BPS_SCALE) {
             revert E_FeeExceedsBPS();
         }

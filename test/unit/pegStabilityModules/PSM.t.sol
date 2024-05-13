@@ -8,6 +8,7 @@ import {PegStabilityModule, EVCUtil} from "../../../src/Synths/PegStabilityModul
 import {ESynth, IEVC} from "../../../src/Synths/ESynth.sol";
 import {TestERC20} from "../../mocks/TestERC20.sol";
 import {EthereumVaultConnector} from "ethereum-vault-connector/EthereumVaultConnector.sol";
+import {EVCUtil} from "ethereum-vault-connector/utils/EVCUtil.sol";
 
 contract PSMTest is Test {
     uint256 public TO_UNDERLYING_FEE = 30;
@@ -94,7 +95,7 @@ contract PSMTest is Test {
     }
 
     function testConstructorEVCZeroAddress() public {
-        vm.expectRevert(EVCUtil.EVC_InvalidAddress.selector);
+        vm.expectRevert(PegStabilityModule.E_ZeroAddress.selector);
         new PegStabilityModule(
             address(0), address(synth), address(underlying), TO_UNDERLYING_FEE, TO_SYNTH_FEE, CONVERSION_PRICE
         );
