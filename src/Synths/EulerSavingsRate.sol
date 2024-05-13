@@ -11,8 +11,8 @@ import {EVCUtil} from "ethereum-vault-connector/utils/EVCUtil.sol";
 // @note Do NOT use with fee on transfer tokens
 // @note Do NOT use with rebasing tokens
 contract EulerSavingsRate is EVCUtil, ERC4626 {
-    uint8 internal constant REENTRANCYLOCK__UNLOCKED = 1;
-    uint8 internal constant REENTRANCYLOCK__LOCKED = 2;
+    uint8 internal constant UNLOCKED = 1;
+    uint8 internal constant LOCKED = 2;
 
     uint256 public constant INTEREST_SMEAR = 2 weeks;
 
@@ -38,11 +38,11 @@ contract EulerSavingsRate is EVCUtil, ERC4626 {
     }
 
     modifier nonReentrant() {
-        if (esrSlot.locked == REENTRANCYLOCK__LOCKED) revert Reentrancy();
+        if (esrSlot.locked == LOCKED) revert Reentrancy();
 
-        esrSlot.locked = REENTRANCYLOCK__LOCKED;
+        esrSlot.locked = LOCKED;
         _;
-        esrSlot.locked = REENTRANCYLOCK__UNLOCKED;
+        esrSlot.locked = UNLOCKED;
     }
 
     constructor(IEVC _evc, address _asset, string memory _name, string memory _symbol)
@@ -50,7 +50,7 @@ contract EulerSavingsRate is EVCUtil, ERC4626 {
         ERC4626(IERC20(_asset))
         ERC20(_name, _symbol)
     {
-        esrSlot.locked = REENTRANCYLOCK__UNLOCKED;
+        esrSlot.locked = UNLOCKED;
     }
 
     function totalAssets() public view override returns (uint256) {
