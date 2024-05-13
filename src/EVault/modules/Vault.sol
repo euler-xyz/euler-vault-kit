@@ -235,7 +235,7 @@ abstract contract VaultModule is IVault, Base, AssetTransfers, BalanceUtils {
         // under-estimate the return amount to zero.
         // Integrators who handle borrowing should implement custom logic to work with the particular controllers
         // they want to support.
-        if (isCollateralEnabled(owner, address(this)) && hasControllerEnabled(owner)) return Shares.wrap(0);
+        if (isCollateralEnabled(owner, address(this)) && hasAnyControllerEnabled(owner)) return Shares.wrap(0);
 
         VaultCache memory vaultCache = loadVault();
 

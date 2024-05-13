@@ -116,15 +116,15 @@ abstract contract LiquidationModule is ILiquidation, Base, BalanceUtils, Liquidi
     {
         // Check account health
 
-        (uint256 liquidityCollateralValue, uint256 liquidityLiabilityValue) =
+        (uint256 collateralAdjustedValue, uint256 liquidityLiabilityValue) =
             calculateLiquidity(vaultCache, liqCache.violator, liqCache.collaterals, true);
 
         // no violation
-        if (liquidityCollateralValue > liquidityLiabilityValue) return liqCache;
+        if (collateralAdjustedValue > liquidityLiabilityValue) return liqCache;
 
         // Compute discount
 
-        uint256 discountFactor = liquidityCollateralValue * 1e18 / liquidityLiabilityValue; // discountFactor = health score = 1 - discount
+        uint256 discountFactor = collateralAdjustedValue * 1e18 / liquidityLiabilityValue; // discountFactor = health score = 1 - discount
 
         if (discountFactor < 1e18 - MAXIMUM_LIQUIDATION_DISCOUNT) {
             discountFactor = 1e18 - MAXIMUM_LIQUIDATION_DISCOUNT;
