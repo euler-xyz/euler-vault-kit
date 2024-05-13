@@ -61,7 +61,7 @@ abstract contract VaultModule is IVault, Base, AssetTransfers, BalanceUtils {
         if (isOperationDisabled(vaultCache.hookedOps, OP_MINT)) return 0;
 
         // make sure to not revert on conversion
-        uint256 shares = maxDepositInternal(vaultCache, account).toAssets().toSharesDownUint256(vaultCache);
+        uint256 shares = maxDepositInternal(vaultCache, account).toAssets().toSharesDownUint(vaultCache);
 
         return shares < MAX_SANE_AMOUNT ? shares : MAX_SANE_AMOUNT;
     }
