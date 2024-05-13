@@ -203,6 +203,8 @@ contract EVault is Dispatch {
 
     function maxLiquidationDiscount() public view virtual override useView(MODULE_GOVERNANCE) returns (uint16) {}
 
+    function liquidationCoolOffTime() public view virtual override useView(MODULE_GOVERNANCE) returns (uint16) {}
+
     function hookConfig() public view virtual override useView(MODULE_GOVERNANCE) returns (address, uint32) {}
 
     function configFlags() public view virtual override useView(MODULE_GOVERNANCE) returns (uint32) {}
@@ -233,6 +235,8 @@ contract EVault is Dispatch {
     function clearLTV(address collateral) public virtual override use(MODULE_GOVERNANCE) {}
 
     function setMaxLiquidationDiscount(uint16 newDiscount) public virtual override use(MODULE_GOVERNANCE) {}
+
+    function setLiquidationCoolOffTime(uint16 newCoolOffTime) public virtual override use(MODULE_GOVERNANCE) {}
 
     function setInterestRateModel(address newModel) public virtual override use(MODULE_GOVERNANCE) {}
 

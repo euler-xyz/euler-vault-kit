@@ -70,6 +70,7 @@ contract LiquidationUnitTest is EVaultTestBase {
         evc.enableController(borrower, address(eTST));
 
         eTST.borrow(5e18, borrower);
+
         assertEq(assetTST.balanceOf(borrower), 5e18);
         vm.stopPrank();
 

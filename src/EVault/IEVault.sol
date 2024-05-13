@@ -377,6 +377,10 @@ interface IGovernance {
     /// @return The maximum liquidation discount in 1e4 scale
     function maxLiquidationDiscount() external view returns (uint16);
 
+    /// @notice Retrieves liquidation cool off time, which must elapse after successful account status check before account can be liquidated
+    /// @return The liquidation cool off time in seconds
+    function liquidationCoolOffTime() external view returns (uint16);
+
     /// @notice Retrieves a hook target and a bitmask indicating which operations call the hook target.
     function hookConfig() external view returns (address, uint32);
 
@@ -424,6 +428,10 @@ interface IGovernance {
     /// @notice Set a new maximum liquidation discount
     /// @param newDiscount New maximum liquidation discount in 1e4 scale
     function setMaxLiquidationDiscount(uint16 newDiscount) external;
+
+    /// @notice Retrieves liquidation cool off time, which must elapse after successful account status check before account can be liquidated
+    /// @param newCoolOffTime The new liquidation cool off time in seconds
+    function setLiquidationCoolOffTime(uint16 newCoolOffTime) external;
 
     /// @notice Set a new interest rate model contract
     /// @param newModel Address of the contract

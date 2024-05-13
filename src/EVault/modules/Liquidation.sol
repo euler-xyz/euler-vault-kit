@@ -74,7 +74,7 @@ abstract contract LiquidationModule is ILiquidation, Base, BalanceUtils, Liquidi
 
         // Checks
 
-        // Self liquidation is not allowed
+        // Same account self-liquidation is not allowed
         if (liqCache.violator == liqCache.liquidator) revert E_SelfLiquidation();
         // Only liquidate trusted collaterals to make sure yield transfer has no side effects.
         if (!isRecognizedCollateral(liqCache.collateral)) revert E_BadCollateral();
@@ -85,6 +85,8 @@ abstract contract LiquidationModule is ILiquidation, Base, BalanceUtils, Liquidi
         // Violator's health check must not be deferred, meaning no prior operations on violator's account
         // would possibly be forgiven after the enforced collateral transfer to the liquidator
         if (isAccountStatusCheckDeferred(violator)) revert E_ViolatorLiquidityDeferred();
+        // A cool off time must elapse since successful account status check in order to mitigate self-liquidaition attacks
+        if (isInLiquidationCoolOff(violator)) revert E_LiquidationCoolOff();
 
         // Violator has no liabilities, liquidation is a no-op
         if (liqCache.liability.isZero()) return liqCache;
@@ -216,6 +218,12 @@ abstract contract LiquidationModule is ILiquidation, Base, BalanceUtils, Liquidi
         emit Liquidate(
             liqCache.liquidator, liqCache.violator, liqCache.collateral, liqCache.repay.toUint(), liqCache.yieldBalance
         );
+    }
+
+    function isInLiquidationCoolOff(address account) private view returns (bool) {
+        unchecked {
+            return block.timestamp < getLastAccountStatusCheckTimestamp(account) + vaultStorage.liquidationCoolOffTime;
+        }
     }
 }
 

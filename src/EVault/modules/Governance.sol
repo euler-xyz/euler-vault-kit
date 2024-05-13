@@ -46,6 +46,9 @@ abstract contract GovernanceModule is IGovernance, Base, BalanceUtils, BorrowUti
     /// @param newLiquidationDiscount The new maximum liquidation discount in 1e4 scale
     event GovSetMaxLiquidationDiscount(uint16 newLiquidationDiscount);
     event GovSetInterestRateModel(address interestRateModel);
+    /// @notice Set a new liqiuidation cool off time, which must elapse after successful account status check before account can be liquidated
+    /// @param newCoolOffTime The new liquidation cool off time in seconds
+    event GovSetLiquidationCoolOffTime(uint16 newCoolOffTime);
     event GovSetHookConfig(address indexed newHookTarget, uint32 newHookedOps);
     event GovSetConfigFlags(uint32 newConfigFlags);
     event GovSetCaps(uint16 newSupplyCap, uint16 newBorrowCap);
@@ -134,6 +137,11 @@ abstract contract GovernanceModule is IGovernance, Base, BalanceUtils, BorrowUti
     /// @inheritdoc IGovernance
     function maxLiquidationDiscount() public view virtual reentrantOK returns (uint16) {
         return vaultStorage.maxLiquidationDiscount.toUint16();
+    }
+
+    /// @inheritdoc IGovernance
+    function liquidationCoolOffTime() public view virtual reentrantOK returns (uint16) {
+        return vaultStorage.liquidationCoolOffTime;
     }
 
     /// @inheritdoc IGovernance
@@ -279,6 +287,12 @@ abstract contract GovernanceModule is IGovernance, Base, BalanceUtils, BorrowUti
     function setMaxLiquidationDiscount(uint16 newDiscount) public virtual nonReentrant governorOnly {
         vaultStorage.maxLiquidationDiscount = newDiscount.toConfigAmount();
         emit GovSetMaxLiquidationDiscount(newDiscount);
+    }
+
+    /// @inheritdoc IGovernance
+    function setLiquidationCoolOffTime(uint16 newCoolOffTime) public virtual nonReentrant governorOnly {
+        vaultStorage.liquidationCoolOffTime = newCoolOffTime;
+        emit GovSetLiquidationCoolOffTime(newCoolOffTime);
     }
 
     /// @inheritdoc IGovernance
