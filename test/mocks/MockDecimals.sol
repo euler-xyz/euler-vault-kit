@@ -8,5 +8,4 @@ contract MockDecimals {
     constructor(uint8 decimals_) {
         decimals = decimals_;
     }
-
 }
