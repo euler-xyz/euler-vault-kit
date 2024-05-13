@@ -61,7 +61,6 @@ contract EulerSavingsRate is EVCUtil, ERC4626 {
     {
         esrSlot.locked = UNLOCKED;
     }
-    
 
     /// @notice Returns the total assets deposited + any accrued interest.
     /// @return The total assets deposited + any accrued interest.
