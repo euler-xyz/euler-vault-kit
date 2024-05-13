@@ -52,7 +52,10 @@ contract EulerSavingsRate is EVCUtil, ERC4626 {
     {
         esrSlot.locked = UNLOCKED;
     }
+    
 
+    /// @notice Returns the total assets deposited + any accrued interest.
+    /// @return The total assets deposited + any accrued interest.
     function totalAssets() public view override returns (uint256) {
         return totalAssetsDeposited + interestAccrued();
     }
@@ -88,6 +91,11 @@ contract EulerSavingsRate is EVCUtil, ERC4626 {
         return super.transferFrom(from, to, amount);
     }
 
+
+    /// @notice Deposits a certain amount of assets to the vault.
+    /// @param assets The amount of assets to deposit.
+    /// @param receiver The recipient of the shares.
+    /// @return The amount of shares minted.
     function withdraw(uint256 assets, address receiver, address owner)
         public
         override
@@ -100,6 +108,10 @@ contract EulerSavingsRate is EVCUtil, ERC4626 {
         return super.withdraw(assets, receiver, owner);
     }
 
+    /// @notice Redeems a certain amount of shares for assets.
+    /// @param shares The amount of shares to redeem.
+    /// @param receiver The recipient of the assets.
+    /// @return The amount of assets redeemed.
     function redeem(uint256 shares, address receiver, address owner)
         public
         override
@@ -125,6 +137,7 @@ contract EulerSavingsRate is EVCUtil, ERC4626 {
         super._withdraw(caller, receiver, owner, assets, shares);
     }
 
+    /// @notice Smears any donations to this vault as interest.
     function gulp() public {
         ESRSlot memory esrSlotCache = updateInterestAndReturnESRSlotCache();
 
@@ -141,6 +154,8 @@ contract EulerSavingsRate is EVCUtil, ERC4626 {
         esrSlot = esrSlotCache;
     }
 
+    /// @notice Updates the interest and returns the ESR storage slot cache.
+    /// @return The ESR storage slot cache.
     function updateInterestAndReturnESRSlotCache() public returns (ESRSlot memory) {
         ESRSlot memory esrSlotCache = esrSlot;
         uint256 accruedInterest = interestAccruedFromCache(esrSlotCache);
@@ -156,6 +171,8 @@ contract EulerSavingsRate is EVCUtil, ERC4626 {
         return esrSlotCache;
     }
 
+    /// @notice Returns the maximum amount of assets that can be redeemed by an account.
+    /// @dev Will return 0 if the account has a controller.
     function maxRedeem(address owner) public view override returns (uint256) {
         // Max redeem can potentially be 0 if there is a liability
         if (evc.getControllers(owner).length > 0) {
@@ -165,6 +182,8 @@ contract EulerSavingsRate is EVCUtil, ERC4626 {
         return super.maxRedeem(owner);
     }
 
+    /// @notice Returns the maximum amount of assets that can be withdrawn by an account.
+    /// @dev Will return 0 if the account has a controller.
     function maxWithdraw(address owner) public view override returns (uint256) {
         // Max withdraw can potentially be 0 if there is a liability
         if (evc.getControllers(owner).length > 0) {
@@ -174,6 +193,7 @@ contract EulerSavingsRate is EVCUtil, ERC4626 {
         return super.maxWithdraw(owner);
     }
 
+    /// @notice Returns the amount of interest accrued.
     function interestAccrued() public view returns (uint256) {
         return interestAccruedFromCache(esrSlot);
     }
@@ -196,6 +216,7 @@ contract EulerSavingsRate is EVCUtil, ERC4626 {
         return esrSlotCache.interestLeft * timePassed / totalDuration;
     }
 
+    /// @notice Returns the ESR storage slot as a struct.
     function getESRSlot() public view returns (ESRSlot memory) {
         return esrSlot;
     }
