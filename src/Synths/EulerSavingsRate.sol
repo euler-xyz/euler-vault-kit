@@ -2,18 +2,28 @@
 pragma solidity ^0.8.0;
 
 import {Context} from "openzeppelin-contracts/utils/Context.sol";
+import {Math} from "openzeppelin-contracts/utils/math/Math.sol";
 import {IERC20} from "openzeppelin-contracts/token/ERC20/IERC20.sol";
 import {ERC20} from "openzeppelin-contracts/token/ERC20/ERC20.sol";
 import {ERC4626} from "openzeppelin-contracts/token/ERC20/extensions/ERC4626.sol";
 import {IEVC} from "ethereum-vault-connector/interfaces/IEthereumVaultConnector.sol";
 import {EVCUtil} from "ethereum-vault-connector/utils/EVCUtil.sol";
 
-// @note Do NOT use with fee on transfer tokens
-// @note Do NOT use with rebasing tokens
+/// @title EulerSavingsRate
+/// @author Euler Labs (https://www.eulerlabs.com/)
+/// @notice EulerSavingsRate is a ERC4626-compatible vault which allows users to deposit the underlying asset and receive
+/// interest in the form of the same underlying asset. On withdraw, redeem and transfers, the account status checks must be
+/// requested for the account which health might be negatively affected. Thanks to that, the shares of the EulerSavingsRate
+/// vault might be used as collateral by other EVC-compatible vaults.
+/// @dev Do NOT use with fee on transfer tokens
+/// @dev Do NOT use with rebasing tokens
 contract EulerSavingsRate is EVCUtil, ERC4626 {
-    uint8 internal constant REENTRANCYLOCK__UNLOCKED = 1;
-    uint8 internal constant REENTRANCYLOCK__LOCKED = 2;
+    using Math for uint256;
 
+    uint8 internal constant UNLOCKED = 1;
+    uint8 internal constant LOCKED = 2;
+
+    uint256 internal constant VIRTUAL_AMOUNT = 1e6;
     uint256 public constant INTEREST_SMEAR = 2 weeks;
 
     struct ESRSlot {
@@ -24,8 +34,7 @@ contract EulerSavingsRate is EVCUtil, ERC4626 {
     }
 
     ESRSlot internal esrSlot;
-
-    uint256 internal totalAssetsDeposited;
+    uint256 internal _totalAssets;
 
     error Reentrancy();
 
@@ -38,23 +47,41 @@ contract EulerSavingsRate is EVCUtil, ERC4626 {
     }
 
     modifier nonReentrant() {
-        if (esrSlot.locked == REENTRANCYLOCK__LOCKED) revert Reentrancy();
+        if (esrSlot.locked == LOCKED) revert Reentrancy();
 
-        esrSlot.locked = REENTRANCYLOCK__LOCKED;
+        esrSlot.locked = LOCKED;
         _;
-        esrSlot.locked = REENTRANCYLOCK__UNLOCKED;
+        esrSlot.locked = UNLOCKED;
     }
 
     constructor(IEVC _evc, address _asset, string memory _name, string memory _symbol)
-        EVCUtil(address(_evc))
+        EVCUtil(_evc)
         ERC4626(IERC20(_asset))
         ERC20(_name, _symbol)
     {
-        esrSlot.locked = REENTRANCYLOCK__UNLOCKED;
+        esrSlot.locked = UNLOCKED;
     }
 
     function totalAssets() public view override returns (uint256) {
-        return totalAssetsDeposited + interestAccrued();
+        return _totalAssets + interestAccrued();
+    }
+
+    function maxRedeem(address owner) public view override returns (uint256) {
+        // Max redeem can potentially be 0 if there is a liability
+        if (evc.getControllers(owner).length > 0) {
+            return 0;
+        }
+
+        return super.maxRedeem(owner);
+    }
+
+    function maxWithdraw(address owner) public view override returns (uint256) {
+        // Max withdraw can potentially be 0 if there is a liability
+        if (evc.getControllers(owner).length > 0) {
+            return 0;
+        }
+
+        return super.maxWithdraw(owner);
     }
 
     /// @notice Transfers a certain amount of tokens to a recipient.
@@ -101,7 +128,7 @@ contract EulerSavingsRate is EVCUtil, ERC4626 {
         requireAccountStatusCheck(owner)
         returns (uint256 shares)
     {
-        // Move interest to totalAssetsDeposited
+        // Move interest to totalAssets
         updateInterestAndReturnESRSlotCache();
         return super.withdraw(assets, receiver, owner);
     }
@@ -113,13 +140,21 @@ contract EulerSavingsRate is EVCUtil, ERC4626 {
         requireAccountStatusCheck(owner)
         returns (uint256 assets)
     {
-        // Move interest to totalAssetsDeposited
+        // Move interest to totalAssets
         updateInterestAndReturnESRSlotCache();
         return super.redeem(shares, receiver, owner);
     }
 
+    function _convertToShares(uint256 assets, Math.Rounding rounding) internal view override returns (uint256) {
+        return assets.mulDiv(totalSupply() + VIRTUAL_AMOUNT, totalAssets() + VIRTUAL_AMOUNT, rounding);
+    }
+
+    function _convertToAssets(uint256 shares, Math.Rounding rounding) internal view override returns (uint256) {
+        return shares.mulDiv(totalAssets() + VIRTUAL_AMOUNT, totalSupply() + VIRTUAL_AMOUNT, rounding);
+    }
+
     function _deposit(address caller, address receiver, uint256 assets, uint256 shares) internal override {
-        totalAssetsDeposited += assets;
+        _totalAssets = _totalAssets + assets;
         super._deposit(caller, receiver, assets, shares);
     }
 
@@ -127,7 +162,7 @@ contract EulerSavingsRate is EVCUtil, ERC4626 {
         internal
         override
     {
-        totalAssetsDeposited -= assets;
+        _totalAssets = _totalAssets - assets;
         super._withdraw(caller, receiver, owner, assets, shares);
     }
 
@@ -135,7 +170,7 @@ contract EulerSavingsRate is EVCUtil, ERC4626 {
         ESRSlot memory esrSlotCache = updateInterestAndReturnESRSlotCache();
 
         uint256 assetBalance = IERC20(asset()).balanceOf(address(this));
-        uint256 toGulp = assetBalance - totalAssetsDeposited - esrSlotCache.interestLeft;
+        uint256 toGulp = assetBalance - _totalAssets - esrSlotCache.interestLeft;
 
         uint256 maxGulp = type(uint168).max - esrSlotCache.interestLeft;
         if (toGulp > maxGulp) toGulp = maxGulp; // cap interest, allowing the vault to function
@@ -156,8 +191,8 @@ contract EulerSavingsRate is EVCUtil, ERC4626 {
         esrSlotCache.lastInterestUpdate = uint40(block.timestamp);
         // write esrSlotCache back to storage in a single SSTORE
         esrSlot = esrSlotCache;
-        // Move interest accrued to totalAssetsDeposited
-        totalAssetsDeposited += accruedInterest;
+        // Move interest accrued to totalAssets
+        _totalAssets = _totalAssets + accruedInterest;
 
         return esrSlotCache;
     }
