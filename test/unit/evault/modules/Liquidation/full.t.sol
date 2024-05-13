@@ -583,7 +583,7 @@ contract VaultLiquidation_Test is EVaultTestBase {
         uint256 shares = eTST2.convertToShares(maxYield);
         uint256 yieldReverse = eTST2.convertToAssets(shares);
         // rounding errors
-        assertEq(maxYield - yieldReverse, 4);
+        assertEq(maxYield - yieldReverse, 2);
 
         uint256 snapshot = vm.snapshot();
 

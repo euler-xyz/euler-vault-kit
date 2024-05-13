@@ -194,11 +194,11 @@ contract VaultTest_BalancesWithInterest is EVaultTestBase {
         assertEq(eTST.debtOf(user3), 1.10524434607857021e18);
 
         // eVault maxWithdraw increases. 10% less than the amount owed, because of reserve fee. Matches untouchedSupplyAPY above:
-        assertEq(eTST.convertToAssets(eTST.balanceOf(user1)), 1.047359955735333033e18);
-        assertEq(eTST.convertToAssets(eTST.balanceOf(user2)), 1.047359955735333033e18);
+        assertEq(eTST.convertToAssets(eTST.balanceOf(user1)), 1.047359955735332915e18);
+        assertEq(eTST.convertToAssets(eTST.balanceOf(user2)), 1.047359955735332915e18);
 
         // Same as in basic case:
-        assertApproxEqAbs(eTST.accumulatedFeesAssets(), 0.010524434607856782e18, 0.0000000000000001e18);
+        assertApproxEqAbs(eTST.accumulatedFeesAssets(), 0.010524434607857019e18, 0.0000000000000001e18);
 
         // Get new APYs:
         (borrowAPY, supplyAPY) = getVaultInfo(address(eTST));
@@ -211,11 +211,11 @@ contract VaultTest_BalancesWithInterest is EVaultTestBase {
         assertEq(eTST.debtOf(user3), 1.221565064538646276e18);
 
         // More interest earned (prev balance * (1+supplyAPY)):
-        assertEq(eTST.convertToAssets(eTST.balanceOf(user1)), 1.099442601860420398e18);
-        assertEq(eTST.convertToAssets(eTST.balanceOf(user2)), 1.099442601860420398e18);
+        assertEq(eTST.convertToAssets(eTST.balanceOf(user1)), 1.099442601860420015e18);
+        assertEq(eTST.convertToAssets(eTST.balanceOf(user2)), 1.099442601860420015e18);
 
         // Original reserve balance times supplyAPY, plus 10% of current interest accrued
-        assertApproxEqAbs(eTST.accumulatedFeesAssets(), 0.022679860817706035e18, 0.0000000000000001e18);
+        assertApproxEqAbs(eTST.accumulatedFeesAssets(), 0.022679860817706803e18, 0.0000000000000001e18);
     }
 
     function test_poolDonationIsIgnored() public {
