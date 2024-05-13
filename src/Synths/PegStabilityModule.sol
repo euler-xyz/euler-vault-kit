@@ -38,6 +38,10 @@ contract PegStabilityModule is EVCUtil {
         TO_SYNTH_FEE = toSynthFeeBPS;
     }
 
+    /// @notice Swaps the given amount of synth to underlying given an input amount of synth.
+    /// @param amountIn The amount of synth to swap.
+    /// @param receiver The address to receive the underlying.
+    /// @return The amount of underlying received.
     function swapToUnderlyingGivenIn(uint256 amountIn, address receiver) external returns (uint256) {
         uint256 amountOut = quoteToUnderlyingGivenIn(amountIn);
 
@@ -47,6 +51,10 @@ contract PegStabilityModule is EVCUtil {
         return amountOut;
     }
 
+    /// @notice Swaps the given amount of synth to underlying given an output amount of underlying.
+    /// @param amountOut The amount of underlying to receive.
+    /// @param receiver The address to receive the underlying.
+    /// @return The amount of synth swapped.
     function swapToUnderlyingGivenOut(uint256 amountOut, address receiver) external returns (uint256) {
         uint256 amountIn = quoteToUnderlyingGivenOut(amountOut);
 
@@ -56,6 +64,10 @@ contract PegStabilityModule is EVCUtil {
         return amountIn;
     }
 
+    /// @notice Swaps the given amount of underlying to synth given an input amount of underlying.
+    /// @param amountIn The amount of underlying to swap.
+    /// @param receiver The address to receive the synth.
+    /// @return The amount of synth received.
     function swapToSynthGivenIn(uint256 amountIn, address receiver) external returns (uint256) {
         uint256 amountOut = quoteToSynthGivenIn(amountIn);
 
@@ -65,6 +77,10 @@ contract PegStabilityModule is EVCUtil {
         return amountOut;
     }
 
+    /// @notice Swaps the given amount of underlying to synth given an output amount of synth.
+    /// @param amountOut The amount of synth to receive.
+    /// @param receiver The address to receive the synth.
+    /// @return The amount of underlying swapped.
     function swapToSynthGivenOut(uint256 amountOut, address receiver) external returns (uint256) {
         uint256 amountIn = quoteToSynthGivenOut(amountOut);
 
@@ -74,18 +90,30 @@ contract PegStabilityModule is EVCUtil {
         return amountIn;
     }
 
+    /// @notice Quotes the amount of underlying given an input amount of synth.
+    /// @param amountIn The amount of synth to swap.
+    /// @return The amount of underlying received.
     function quoteToUnderlyingGivenIn(uint256 amountIn) public view returns (uint256) {
         return amountIn * (BPS_SCALE - TO_UNDERLYING_FEE) / BPS_SCALE;
     }
 
+    /// @notice Quotes the amount of underlying given an output amount of synth.
+    /// @param amountOut The amount of underlying to receive.
+    /// @return The amount of synth swapped.
     function quoteToUnderlyingGivenOut(uint256 amountOut) public view returns (uint256) {
         return amountOut * BPS_SCALE / (BPS_SCALE - TO_UNDERLYING_FEE);
     }
 
+    /// @notice Quotes the amount of synth given an input amount of underlying.
+    /// @param amountIn The amount of underlying to swap.
+    /// @return The amount of synth received.
     function quoteToSynthGivenIn(uint256 amountIn) public view returns (uint256) {
         return amountIn * (BPS_SCALE - TO_SYNTH_FEE) / BPS_SCALE;
     }
 
+    /// @notice Quotes the amount of synth given an output amount of underlying.
+    /// @param amountOut The amount of synth to receive.
+    /// @return The amount of underlying swapped.
     function quoteToSynthGivenOut(uint256 amountOut) public view returns (uint256) {
         return amountOut * BPS_SCALE / (BPS_SCALE - TO_SYNTH_FEE);
     }
