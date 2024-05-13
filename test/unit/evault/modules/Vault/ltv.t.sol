@@ -174,4 +174,24 @@ contract VaultTest_LTV is EVaultTestBase {
         assertEq(eTST.LTVList().length, 1);
         assertEq(eTST.LTVList()[0], address(eTST2));
     }
+
+    function test_setLTV_borrowLTV() public {
+        assertEq(eTST.LTVList().length, 0);
+
+        //borrowLTV == liquidationLTV
+        eTST.setLTV(address(eTST2), 0.1e4, 0.1e4, 0); 
+
+        assertEq(eTST.LTVBorrow(address(eTST2)), 0.1e4);
+        assertEq(eTST.LTVLiquidation(address(eTST2)), 0.1e4);
+
+        //borrowLTV < liquidationLTV
+        eTST.setLTV(address(eTST2), 0.06e4, 0.1e4, 0); 
+
+        assertEq(eTST.LTVBorrow(address(eTST2)), 0.06e4);
+        assertEq(eTST.LTVLiquidation(address(eTST2)), 0.1e4);
+
+        vm.expectRevert(Errors.E_LTVBorrow.selector);
+        //borrowLTV > liquidationLTV
+        eTST.setLTV(address(eTST2), 0.2e4, 0.1e4, 0); 
+    }
 }
