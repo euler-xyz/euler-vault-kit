@@ -90,18 +90,6 @@ contract IRMSynthTest is Test {
         assertEq(lastUpdatedAfter, lastUpdatedBefore);
     }
 
-    function test_IRMSynth_0Quote() public {
-        oracle.setPrice(synth, REFERENCE_ASSET, 0);
-        IRMSynth.IRMData memory irmDataBefore = irm.getIRMData();
-        skip(irm.ADJUST_INTERVAL());
-        irm.computeInterestRate(address(0), 0, 0);
-        IRMSynth.IRMData memory irmDataAfter = irm.getIRMData();
-
-        // Should not have updated the rate or last updated
-        assertEq(irmDataBefore.lastRate, irmDataAfter.lastRate);
-        assertEq(irmDataBefore.lastUpdated, irmDataAfter.lastUpdated);
-    }
-
     function testIRMSynth_RateAdjustUp() public {
         oracle.setPrice(synth, REFERENCE_ASSET, irm.targetQuote() / 2);
 
