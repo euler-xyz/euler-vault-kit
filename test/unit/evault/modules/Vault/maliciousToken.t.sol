@@ -24,7 +24,7 @@ contract VaultTest_MaliciousToken is EVaultTestBase {
         user3 = makeAddr("user3");
 
         startHoax(address(this));
-        eTST2.setLTV(address(eTST), 0.3e4, 0);
+        eTST2.setLTV(address(eTST), 0.3e4, 0.3e4, 0);
 
         assetTST.mint(user1, 200e18);
         startHoax(user1);

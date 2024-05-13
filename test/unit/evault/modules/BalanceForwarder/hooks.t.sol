@@ -284,7 +284,7 @@ contract BalanceForwarderTest_Hooks is EVaultTestBase {
     }
 
     function setUpBorrow(address user) internal {
-        eTST.setLTV(address(eTST2), 1e4, 0);
+        eTST.setLTV(address(eTST2), 1e4, 1e4, 0);
 
         vm.startPrank(user);
         assetTST2.mint(user, 1000 ether);

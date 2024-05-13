@@ -145,8 +145,8 @@ contract MockHookTarget is Test, IHookTarget {
         eTST.protocolFeeShare();
         eTST.protocolFeeReceiver();
         eTST.caps();
-        eTST.borrowingLTV(account1);
-        eTST.liquidationLTV(account1);
+        eTST.LTVBorrow(account1);
+        eTST.LTVLiquidation(account1);
         eTST.LTVFull(account1);
         eTST.LTVList();
         eTST.hookConfig();
@@ -172,7 +172,12 @@ contract MockHookTarget is Test, IHookTarget {
         eTST.setFeeReceiver(account1);
 
         vm.expectRevert(Errors.E_Reentrancy.selector);
-        eTST.setLTV(account1, uint16(bound(amount1, 0, type(uint16).max)), uint32(bound(amount2, 0, type(uint32).max)));
+        eTST.setLTV(
+            account1,
+            uint16(bound(amount1, 0, type(uint16).max)),
+            uint16(bound(amount1, 0, type(uint16).max)),
+            uint32(bound(amount2, 0, type(uint32).max))
+        );
 
         vm.expectRevert(Errors.E_Reentrancy.selector);
         eTST.clearLTV(account1);
@@ -383,8 +388,8 @@ contract ReentrancyTest is EVaultTestBase {
         eTST.protocolFeeShare();
         eTST.protocolFeeReceiver();
         eTST.caps();
-        eTST.borrowingLTV(account1);
-        eTST.liquidationLTV(account1);
+        eTST.LTVBorrow(account1);
+        eTST.LTVLiquidation(account1);
         eTST.LTVFull(account1);
         eTST.LTVList();
         eTST.hookConfig();
@@ -410,7 +415,12 @@ contract ReentrancyTest is EVaultTestBase {
         eTST.setFeeReceiver(account1);
 
         vm.expectRevert(Errors.E_Reentrancy.selector);
-        eTST.setLTV(account1, uint16(bound(amount1, 0, type(uint16).max)), uint32(bound(amount2, 0, type(uint32).max)));
+        eTST.setLTV(
+            account1,
+            uint16(bound(amount1, 0, type(uint16).max)),
+            uint16(bound(amount1, 0, type(uint16).max)),
+            uint32(bound(amount2, 0, type(uint32).max))
+        );
 
         vm.expectRevert(Errors.E_Reentrancy.selector);
         eTST.clearLTV(account1);

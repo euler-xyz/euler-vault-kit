@@ -33,7 +33,7 @@ contract LiquidationUnitTest is EVaultTestBase {
         oracle.setPrice(address(assetTST), unitOfAccount, 1e18);
         oracle.setPrice(address(eTST2), unitOfAccount, 1e18);
 
-        eTST.setLTV(address(eTST2), 0.9e4, 0);
+        eTST.setLTV(address(eTST2), 0.9e4, 0.9e4, 0);
 
         // Depositor
 
@@ -84,7 +84,7 @@ contract LiquidationUnitTest is EVaultTestBase {
         (maxRepay, yield) = eTST.checkLiquidation(liquidator, borrower, address(eTST2));
 
         uint256 collateralValue = eTST2.balanceOf(borrower) * 5e17 / 1e18;
-        uint256 liquiditycollateralValue = collateralValue * uint256(eTST.liquidationLTV(address(eTST2))) / 1e4;
+        uint256 liquiditycollateralValue = collateralValue * uint256(eTST.LTVLiquidation(address(eTST2))) / 1e4;
         uint256 liabilityValue = eTST.debtOf(borrower);
         uint256 discountFactor = liquiditycollateralValue * 1e18 / liabilityValue;
         uint256 expectedMaxRepayValue = collateralValue * discountFactor / 1e18;

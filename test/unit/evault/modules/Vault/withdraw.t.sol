@@ -44,7 +44,7 @@ contract VaultTest_Withdraw is EVaultTestBase {
         oracle.setPrice(address(eTST2), unitOfAccount, 0.4e18);
         oracle.setPrice(address(eTST3), unitOfAccount, 2.2e18);
 
-        eTST.setLTV(address(eTST2), 0.3e4, 0);
+        eTST.setLTV(address(eTST2), 0.3e4, 0.3e4, 0);
 
         // Lender
 
@@ -284,7 +284,7 @@ contract VaultTest_Withdraw is EVaultTestBase {
         evc.enableCollateral(lender, address(eTST3));
 
         startHoax(address(this));
-        eTST.setLTV(address(eTST3), 0.95e4, 0);
+        eTST.setLTV(address(eTST3), 0.95e4, 0.95e4, 0);
 
         (uint256 collateralValue, uint256 liabilityValue) = eTST.accountLiquidity(borrower, false);
         assertApproxEqAbs(collateralValue * 1e18 / liabilityValue, 1.09e18, 0.01e18);

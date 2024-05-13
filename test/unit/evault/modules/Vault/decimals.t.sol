@@ -59,8 +59,8 @@ contract VaultTest_Decimals is EVaultTestBase {
         oracle.setPrice(address(eTST2), unitOfAccount, 0.2e18);
 
         startHoax(address(this));
-        eTST3.setLTV(address(eTST2), 0.21e4, 0);
-        eTST4.setLTV(address(eTST2), 0.21e4, 0);
+        eTST3.setLTV(address(eTST2), 0.21e4, 0.21e4, 0);
+        eTST4.setLTV(address(eTST2), 0.21e4, 0.21e4, 0);
     }
 
     function test_basicFlow() public {
