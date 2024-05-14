@@ -89,6 +89,8 @@ abstract contract TokenModule is IToken, Base, BalanceUtils {
         return true;
     }
 
+    /// @dev Disallow users from passing special addresses used in account status checks as a `from` address.
+    /// @dev Special address values modify the logic of `initOperation` so they should not be allowed.
     function validateTransferFromAccount(address from) private pure {
         if (from == CHECKACCOUNT_NONE || from == CHECKACCOUNT_CALLER) revert E_BadSharesOwner();
     }
