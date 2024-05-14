@@ -121,17 +121,11 @@ abstract contract LiquidationModule is ILiquidation, Base, BalanceUtils, Liquidi
         // no violation
         if (liquidityCollateralValue > liquidityLiabilityValue) return liqCache;
 
-        // Compute discount
+        // Compute bonus
 
-        uint256 discountFactor = liquidityCollateralValue * 1e18 / liquidityLiabilityValue; // discountFactor = health score = 1 - discount
-        {
-            uint256 minDiscountFactor;
-            unchecked {
-                // discount <= config scale, so discount factor >= 0
-                minDiscountFactor = 1e18 - uint256(1e18) * vaultStorage.maxLiquidationDiscount.toUint16() / CONFIG_SCALE;
-            }
-            if (discountFactor < minDiscountFactor) discountFactor = minDiscountFactor;
-        }
+        uint256 bonusFactor = CONFIG_SCALE - liquidityCollateralValue * CONFIG_SCALE / liquidityLiabilityValue;
+        uint256 maxBonusFactor = vaultStorage.maxLiquidationBonus.toUint16();
+        if (bonusFactor > maxBonusFactor) bonusFactor = maxBonusFactor;
 
         // Compute maximum yield using mid-point prices
 
@@ -152,13 +146,13 @@ abstract contract LiquidationModule is ILiquidation, Base, BalanceUtils, Liquidi
         }
 
         uint256 maxRepayValue = liabilityValue;
-        uint256 maxYieldValue = maxRepayValue * 1e18 / discountFactor;
+        uint256 maxYieldValue = maxRepayValue * bonusFactor / CONFIG_SCALE;
 
         // Limit yield to borrower's available collateral, and reduce repay if necessary
         // This can happen when borrower has multiple collaterals and seizing all of this one won't bring the violator back to solvency
 
         if (collateralValue < maxYieldValue) {
-            maxRepayValue = collateralValue * discountFactor / 1e18;
+            maxRepayValue = collateralValue * CONFIG_SCALE / bonusFactor;
             maxYieldValue = collateralValue;
         }
 
