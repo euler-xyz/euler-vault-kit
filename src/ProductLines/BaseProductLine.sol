@@ -56,12 +56,12 @@ abstract contract BaseProductLine {
         emit Genesis();
     }
 
-    function makeNewVaultInternal(bool upgradeable, address asset, address oracle, address unitOfAccount)
+    function makeNewVaultInternal(bool upgradeable, bytes32 salt, address asset, address oracle, address unitOfAccount)
         internal
         returns (IEVault)
     {
         address newVault = GenericFactory(vaultFactory).createProxy(
-            address(0), upgradeable, abi.encodePacked(asset, oracle, unitOfAccount)
+            address(0), salt, upgradeable, abi.encodePacked(asset, oracle, unitOfAccount)
         );
 
         vaultLookup[newVault] = true;

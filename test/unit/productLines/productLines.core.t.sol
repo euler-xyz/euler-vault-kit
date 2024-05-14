@@ -16,7 +16,8 @@ contract ProductLine_Core is EVaultTestBase {
 
     function test_ProductLine_Core_EVCCompatibility() public {
         assertEq(eTST.configFlags(), 0);
-        IEVault nested = IEVault(coreProductLine.createVault(address(eTST), address(oracle), unitOfAccount));
+        IEVault nested =
+            IEVault(coreProductLine.createVault(bytes32(uint256(100)), address(eTST), address(oracle), unitOfAccount));
         assertEq(nested.configFlags(), CFG_EVC_COMPATIBLE_ASSET);
     }
 }

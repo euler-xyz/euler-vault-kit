@@ -213,7 +213,9 @@ contract ReentrancyTest is EVaultTestBase {
         vm.prank(admin);
         factory.setImplementation(evaultImpl);
 
-        eTST = IEVault(coreProductLine.createVault(address(assetTST), address(oracle), unitOfAccount));
+        eTST = IEVault(
+            coreProductLine.createVault(bytes32(uint256(100)), address(assetTST), address(oracle), unitOfAccount)
+        );
 
         vm.assume(sender != address(0) && sender != address(eTST));
 

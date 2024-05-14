@@ -10,7 +10,7 @@ contract ProductLine_Escrow is EVaultTestBase {
         OP_BORROW | OP_REPAY | OP_LOOP | OP_DELOOP | OP_PULL_DEBT | OP_CONVERT_FEES | OP_LIQUIDATE | OP_TOUCH;
 
     function test_ProductLine_Escrow_basicViews() public {
-        IEVault escrowTST = IEVault(escrowProductLine.createVault(address(assetTST)));
+        IEVault escrowTST = IEVault(escrowProductLine.createVault(bytes32(uint256(100)), address(assetTST)));
 
         assertEq(factory.getProxyConfig(address(escrowTST)).upgradeable, false);
 
@@ -25,9 +25,9 @@ contract ProductLine_Escrow is EVaultTestBase {
     }
 
     function test_ProductLine_Escrow_RevertWhenAlreadyCreated() public {
-        escrowProductLine.createVault(address(assetTST));
+        escrowProductLine.createVault(bytes32(uint256(101)), address(assetTST));
 
         vm.expectRevert(Escrow.E_AlreadyCreated.selector);
-        escrowProductLine.createVault(address(assetTST));
+        escrowProductLine.createVault(bytes32(uint256(102)), address(assetTST));
     }
 }

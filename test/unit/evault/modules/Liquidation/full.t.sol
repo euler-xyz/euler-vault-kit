@@ -46,17 +46,32 @@ contract VaultLiquidation_Test is EVaultTestBase {
         eTST2.setInterestRateModel(address(new IRMTestZero()));
 
         eWETH = IEVault(
-            factory.createProxy(address(0), true, abi.encodePacked(address(assetWETH), address(oracle), unitOfAccount))
+            factory.createProxy(
+                address(0),
+                bytes32(uint256(100)),
+                true,
+                abi.encodePacked(address(assetWETH), address(oracle), unitOfAccount)
+            )
         );
         eWETH.setInterestRateModel(address(new IRMTestZero()));
 
         eTST3 = IEVault(
-            factory.createProxy(address(0), true, abi.encodePacked(address(assetTST3), address(oracle), unitOfAccount))
+            factory.createProxy(
+                address(0),
+                bytes32(uint256(101)),
+                true,
+                abi.encodePacked(address(assetTST3), address(oracle), unitOfAccount)
+            )
         );
         eTST3.setInterestRateModel(address(new IRMTestZero()));
 
         eTST4 = IEVault(
-            factory.createProxy(address(0), true, abi.encodePacked(address(assetTST4), address(oracle), unitOfAccount))
+            factory.createProxy(
+                address(0),
+                bytes32(uint256(102)),
+                true,
+                abi.encodePacked(address(assetTST4), address(oracle), unitOfAccount)
+            )
         );
         eTST4.setInterestRateModel(address(new IRMTestZero()));
 
@@ -167,7 +182,9 @@ contract VaultLiquidation_Test is EVaultTestBase {
 
     function test_noOracle() public {
         IEVault eTSTx = IEVault(
-            factory.createProxy(address(0), true, abi.encodePacked(address(assetTST), address(0), unitOfAccount))
+            factory.createProxy(
+                address(0), bytes32(uint256(103)), true, abi.encodePacked(address(assetTST), address(0), unitOfAccount)
+            )
         );
 
         startHoax(borrower);
@@ -1389,7 +1406,7 @@ contract VaultLiquidation_Test is EVaultTestBase {
 
         IEVault eTSTx = IEVault(
             factory.createProxy(
-                address(0), true, abi.encodePacked(address(assetTST), address(oracle), address(assetTST))
+                address(0), bytes32(uint256(100)), true, abi.encodePacked(address(assetTST), address(oracle), address(assetTST))
             )
         );
         eTSTx.setLTV(address(eTST2), 0.95e4, 0);

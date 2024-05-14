@@ -36,11 +36,11 @@ contract ProductLine_Base is EVaultTestBase {
         wrongAsset.set(IERC20.name.selector);
 
         vm.expectRevert(ErrorThrower.NoGood.selector);
-        coreProductLine.createVault(address(wrongAsset), address(oracle), unitOfAccount);
+        coreProductLine.createVault(bytes32(uint256(100)), address(wrongAsset), address(oracle), unitOfAccount);
 
         wrongAsset.set(IERC20.symbol.selector);
 
         vm.expectRevert(ErrorThrower.NoGood.selector);
-        coreProductLine.createVault(address(wrongAsset), address(oracle), unitOfAccount);
+        coreProductLine.createVault(bytes32(uint256(101)), address(wrongAsset), address(oracle), unitOfAccount);
     }
 }

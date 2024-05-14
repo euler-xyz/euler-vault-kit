@@ -33,12 +33,12 @@ contract Core is BaseProductLine {
         _;
     }
 
-    function createVault(address asset, address oracle, address unitOfAccount)
+    function createVault(bytes32 salt, address asset, address oracle, address unitOfAccount)
         external
         governorOnly
         returns (address)
     {
-        IEVault vault = makeNewVaultInternal(UPGRADEABLE, asset, oracle, unitOfAccount);
+        IEVault vault = makeNewVaultInternal(UPGRADEABLE, salt, asset, oracle, unitOfAccount);
 
         vault.setName(string.concat("Core vault: ", getTokenName(asset)));
         vault.setSymbol(string.concat("e", getTokenSymbol(asset)));

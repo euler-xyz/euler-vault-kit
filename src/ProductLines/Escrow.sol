@@ -24,10 +24,10 @@ contract Escrow is BaseProductLine {
 
     constructor(address vaultFactory_, address evc_) BaseProductLine(vaultFactory_, evc_) {}
 
-    function createVault(address asset) external returns (address) {
+    function createVault(bytes32 salt, address asset) external returns (address) {
         if (assetLookup[asset] != address(0)) revert E_AlreadyCreated();
 
-        IEVault vault = makeNewVaultInternal(UPGRADEABLE, asset, address(0), address(0));
+        IEVault vault = makeNewVaultInternal(UPGRADEABLE, salt, asset, address(0), address(0));
 
         assetLookup[asset] = address(vault);
 

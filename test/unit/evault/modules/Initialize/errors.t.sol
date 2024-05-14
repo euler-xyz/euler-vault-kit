@@ -23,7 +23,7 @@ contract InitializeTests is EVaultTestBase, MetaProxyDeployer {
         vm.assume(input.length != PROXY_METADATA_LENGTH);
         bytes memory trailingData = bytes(input);
 
-        address proxy = deployMetaProxy(address(new Initialize(integrations)), trailingData);
+        address proxy = deployMetaProxy(address(new Initialize(integrations)), bytes32(uint256(1)), trailingData);
         vm.expectRevert(Errors.E_ProxyMetadata.selector);
         IComponent(proxy).initialize(msg.sender);
     }
@@ -31,7 +31,7 @@ contract InitializeTests is EVaultTestBase, MetaProxyDeployer {
     function test_asset_is_a_contract() public {
         bytes memory trailingData = abi.encodePacked(address(0), address(1), address(2));
 
-        address proxy = deployMetaProxy(address(new Initialize(integrations)), trailingData);
+        address proxy = deployMetaProxy(address(new Initialize(integrations)), bytes32(uint256(1)), trailingData);
         vm.expectRevert(Errors.E_BadAddress.selector);
         IComponent(proxy).initialize(msg.sender);
     }

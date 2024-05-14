@@ -135,10 +135,13 @@ contract EVaultTestBase is AssertionsCustomTypes, Test, DeployPermit2 {
         assetTST = new TestERC20("Test Token", "TST", 18, false);
         assetTST2 = new TestERC20("Test Token 2", "TST2", 18, false);
 
-        eTST = IEVault(coreProductLine.createVault(address(assetTST), address(oracle), unitOfAccount));
+        eTST =
+            IEVault(coreProductLine.createVault(bytes32(uint256(1)), address(assetTST), address(oracle), unitOfAccount));
         eTST.setInterestRateModel(address(new IRMTestDefault()));
 
-        eTST2 = IEVault(coreProductLine.createVault(address(assetTST2), address(oracle), unitOfAccount));
+        eTST2 = IEVault(
+            coreProductLine.createVault(bytes32(uint256(2)), address(assetTST2), address(oracle), unitOfAccount)
+        );
         eTST.setInterestRateModel(address(new IRMTestDefault()));
     }
 
@@ -147,7 +150,9 @@ contract EVaultTestBase is AssertionsCustomTypes, Test, DeployPermit2 {
 
     function createSynthEVault(address asset) internal returns (IEVault) {
         IEVault v = IEVault(
-            factory.createProxy(address(0), true, abi.encodePacked(address(asset), address(oracle), unitOfAccount))
+            factory.createProxy(
+                address(0), bytes32(uint256(3)), true, abi.encodePacked(address(asset), address(oracle), unitOfAccount)
+            )
         );
         v.setInterestRateModel(address(new IRMTestDefault()));
 

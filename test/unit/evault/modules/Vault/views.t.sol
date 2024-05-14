@@ -9,8 +9,9 @@ contract VaultTest_views is EVaultTestBase {
         assertEq(eTST.asset(), address(assetTST));
         address creator = makeAddr("creator");
         vm.prank(creator);
-        address newVault =
-            factory.createProxy(address(0), true, abi.encodePacked(address(assetTST), address(oracle), unitOfAccount));
+        address newVault = factory.createProxy(
+            address(0), bytes32(uint256(100)), true, abi.encodePacked(address(assetTST), address(oracle), unitOfAccount)
+        );
         assertEq(IEVault(newVault).creator(), creator);
     }
 }
