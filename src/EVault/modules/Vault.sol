@@ -191,7 +191,6 @@ abstract contract VaultModule is IVault, Base, AssetTransfers, BalanceUtils {
         Shares shares = assets.toSharesDown(vaultCache);
         if (shares.isZero()) revert E_ZeroShares();
 
-        // skim performs equivalent order of operations as the deposit function, without assets being pulled from the user
         vaultStorage.cash = vaultCache.cash = vaultCache.cash + assets;
         increaseBalance(vaultCache, receiver, account, shares, assets);
 
