@@ -200,7 +200,6 @@ contract VaultLiquidation_Test is EVaultTestBase {
         vm.stopPrank();
         vm.prank(borrower);
         evc.enableCollateral(borrower, address(eTST3));
-
         startHoax(address(this));
 
         oracle.setPrice(address(assetTST), unitOfAccount, 2.5e18);
@@ -984,6 +983,7 @@ contract VaultLiquidation_Test is EVaultTestBase {
         startHoax(borrower);
         evc.enableController(borrower, address(eTST));
         eTST.borrow(5e18, borrower);
+
         // set up liquidator to support the debt
         startHoax(lender);
         evc.enableController(lender, address(eTST));
@@ -1399,7 +1399,6 @@ contract VaultLiquidation_Test is EVaultTestBase {
         startHoax(borrower);
         evc.enableController(borrower, address(eTSTx));
         eTSTx.borrow(40e18, borrower);
-        skip(1);
 
         (uint256 collateralValue, uint256 liabilityValue) = eTSTx.accountLiquidity(borrower, false);
         assertApproxEqAbs(collateralValue * 1e18 / liabilityValue, 1.18e18, 0.01e18);

@@ -115,7 +115,6 @@ contract VaultTest_LTV is EVaultTestBase {
         startHoax(borrower);
         evc.enableCollateral(borrower, address(eTST2));
         evc.enableController(borrower, address(eTST));
-        skip(1);
         vm.stopPrank();
 
         // No borrow, liquidation is a no-op
