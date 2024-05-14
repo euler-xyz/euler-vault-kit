@@ -18,6 +18,9 @@ contract ERC4626Harness is VaultModule, TokenModule, AbstractBaseHarness {
         // The assets stored in the vault for a user.
         // return vaultStorage.users[user].getBalance().toAssetsDown(loadVault()).toUint();
     }
+    function asset() public view override reentrantOK returns (address) {
+        return address(underlying_asset);
+    }
 
     // VaultStorage Accessors:
     function storage_lastInterestAccumulatorUpdate() public view returns (uint48) {

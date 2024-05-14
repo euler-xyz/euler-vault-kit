@@ -12,8 +12,8 @@ import "Base.spec";
 import "./GhostPow.spec";
 import "./LoadVaultSummary.spec";
 
-using DummyERC20A as ERC20a; 
-using DummyERC20B as ERC20b; 
+// using DummyERC20A as ERC20a; 
+// using DummyERC20B as ERC20b; 
 
 /*
     Declaration of methods that are used in the rules. envfree indicate that
@@ -62,7 +62,7 @@ methods {
     // function _.transferFrom(address,address,uint256) external => DISPATCHER(true);
 
     // function ERC20a.balanceOf(address) external returns uint256 envfree; // NOT ENVFREE
-    function ERC20a.transferFrom(address,address,uint256) external returns bool; // not envfree
+    function erc20.transferFrom(address,address,uint256) external returns bool; // not envfree
 
 
     function RPow.rpow(uint256 x, uint256 y, uint256 base) internal returns (uint256, bool) => CVLPow(x, y, base);
@@ -102,7 +102,7 @@ function CVLgetCurrentOnBehalfOfAccount(address addr) returns (address, bool) {
 // Summarize trySafeTransferFrom as DummyERC20 transferFrom
 function CVLTrySafeTransferFrom(env e, address from, address to, uint256 value) returns (bool, bytes) {
     bytes ret; // Ideally bytes("") if there is a way to do this
-    return (ERC20a.transferFrom(e, from, to, value), ret);
+    return (erc20.transferFrom(e, from, to, value), ret);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -278,6 +278,16 @@ hook Sload Vault.PackedUserSlot val currentContract.vaultStorage.users[KEY addre
 // passing: https://prover.certora.com/output/65266/de3636d287d2473294463c07263fc11e/?anonymousKey=ac8f74e6c5c1298f0954a21fafd41cccf32b9ffb
 invariant totalSupplyIsSumOfBalances(env e)
     to_mathint(totalSupply(e)) == sumOfBalances;
+
+rule totalSupplyIsSumOfBalancesRule {
+    env e;
+    uint256 amount;
+    address receiver;
+    // require sumOfBalances == 0;
+    // require to_mathint(totalSupply(e)) == sumOfBalances;
+    // deposit(e, amount, receiver);
+    assert to_mathint(totalSupply(e)) == sumOfBalances;
+}
 
 
 
@@ -578,9 +588,9 @@ rule sanity (method f) {
     assert false;
 }
 
-// rule vaultCacheSanity (method f) {
-//     env e;
-//     BaseHarness.VaultCache vaultCache;
-//     CVLInitVaultCache(e, vaultCache);
-//     assert false;
-// }
+rule vaultCacheSanity (method f) {
+    env e;
+    BaseHarness.VaultCache vaultCache;
+    CVLInitVaultCache(e, vaultCache);
+    assert false;
+}
