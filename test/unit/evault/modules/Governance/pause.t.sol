@@ -341,7 +341,6 @@ contract Governance_PauseOps is EVaultTestBase {
         evc.enableController(borrower, address(eTST));
         evc.enableCollateral(borrower, address(eTST2));
         eTST.borrow(8 * MINT_AMOUNT / 10, borrower);
-        skip(1);
         vm.stopPrank();
 
         oracle.setPrice(address(assetTST2), unitOfAccount, 0.5e17);

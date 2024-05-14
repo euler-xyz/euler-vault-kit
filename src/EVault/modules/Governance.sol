@@ -38,7 +38,7 @@ abstract contract GovernanceModule is IGovernance, Base, BalanceUtils, BorrowUti
         address indexed collateral, uint48 targetTimestamp, uint16 targetLTV, uint32 rampDuration, uint16 originalLTV
     );
     event GovSetInterestRateModel(address interestRateModel);
-    /// @notice Set a new liqiuidation cool off time, which must elapse after successful account status check before account can be liquidated
+    /// @notice Set a new liquidation cool off time, which must elapse after successful account status check, before account can be liquidated
     /// @param newCoolOffTime The new liquidation cool off time in seconds
     event GovSetLiquidationCoolOffTime(uint16 newCoolOffTime);
     event GovSetHookConfig(address indexed newHookTarget, uint32 newHookedOps);
