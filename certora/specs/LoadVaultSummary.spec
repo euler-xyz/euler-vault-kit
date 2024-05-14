@@ -82,7 +82,7 @@ function CVLInitVaultCache(env e, BaseHarness.VaultCache vaultCache) returns boo
 
     // either of these cause a vacuity failure ...
     // require vaultCache.asset == erc20;
-    // require vaultCache.asset == asset();
+    require vaultCache.asset == asset();
     require vaultCache.oracle == oracleAddress;
     require vaultCache.unitOfAccount == unitOfAccount;
 
