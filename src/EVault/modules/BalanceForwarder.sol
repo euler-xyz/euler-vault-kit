@@ -9,7 +9,7 @@ import "../shared/types/Types.sol";
 
 /// @title BalanceForwarderModule
 /// @author Euler Labs (https://www.eulerlabs.com/)
-/// @notice An EVault module handling communication a with balance tracker contract.
+/// @notice An EVault module handling communication with a balance tracker contract.
 abstract contract BalanceForwarderModule is IBalanceForwarder, Base {
     /// @inheritdoc IBalanceForwarder
     function balanceTrackerAddress() public view virtual reentrantOK returns (address) {
