@@ -54,6 +54,9 @@ abstract contract BorrowUtils is Base {
         logBorrowChange(account, prevOwed, owed);
     }
 
+    /// @dev Contrary to `increaseBorrow` and `transferBorrow` this function does the accounting in Assets
+    /// by first rounding up the user's debt. The rounding is an additional cost to the user and is recorded
+    /// both in user's account and in `totalBorrows`
     function decreaseBorrow(VaultCache memory vaultCache, address account, Assets amount) internal virtual {
         (Owed owedExact, Owed prevOwed) = loadUserBorrow(vaultCache, account);
         Assets owed = owedExact.toAssetsUp();
