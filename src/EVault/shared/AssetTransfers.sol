@@ -19,13 +19,20 @@ abstract contract AssetTransfers is Base {
         vaultStorage.cash = vaultCache.cash = vaultCache.cash + amount;
     }
 
+    /// @dev If the `CFG_EVC_COMPATIBLE_ASSET` flag is set, the function will protect users against mistakenly sending the funds
+    /// to EVC sub-accounts. Functions that push tokens out (`withdraw`, `redeem`, `borrow`) accept a `receiver` argument.
+    /// If the user set one of their sub-accounts (not owner) as a receiver, funds would be lost, because a regular asset doesn't
+    /// support EVC's sub-accounts. The private key to a sub-account (not owner) is not known, so user would not be able to move
+    /// the funds out. The function will make a best effort to prevent this by checking if the receiver of the token
+    /// is recognized by EVC as non-owner sub-account. In other words, if there is an account registered in EVC as owner matching the
+    /// intended receiver, transfer will be prevented. There is guarantee however that EVC will have the owner registered.
+    ///
+    /// If the asset itself is compatible with EVC, it is safe to not set the flag and send the asset to a non-owner sub-account.
+    /// the transfer will be prevented.
     function pushAssets(VaultCache memory vaultCache, address to, Assets amount) internal virtual {
         if (
             to == address(0)
-            // If the underlying asset is not EVC-compatible, do not transfer assets to any
-            // address that the EVC knows to be a sub-account. Non-EVC-compatible tokens do
-            // not know about sub-accounts, so the funds would be lost.
-            || (vaultCache.configFlags.isNotSet(CFG_EVC_COMPATIBLE_ASSET) && isKnownNonOwnerAccount(to))
+                || (vaultCache.configFlags.isNotSet(CFG_EVC_COMPATIBLE_ASSET) && isKnownNonOwnerAccount(to))
         ) {
             revert E_BadAssetReceiver();
         }
