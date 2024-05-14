@@ -49,19 +49,26 @@ abstract contract TokenModule is IToken, Base, BalanceUtils {
 
     /// @inheritdoc IERC20
     function transfer(address to, uint256 amount) public virtual nonReentrant returns (bool) {
-        return transferFromInternal(address(0), to, amount);
+        (, address account) = initOperation(OP_TRANSFER, CHECKACCOUNT_CALLER);
+        return transferFromInternal(account, account, to, amount.toShares());
     }
 
     /// @inheritdoc IToken
     function transferFromMax(address from, address to) public virtual nonReentrant returns (bool) {
         validateTransferFromAccount(from);
-        return transferFromInternal(from, to, vaultStorage.users[from].getBalance().toUint());
+
+        (, address account) = initOperation(OP_TRANSFER, from);
+
+        return transferFromInternal(account, from, to, vaultStorage.users[from].getBalance());
     }
 
     /// @inheritdoc IERC20
     function transferFrom(address from, address to, uint256 amount) public virtual nonReentrant returns (bool) {
         validateTransferFromAccount(from);
-        return transferFromInternal(from, to, amount);
+
+        (, address account) = initOperation(OP_TRANSFER, from);
+
+        return transferFromInternal(account, from, to, amount.toShares());
     }
 
     /// @inheritdoc IERC20
@@ -73,13 +80,8 @@ abstract contract TokenModule is IToken, Base, BalanceUtils {
         return true;
     }
 
-    function transferFromInternal(address from, address to, uint256 amount) private returns (bool) {
-        (, address account) = initOperation(OP_TRANSFER, from == address(0) ? CHECKACCOUNT_CALLER : from);
-
-        if (from == address(0)) from = account;
+    function transferFromInternal(address account, address from, address to, Shares shares) private returns (bool) {
         if (from == to) revert E_SelfTransfer();
-
-        Shares shares = amount.toShares();
 
         decreaseAllowance(from, account, shares);
         transferBalance(from, to, shares);
