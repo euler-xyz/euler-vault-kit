@@ -6,6 +6,7 @@ import {Storage} from "./Storage.sol";
 import "./types/Types.sol";
 
 /// @title LTVUtils
+/// @custom:security-contact security@euler.xyz
 /// @author Euler Labs (https://www.eulerlabs.com/)
 /// @notice Overridable getters for LTV configuration
 abstract contract LTVUtils is Storage {

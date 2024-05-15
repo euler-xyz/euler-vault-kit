@@ -10,6 +10,7 @@ import {LiquidityUtils} from "../shared/LiquidityUtils.sol";
 import "../shared/types/Types.sol";
 
 /// @title LiquidationModule
+/// @custom:security-contact security@euler.xyz
 /// @author Euler Labs (https://www.eulerlabs.com/)
 /// @notice An EVault module handling liquidations of unhealthy accounts
 abstract contract LiquidationModule is ILiquidation, Base, BalanceUtils, LiquidityUtils {

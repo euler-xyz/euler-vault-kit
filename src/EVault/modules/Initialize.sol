@@ -13,6 +13,7 @@ import "../shared/Constants.sol";
 import "../shared/types/Types.sol";
 
 /// @title InitializeModule
+/// @custom:security-contact security@euler.xyz
 /// @author Euler Labs (https://www.eulerlabs.com/)
 /// @notice An EVault module implementing the initialization of the new vault contract
 abstract contract InitializeModule is IInitialize, Base, BorrowUtils {

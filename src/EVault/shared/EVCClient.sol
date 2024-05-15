@@ -12,6 +12,7 @@ import {IERC20} from "../IEVault.sol";
 import {IEVC} from "ethereum-vault-connector/interfaces/IEthereumVaultConnector.sol";
 
 /// @title EVCClient
+/// @custom:security-contact security@euler.xyz
 /// @author Euler Labs (https://www.eulerlabs.com/)
 /// @notice Utilities for interacting with the EVC (Ethereum Vault Connector)
 abstract contract EVCClient is Storage, Events, Errors {

@@ -7,6 +7,7 @@ import {RevertBytes} from "./RevertBytes.sol";
 import {IPermit2} from "../../../interfaces/IPermit2.sol";
 
 /// @title SafeERC20Lib Library
+/// @custom:security-contact security@euler.xyz
 /// @author Euler Labs (https://www.eulerlabs.com/)
 /// @notice The library provides helpers for ERC20 transfers, including Permit2 support
 library SafeERC20Lib {

@@ -11,6 +11,7 @@ import {ProxyUtils} from "./lib/ProxyUtils.sol";
 import "./types/Types.sol";
 
 /// @title Cache
+/// @custom:security-contact security@euler.xyz
 /// @author Euler Labs (https://www.eulerlabs.com/)
 /// @notice Utilities for loading vault storage and updating it with interest accrued
 contract Cache is Storage, Errors {

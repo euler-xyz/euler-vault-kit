@@ -8,6 +8,7 @@ import {IPriceOracle} from "../../../interfaces/IPriceOracle.sol";
 import "../Constants.sol";
 
 /// @title ProxyUtils Library
+/// @custom:security-contact security@euler.xyz
 /// @author Euler Labs (https://www.eulerlabs.com/)
 /// @notice The library provides a helper function for working with proxy meta data
 library ProxyUtils {
