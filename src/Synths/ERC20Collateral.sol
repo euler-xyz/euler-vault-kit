@@ -18,7 +18,7 @@ abstract contract ERC20Collateral is EVCUtil, ERC20Permit, ReentrancyGuard {
     {}
 
     /// @notice Transfers a certain amount of tokens to a recipient.
-    /// @dev Overriden to add re-entrancy protection.
+    /// @dev Overriden to add reentrancy protection.
     /// @param to The recipient of the transfer.
     /// @param amount The amount shares to transfer.
     /// @return A boolean indicating whether the transfer was successful.
@@ -27,7 +27,7 @@ abstract contract ERC20Collateral is EVCUtil, ERC20Permit, ReentrancyGuard {
     }
 
     /// @notice Transfers a certain amount of tokens from a sender to a recipient.
-    /// @dev Overriden to add re-entrancy protection.
+    /// @dev Overriden to add reentrancy protection.
     /// @param from The sender of the transfer.
     /// @param to The recipient of the transfer.
     /// @param amount The amount of shares to transfer.

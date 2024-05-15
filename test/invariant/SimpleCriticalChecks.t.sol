@@ -10,10 +10,12 @@ import {IRMTestDefault} from "../mocks/IRMTestDefault.sol";
 import {MockPriceOracle} from "../mocks/MockPriceOracle.sol";
 import "forge-std/console.sol";
 
+interface IGovernanceOverride {
+    function resetInitOperationFlag() external;
+}
+
 // Entry Point contract for the fuzzer. Bounds the inputs and prepares the environment for the tests.
 contract EntryPoint is Test {
-    uint32 internal constant INIT_OPERATION_FLAG = 1 << 31;
-
     error EVault_Panic();
 
     IEVC immutable evc;
@@ -79,23 +81,18 @@ contract EntryPoint is Test {
         vm.stopPrank();
         vm.startPrank(governor);
         selectedVault = eTST[seed % eTST.length];
-        (address hookTarget, uint32 hookedOps) = selectedVault.hookConfig();
-        selectedVault.setHookConfig(hookTarget, hookedOps & ~INIT_OPERATION_FLAG);
+        // this will fail if there's no overrides on
+        try IGovernanceOverride(address(selectedVault)).resetInitOperationFlag() {} catch {}
         vm.stopPrank();
 
         vm.startPrank(msg.sender);
 
         try selectedVault.disableController() {
             if (selectedVault.debtOf(msg.sender) != 0) errors.push("EVault Panic on disableController");
-        } catch {
-            assertTrue(true);
-        }
+        } catch {}
 
-        try evc.enableController(msg.sender, address(eTST[uint256(keccak256(abi.encode(seed))) % eTST.length])) {
-            assertTrue(true);
-        } catch {
-            assertTrue(true);
-        }
+        try evc.enableController(msg.sender, address(eTST[uint256(keccak256(abi.encode(seed))) % eTST.length])) {}
+            catch {}
     }
 
     function boundAmount(uint256 amount) private pure returns (uint256) {

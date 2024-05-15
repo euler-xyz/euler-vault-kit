@@ -120,9 +120,9 @@ contract EVault is Dispatch {
 
     function repay(uint256 amount, address receiver) public virtual override callThroughEVC use(MODULE_BORROWING) returns (uint256) {}
 
-    function loop(uint256 amount, address sharesReceiver) public virtual override callThroughEVC use(MODULE_BORROWING) returns (uint256) {}
+    function loop(uint256 amount, address sharesReceiver) public virtual override callThroughEVC use(MODULE_BORROWING) returns (uint256 shares, uint256 debt) {}
 
-    function deloop(uint256 amount, address debtFrom) public virtual override callThroughEVC use(MODULE_BORROWING) returns (uint256) {}
+    function deloop(uint256 amount, address debtFrom) public virtual override callThroughEVC use(MODULE_BORROWING) returns (uint256 shares, uint256 debt) {}
 
     function pullDebt(uint256 amount, address from) public virtual override callThroughEVC use(MODULE_BORROWING) returns (uint256) {}
 

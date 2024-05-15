@@ -685,7 +685,7 @@ contract VaultLiquidation_Test is EVaultTestBase {
         assertEq(maxYield, 100e18);
 
         startHoax(address(this));
-        eTST.setConfigFlags(1 << 16);
+        eTST.setConfigFlags(1 << 0);
 
         startHoax(lender);
         eTST.liquidate(borrower, address(eTST2), maxRepay, 0);
@@ -1651,7 +1651,7 @@ contract VaultLiquidation_Test is EVaultTestBase {
 
         // too big
         startHoax(address(this));
-        vm.expectRevert(Errors.E_InvalidConfigAmount.selector);
+        vm.expectRevert(Errors.E_ConfigAmountTooLargeToEncode.selector);
         eTST.setMaxLiquidationDiscount(1e4 + 1);
 
         // set ok

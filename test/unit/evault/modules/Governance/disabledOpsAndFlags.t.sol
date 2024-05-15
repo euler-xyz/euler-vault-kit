@@ -65,6 +65,7 @@ contract Governance_PauseOps is EVaultTestBase {
     }
 
     function testFuzz_onlyGovernorShouldBeAbleToSetDisabledOps(uint32 newDisabledOps) public {
+        newDisabledOps = uint32(bound(newDisabledOps, 0, OP_MAX_VALUE - 1));
         eTST.setHookConfig(address(0), newDisabledOps);
         (, uint32 disabledOps) = eTST.hookConfig();
         assertEq(disabledOps, newDisabledOps);
@@ -131,7 +132,7 @@ contract Governance_PauseOps is EVaultTestBase {
 
     function testFuzz_disablingTransferOpsShouldFailAfterDisabled(address to, uint256 amount) public {
         eTST.setHookConfig(address(0), OP_TRANSFER);
-        vm.assume(to != address(this) && to != depositor);
+        vm.assume(to != address(this) && to != depositor && to != address(0));
         vm.expectRevert(Errors.E_OperationDisabled.selector);
         eTST.transfer(to, amount);
 

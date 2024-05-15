@@ -60,12 +60,13 @@ abstract contract GovernanceModule is IGovernance, Base, BalanceUtils, BorrowUti
         uint16 liquidationLTV,
         uint16 initialLiquidationLTV,
         uint48 targetTimestamp,
-        uint32 rampDuration
+        uint32 rampDuration,
+        bool initialized
     );
     /// @notice Set an interest rate model contract address
     /// @param newInterestRateModel Address of the new IRM
     event GovSetInterestRateModel(address newInterestRateModel);
-    
+
     /// @notice Set a maximum liquidation discount
     /// @param newLiquidationDiscount The new maximum liquidation discount in 1e4 scale
     event GovSetMaxLiquidationDiscount(uint16 newLiquidationDiscount);
@@ -291,7 +292,7 @@ abstract contract GovernanceModule is IGovernance, Base, BalanceUtils, BorrowUti
 
         LTVConfig memory currentLTV = vaultStorage.ltvLookup[collateral];
 
-        // If the new liquidation LTV is higher or the same than the previous, it should take effect immediately
+        // If new LTV is higher or equal to current, as per ramping configuration, it should take effect immediately
         if (newLiquidationLTV >= currentLTV.getLTV(true) && rampDuration > 0) revert E_LTVLiquidation();
 
         LTVConfig memory newLTV = currentLTV.setLTV(newBorrowLTV, newLiquidationLTV, rampDuration);
@@ -306,7 +307,8 @@ abstract contract GovernanceModule is IGovernance, Base, BalanceUtils, BorrowUti
             newLTV.liquidationLTV.toUint16(),
             newLTV.initialLiquidationLTV.toUint16(),
             newLTV.targetTimestamp,
-            newLTV.rampDuration
+            newLTV.rampDuration,
+            !currentLTV.initialized
         );
     }
 
@@ -318,7 +320,7 @@ abstract contract GovernanceModule is IGovernance, Base, BalanceUtils, BorrowUti
         uint16 originalLTV = getLTV(collateral, true).toUint16();
         vaultStorage.ltvLookup[collateral].clear();
 
-        emit GovSetLTV(collateral, 0, 0, originalLTV, 0, 0);
+        emit GovSetLTV(collateral, 0, 0, originalLTV, 0, 0, false);
     }
 
     /// @inheritdoc IGovernance
@@ -354,6 +356,8 @@ abstract contract GovernanceModule is IGovernance, Base, BalanceUtils, BorrowUti
                 && IHookTarget(newHookTarget).isHookTarget() != IHookTarget.isHookTarget.selector
         ) revert E_NotHookTarget();
 
+        if (newHookedOps >= OP_MAX_VALUE) revert E_NotSupported();
+
         vaultStorage.hookTarget = newHookTarget;
         vaultStorage.hookedOps = Flags.wrap(newHookedOps);
         emit GovSetHookConfig(newHookTarget, newHookedOps);
@@ -361,6 +365,8 @@ abstract contract GovernanceModule is IGovernance, Base, BalanceUtils, BorrowUti
 
     /// @inheritdoc IGovernance
     function setConfigFlags(uint32 newConfigFlags) public virtual nonReentrant governorOnly {
+        if (newConfigFlags >= CFG_MAX_VALUE) revert E_NotSupported();
+
         vaultStorage.configFlags = Flags.wrap(newConfigFlags);
         emit GovSetConfigFlags(newConfigFlags);
     }

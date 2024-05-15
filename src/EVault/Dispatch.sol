@@ -74,14 +74,14 @@ abstract contract Dispatch is
 
     // Modifier proxies the function call to a module and low-level returns the result
     modifier use(address module) {
-        _; // when using the modifier, it is assumed the function body is empty and no code will run before delegating to module.
+        _; // when using the modifier, it is assumed the function body is empty.
         delegateToModule(module);
     }
 
     // Delegate call can't be used in a view function. To work around this limitation,
     // static call `this.viewDelegate()` function, which in turn will delegate the payload to a module.
     modifier useView(address module) {
-        _; // when using the modifier, it is assumed the function body is empty and no code will run before delegating to module.
+        _; // when using the modifier, it is assumed the function body is empty.
         delegateToModuleView(module);
     }
 

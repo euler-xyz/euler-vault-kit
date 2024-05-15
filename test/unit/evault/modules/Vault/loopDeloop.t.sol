@@ -207,7 +207,10 @@ contract VaultTest_LoopDeloop is EVaultTestBase {
 
         assertEq(assetTST.balanceOf(user2), 99.4e18);
         assertEq(eTST.balanceOf(user2), 0.6e18);
-        assertEq(eTST.maxWithdraw(user2), 0.6e18);
+        assertEq(eTST.maxWithdraw(user2), 0);
         assertEq(eTST.debtOf(user2), 0);
+
+        eTST.disableController();
+        assertEq(eTST.maxWithdraw(user2), 0.6e18);
     }
 }

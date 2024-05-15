@@ -49,28 +49,27 @@ abstract contract TokenModule is IToken, Base, BalanceUtils {
     }
 
     /// @inheritdoc IERC20
-    function transfer(address to, uint256 amount) public virtual reentrantOK returns (bool) {
-        return transferFrom(address(0), to, amount);
+    function transfer(address to, uint256 amount) public virtual nonReentrant returns (bool) {
+        (, address account) = initOperation(OP_TRANSFER, CHECKACCOUNT_CALLER);
+        return transferFromInternal(account, account, to, amount.toShares());
     }
 
     /// @inheritdoc IToken
-    function transferFromMax(address from, address to) public virtual reentrantOK returns (bool) {
-        return transferFrom(from, to, vaultStorage.users[from].getBalance().toUint());
+    function transferFromMax(address from, address to) public virtual nonReentrant returns (bool) {
+        validateTransferFromAccount(from);
+
+        (, address account) = initOperation(OP_TRANSFER, from);
+
+        return transferFromInternal(account, from, to, vaultStorage.users[from].getBalance());
     }
 
     /// @inheritdoc IERC20
     function transferFrom(address from, address to, uint256 amount) public virtual nonReentrant returns (bool) {
-        (, address account) = initOperation(OP_TRANSFER, from == address(0) ? CHECKACCOUNT_CALLER : from);
+        validateTransferFromAccount(from);
 
-        if (from == address(0)) from = account;
-        if (from == to) revert E_SelfTransfer();
+        (, address account) = initOperation(OP_TRANSFER, from);
 
-        Shares shares = amount.toShares();
-
-        decreaseAllowance(from, account, shares);
-        transferBalance(from, to, shares);
-
-        return true;
+        return transferFromInternal(account, from, to, amount.toShares());
     }
 
     /// @inheritdoc IERC20
@@ -80,6 +79,21 @@ abstract contract TokenModule is IToken, Base, BalanceUtils {
         setAllowance(account, spender, amount);
 
         return true;
+    }
+
+    function transferFromInternal(address account, address from, address to, Shares shares) private returns (bool) {
+        if (from == to) revert E_SelfTransfer();
+
+        decreaseAllowance(from, account, shares);
+        transferBalance(from, to, shares);
+
+        return true;
+    }
+
+    /// @dev Disallow users from passing special addresses used in account status checks as a `from` address.
+    /// @dev Special address values modify the logic of `initOperation` so they should not be allowed.
+    function validateTransferFromAccount(address from) private pure {
+        if (from == CHECKACCOUNT_NONE || from == CHECKACCOUNT_CALLER) revert E_BadSharesOwner();
     }
 }
 

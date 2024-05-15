@@ -105,7 +105,7 @@ contract VaultTest_LTV is EVaultTestBase {
     }
 
     function test_ltvRange() public {
-        vm.expectRevert(Errors.E_InvalidConfigAmount.selector);
+        vm.expectRevert(Errors.E_ConfigAmountTooLargeToEncode.selector);
         eTST.setLTV(address(eTST2), 1e4 + 1, 1e4 + 1, 0);
     }
 

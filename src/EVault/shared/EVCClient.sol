@@ -86,7 +86,7 @@ abstract contract EVCClient is Storage, Events, Errors {
         evc.forgiveAccountStatusCheck(account);
     }
 
-    function hasControllerEnabled(address account) internal view returns (bool) {
+    function hasAnyControllerEnabled(address account) internal view returns (bool) {
         return evc.getControllers(account).length > 0;
     }
 

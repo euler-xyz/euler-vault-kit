@@ -81,9 +81,10 @@ abstract contract Base is EVCClient, Cache {
         // The snapshot is used only to verify that supply increased when checking the supply cap, and to verify that the borrows
         // increased when checking the borrowing cap. Caps are not checked when the capped variables decrease (become safer).
         // For this reason, the snapshot is disabled if both caps are disabled.
+        // The snapshot is cleared during the vault status check hence the vault status check must not be forgiven.
         if (
             !vaultCache.snapshotInitialized
-                && (vaultCache.supplyCap < type(uint256).max || vaultCache.borrowCap < type(uint256).max)
+                && !(vaultCache.supplyCap == type(uint256).max && vaultCache.borrowCap == type(uint256).max)
         ) {
             vaultStorage.snapshotInitialized = vaultCache.snapshotInitialized = true;
             snapshot.set(vaultCache.cash, vaultCache.totalBorrows.toAssetsUp());

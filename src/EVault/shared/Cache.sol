@@ -76,28 +76,33 @@ contract Cache is Storage, Errors {
             uint256 interestRate = vaultStorage.interestRate;
 
             uint256 newInterestAccumulator = vaultCache.interestAccumulator;
+            uint256 newTotalBorrows = vaultCache.totalBorrows.toUint();
 
             unchecked {
+                uint256 intermediate;
                 (uint256 multiplier, bool overflow) = RPow.rpow(interestRate + 1e27, deltaT, 1e27);
 
                 // if exponentiation or accumulator update overflows, keep the old accumulator
                 if (!overflow) {
-                    uint256 intermediate = newInterestAccumulator * multiplier;
+                    intermediate = newInterestAccumulator * multiplier;
                     if (newInterestAccumulator == intermediate / multiplier) {
                         newInterestAccumulator = intermediate / 1e27;
                     }
                 }
+
+                intermediate = newTotalBorrows * newInterestAccumulator;
+                if (newTotalBorrows == intermediate / newInterestAccumulator) {
+                    newTotalBorrows = intermediate / vaultCache.interestAccumulator;
+                }
             }
 
-            uint256 newTotalBorrows =
-                vaultCache.totalBorrows.toUint() * newInterestAccumulator / vaultCache.interestAccumulator;
             uint256 newAccumulatedFees = vaultCache.accumulatedFees.toUint();
             uint256 newTotalShares = vaultCache.totalShares.toUint();
             uint256 feeAssets = (newTotalBorrows - vaultCache.totalBorrows.toUint()) * interestFee.toUint16()
-                / (1e4 << INTERNAL_DEBT_PRECISION_SHIFT);
+                / (uint256(CONFIG_SCALE) << INTERNAL_DEBT_PRECISION_SHIFT);
 
             if (feeAssets != 0) {
-                uint256 newTotalAssets = vaultCache.cash.toUint() + OwedLib.toAssetsUpUint256(newTotalBorrows);
+                uint256 newTotalAssets = vaultCache.cash.toUint() + OwedLib.toAssetsUpUint(newTotalBorrows);
                 newTotalShares = newTotalAssets * newTotalShares / (newTotalAssets - feeAssets);
                 newAccumulatedFees += newTotalShares - vaultCache.totalShares.toUint();
             }

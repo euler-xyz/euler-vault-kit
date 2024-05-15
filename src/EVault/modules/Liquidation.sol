@@ -116,15 +116,15 @@ abstract contract LiquidationModule is ILiquidation, Base, BalanceUtils, Liquidi
     {
         // Check account health
 
-        (uint256 liquidityCollateralValue, uint256 liquidityLiabilityValue) =
+        (uint256 collateralAdjustedValue, uint256 liabilityValue) =
             calculateLiquidity(vaultCache, liqCache.violator, liqCache.collaterals, true);
 
         // no violation
-        if (liquidityCollateralValue > liquidityLiabilityValue) return liqCache;
+        if (collateralAdjustedValue > liabilityValue) return liqCache;
 
         // Compute discount
 
-        uint256 discountFactor = liquidityCollateralValue * 1e18 / liquidityLiabilityValue; // discountFactor = health score = 1 - discount
+        uint256 discountFactor = collateralAdjustedValue * 1e18 / liabilityValue; // discountFactor = health score = 1 - discount
         {
             uint256 minDiscountFactor;
             unchecked {
@@ -146,12 +146,6 @@ abstract contract LiquidationModule is ILiquidation, Base, BalanceUtils, Liquidi
             return liqCache;
         }
 
-        uint256 liabilityValue = liqCache.liability.toUint();
-        if (address(vaultCache.asset) != vaultCache.unitOfAccount) {
-            liabilityValue =
-                vaultCache.oracle.getQuote(liabilityValue, address(vaultCache.asset), vaultCache.unitOfAccount);
-        }
-
         uint256 maxRepayValue = liabilityValue;
         uint256 maxYieldValue = maxRepayValue * 1e18 / discountFactor;
 
@@ -159,7 +153,7 @@ abstract contract LiquidationModule is ILiquidation, Base, BalanceUtils, Liquidi
         // This can happen when borrower has multiple collaterals and seizing all of this one won't bring the violator back to solvency
 
         if (collateralValue < maxYieldValue) {
-            maxRepayValue = collateralValue * discountFactor / 1e18;
+            maxRepayValue = (collateralValue * discountFactor + 1e18 - 1) / 1e18; // round up for consistency
             maxYieldValue = collateralValue;
         }
 
@@ -178,7 +172,9 @@ abstract contract LiquidationModule is ILiquidation, Base, BalanceUtils, Liquidi
 
         // Handle repay: liquidator takes on violator's debt:
 
-        transferBorrow(vaultCache, liqCache.violator, liqCache.liquidator, liqCache.repay);
+        if (liqCache.repay.toUint() > 0) {
+            transferBorrow(vaultCache, liqCache.violator, liqCache.liquidator, liqCache.repay);
+        }
 
         // Handle yield: liquidator receives violator's collateral
 
