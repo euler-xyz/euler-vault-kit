@@ -14,6 +14,7 @@ import {ProxyUtils} from "../shared/lib/ProxyUtils.sol";
 import "../shared/types/Types.sol";
 
 /// @title GovernanceModule
+/// @custom:security-contact security@euler.xyz
 /// @author Euler Labs (https://www.eulerlabs.com/)
 /// @notice An EVault module handling governance, including configuration and fees
 abstract contract GovernanceModule is IGovernance, Base, BalanceUtils, BorrowUtils, LTVUtils {
@@ -30,17 +31,52 @@ abstract contract GovernanceModule is IGovernance, Base, BalanceUtils, BorrowUti
     // Higher bound of the guaranteed range
     uint16 internal constant GUARANTEED_INTEREST_FEE_MAX = 1e4;
 
+    /// @notice Set a name of the EVault's share token (eToken)
+    /// @param newName A new name of the eToken
     event GovSetName(string newName);
+
+    /// @notice Set a symbol of the EVault's share token (eToken)
+    /// @param newSymbol A new symbol of the eToken
     event GovSetSymbol(string newSymbol);
+
+    /// @notice Set a governor address for the EVault
+    /// @param newGovernorAdmin Address of the new governor
     event GovSetGovernorAdmin(address indexed newGovernorAdmin);
+
+    /// @notice Set a fee receiver address
+    /// @param newFeeReceiver Address of the new fee receiver
     event GovSetFeeReceiver(address indexed newFeeReceiver);
+
+    /// @notice Set new LTV configuration for a collateral
+    /// @param collateral Address of the collateral
+    /// @param targetTimestamp If the LTV is lowered, the timestamp when the ramped liquidation LTV will merge with the `targetLTV`
+    /// @param targetLTV The new LTV for the collateral in 1e4 scale
+    /// @param rampDuration If the LTV is lowered, duration in seconds, during which the liquidation LTV will be merging with `targetLTV`
+    /// @param originalLTV The previous liquidation LTV at the moment a new configuration was set
     event GovSetLTV(
         address indexed collateral, uint48 targetTimestamp, uint16 targetLTV, uint32 rampDuration, uint16 originalLTV
     );
-    event GovSetInterestRateModel(address interestRateModel);
+
+    /// @notice Set an interest rate model contract address
+    /// @param newInterestRateModel Address of the new IRM
+    event GovSetInterestRateModel(address newInterestRateModel);
+
+    /// @notice Set new hooks configuration
+    /// @param newHookTarget Address of the new hook target contract
+    /// @param newHookedOps A bitfield of operations to be hooked. See Constants.sol for a list of operations
     event GovSetHookConfig(address indexed newHookTarget, uint32 newHookedOps);
+
+    /// @notice Set new configuration flags
+    /// @param newConfigFlags New configuration flags. See Constants.sol for a list of configuration flags
     event GovSetConfigFlags(uint32 newConfigFlags);
+
+    /// @notice Set new caps
+    /// @param newSupplyCap New supply cap in AmountCap format
+    /// @param newBorrowCap New borrow cap in AmountCap format
     event GovSetCaps(uint16 newSupplyCap, uint16 newBorrowCap);
+
+    /// @notice Set new interest fee
+    /// @param newFee New interest fee as percentage in 1e4 scale
     event GovSetInterestFee(uint16 newFee);
 
     modifier governorOnly() {

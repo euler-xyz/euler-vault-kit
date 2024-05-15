@@ -5,9 +5,10 @@ pragma solidity ^0.8.0;
 import {Dispatch} from "./Dispatch.sol";
 
 /// @title EVault
+/// @custom:security-contact security@euler.xyz
 /// @author Euler Labs (https://www.eulerlabs.com/)
 /// @notice This contract implements an EVC enabled lending vault
-/// @dev The responsibility of this contract is call routing. Select functions are embedded, while most are delegated to the modules.
+/// @dev The responsibility of this contract is call routing. Select functions are embedded, while most are delegated to the modules
 contract EVault is Dispatch {
     constructor(Integrations memory integrations, DeployedModules memory modules) Dispatch(integrations, modules) {}
 

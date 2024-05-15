@@ -4,10 +4,18 @@ pragma solidity ^0.8.0;
 
 import "./IIRM.sol";
 
+/// @title IRMLinearKink
+/// @custom:security-contact security@euler.xyz
+/// @author Euler Labs (https://www.eulerlabs.com/)
+/// @notice Implementation of an interest rate model, where interest rate grows linearly with utilization, and spikes after reaching kink
 contract IRMLinearKink is IIRM {
+    /// @notice Base interest rate applied when utilization is equal zero
     uint256 public immutable baseRate;
+    /// @notice Slope of the function before the kink
     uint256 public immutable slope1;
+    /// @notice Slope of the function after the kink
     uint256 public immutable slope2;
+    /// @notice Utilization at which the slope of the interest rate function changes. In type(uint32).max scale.
     uint256 public immutable kink;
 
     constructor(uint256 baseRate_, uint256 slope1_, uint256 slope2_, uint256 kink_) {
@@ -17,6 +25,7 @@ contract IRMLinearKink is IIRM {
         kink = kink_;
     }
 
+    /// @inheritdoc IIRM
     function computeInterestRate(address vault, uint256 cash, uint256 borrows)
         external
         view
@@ -28,6 +37,7 @@ contract IRMLinearKink is IIRM {
         return computeInterestRateInternal(vault, cash, borrows);
     }
 
+    /// @inheritdoc IIRM
     function computeInterestRateView(address vault, uint256 cash, uint256 borrows)
         external
         view

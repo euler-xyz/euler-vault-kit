@@ -10,12 +10,13 @@ import {LiquidityUtils} from "../shared/LiquidityUtils.sol";
 import "../shared/types/Types.sol";
 
 /// @title LiquidationModule
+/// @custom:security-contact security@euler.xyz
 /// @author Euler Labs (https://www.eulerlabs.com/)
 /// @notice An EVault module handling liquidations of unhealthy accounts
 abstract contract LiquidationModule is ILiquidation, Base, BalanceUtils, LiquidityUtils {
     using TypesLib for uint256;
 
-    // Maximum liquidation discount that can be awarded under any conditions in wad.
+    // Maximum liquidation discount that can be awarded under any conditions.
     uint256 internal constant MAXIMUM_LIQUIDATION_DISCOUNT = 0.2e18;
 
     struct LiquidationCache {

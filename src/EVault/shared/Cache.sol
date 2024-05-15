@@ -11,6 +11,7 @@ import {ProxyUtils} from "./lib/ProxyUtils.sol";
 import "./types/Types.sol";
 
 /// @title Cache
+/// @custom:security-contact security@euler.xyz
 /// @author Euler Labs (https://www.eulerlabs.com/)
 /// @notice Utilities for loading vault storage and updating it with interest accrued
 contract Cache is Storage, Errors {
@@ -36,8 +37,8 @@ contract Cache is Storage, Errors {
         initVaultCache(vaultCache);
     }
 
-    // Takes a VaultCache struct, overwrites it with VaultStorage data and, if time has passed since MarkeStorage
-    // was last updated, updates MarkeStorage.
+    // Takes a VaultCache struct, overwrites it with VaultStorage data and, if time has passed since VaultStorage
+    // was last updated, updates VaultStorage.
     // Returns a boolean if the cache is different from storage. VaultCache param is updated to this block.
     function initVaultCache(VaultCache memory vaultCache) private view returns (bool dirty) {
         dirty = false;

@@ -7,6 +7,7 @@ import {RevertBytes} from "./RevertBytes.sol";
 import {IPermit2} from "../../../interfaces/IPermit2.sol";
 
 /// @title SafeERC20Lib Library
+/// @custom:security-contact security@euler.xyz
 /// @author Euler Labs (https://www.eulerlabs.com/)
 /// @notice The library provides helpers for ERC20 transfers, including Permit2 support
 library SafeERC20Lib {
@@ -18,8 +19,7 @@ library SafeERC20Lib {
         internal
         returns (bool, bytes memory)
     {
-        (bool success, bytes memory data) =
-            address(token).call(abi.encodeWithSelector(IERC20.transferFrom.selector, from, to, value));
+        (bool success, bytes memory data) = address(token).call(abi.encodeCall(IERC20.transferFrom, (from, to, value)));
 
         return isEmptyOrTrueReturn(success, data) ? (true, bytes("")) : (false, data);
     }
@@ -29,7 +29,7 @@ library SafeERC20Lib {
         bytes memory fallbackData;
         if (!success && permit2 != address(0)) {
             if (value > type(uint160).max) {
-                revert E_TransferFromFailed(tryData, abi.encodeWithSelector(E_Permit2AmountOverflow.selector));
+                revert E_TransferFromFailed(tryData, abi.encodePacked(E_Permit2AmountOverflow.selector));
             }
             // it's now safe to down-cast value to uint160
             (success, fallbackData) =
@@ -41,8 +41,7 @@ library SafeERC20Lib {
 
     // If no code exists under the token address, the function will succeed. EVault ensures this is not the case in `initialize`.
     function safeTransfer(IERC20 token, address to, uint256 value) internal {
-        (bool success, bytes memory data) =
-            address(token).call(abi.encodeWithSelector(IERC20.transfer.selector, to, value));
+        (bool success, bytes memory data) = address(token).call(abi.encodeCall(IERC20.transfer, (to, value)));
         if (!isEmptyOrTrueReturn(success, data)) RevertBytes.revertBytes(data);
     }
 

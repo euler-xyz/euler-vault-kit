@@ -7,6 +7,7 @@ import {Events} from "src/EVault/shared/Events.sol";
 import {SafeERC20Lib} from "src/EVault/shared/lib/SafeERC20Lib.sol";
 import {IAllowanceTransfer} from "permit2/src/interfaces/IAllowanceTransfer.sol";
 import {IRMMax} from "../../../../mocks/IRMMax.sol";
+import {IRMTestFixed} from "../../../../mocks/IRMTestFixed.sol";
 import "forge-std/Test.sol";
 
 import "src/EVault/shared/types/Types.sol";
@@ -582,5 +583,166 @@ contract VaultTest_Borrow is EVaultTestBase {
 
         assertEq(eTST.totalBorrows(), 362);
         assertEq(eTST.debtOf(borrower), 362);
+    }
+
+    function test_borrowLogs(
+        uint256 borrow1,
+        uint256 borrow2,
+        uint256 repay1,
+        uint256 repay2,
+        uint256 skip1,
+        uint256 skip2,
+        uint256 skip3,
+        uint256 skip4
+    ) public {
+        borrow1 = bound(borrow1, 1e18, 2.5e18);
+        borrow2 = bound(borrow2, 1e18, 2.5e18);
+        repay1 = bound(repay1, 0.1e18, 1.5e18);
+        repay2 = bound(repay2, 1, 0.00001e18);
+
+        skip1 = bound(skip1, 1, 7 days);
+        skip2 = bound(skip2, 1, 7 days);
+        skip3 = bound(skip3, 7 days, 14 days);
+        skip4 = bound(skip4, 1, 7 days);
+
+        eTST.setInterestRateModel(address(new IRMTestFixed()));
+        address dTST = eTST.dToken();
+
+        startHoax(borrower);
+
+        evc.enableController(borrower, address(eTST));
+        evc.enableCollateral(borrower, address(eTST2));
+        assetTST.approve(address(eTST), type(uint256).max);
+        assetTST.mint(borrower, 1000e18);
+
+        // First borrow
+
+        assertEq(eTST.debtOf(borrower), 0);
+
+        vm.expectEmit();
+        emit Events.Borrow(borrower, borrow1);
+        vm.expectEmit(dTST);
+        emit Events.Transfer(address(0), borrower, borrow1);
+
+        eTST.borrow(borrow1, borrower);
+        uint256 prevDebt = eTST.debtOf(borrower);
+        assertEq(prevDebt, borrow1);
+
+        // Skip time ahead, borrow more
+
+        skip(skip1);
+        uint256 interest1 = eTST.debtOf(borrower) - prevDebt;
+
+        vm.expectEmit();
+        emit Events.InterestAccrued(borrower, interest1);
+        vm.expectEmit();
+        emit Events.Borrow(borrower, borrow2);
+        vm.expectEmit(dTST);
+        emit Events.Transfer(address(0), borrower, borrow2 + interest1);
+
+        eTST.borrow(borrow2, borrower);
+        prevDebt = eTST.debtOf(borrower);
+
+        // Skip again, repay some
+
+        skip(skip2);
+        uint256 interest2 = eTST.debtOf(borrower) - prevDebt;
+        assertTrue(repay1 > interest2); // Interest should be small
+
+        vm.expectEmit();
+        emit Events.InterestAccrued(borrower, interest2);
+        vm.expectEmit();
+        emit Events.Repay(borrower, repay1);
+        vm.expectEmit(dTST);
+        emit Events.Transfer(borrower, address(0), repay1 - interest2);
+
+        eTST.repay(repay1, borrower);
+        prevDebt = eTST.debtOf(borrower);
+
+        // Skip forward, repay tiny (so interest exceeds repay amount)
+
+        skip(skip3);
+        uint256 interest3 = eTST.debtOf(borrower) - prevDebt;
+        assertTrue(interest3 > repay2); // Interest should be small
+
+        vm.expectEmit();
+        emit Events.InterestAccrued(borrower, interest3);
+        vm.expectEmit();
+        emit Events.Repay(borrower, repay2);
+        vm.expectEmit(dTST);
+        emit Events.Transfer(address(0), borrower, interest3 - repay2); // Actually increases debt
+
+        eTST.repay(repay2, borrower);
+        prevDebt = eTST.debtOf(borrower);
+
+        // Skip again, repay everything
+
+        skip(skip4);
+        uint256 interest4 = eTST.debtOf(borrower) - prevDebt;
+
+        vm.expectEmit();
+        emit Events.InterestAccrued(borrower, interest4);
+        vm.expectEmit();
+        emit Events.Repay(borrower, prevDebt + interest4);
+        vm.expectEmit(dTST);
+        emit Events.Transfer(borrower, address(0), prevDebt); // Interest is netted out, repay amount appears less
+
+        eTST.repay(type(uint256).max, borrower);
+
+        assertEq(eTST.debtOf(borrower), 0);
+    }
+
+    function test_borrowLogsTransferDebt() external {
+        eTST.setInterestRateModel(address(new IRMTestFixed()));
+
+        startHoax(borrower);
+
+        evc.enableController(borrower, address(eTST));
+        evc.enableCollateral(borrower, address(eTST2));
+        assetTST.approve(address(eTST), type(uint256).max);
+        assetTST.mint(borrower, 1000e18);
+
+        eTST.borrow(1, borrower);
+
+        assetTST2.transfer(borrower2, type(uint256).max / 2);
+
+        startHoax(borrower2);
+
+        assetTST2.approve(address(eTST2), type(uint256).max);
+        eTST2.deposit(10e18, borrower2);
+
+        evc.enableController(borrower2, address(eTST));
+        evc.enableCollateral(borrower2, address(eTST2));
+        assetTST.approve(address(eTST), type(uint256).max);
+        assetTST.mint(borrower2, 1000e18);
+
+        eTST.borrow(1, borrower2);
+
+        skip(10 days);
+
+        // a little interest accrued (0.3%)
+        assertEq(owedTo1e5(eTST.debtOfExact(borrower)), 1.00274e5);
+        assertEq(owedTo1e5(eTST.debtOfExact(borrower2)), 1.00274e5);
+
+        // record interest in storage
+        eTST.borrow(1, borrower2);
+
+        skip(10 days);
+
+        // more accrued. Small debt fractions are in storage of both accounts and will be accrued currently
+        assertEq(owedTo1e5(eTST.debtOfExact(borrower2)), 2.00823e5);
+
+        // now borrower2 in LogBorrow would receiveamount = 2, prevOwed = 3, owed = 4.
+        // Amount is adjusted to 1 and interest accrued is 0, so no event is emitted
+        vm.recordLogs();
+        vm.expectEmit();
+        emit Events.Borrow(borrower2, 1);
+        eTST.pullDebt(2, borrower);
+
+        assertEq(vm.getRecordedLogs().length, 11); // InterestAccrued would be the 12th event
+    }
+
+    function owedTo1e5(uint256 debt) internal pure returns (uint256) {
+        return (debt * 1e5) >> INTERNAL_DEBT_PRECISION_SHIFT;
     }
 }

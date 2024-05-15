@@ -14,6 +14,7 @@ import {IFlashLoan} from "../../interfaces/IFlashLoan.sol";
 import "../shared/types/Types.sol";
 
 /// @title BorrowingModule
+/// @custom:security-contact security@euler.xyz
 /// @author Euler Labs (https://www.eulerlabs.com/)
 /// @notice An EVault module handling borrowing and repaying of vault assets
 abstract contract BorrowingModule is IBorrowing, Base, AssetTransfers, BalanceUtils, LiquidityUtils {

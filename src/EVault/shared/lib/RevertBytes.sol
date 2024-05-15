@@ -5,6 +5,7 @@ pragma solidity ^0.8.0;
 import "../Errors.sol";
 
 /// @title RevertBytes Library
+/// @custom:security-contact security@euler.xyz
 /// @author Euler Labs (https://www.eulerlabs.com/)
 /// @notice The library provides a helper function for bubbling up errors
 library RevertBytes {

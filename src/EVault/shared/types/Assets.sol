@@ -8,6 +8,7 @@ import {ConversionHelpers} from "../lib/ConversionHelpers.sol";
 import "../Constants.sol";
 
 /// @title AssetsLib
+/// @custom:security-contact security@euler.xyz
 /// @author Euler Labs (https://www.eulerlabs.com/)
 /// @notice Custom type `Assets` represents amounts of the vault's underlying asset
 library AssetsLib {
@@ -40,6 +41,12 @@ library AssetsLib {
     function toOwed(Assets self) internal pure returns (Owed) {
         unchecked {
             return TypesLib.toOwed(self.toUint() << INTERNAL_DEBT_PRECISION_SHIFT);
+        }
+    }
+
+    function addUnchecked(Assets self, Assets b) internal pure returns (Assets) {
+        unchecked {
+            return Assets.wrap(uint112(self.toUint() + b.toUint()));
         }
     }
 
