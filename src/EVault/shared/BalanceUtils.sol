@@ -3,7 +3,6 @@
 pragma solidity ^0.8.0;
 
 import {Base} from "./Base.sol";
-import {IBalanceTracker} from "../../interfaces/IBalanceTracker.sol";
 
 import "./types/Types.sol";
 
@@ -11,8 +10,6 @@ import "./types/Types.sol";
 /// @author Euler Labs (https://www.eulerlabs.com/)
 /// @notice Utilities for tracking share balances and allowances
 abstract contract BalanceUtils is Base {
-    using TypesLib for uint256;
-
     // Balances
 
     function increaseBalance(

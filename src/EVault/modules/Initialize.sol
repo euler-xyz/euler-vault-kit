@@ -7,7 +7,6 @@ import {Base} from "../shared/Base.sol";
 import {BorrowUtils} from "../shared/BorrowUtils.sol";
 import {DToken} from "../DToken.sol";
 import {ProxyUtils} from "../shared/lib/ProxyUtils.sol";
-import {VaultCache} from "../shared/types/VaultCache.sol";
 
 import "../shared/Constants.sol";
 import "../shared/types/Types.sol";

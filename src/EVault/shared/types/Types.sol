@@ -7,7 +7,6 @@ import "../../IEVault.sol";
 import "./VaultStorage.sol";
 import "./Snapshot.sol";
 import "./UserStorage.sol";
-import "./LTVConfig.sol";
 
 import "./Shares.sol";
 import "./Assets.sol";
