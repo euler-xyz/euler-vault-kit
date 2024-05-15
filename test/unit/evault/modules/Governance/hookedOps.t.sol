@@ -333,7 +333,8 @@ contract Governance_HookedOps is EVaultTestBase {
         }
 
         if (hookedOps & OP_REPAY_WITH_SHARES != 0) {
-            bytes memory data = getHookCalldata(abi.encodeCall(IEVault(eTST).repayWithShares, (amount, address1)), sender);
+            bytes memory data =
+                getHookCalldata(abi.encodeCall(IEVault(eTST).repayWithShares, (amount, address1)), sender);
             MockHookTarget(hookTarget).setExpectedDataHash(keccak256(data));
             vm.expectRevert(MockHookTarget.ExpectedData.selector);
             eTST.repayWithShares(amount, address1);

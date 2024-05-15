@@ -161,28 +161,35 @@ contract BorrowingModuleHandler is BaseHandler {
     }
 
     function assert_BM_INVARIANT_N(uint256 amount) external setup {
-        bool success;
-        bytes memory returnData;
+        // FIXME
 
-        uint256 debtBefore = eTST.debtOf(address(actor));
-        uint256 balanceBefore = eTST.balanceOf(address(actor));
+        // bool success;
+        // bytes memory returnData;
 
-        revert("FIXME"); // TODO: fix description of the invariant in InvariantsSpec
+        // uint256 debtBefore = eTST.debtOf(address(actor));
+        // uint256 balanceBefore = eTST.balanceOf(address(actor));
+
         // (success, returnData) =
-        //     actor.proxy(address(eTST), abi.encodeWithSelector(IBorrowing.loop.selector, amount, address(actor)));
+        //     actor.proxy(address(eTST), abi.encodeWithSelector(IERC4626.deposit.selector, amount, address(actor)));
 
-        if (success) {
-            (success, returnData) =
-                actor.proxy(address(eTST), abi.encodeWithSelector(IBorrowing.repayWithShares.selector, amount, address(actor)));
-        }
+        // if (success) {
+        //     (success, returnData) =
+        //         actor.proxy(address(eTST), abi.encodeWithSelector(IBorrowing.borrow.selector, amount, address(actor)));
+        // }
 
-        if (success) {
-            uint256 debtAfter = eTST.debtOf(address(actor));
-            uint256 balanceAfter = eTST.balanceOf(address(actor));
+        // if (success) {
+        //     (success, returnData) = actor.proxy(
+        //         address(eTST), abi.encodeWithSelector(IBorrowing.repayWithShares.selector, amount, address(actor))
+        //     );
+        // }
 
-            assertGe(balanceBefore, balanceAfter, BM_INVARIANT_N1);
-            assertLe(debtBefore, debtAfter, BM_INVARIANT_N2);
-        }
+        // if (success) {
+        //     uint256 debtAfter = eTST.debtOf(address(actor));
+        //     uint256 balanceAfter = eTST.balanceOf(address(actor));
+
+        //     assertGe(balanceBefore, balanceAfter, BM_INVARIANT_N1);
+        //     assertLe(debtBefore, debtAfter, BM_INVARIANT_N2);
+        // }
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////////

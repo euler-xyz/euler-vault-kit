@@ -256,9 +256,7 @@ contract VaultTest_Caps is EVaultTestBase {
         eTST.borrow(amount, user);
     }
 
-    function test_BorrowCap_WhenOver_Borrow(uint16 borrowCapOrig, uint16 borrowCapNow, uint256 amount)
-        public
-    {
+    function test_BorrowCap_WhenOver_Borrow(uint16 borrowCapOrig, uint16 borrowCapNow, uint256 amount) public {
         setUpOverBorrowCap(borrowCapOrig, borrowCapNow);
         amount = bound(amount, 1, MAX_SANE_AMOUNT);
         uint256 snapshot = vm.snapshot();
