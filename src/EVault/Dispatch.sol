@@ -30,15 +30,25 @@ abstract contract Dispatch is
     BalanceForwarderModule,
     GovernanceModule
 {
+    /// @notice Addresses of the Initialize module
     address public immutable MODULE_INITIALIZE;
+    /// @notice Addresses of the Token module
     address public immutable MODULE_TOKEN;
+    /// @notice Addresses of the Vault module
     address public immutable MODULE_VAULT;
+    /// @notice Addresses of the Borrowing module
     address public immutable MODULE_BORROWING;
+    /// @notice Addresses of the Liquidation module
     address public immutable MODULE_LIQUIDATION;
+    /// @notice Addresses of the RiskManager module
     address public immutable MODULE_RISKMANAGER;
+    /// @notice Addresses of the BalanceForwarder module
     address public immutable MODULE_BALANCE_FORWARDER;
+    /// @notice Addresses of the Governance module
     address public immutable MODULE_GOVERNANCE;
 
+    /// @title DeployedModules
+    /// @notice This struct is used to pass in the addresses of EVault modules during deployment
     struct DeployedModules {
         address initialize;
         address token;
@@ -74,6 +84,12 @@ abstract contract Dispatch is
         delegateToModuleView(module);
     }
 
+    // Modifier ensures, that the body of the function is always executed from the EVC call.
+    // It is accomplished by intercepting calls incoming directly to the vault and passing them
+    // to the EVC.call function. EVC calls the vault back with original calldata. As a result, the account
+    // and vault status checks are always executed in the checks deferral frame, at the end of the call,
+    // outside of the vault's re-entrancy protections.
+    // The modifier is applied to all functions which schedule account or vault status checks.
     modifier callThroughEVC() {
         if (msg.sender == address(evc)) {
             _;
@@ -129,12 +145,6 @@ abstract contract Dispatch is
         }
     }
 
-    // Modifier ensures, that the body of the function is always executed from the EVC call.
-    // It is accomplished by intercepting calls incoming directly to the vault and passing them
-    // to the EVC.call function. EVC calls the vault back with original calldata. As a result, the account
-    // and vault status checks are always executed in the checks deferral frame, at the end of the call,
-    // outside of the vault's re-entrancy protections.
-    // The modifier is applied to all functions which schedule account or vault status checks.
     function callThroughEVCInternal() private {
         address _evc = address(evc);
         assembly {
