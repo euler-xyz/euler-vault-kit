@@ -155,7 +155,7 @@ abstract contract LiquidationModule is ILiquidation, Base, BalanceUtils, Liquidi
         // This can happen when borrower has multiple collaterals and seizing all of this one won't bring the violator back to solvency
 
         if (collateralValue < maxYieldValue) {
-            maxRepayValue = collateralValue * discountFactor / 1e18;
+            maxRepayValue = (collateralValue * discountFactor + 1e18 - 1) / 1e18; // round up for consistency
             maxYieldValue = collateralValue;
         }
 
