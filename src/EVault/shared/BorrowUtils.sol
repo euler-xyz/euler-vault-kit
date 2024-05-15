@@ -54,13 +54,13 @@ abstract contract BorrowUtils is Base {
         logBorrowChange(account, prevOwed, owed);
     }
 
-    function decreaseBorrow(VaultCache memory vaultCache, address account, Assets amount) internal virtual {
+    function decreaseBorrow(VaultCache memory vaultCache, address account, Assets assets) internal virtual {
         (Owed owedExact, Owed prevOwed) = loadUserBorrow(vaultCache, account);
         Assets owed = owedExact.toAssetsUp();
 
-        if (amount > owed) revert E_RepayTooMuch();
+        if (assets > owed) revert E_RepayTooMuch();
 
-        Owed owedRemaining = owed.subUnchecked(amount).toOwed();
+        Owed owedRemaining = owed.subUnchecked(assets).toOwed();
 
         setUserBorrow(vaultCache, account, owedRemaining);
         vaultStorage.totalBorrows = vaultCache.totalBorrows =
