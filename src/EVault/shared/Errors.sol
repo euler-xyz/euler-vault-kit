@@ -13,11 +13,12 @@ contract Errors {
     error E_InsufficientAllowance();
     error E_InsufficientCash();
     error E_InsufficientAssets();
+    error E_InsufficientBalance();
+    error E_InsufficientDebt();
     error E_FlashLoanNotRepaid();
     error E_Reentrancy();
     error E_OperationDisabled();
     error E_OutstandingDebt();
-    error E_InsufficientBalance();
     error E_AmountTooLargeToEncode();
     error E_DebtAmountTooLargeToEncode();
     error E_RepayTooMuch();
