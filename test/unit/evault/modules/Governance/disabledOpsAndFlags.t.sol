@@ -65,6 +65,7 @@ contract Governance_PauseOps is EVaultTestBase {
     }
 
     function testFuzz_onlyGovernorShouldBeAbleToSetDisabledOps(uint32 newDisabledOps) public {
+        newDisabledOps = uint32(bound(newDisabledOps, 0, OP_MAX_VALUE - 1));
         eTST.setHookConfig(address(0), newDisabledOps);
         (, uint32 disabledOps) = eTST.hookConfig();
         assertEq(disabledOps, newDisabledOps);

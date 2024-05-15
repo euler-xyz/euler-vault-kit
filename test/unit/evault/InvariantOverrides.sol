@@ -15,12 +15,12 @@ import "forge-std/console.sol";
 
 // Abstract contract to override functions and check invariants.
 abstract contract FunctionOverrides is BalanceUtils, BorrowUtils {
-    uint32 internal constant INIT_OPERATION_FLAG = 1 << 31;
+    bool public initOperationFlag;
 
     error EVault_Panic();
 
     function checkInvariants(address checkedAccount, address controllerEnabled) internal view {
-        if (Flags.unwrap(vaultStorage.hookedOps) & INIT_OPERATION_FLAG == 0) {
+        if (!initOperationFlag) {
             console.log("EVault Panic on InitOperation");
             revert EVault_Panic();
         }
@@ -48,7 +48,7 @@ abstract contract FunctionOverrides is BalanceUtils, BorrowUtils {
         returns (VaultCache memory vaultCache, address account)
     {
         (vaultCache, account) = super.initOperation(operation, accountToCheck);
-        vaultStorage.hookedOps = Flags.wrap(Flags.unwrap(vaultStorage.hookedOps) | INIT_OPERATION_FLAG);
+        initOperationFlag = true;
     }
 
     function increaseBalance(
@@ -176,6 +176,10 @@ contract BorrowingOverride is Borrowing, FunctionOverrides {
 
 contract GovernanceOverride is Governance, FunctionOverrides {
     constructor(Integrations memory integrations) Governance(integrations) {}
+
+    function resetInitOperationFlag() public governorOnly {
+        initOperationFlag = false;
+    }
 
     function initOperation(uint32 operation, address accountToCheck)
         internal
