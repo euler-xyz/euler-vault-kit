@@ -92,6 +92,7 @@ contract GenericFactory is MetaProxyDeployer {
         _;
     }
 
+    /// @dev For non upgradeable factories, set zero address as the admin
     constructor(address admin) {
         emit Genesis();
 
