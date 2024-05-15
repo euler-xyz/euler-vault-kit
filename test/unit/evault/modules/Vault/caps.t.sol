@@ -108,11 +108,6 @@ contract VaultTest_Caps is EVaultTestBase {
         if (shouldRevert) vm.expectRevert();
         vm.prank(user);
         eTST.mint(amount, user);
-
-        vm.revertTo(snapshot);
-        if (shouldRevert) vm.expectRevert();
-        vm.prank(user);
-        eTST.loop(amount, user);
     }
 
     function test_SupplyCap_WhenAt_IncreasingActions(uint16 supplyCap, uint256 amount) public {
@@ -130,11 +125,6 @@ contract VaultTest_Caps is EVaultTestBase {
         vm.expectRevert();
         vm.prank(user);
         eTST.mint(amount, user);
-
-        vm.revertTo(snapshot);
-        vm.expectRevert();
-        vm.prank(user);
-        eTST.loop(amount, user);
     }
 
     function test_SupplyCap_WhenOver_IncreasingActions(uint16 supplyCapOrig, uint16 supplyCapNow, uint256 amount)
@@ -154,11 +144,6 @@ contract VaultTest_Caps is EVaultTestBase {
         vm.expectRevert();
         vm.prank(user);
         eTST.mint(amount, user);
-
-        vm.revertTo(snapshot);
-        vm.expectRevert();
-        vm.prank(user);
-        eTST.loop(amount, user);
     }
 
     function test_SupplyCap_WhenUnder_DecreasingActions(uint16 supplyCap, uint256 initAmount, uint256 amount) public {
@@ -177,7 +162,7 @@ contract VaultTest_Caps is EVaultTestBase {
 
         vm.revertTo(snapshot);
         vm.prank(user);
-        eTST.deloop(amount, user);
+        eTST.repayWithShares(amount, user);
     }
 
     function test_SupplyCap_WhenAt_DecreasingActions(uint16 supplyCap, uint256 amount) public {
@@ -196,7 +181,7 @@ contract VaultTest_Caps is EVaultTestBase {
 
         vm.revertTo(snapshot);
         vm.prank(user);
-        eTST.deloop(amount, user);
+        eTST.repayWithShares(amount, user);
     }
 
     function test_SupplyCap_WhenOver_DecreasingActions(uint16 supplyCapOrig, uint16 supplyCapNow, uint256 amount)
@@ -217,7 +202,7 @@ contract VaultTest_Caps is EVaultTestBase {
 
         vm.revertTo(snapshot);
         vm.prank(user);
-        eTST.deloop(amount, user);
+        eTST.repayWithShares(amount, user);
     }
 
     function test_BorrowCap_UnlimitedByDefault() public {
@@ -248,7 +233,7 @@ contract VaultTest_Caps is EVaultTestBase {
         eTST.deposit(1, user);
     }
 
-    function test_BorrowCap_WhenUnder_IncreasingActions(uint16 borrowCap, uint256 initAmount, uint256 amount) public {
+    function test_BorrowCap_WhenUnder_Borrow(uint16 borrowCap, uint256 initAmount, uint256 amount) public {
         uint256 remaining = setUpUnderBorrowCap(borrowCap, initAmount);
         amount = bound(amount, 1, remaining);
         bool shouldRevert = amount > remaining;
@@ -258,17 +243,9 @@ contract VaultTest_Caps is EVaultTestBase {
         if (shouldRevert) vm.expectRevert();
         vm.prank(user);
         eTST.borrow(amount, user);
-
-        vm.revertTo(snapshot);
-        uint256 maxDeposit = MAX_SANE_AMOUNT - eTST.totalSupply();
-        uint256 maxWind = maxDeposit < remaining ? maxDeposit : remaining;
-        amount = bound(amount, 1, maxWind);
-        if (shouldRevert) vm.expectRevert();
-        vm.prank(user);
-        eTST.loop(amount, user);
     }
 
-    function test_BorrowCap_WhenAt_IncreasingActions(uint16 borrowCap, uint256 amount) public {
+    function test_BorrowCap_WhenAt_Borrow(uint16 borrowCap, uint256 amount) public {
         setUpAtBorrowCap(borrowCap);
         amount = bound(amount, 1, MAX_SANE_AMOUNT);
         uint256 snapshot = vm.snapshot();
@@ -277,14 +254,9 @@ contract VaultTest_Caps is EVaultTestBase {
         vm.expectRevert();
         vm.prank(user);
         eTST.borrow(amount, user);
-
-        vm.revertTo(snapshot);
-        vm.expectRevert();
-        vm.prank(user);
-        eTST.loop(amount, user);
     }
 
-    function test_BorrowCap_WhenOver_IncreasingActions(uint16 borrowCapOrig, uint16 borrowCapNow, uint256 amount)
+    function test_BorrowCap_WhenOver_Borrow(uint16 borrowCapOrig, uint16 borrowCapNow, uint256 amount)
         public
     {
         setUpOverBorrowCap(borrowCapOrig, borrowCapNow);
@@ -295,11 +267,6 @@ contract VaultTest_Caps is EVaultTestBase {
         vm.expectRevert();
         vm.prank(user);
         eTST.borrow(amount, user);
-
-        vm.revertTo(snapshot);
-        vm.expectRevert();
-        vm.prank(user);
-        eTST.loop(amount, user);
     }
 
     function test_BorrowCap_WhenUnder_DecreasingActions(uint16 borrowCap, uint256 initAmount, uint256 amount) public {
@@ -313,7 +280,7 @@ contract VaultTest_Caps is EVaultTestBase {
 
         vm.revertTo(snapshot);
         vm.prank(user);
-        eTST.deloop(amount, user);
+        eTST.repayWithShares(amount, user);
     }
 
     function test_BorrowCap_WhenAt_DecreasingActions(uint16 borrowCap, uint256 amount) public {
@@ -327,7 +294,7 @@ contract VaultTest_Caps is EVaultTestBase {
 
         vm.revertTo(snapshot);
         vm.prank(user);
-        eTST.deloop(amount, user);
+        eTST.repayWithShares(amount, user);
     }
 
     function test_BorrowCap_WhenOver_DecreasingActions(uint16 borrowCapOrig, uint16 borrowCapNow, uint256 amount)
@@ -343,7 +310,7 @@ contract VaultTest_Caps is EVaultTestBase {
 
         vm.revertTo(snapshot);
         vm.prank(user);
-        eTST.deloop(amount, user);
+        eTST.repayWithShares(amount, user);
     }
 
     function test_BorrowCap_WhenOver_InterestAccrual(

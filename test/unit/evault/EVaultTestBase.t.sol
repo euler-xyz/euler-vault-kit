@@ -143,7 +143,7 @@ contract EVaultTestBase is AssertionsCustomTypes, Test, DeployPermit2 {
     }
 
     address internal SYNTH_VAULT_HOOK_TARGET = address(new MockHook());
-    uint32 internal constant SYNTH_VAULT_HOOKED_OPS = OP_DEPOSIT | OP_MINT | OP_REDEEM | OP_SKIM | OP_LOOP | OP_DELOOP;
+    uint32 internal constant SYNTH_VAULT_HOOKED_OPS = OP_DEPOSIT | OP_MINT | OP_REDEEM | OP_SKIM | OP_REPAY_WITH_SHARES;
 
     function createSynthEVault(address asset) internal returns (IEVault) {
         IEVault v = IEVault(factory.createProxy(true, abi.encodePacked(address(asset), address(oracle), unitOfAccount)));

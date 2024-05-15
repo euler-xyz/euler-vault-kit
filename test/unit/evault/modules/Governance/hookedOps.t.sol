@@ -332,19 +332,11 @@ contract Governance_HookedOps is EVaultTestBase {
             eTST.repay(amount, address1);
         }
 
-        if (hookedOps & OP_LOOP != 0) {
-            evc.enableController(sender, address(eTST));
-            bytes memory data = getHookCalldata(abi.encodeCall(IEVault(eTST).loop, (amount, address1)), sender);
+        if (hookedOps & OP_REPAY_WITH_SHARES != 0) {
+            bytes memory data = getHookCalldata(abi.encodeCall(IEVault(eTST).repayWithShares, (amount, address1)), sender);
             MockHookTarget(hookTarget).setExpectedDataHash(keccak256(data));
             vm.expectRevert(MockHookTarget.ExpectedData.selector);
-            eTST.loop(amount, address1);
-        }
-
-        if (hookedOps & OP_DELOOP != 0) {
-            bytes memory data = getHookCalldata(abi.encodeCall(IEVault(eTST).deloop, (amount, address1)), sender);
-            MockHookTarget(hookTarget).setExpectedDataHash(keccak256(data));
-            vm.expectRevert(MockHookTarget.ExpectedData.selector);
-            eTST.deloop(amount, address1);
+            eTST.repayWithShares(amount, address1);
         }
 
         if (hookedOps & OP_PULL_DEBT != 0) {

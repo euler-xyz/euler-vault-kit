@@ -77,25 +77,7 @@ contract BorrowingModuleHandler is BaseHandler {
         }
     }
 
-    function loop(uint256 amount, uint256 i) external setup {
-        bool success;
-        bytes memory returnData;
-
-        // Get one of the three actors randomly
-        address receiver = _getRandomActor(i);
-
-        address target = address(eTST);
-
-        _before();
-        (success, returnData) = actor.proxy(target, abi.encodeWithSelector(IBorrowing.loop.selector, amount, receiver));
-
-        if (success) {
-            uint256 shares = abi.decode(returnData, (uint256));
-            _increaseGhostShares(shares, address(receiver));
-        }
-    }
-
-    function deloop(uint256 amount, uint256 i) external setup {
+    function repayWithShares(uint256 amount, uint256 i) external setup {
         bool success;
         bytes memory returnData;
 
@@ -106,7 +88,7 @@ contract BorrowingModuleHandler is BaseHandler {
 
         _before();
         (success, returnData) =
-            actor.proxy(target, abi.encodeWithSelector(IBorrowing.deloop.selector, amount, receiver));
+            actor.proxy(target, abi.encodeWithSelector(IBorrowing.repayWithShares.selector, amount, receiver));
 
         if (success) {
             uint256 shares = abi.decode(returnData, (uint256));
@@ -185,12 +167,13 @@ contract BorrowingModuleHandler is BaseHandler {
         uint256 debtBefore = eTST.debtOf(address(actor));
         uint256 balanceBefore = eTST.balanceOf(address(actor));
 
-        (success, returnData) =
-            actor.proxy(address(eTST), abi.encodeWithSelector(IBorrowing.loop.selector, amount, address(actor)));
+        revert("FIXME"); // TODO: fix description of the invariant in InvariantsSpec
+        // (success, returnData) =
+        //     actor.proxy(address(eTST), abi.encodeWithSelector(IBorrowing.loop.selector, amount, address(actor)));
 
         if (success) {
             (success, returnData) =
-                actor.proxy(address(eTST), abi.encodeWithSelector(IBorrowing.deloop.selector, amount, address(actor)));
+                actor.proxy(address(eTST), abi.encodeWithSelector(IBorrowing.repayWithShares.selector, amount, address(actor)));
         }
 
         if (success) {

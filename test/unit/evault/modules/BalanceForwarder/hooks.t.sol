@@ -206,43 +206,26 @@ contract BalanceForwarderTest_Hooks is EVaultTestBase {
         vm.skip(true);
     }
 
-    function test_OnLoop_ToSelf() public {
-        setUpBorrow(alice);
-
-        vm.prank(alice);
-        eTST.loop(1 ether, alice);
-        assertEq(MBT.calls(alice, 11 ether, false), 1);
-        assertBalance(alice, 11 ether);
-    }
-
-    function test_OnLoop_ToOther() public {
-        setUpBorrow(alice);
-
-        vm.prank(alice);
-        eTST.loop(1 ether, bob);
-        assertEq(MBT.calls(bob, 1 ether, false), 1);
-        assertBalance(bob, 1 ether);
-        assertBalance(alice, 10 ether);
-    }
-
-    function test_OnDeloopd_FromSelf() public {
+    function test_OnRepayWithShares_FromSelf() public {
         setUpBorrow(alice);
 
         vm.startPrank(alice);
-        eTST.loop(2 ether, alice);
-        eTST.deloop(1 ether, alice);
+        eTST.borrow(2 ether, alice);
+        eTST.deposit(2 ether, alice);
+
+        eTST.repayWithShares(1 ether, alice);
         assertEq(MBT.calls(alice, 11 ether, false), 1);
         assertBalance(alice, 11 ether);
     }
 
-    function test_OnDeloopd_FromOther() public {
+    function test_OnRepayWithShares_FromOther() public {
         setUpBorrow(alice);
 
-        vm.prank(alice);
-        eTST.loop(2 ether, alice);
+        vm.startPrank(alice);
+        eTST.borrow(2 ether, alice);
+        eTST.deposit(2 ether, alice);
 
-        vm.prank(alice);
-        eTST.deloop(1 ether, bob);
+        eTST.repayWithShares(1 ether, bob);
         assertEq(MBT.calls(alice, 12 ether, false), 1);
         assertBalance(alice, 12 ether);
     }
@@ -251,7 +234,7 @@ contract BalanceForwarderTest_Hooks is EVaultTestBase {
         setUpBorrow(alice);
 
         vm.prank(alice);
-        eTST.loop(1 ether, bob);
+        eTST.deposit(1 ether, bob);
 
         skip(300);
 

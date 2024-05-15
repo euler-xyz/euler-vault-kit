@@ -99,10 +99,7 @@ contract MockHookTarget is Test, IHookTarget {
         eTST.repay(amount1, account1);
 
         vm.expectRevert(Errors.E_Reentrancy.selector);
-        eTST.loop(amount1, account1);
-
-        vm.expectRevert(Errors.E_Reentrancy.selector);
-        eTST.deloop(amount1, account1);
+        eTST.repayWithShares(amount1, account1);
 
         vm.expectRevert(Errors.E_Reentrancy.selector);
         eTST.pullDebt(amount1, account1);
@@ -335,10 +332,7 @@ contract ReentrancyTest is EVaultTestBase {
         eTST.repay(amount1, account1);
 
         vm.expectRevert(Errors.E_Reentrancy.selector);
-        eTST.loop(amount1, account1);
-
-        vm.expectRevert(Errors.E_Reentrancy.selector);
-        eTST.deloop(amount1, account1);
+        eTST.repayWithShares(amount1, account1);
 
         vm.expectRevert(Errors.E_Reentrancy.selector);
         eTST.pullDebt(amount1, account1);

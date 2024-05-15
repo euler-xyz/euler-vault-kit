@@ -327,7 +327,7 @@ contract VaultTest_BalancesWithInterest is EVaultTestBase {
         assertEq(assetTST.balanceOf(user1), 100e18);
     }
 
-    function test_loop_unloop_exchangeRateRounding() public {
+    function test_repayWithShares_exchangeRateRounding() public {
         startHoax(user2);
         eTST.deposit(1e18, user2);
         startHoax(user1);
@@ -363,13 +363,14 @@ contract VaultTest_BalancesWithInterest is EVaultTestBase {
 
         uint256 snapshot = vm.snapshot();
 
-        eTST.loop(1, user1);
+        eTST.mint(1, user1);
+        eTST.borrow(eTST.previewMint(1), user1);
         uint256 balance = eTST.convertToAssets(eTST.balanceOf(user1));
 
-        // debt is rounded up on loop
+        // debt is rounded up on previewMint
         assertEq(eTST.debtOf(user1), balance + 1);
 
-        eTST.deloop(type(uint256).max, user1);
+        eTST.repayWithShares(type(uint256).max, user1);
         assertEq(eTST.maxWithdraw(user1), 0);
         // debt still present
         assertEq(eTST.debtOf(user1), 1);
@@ -384,7 +385,9 @@ contract VaultTest_BalancesWithInterest is EVaultTestBase {
         eTST.setInterestRateModel(address(new IRMTestFixed()));
         startHoax(user1);
         evc.enableController(user1, address(eTST));
-        eTST.loop(1, user1);
+
+        eTST.mint(1, user1);
+        eTST.borrow(eTST.previewMint(1), user1);
 
         skip(86400 * 20);
 
@@ -393,7 +396,7 @@ contract VaultTest_BalancesWithInterest is EVaultTestBase {
         // debt rounded up
         assertEq(eTST.debtOf(user1), balance + 1 + 1);
 
-        eTST.deloop(type(uint256).max, user1);
+        eTST.repayWithShares(type(uint256).max, user1);
 
         assertEq(eTST.maxWithdraw(user1), 0);
         assertEq(eTST.debtOf(user1), 2);

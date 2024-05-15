@@ -93,28 +93,10 @@ abstract contract BorrowingModule is IBorrowing, Base, AssetTransfers, BalanceUt
     }
 
     /// @inheritdoc IBorrowing
-    function loop(uint256 amount, address sharesReceiver) public virtual nonReentrant returns (uint256) {
-        (VaultCache memory vaultCache, address account) = initOperation(OP_LOOP, CHECKACCOUNT_CALLER);
+    function repayWithShares(uint256 amount, address receiver) public virtual nonReentrant returns (uint256) {
+        (VaultCache memory vaultCache, address account) = initOperation(OP_REPAY_WITH_SHARES, CHECKACCOUNT_CALLER);
 
-        Assets assets = amount.toAssets();
-        if (assets.isZero()) return 0;
-        Shares shares = assets.toSharesUp(vaultCache);
-        assets = shares.toAssetsUp(vaultCache);
-
-        // Mint DTokens
-        increaseBorrow(vaultCache, account, assets);
-
-        // Mint ETokens
-        increaseBalance(vaultCache, sharesReceiver, account, shares, assets);
-
-        return shares.toUint();
-    }
-
-    /// @inheritdoc IBorrowing
-    function deloop(uint256 amount, address debtFrom) public virtual nonReentrant returns (uint256) {
-        (VaultCache memory vaultCache, address account) = initOperation(OP_DELOOP, CHECKACCOUNT_CALLER);
-
-        Assets owed = getCurrentOwed(vaultCache, debtFrom).toAssetsUp();
+        Assets owed = getCurrentOwed(vaultCache, receiver).toAssetsUp();
         if (owed.isZero()) return 0;
 
         Assets assets;
@@ -139,7 +121,7 @@ abstract contract BorrowingModule is IBorrowing, Base, AssetTransfers, BalanceUt
         decreaseBalance(vaultCache, account, account, account, shares, assets);
 
         // Burn DTokens
-        decreaseBorrow(vaultCache, debtFrom, assets);
+        decreaseBorrow(vaultCache, receiver, assets);
 
         return shares.toUint();
     }

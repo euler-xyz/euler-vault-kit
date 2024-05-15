@@ -181,32 +181,15 @@ contract Governance_PauseOps is EVaultTestBase {
         eTST.repay(type(uint256).max, receiver);
     }
 
-    function testFuzz_loopingDisabledOpsShouldFailAfterDisabled(uint256 amount, address sharesReceiver) public {
-        eTST.setHookConfig(address(0), OP_LOOP);
-        evc.enableController(address(this), address(eTST));
+    function testFuzz_repayingWithSharesDisabledOpsShouldFailAfterDisabled(uint256 amount, address receiver) public {
+        eTST.setHookConfig(address(0), OP_REPAY_WITH_SHARES);
         vm.expectRevert(Errors.E_OperationDisabled.selector);
-        eTST.loop(amount, sharesReceiver);
-
-        // re-enable
-        eTST.setHookConfig(address(0), 0);
-        vm.startPrank(borrower);
-        evc.enableController(borrower, address(eTST));
-        evc.enableCollateral(borrower, address(eTST2));
-        amount = bound(amount, 1, MINT_AMOUNT / 2);
-        vm.assume(sharesReceiver != address(0));
-        eTST.loop(amount, sharesReceiver);
-        vm.stopPrank();
-    }
-
-    function testFuzz_deloopingDisabledOpsShouldFailAfterDisabled(uint256 amount, address debtFrom) public {
-        eTST.setHookConfig(address(0), OP_DELOOP);
-        vm.expectRevert(Errors.E_OperationDisabled.selector);
-        eTST.deloop(amount, debtFrom);
+        eTST.repayWithShares(amount, receiver);
 
         // re-enable
         eTST.setHookConfig(address(0), 0);
         vm.prank(borrower);
-        eTST.deloop(amount, borrower);
+        eTST.repayWithShares(amount, borrower);
     }
 
     function testFuzz_pullingDebtDisabledOpsShouldFailAfterDisabled(uint256 amount, address from) public {
