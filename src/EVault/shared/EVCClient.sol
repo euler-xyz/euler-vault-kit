@@ -15,7 +15,7 @@ import {IEVC} from "ethereum-vault-connector/interfaces/IEthereumVaultConnector.
 /// @author Euler Labs (https://www.eulerlabs.com/)
 /// @notice Utilities for interacting with the EVC (Ethereum Vault Connector)
 abstract contract EVCClient is Storage, Events, Errors {
-    IEVC immutable evc;
+    IEVC internal immutable evc;
 
     modifier onlyEVCChecks() {
         if (msg.sender != address(evc) || !evc.areChecksInProgress()) {

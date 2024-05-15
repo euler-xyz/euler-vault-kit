@@ -12,8 +12,8 @@ interface IComponent {
 contract GenericFactory is MetaProxyDeployer {
     // Constants
 
-    uint256 constant REENTRANCYLOCK__UNLOCKED = 1;
-    uint256 constant REENTRANCYLOCK__LOCKED = 2;
+    uint256 internal constant REENTRANCYLOCK__UNLOCKED = 1;
+    uint256 internal constant REENTRANCYLOCK__LOCKED = 2;
 
     // State
 
