@@ -194,13 +194,17 @@ contract EVault is Dispatch {
 
     function caps() public view virtual override useView(MODULE_GOVERNANCE) returns (uint16 supplyCap, uint16 borrowCap) {}
 
-    function borrowingLTV(address collateral) public view virtual override useView(MODULE_GOVERNANCE) returns (uint16) {}
+    function LTVBorrow(address collateral) public view virtual override useView(MODULE_GOVERNANCE) returns (uint16) {}
 
-    function liquidationLTV(address collateral) public view virtual override useView(MODULE_GOVERNANCE) returns (uint16) {}
+    function LTVLiquidation(address collateral) public view virtual override useView(MODULE_GOVERNANCE) returns (uint16) {}
 
-    function LTVFull(address collateral) public view virtual override useView(MODULE_GOVERNANCE) returns (uint48 targetTimestamp, uint16 targetLTV, uint32 rampDuration, uint16 originalLTV) {}
+    function LTVFull(address collateral) public view virtual override useView(MODULE_GOVERNANCE) returns (uint16 borrowLTV, uint16 liquidationLTV, uint16 initialLiquidationLTV, uint48 targetTimestamp, uint32 rampDuration) {}
 
     function LTVList() public view virtual override useView(MODULE_GOVERNANCE) returns (address[] memory) {}
+
+    function maxLiquidationDiscount() public view virtual override useView(MODULE_GOVERNANCE) returns (uint16) {}
+
+    function liquidationCoolOffTime() public view virtual override useView(MODULE_GOVERNANCE) returns (uint16) {}
 
     function hookConfig() public view virtual override useView(MODULE_GOVERNANCE) returns (address, uint32) {}
 
@@ -227,9 +231,13 @@ contract EVault is Dispatch {
 
     function setHookConfig(address newHookTarget, uint32 newHookedOps) public virtual override use(MODULE_GOVERNANCE) {}
 
-    function setLTV(address collateral, uint16 ltv, uint32 rampDuration) public virtual override use(MODULE_GOVERNANCE) {}
+    function setLTV(address collateral, uint16 borrowLTV, uint16 liquidationLTV, uint32 rampDuration) public virtual override use(MODULE_GOVERNANCE) {}
 
     function clearLTV(address collateral) public virtual override use(MODULE_GOVERNANCE) {}
+
+    function setMaxLiquidationDiscount(uint16 newDiscount) public virtual override use(MODULE_GOVERNANCE) {}
+
+    function setLiquidationCoolOffTime(uint16 newCoolOffTime) public virtual override use(MODULE_GOVERNANCE) {}
 
     function setInterestRateModel(address newModel) public virtual override use(MODULE_GOVERNANCE) {}
 

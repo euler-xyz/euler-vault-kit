@@ -49,17 +49,30 @@ abstract contract GovernanceModule is IGovernance, Base, BalanceUtils, BorrowUti
 
     /// @notice Set new LTV configuration for a collateral
     /// @param collateral Address of the collateral
+    /// @param borrowLTV The new LTV for the collateral, used to determine health of the account during regular operations, in 1e4 scale
+    /// @param liquidationLTV The new LTV for the collateral, used to determine health of the account during liquidations, in 1e4 scale
+    /// @param initialLiquidationLTV The previous liquidation LTV at the moment a new configuration was set
     /// @param targetTimestamp If the LTV is lowered, the timestamp when the ramped liquidation LTV will merge with the `targetLTV`
-    /// @param targetLTV The new LTV for the collateral in 1e4 scale
     /// @param rampDuration If the LTV is lowered, duration in seconds, during which the liquidation LTV will be merging with `targetLTV`
-    /// @param originalLTV The previous liquidation LTV at the moment a new configuration was set
     event GovSetLTV(
-        address indexed collateral, uint48 targetTimestamp, uint16 targetLTV, uint32 rampDuration, uint16 originalLTV
+        address indexed collateral,
+        uint16 borrowLTV,
+        uint16 liquidationLTV,
+        uint16 initialLiquidationLTV,
+        uint48 targetTimestamp,
+        uint32 rampDuration
     );
-
     /// @notice Set an interest rate model contract address
     /// @param newInterestRateModel Address of the new IRM
     event GovSetInterestRateModel(address newInterestRateModel);
+    
+    /// @notice Set a maximum liquidation discount
+    /// @param newLiquidationDiscount The new maximum liquidation discount in 1e4 scale
+    event GovSetMaxLiquidationDiscount(uint16 newLiquidationDiscount);
+
+    /// @notice Set a new liquidation cool off time, which must elapse after successful account status check, before account can be liquidated
+    /// @param newCoolOffTime The new liquidation cool off time in seconds
+    event GovSetLiquidationCoolOffTime(uint16 newCoolOffTime);
 
     /// @notice Set new hooks configuration
     /// @param newHookTarget Address of the new hook target contract
@@ -127,24 +140,46 @@ abstract contract GovernanceModule is IGovernance, Base, BalanceUtils, BorrowUti
     }
 
     /// @inheritdoc IGovernance
-    function borrowingLTV(address collateral) public view virtual reentrantOK returns (uint16) {
+    function LTVBorrow(address collateral) public view virtual reentrantOK returns (uint16) {
         return getLTV(collateral, false).toUint16();
     }
 
     /// @inheritdoc IGovernance
-    function liquidationLTV(address collateral) public view virtual reentrantOK returns (uint16) {
+    function LTVLiquidation(address collateral) public view virtual reentrantOK returns (uint16) {
         return getLTV(collateral, true).toUint16();
     }
 
     /// @inheritdoc IGovernance
-    function LTVFull(address collateral) public view virtual reentrantOK returns (uint48, uint16, uint32, uint16) {
+    function LTVFull(address collateral)
+        public
+        view
+        virtual
+        reentrantOK
+        returns (uint16, uint16, uint16, uint48, uint32)
+    {
         LTVConfig memory ltv = vaultStorage.ltvLookup[collateral];
-        return (ltv.targetTimestamp, ltv.targetLTV.toUint16(), ltv.rampDuration, ltv.originalLTV.toUint16());
+        return (
+            ltv.borrowLTV.toUint16(),
+            ltv.liquidationLTV.toUint16(),
+            ltv.initialLiquidationLTV.toUint16(),
+            ltv.targetTimestamp,
+            ltv.rampDuration
+        );
     }
 
     /// @inheritdoc IGovernance
     function LTVList() public view virtual reentrantOK returns (address[] memory) {
         return vaultStorage.ltvList;
+    }
+
+    /// @inheritdoc IGovernance
+    function maxLiquidationDiscount() public view virtual reentrantOK returns (uint16) {
+        return vaultStorage.maxLiquidationDiscount.toUint16();
+    }
+
+    /// @inheritdoc IGovernance
+    function liquidationCoolOffTime() public view virtual reentrantOK returns (uint16) {
+        return vaultStorage.liquidationCoolOffTime;
     }
 
     /// @inheritdoc IGovernance
@@ -239,28 +274,39 @@ abstract contract GovernanceModule is IGovernance, Base, BalanceUtils, BorrowUti
     }
 
     /// @inheritdoc IGovernance
-    function setLTV(address collateral, uint16 ltv, uint32 rampDuration) public virtual nonReentrant governorOnly {
+    function setLTV(address collateral, uint16 borrowLTV, uint16 liquidationLTV, uint32 rampDuration)
+        public
+        virtual
+        nonReentrant
+        governorOnly
+    {
         // self-collateralization is not allowed
         if (collateral == address(this)) revert E_InvalidLTVAsset();
 
-        ConfigAmount newLTVAmount = ltv.toConfigAmount();
-        LTVConfig memory origLTV = vaultStorage.ltvLookup[collateral];
+        ConfigAmount newBorrowLTV = borrowLTV.toConfigAmount();
+        ConfigAmount newLiquidationLTV = liquidationLTV.toConfigAmount();
 
-        // If new LTV is higher than the previous, or the same, it should take effect immediately
-        if (newLTVAmount >= origLTV.getLTV(true) && rampDuration > 0) revert E_LTVRamp();
+        // The borrow LTV must be lower than or equal to the the converged liquidation LTV
+        if (newBorrowLTV > newLiquidationLTV) revert E_LTVBorrow();
 
-        LTVConfig memory newLTV = origLTV.setLTV(newLTVAmount, rampDuration);
+        LTVConfig memory currentLTV = vaultStorage.ltvLookup[collateral];
+
+        // If the new liquidation LTV is higher or the same than the previous, it should take effect immediately
+        if (newLiquidationLTV >= currentLTV.getLTV(true) && rampDuration > 0) revert E_LTVLiquidation();
+
+        LTVConfig memory newLTV = currentLTV.setLTV(newBorrowLTV, newLiquidationLTV, rampDuration);
 
         vaultStorage.ltvLookup[collateral] = newLTV;
 
-        if (!origLTV.initialized) vaultStorage.ltvList.push(collateral);
+        if (!currentLTV.initialized) vaultStorage.ltvList.push(collateral);
 
         emit GovSetLTV(
             collateral,
+            newLTV.borrowLTV.toUint16(),
+            newLTV.liquidationLTV.toUint16(),
+            newLTV.initialLiquidationLTV.toUint16(),
             newLTV.targetTimestamp,
-            newLTV.targetLTV.toUint16(),
-            newLTV.rampDuration,
-            newLTV.originalLTV.toUint16()
+            newLTV.rampDuration
         );
     }
 
@@ -272,7 +318,19 @@ abstract contract GovernanceModule is IGovernance, Base, BalanceUtils, BorrowUti
         uint16 originalLTV = getLTV(collateral, true).toUint16();
         vaultStorage.ltvLookup[collateral].clear();
 
-        emit GovSetLTV(collateral, 0, 0, 0, originalLTV);
+        emit GovSetLTV(collateral, 0, 0, originalLTV, 0, 0);
+    }
+
+    /// @inheritdoc IGovernance
+    function setMaxLiquidationDiscount(uint16 newDiscount) public virtual nonReentrant governorOnly {
+        vaultStorage.maxLiquidationDiscount = newDiscount.toConfigAmount();
+        emit GovSetMaxLiquidationDiscount(newDiscount);
+    }
+
+    /// @inheritdoc IGovernance
+    function setLiquidationCoolOffTime(uint16 newCoolOffTime) public virtual nonReentrant governorOnly {
+        vaultStorage.liquidationCoolOffTime = newCoolOffTime;
+        emit GovSetLiquidationCoolOffTime(newCoolOffTime);
     }
 
     /// @inheritdoc IGovernance

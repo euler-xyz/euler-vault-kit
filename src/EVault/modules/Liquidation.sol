@@ -16,9 +16,6 @@ import "../shared/types/Types.sol";
 abstract contract LiquidationModule is ILiquidation, Base, BalanceUtils, LiquidityUtils {
     using TypesLib for uint256;
 
-    // Maximum liquidation discount that can be awarded under any conditions.
-    uint256 internal constant MAXIMUM_LIQUIDATION_DISCOUNT = 0.2e18;
-
     struct LiquidationCache {
         address liquidator;
         address violator;
@@ -78,7 +75,7 @@ abstract contract LiquidationModule is ILiquidation, Base, BalanceUtils, Liquidi
 
         // Checks
 
-        // Self liquidation is not allowed
+        // Same account self-liquidation is not allowed
         if (liqCache.violator == liqCache.liquidator) revert E_SelfLiquidation();
         // Only liquidate trusted collaterals to make sure yield transfer has no side effects.
         if (!isRecognizedCollateral(liqCache.collateral)) revert E_BadCollateral();
@@ -89,6 +86,8 @@ abstract contract LiquidationModule is ILiquidation, Base, BalanceUtils, Liquidi
         // Violator's health check must not be deferred, meaning no prior operations on violator's account
         // would possibly be forgiven after the enforced collateral transfer to the liquidator
         if (isAccountStatusCheckDeferred(violator)) revert E_ViolatorLiquidityDeferred();
+        // A cool off time must elapse since successful account status check in order to mitigate self-liquidaition attacks
+        if (isInLiquidationCoolOff(violator)) revert E_LiquidationCoolOff();
 
         // Violator has no liabilities, liquidation is a no-op
         if (liqCache.liability.isZero()) return liqCache;
@@ -126,9 +125,13 @@ abstract contract LiquidationModule is ILiquidation, Base, BalanceUtils, Liquidi
         // Compute discount
 
         uint256 discountFactor = liquidityCollateralValue * 1e18 / liquidityLiabilityValue; // discountFactor = health score = 1 - discount
-
-        if (discountFactor < 1e18 - MAXIMUM_LIQUIDATION_DISCOUNT) {
-            discountFactor = 1e18 - MAXIMUM_LIQUIDATION_DISCOUNT;
+        {
+            uint256 minDiscountFactor;
+            unchecked {
+                // discount <= config scale, so discount factor >= 0
+                minDiscountFactor = 1e18 - uint256(1e18) * vaultStorage.maxLiquidationDiscount.toUint16() / CONFIG_SCALE;
+            }
+            if (discountFactor < minDiscountFactor) discountFactor = minDiscountFactor;
         }
 
         // Compute maximum yield using mid-point prices
@@ -216,6 +219,12 @@ abstract contract LiquidationModule is ILiquidation, Base, BalanceUtils, Liquidi
         emit Liquidate(
             liqCache.liquidator, liqCache.violator, liqCache.collateral, liqCache.repay.toUint(), liqCache.yieldBalance
         );
+    }
+
+    function isInLiquidationCoolOff(address account) private view returns (bool) {
+        unchecked {
+            return block.timestamp < getLastAccountStatusCheckTimestamp(account) + vaultStorage.liquidationCoolOffTime;
+        }
     }
 }
 

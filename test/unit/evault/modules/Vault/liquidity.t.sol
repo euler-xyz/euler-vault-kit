@@ -37,10 +37,10 @@ contract VaultTest_Liquidity is EVaultTestBase {
         eTST2.setInterestRateModel(address(new IRMTestZero()));
         eTST3.setInterestRateModel(address(new IRMTestZero()));
 
-        eTST.setLTV(address(eTST2), 0.3e4, 0);
-        eTST2.setLTV(address(eTST), 0.3e4, 0);
-        eTST3.setLTV(address(eTST), 0.3e4, 0);
-        eTST3.setLTV(address(eTST2), 0.3e4, 0);
+        eTST.setLTV(address(eTST2), 0.3e4, 0.3e4, 0);
+        eTST2.setLTV(address(eTST), 0.3e4, 0.3e4, 0);
+        eTST3.setLTV(address(eTST), 0.3e4, 0.3e4, 0);
+        eTST3.setLTV(address(eTST2), 0.3e4, 0.3e4, 0);
 
         startHoax(user1);
         assetTST.approve(address(eTST), type(uint256).max);

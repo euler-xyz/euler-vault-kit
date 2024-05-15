@@ -110,6 +110,10 @@ abstract contract EVCClient is Storage, Events, Errors {
         return evc.isControlCollateralInProgress();
     }
 
+    function getLastAccountStatusCheckTimestamp(address account) internal view returns (uint256) {
+        return evc.getLastAccountStatusCheckTimestamp(account);
+    }
+
     function validateController(address account) internal view {
         address[] memory controllers = evc.getControllers(account);
 

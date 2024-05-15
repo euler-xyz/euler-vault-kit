@@ -47,7 +47,7 @@ contract VaultTest_BalancesWithInterest is EVaultTestBase {
         oracle.setPrice(address(eTST2), unitOfAccount, 0.2e18);
 
         startHoax(address(this));
-        eTST.setLTV(address(eTST2), 0.21e4, 0);
+        eTST.setLTV(address(eTST2), 0.21e4, 0.21e4, 0);
 
         skip(31 * 60);
     }

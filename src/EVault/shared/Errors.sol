@@ -27,6 +27,7 @@ contract Errors {
     error E_ControllerDisabled();
     error E_CollateralDisabled();
     error E_ViolatorLiquidityDeferred();
+    error E_LiquidationCoolOff();
     error E_ExcessiveRepayAmount();
     error E_MinYield();
     error E_BadAddress();
@@ -50,6 +51,7 @@ contract Errors {
     error E_InvalidConfigAmount();
     error E_BadAssetReceiver();
     error E_BadSharesReceiver();
-    error E_LTVRamp();
+    error E_LTVBorrow();
+    error E_LTVLiquidation();
     error E_NotHookTarget();
 }
