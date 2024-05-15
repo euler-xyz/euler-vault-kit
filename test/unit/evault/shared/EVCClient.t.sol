@@ -170,8 +170,9 @@ contract EVCClientUnitTest is EVaultTestBase {
         GenericFactory factory = new GenericFactory(admin);
 
         factory.setImplementation(address(bVaultImpl));
-        IEVault v =
-            IEVault(factory.createProxy(true, abi.encodePacked(address(assetTST2), address(oracle), unitOfAccount)));
+        IEVault v = IEVault(
+            factory.createProxy(address(0), true, abi.encodePacked(address(assetTST2), address(oracle), unitOfAccount))
+        );
         v.setInterestRateModel(address(new IRMTestDefault()));
 
         return address(v);

@@ -89,13 +89,13 @@ contract Setup is BaseTest {
 
         // Deploy the vaults
         eTST = EVaultExtended(
-            factory.createProxy(true, abi.encodePacked(address(assetTST), address(oracle), unitOfAccount))
+            factory.createProxy(address(0), true, abi.encodePacked(address(assetTST), address(oracle), unitOfAccount))
         );
         eTST.setInterestRateModel(address(new IRMTestDefault()));
         vaults.push(address(eTST));
 
         eTST2 = EVaultExtended(
-            factory.createProxy(true, abi.encodePacked(address(assetTST2), address(oracle), unitOfAccount))
+            factory.createProxy(address(0), true, abi.encodePacked(address(assetTST2), address(oracle), unitOfAccount))
         );
         eTST2.setInterestRateModel(address(new IRMTestDefault()));
         vaults.push(address(eTST2));

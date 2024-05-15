@@ -47,13 +47,19 @@ contract VaultLiquidation_Test is EVaultTestBase {
         eTST.setInterestRateModel(address(new IRMTestZero()));
         eTST2.setInterestRateModel(address(new IRMTestZero()));
 
-        eWETH = IEVault(factory.createProxy(true, abi.encodePacked(address(assetWETH), address(oracle), unitOfAccount)));
+        eWETH = IEVault(
+            factory.createProxy(address(0), true, abi.encodePacked(address(assetWETH), address(oracle), unitOfAccount))
+        );
         eWETH.setInterestRateModel(address(new IRMTestZero()));
 
-        eTST3 = IEVault(factory.createProxy(true, abi.encodePacked(address(assetTST3), address(oracle), unitOfAccount)));
+        eTST3 = IEVault(
+            factory.createProxy(address(0), true, abi.encodePacked(address(assetTST3), address(oracle), unitOfAccount))
+        );
         eTST3.setInterestRateModel(address(new IRMTestZero()));
 
-        eTST4 = IEVault(factory.createProxy(true, abi.encodePacked(address(assetTST4), address(oracle), unitOfAccount)));
+        eTST4 = IEVault(
+            factory.createProxy(address(0), true, abi.encodePacked(address(assetTST4), address(oracle), unitOfAccount))
+        );
         eTST4.setInterestRateModel(address(new IRMTestZero()));
 
         eTST.setLTV(address(eWETH), 0.3e4, 0.3e4, 0);
@@ -162,8 +168,9 @@ contract VaultLiquidation_Test is EVaultTestBase {
     }
 
     function test_noOracle() public {
-        IEVault eTSTx =
-            IEVault(factory.createProxy(true, abi.encodePacked(address(assetTST), address(0), unitOfAccount)));
+        IEVault eTSTx = IEVault(
+            factory.createProxy(address(0), true, abi.encodePacked(address(assetTST), address(0), unitOfAccount))
+        );
 
         startHoax(borrower);
         vm.expectRevert(Errors.E_NoPriceOracle.selector);
@@ -1382,8 +1389,11 @@ contract VaultLiquidation_Test is EVaultTestBase {
     function test_liquidationWhenUnitOfAccountIsAsset() public {
         // set up liquidator to support the debt
 
-        IEVault eTSTx =
-            IEVault(factory.createProxy(true, abi.encodePacked(address(assetTST), address(oracle), address(assetTST))));
+        IEVault eTSTx = IEVault(
+            factory.createProxy(
+                address(0), true, abi.encodePacked(address(assetTST), address(oracle), address(assetTST))
+            )
+        );
         eTSTx.setLTV(address(eTST2), 0.95e4, 0.95e4, 0);
         eTSTx.setMaxLiquidationDiscount(0.2e4);
 
