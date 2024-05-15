@@ -116,15 +116,15 @@ abstract contract LiquidationModule is ILiquidation, Base, BalanceUtils, Liquidi
     {
         // Check account health
 
-        (uint256 collateralAdjustedValue, uint256 liquidityLiabilityValue) =
+        (uint256 collateralAdjustedValue, uint256 liabilityValue) =
             calculateLiquidity(vaultCache, liqCache.violator, liqCache.collaterals, true);
 
         // no violation
-        if (collateralAdjustedValue > liquidityLiabilityValue) return liqCache;
+        if (collateralAdjustedValue > liabilityValue) return liqCache;
 
         // Compute discount
 
-        uint256 discountFactor = collateralAdjustedValue * 1e18 / liquidityLiabilityValue; // discountFactor = health score = 1 - discount
+        uint256 discountFactor = collateralAdjustedValue * 1e18 / liabilityValue; // discountFactor = health score = 1 - discount
 
         if (discountFactor < 1e18 - MAXIMUM_LIQUIDATION_DISCOUNT) {
             discountFactor = 1e18 - MAXIMUM_LIQUIDATION_DISCOUNT;
@@ -140,12 +140,6 @@ abstract contract LiquidationModule is ILiquidation, Base, BalanceUtils, Liquidi
             // worthless collateral can be claimed with no repay
             liqCache.yieldBalance = collateralBalance;
             return liqCache;
-        }
-
-        uint256 liabilityValue = liqCache.liability.toUint();
-        if (address(vaultCache.asset) != vaultCache.unitOfAccount) {
-            liabilityValue =
-                vaultCache.oracle.getQuote(liabilityValue, address(vaultCache.asset), vaultCache.unitOfAccount);
         }
 
         uint256 maxRepayValue = liabilityValue;
