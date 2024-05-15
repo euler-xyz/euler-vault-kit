@@ -232,7 +232,7 @@ abstract contract VaultModule is IVault, Base, AssetTransfers, BalanceUtils {
         // under-estimate the return amount to zero.
         // Integrators who handle borrowing should implement custom logic to work with the particular controllers
         // they want to support.
-        if (max.isZero() || hasControllerEnabled(owner)) return Shares.wrap(0);
+        if (max.isZero() || hasAnyControllerEnabled(owner)) return Shares.wrap(0);
 
         VaultCache memory vaultCache = loadVault();
 
@@ -254,7 +254,7 @@ abstract contract VaultModule is IVault, Base, AssetTransfers, BalanceUtils {
         max = limit < max ? limit : max;
 
         // limit to total shares remaining space
-        max = max.toAssets().toSharesDownUint256(vaultCache);
+        max = max.toAssets().toSharesDownUint(vaultCache);
         limit = MAX_SANE_AMOUNT - vaultCache.totalShares.toUint();
 
         return (limit < max ? limit : max).toShares();
