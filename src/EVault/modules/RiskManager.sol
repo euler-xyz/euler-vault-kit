@@ -81,7 +81,8 @@ abstract contract RiskManagerModule is IRiskManager, Base, LiquidityUtils {
     /// @inheritdoc IRiskManager
     /// @dev See comment about reentrancy for `checkAccountStatus`
     function checkVaultStatus() public virtual reentrantOK onlyEVCChecks returns (bytes4 magicValue) {
-        // Use the updating variant to make sure interest is accrued in storage before the interest rate update
+        // Use the updating variant to make sure interest is accrued in storage before the interest rate update.
+        // Because of interest rate retargetting during the vault status check, the vault status check must not be forgiven.
         VaultCache memory vaultCache = updateVault();
         uint256 newInterestRate = computeInterestRate(vaultCache);
 
