@@ -116,7 +116,7 @@ abstract contract LiquidityUtils is BorrowUtils, LTVUtils {
             (currentCollateralValue,) = vaultCache.oracle.getQuotes(balance, collateral, vaultCache.unitOfAccount);
         }
 
-        return currentCollateralValue * ltv.toUint16() / 1e4;
+        return currentCollateralValue * ltv.toUint16() / CONFIG_SCALE;
     }
 
     function validateOracle(VaultCache memory vaultCache) internal pure {
