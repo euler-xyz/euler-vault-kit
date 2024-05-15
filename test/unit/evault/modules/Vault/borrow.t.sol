@@ -292,7 +292,7 @@ contract VaultTest_Borrow is EVaultTestBase {
         evc.enableCollateral(borrower2, address(eTST2));
         evc.enableController(borrower2, address(eTST));
 
-        vm.expectRevert(Errors.E_InsufficientBalance.selector);
+        vm.expectRevert(Errors.E_InsufficientDebt.selector);
         eTST.pullDebt(amountToBorrow + 1, borrower);
         vm.stopPrank();
     }
