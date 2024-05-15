@@ -62,9 +62,8 @@ contract GenericFactory is MetaProxyDeployer {
         _;
     }
 
+    /// @dev For non upgradeable factories, set zero address as the admin
     constructor(address admin) {
-        if (admin == address(0)) revert E_BadAddress();
-
         emit Genesis();
 
         reentrancyLock = REENTRANCYLOCK__UNLOCKED;
