@@ -174,7 +174,9 @@ abstract contract LiquidationModule is ILiquidation, Base, BalanceUtils, Liquidi
 
         // Handle repay: liquidator takes on violator's debt:
 
-        transferBorrow(vaultCache, liqCache.violator, liqCache.liquidator, liqCache.repay);
+        if (liqCache.repay.toUint() > 0) {
+            transferBorrow(vaultCache, liqCache.violator, liqCache.liquidator, liqCache.repay);
+        }
 
         // Handle yield: liquidator receives violator's collateral
 
