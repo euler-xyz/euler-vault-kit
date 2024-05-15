@@ -245,28 +245,15 @@ contract EntryPoint is Test {
         }
     }
 
-    function loop(uint256 seed, uint256 amount, address sharesReceiver) public afterCall {
+    function repayWithShares(uint256 seed, uint256 amount, address receiver) public afterCall {
         setupEnvironment(seed);
 
-        amount = boundAmount(amount);
-        sharesReceiver = boundAddress(sharesReceiver);
+        receiver = boundAddress(receiver);
 
-        try selectedVault.loop(amount, sharesReceiver) {
+        try selectedVault.repayWithShares(amount, receiver) {
             assertTrue(true);
         } catch (bytes memory reason) {
-            if (bytes4(reason) == EVault_Panic.selector) errors.push("EVault Panic on loop");
-        }
-    }
-
-    function deloop(uint256 seed, uint256 amount, address debtFrom) public afterCall {
-        setupEnvironment(seed);
-
-        debtFrom = boundAddress(debtFrom);
-
-        try selectedVault.deloop(amount, debtFrom) {
-            assertTrue(true);
-        } catch (bytes memory reason) {
-            if (bytes4(reason) == EVault_Panic.selector) errors.push("EVault Panic on deloop");
+            if (bytes4(reason) == EVault_Panic.selector) errors.push("EVault Panic on repayWithShares");
         }
     }
 

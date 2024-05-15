@@ -81,10 +81,6 @@ contract EVCClientUnitTest is EVaultTestBase {
         vm.expectRevert(Errors.E_ControllerDisabled.selector);
         eTST.borrow(5e18, borrower);
 
-        // OP_LOOP
-        vm.expectRevert(Errors.E_ControllerDisabled.selector);
-        eTST.loop(5e18, borrower);
-
         // OP_PULL_DEBT
         vm.expectRevert(Errors.E_ControllerDisabled.selector);
         eTST.pullDebt(5e18, borrower);

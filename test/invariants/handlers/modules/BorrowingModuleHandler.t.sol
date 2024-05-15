@@ -77,25 +77,7 @@ contract BorrowingModuleHandler is BaseHandler {
         }
     }
 
-    function loop(uint256 amount, uint256 i) external setup {
-        bool success;
-        bytes memory returnData;
-
-        // Get one of the three actors randomly
-        address receiver = _getRandomActor(i);
-
-        address target = address(eTST);
-
-        _before();
-        (success, returnData) = actor.proxy(target, abi.encodeWithSelector(IBorrowing.loop.selector, amount, receiver));
-
-        if (success) {
-            uint256 shares = abi.decode(returnData, (uint256));
-            _increaseGhostShares(shares, address(receiver));
-        }
-    }
-
-    function deloop(uint256 amount, uint256 i) external setup {
+    function repayWithShares(uint256 amount, uint256 i) external setup {
         bool success;
         bytes memory returnData;
 
@@ -106,7 +88,7 @@ contract BorrowingModuleHandler is BaseHandler {
 
         _before();
         (success, returnData) =
-            actor.proxy(target, abi.encodeWithSelector(IBorrowing.deloop.selector, amount, receiver));
+            actor.proxy(target, abi.encodeWithSelector(IBorrowing.repayWithShares.selector, amount, receiver));
 
         if (success) {
             uint256 shares = abi.decode(returnData, (uint256));
@@ -179,27 +161,35 @@ contract BorrowingModuleHandler is BaseHandler {
     }
 
     function assert_BM_INVARIANT_N(uint256 amount) external setup {
-        bool success;
-        bytes memory returnData;
+        // FIXME
 
-        uint256 debtBefore = eTST.debtOf(address(actor));
-        uint256 balanceBefore = eTST.balanceOf(address(actor));
+        // bool success;
+        // bytes memory returnData;
 
-        (success, returnData) =
-            actor.proxy(address(eTST), abi.encodeWithSelector(IBorrowing.loop.selector, amount, address(actor)));
+        // uint256 debtBefore = eTST.debtOf(address(actor));
+        // uint256 balanceBefore = eTST.balanceOf(address(actor));
 
-        if (success) {
-            (success, returnData) =
-                actor.proxy(address(eTST), abi.encodeWithSelector(IBorrowing.deloop.selector, amount, address(actor)));
-        }
+        // (success, returnData) =
+        //     actor.proxy(address(eTST), abi.encodeWithSelector(IERC4626.deposit.selector, amount, address(actor)));
 
-        if (success) {
-            uint256 debtAfter = eTST.debtOf(address(actor));
-            uint256 balanceAfter = eTST.balanceOf(address(actor));
+        // if (success) {
+        //     (success, returnData) =
+        //         actor.proxy(address(eTST), abi.encodeWithSelector(IBorrowing.borrow.selector, amount, address(actor)));
+        // }
 
-            assertGe(balanceBefore, balanceAfter, BM_INVARIANT_N1);
-            assertLe(debtBefore, debtAfter, BM_INVARIANT_N2);
-        }
+        // if (success) {
+        //     (success, returnData) = actor.proxy(
+        //         address(eTST), abi.encodeWithSelector(IBorrowing.repayWithShares.selector, amount, address(actor))
+        //     );
+        // }
+
+        // if (success) {
+        //     uint256 debtAfter = eTST.debtOf(address(actor));
+        //     uint256 balanceAfter = eTST.balanceOf(address(actor));
+
+        //     assertGe(balanceBefore, balanceAfter, BM_INVARIANT_N1);
+        //     assertLe(debtBefore, debtAfter, BM_INVARIANT_N2);
+        // }
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////////

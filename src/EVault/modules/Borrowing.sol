@@ -94,34 +94,11 @@ abstract contract BorrowingModule is IBorrowing, Base, AssetTransfers, BalanceUt
     }
 
     /// @inheritdoc IBorrowing
-    function loop(uint256 amount, address sharesReceiver) public virtual nonReentrant returns (uint256, uint256) {
-        (VaultCache memory vaultCache, address account) = initOperation(OP_LOOP, CHECKACCOUNT_CALLER);
+    function repayWithShares(uint256 amount, address receiver) public virtual nonReentrant returns (uint256, uint25) {
+        (VaultCache memory vaultCache, address account) = initOperation(OP_REPAY_WITH_SHARES, CHECKACCOUNT_CALLER);
 
-        Assets assets = amount.toAssets();
-        if (assets.isZero()) return (0, 0);
-
-        // The debt and shares minted should match the current exchange rate from shares to assets.
-        // First round the requested amount up to shares, to avoid zero shares.
-        // Next convert back to assets, again rounding up the debt in favor of the vault.
-        // As a result the amount of debt minted can be greater than amount requested.
-        Shares shares = assets.toSharesUp(vaultCache);
-        assets = shares.toAssetsUp(vaultCache);
-
-        // Mint DTokens
-        increaseBorrow(vaultCache, account, assets);
-
-        // Mint ETokens
-        increaseBalance(vaultCache, sharesReceiver, account, shares, assets);
-
-        return (shares.toUint(), assets.toUint());
-    }
-
-    /// @inheritdoc IBorrowing
-    function deloop(uint256 amount, address debtFrom) public virtual nonReentrant returns (uint256, uint256) {
-        (VaultCache memory vaultCache, address account) = initOperation(OP_DELOOP, CHECKACCOUNT_CALLER);
-
-        Assets owed = getCurrentOwed(vaultCache, debtFrom).toAssetsUp();
-        if (owed.isZero()) return (0, 0);
+        Assets owed = getCurrentOwed(vaultCache, receiver).toAssetsUp();
+        if (owed.isZero()) return 0;
 
         Assets assets;
         Shares shares;
@@ -145,7 +122,7 @@ abstract contract BorrowingModule is IBorrowing, Base, AssetTransfers, BalanceUt
         decreaseBalance(vaultCache, account, account, account, shares, assets);
 
         // Burn DTokens
-        decreaseBorrow(vaultCache, debtFrom, assets);
+        decreaseBorrow(vaultCache, receiver, assets);
 
         return (shares.toUint(), assets.toUint());
     }

@@ -16,11 +16,11 @@ contract DTokenTest is EVaultTestBase {
     function setUp() public override {
         super.setUp();
 
-        assetTST.mint(user, type(uint256).max);
+        assetTST.mint(user, type(uint256).max / 2);
         vm.prank(user);
         assetTST.approve(address(eTST), type(uint256).max);
 
-        assetTST.mint(user2, type(uint256).max);
+        assetTST.mint(user2, type(uint256).max / 2);
         vm.prank(user2);
         assetTST.approve(address(eTST), type(uint256).max);
 
@@ -94,18 +94,6 @@ contract DTokenTest is EVaultTestBase {
         assertEq(dToken.totalSupply(), amount);
     }
 
-    function test_OnLoop(uint256 amount) public {
-        setUpCollateral();
-        amount = bound(amount, 1, MAX_SANE_AMOUNT);
-        vm.expectEmit();
-        emit Events.Transfer(address(0), user, amount);
-        vm.prank(user);
-        eTST.loop(amount, user);
-
-        assertEq(dToken.balanceOf(user), amount);
-        assertEq(dToken.totalSupply(), amount);
-    }
-
     function test_OnRepay(uint256 amountBorrow, uint256 amountRepay) public {
         setUpCollateral();
         amountBorrow = bound(amountBorrow, 1, MAX_SANE_AMOUNT);
@@ -124,20 +112,21 @@ contract DTokenTest is EVaultTestBase {
         assertEq(dToken.totalSupply(), amountBorrow - amountRepay);
     }
 
-    function test_OnDeloop(uint256 amountLoop, uint256 amountDeloop) public {
+    function test_OnRepayWithShares(uint256 amountBorrow, uint256 amountRepayWithShares) public {
         setUpCollateral();
-        amountLoop = bound(amountLoop, 1, MAX_SANE_AMOUNT);
-        amountDeloop = bound(amountDeloop, 1, amountLoop);
-        vm.prank(user);
-        eTST.loop(amountLoop, user);
+        amountBorrow = bound(amountBorrow, 1, MAX_SANE_AMOUNT);
+        amountRepayWithShares = bound(amountRepayWithShares, 1, amountBorrow);
+
+        vm.startPrank(user);
+        eTST.deposit(amountBorrow, user);
+        eTST.borrow(amountBorrow, user);
 
         vm.expectEmit();
-        emit Events.Transfer(user, address(0), amountDeloop);
-        vm.prank(user);
-        eTST.deloop(amountDeloop, user);
+        emit Events.Transfer(user, address(0), amountRepayWithShares);
+        eTST.repayWithShares(amountRepayWithShares, user);
 
-        assertEq(dToken.balanceOf(user), amountLoop - amountDeloop);
-        assertEq(dToken.totalSupply(), amountLoop - amountDeloop);
+        assertEq(dToken.balanceOf(user), amountBorrow - amountRepayWithShares);
+        assertEq(dToken.totalSupply(), amountBorrow - amountRepayWithShares);
     }
 
     function test_onPullDebt(uint256 amountBorrow, uint256 amountPull) public {

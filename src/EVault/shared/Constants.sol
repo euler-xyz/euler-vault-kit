@@ -35,15 +35,14 @@ uint32 constant OP_TRANSFER = 1 << 4;
 uint32 constant OP_SKIM = 1 << 5;
 uint32 constant OP_BORROW = 1 << 6;
 uint32 constant OP_REPAY = 1 << 7;
-uint32 constant OP_LOOP = 1 << 8;
-uint32 constant OP_DELOOP = 1 << 9;
-uint32 constant OP_PULL_DEBT = 1 << 10;
-uint32 constant OP_CONVERT_FEES = 1 << 11;
-uint32 constant OP_LIQUIDATE = 1 << 12;
-uint32 constant OP_FLASHLOAN = 1 << 13;
-uint32 constant OP_TOUCH = 1 << 14;
-uint32 constant OP_VAULT_STATUS_CHECK = 1 << 15;
-uint32 constant OP_MAX_VALUE = 1 << 16;
+uint32 constant OP_REPAY_WITH_SHARES = 1 << 8;
+uint32 constant OP_PULL_DEBT = 1 << 9;
+uint32 constant OP_CONVERT_FEES = 1 << 10;
+uint32 constant OP_LIQUIDATE = 1 << 11;
+uint32 constant OP_FLASHLOAN = 1 << 12;
+uint32 constant OP_TOUCH = 1 << 13;
+uint32 constant OP_VAULT_STATUS_CHECK = 1 << 14;
+uint32 constant OP_MAX_VALUE = 1 << 15;
 
 // Config Flags
 
@@ -55,4 +54,4 @@ uint32 constant CFG_MAX_VALUE = 1 << 2;
 
 // in order to perform these operations, the account doesn't need to have the vault installed as a controller
 uint32 constant CONTROLLER_NEUTRAL_OPS = OP_DEPOSIT | OP_MINT | OP_WITHDRAW | OP_REDEEM | OP_TRANSFER | OP_SKIM
-    | OP_REPAY | OP_DELOOP | OP_CONVERT_FEES | OP_FLASHLOAN | OP_TOUCH | OP_VAULT_STATUS_CHECK;
+    | OP_REPAY | OP_REPAY_WITH_SHARES | OP_CONVERT_FEES | OP_FLASHLOAN | OP_TOUCH | OP_VAULT_STATUS_CHECK;

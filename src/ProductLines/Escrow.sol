@@ -37,7 +37,7 @@ contract Escrow is BaseProductLine {
         // Disable borrowing operations
         vault.setHookConfig(
             address(0),
-            OP_BORROW | OP_REPAY | OP_LOOP | OP_DELOOP | OP_PULL_DEBT | OP_CONVERT_FEES | OP_LIQUIDATE | OP_TOUCH
+            OP_BORROW | OP_REPAY | OP_REPAY_WITH_SHARES | OP_PULL_DEBT | OP_CONVERT_FEES | OP_LIQUIDATE | OP_TOUCH
         );
 
         // Renounce governorship
