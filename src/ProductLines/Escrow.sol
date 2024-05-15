@@ -31,9 +31,6 @@ contract Escrow is BaseProductLine {
 
         assetLookup[asset] = address(vault);
 
-        vault.setName(string.concat("Escrow vault: ", getTokenName(asset)));
-        vault.setSymbol(string.concat("e", getTokenSymbol(asset)));
-
         // Disable borrowing operations
         vault.setHookConfig(
             address(0),

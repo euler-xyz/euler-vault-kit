@@ -30,17 +30,4 @@ contract ProductLine_Base is EVaultTestBase {
         vm.expectRevert(BaseProductLine.E_BadQuery.selector);
         coreProductLine.getVaultListSlice(0, 3);
     }
-
-    function test_ProductLine_tokenNameAndSymbol() public {
-        ErrorThrower wrongAsset = new ErrorThrower();
-        wrongAsset.set(IERC20.name.selector);
-
-        vm.expectRevert(ErrorThrower.NoGood.selector);
-        coreProductLine.createVault(address(wrongAsset), address(oracle), unitOfAccount);
-
-        wrongAsset.set(IERC20.symbol.selector);
-
-        vm.expectRevert(ErrorThrower.NoGood.selector);
-        coreProductLine.createVault(address(wrongAsset), address(oracle), unitOfAccount);
-    }
 }

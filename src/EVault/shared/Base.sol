@@ -10,6 +10,7 @@ import {AddressUtils} from "./lib/AddressUtils.sol";
 
 import {IProtocolConfig} from "../../ProtocolConfig/IProtocolConfig.sol";
 import {IBalanceTracker} from "../../interfaces/IBalanceTracker.sol";
+import {ISequenceRegistry} from "../../interfaces/ISequenceRegistry.sol";
 
 import "./types/Types.sol";
 
@@ -21,18 +22,21 @@ abstract contract Base is EVCClient, Cache {
     IProtocolConfig internal immutable protocolConfig;
     IBalanceTracker internal immutable balanceTracker;
     address internal immutable permit2;
+    ISequenceRegistry immutable sequenceRegistry;
 
     struct Integrations {
         address evc;
         address protocolConfig;
         address balanceTracker;
         address permit2;
+        address sequenceRegistry;
     }
 
     constructor(Integrations memory integrations) EVCClient(integrations.evc) {
         protocolConfig = IProtocolConfig(AddressUtils.checkContract(integrations.protocolConfig));
         balanceTracker = IBalanceTracker(integrations.balanceTracker);
         permit2 = integrations.permit2;
+        sequenceRegistry = ISequenceRegistry(integrations.sequenceRegistry);
     }
 
     modifier reentrantOK() {

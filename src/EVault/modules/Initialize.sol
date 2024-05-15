@@ -8,6 +8,7 @@ import {BorrowUtils} from "../shared/BorrowUtils.sol";
 import {DToken} from "../DToken.sol";
 import {ProxyUtils} from "../shared/lib/ProxyUtils.sol";
 import {VaultCache} from "../shared/types/VaultCache.sol";
+import {RevertBytes} from "../shared/lib/RevertBytes.sol";
 
 import "../shared/Constants.sol";
 import "../shared/types/Types.sol";
@@ -47,6 +48,13 @@ abstract contract InitializeModule is IInitialize, Base, BorrowUtils {
         vaultStorage.interestFee = DEFAULT_INTEREST_FEE.toConfigAmount();
         vaultStorage.creator = vaultStorage.governorAdmin = proxyCreator;
 
+        vaultStorage.symbol = string(
+            abi.encodePacked(
+                "e", getTokenSymbol(address(asset)), "-", uintToString(sequenceRegistry.reserveSeqId(address(asset)))
+            )
+        );
+        vaultStorage.name = string(abi.encodePacked("EVK Vault ", vaultStorage.symbol));
+
         snapshot.reset();
 
         // Emit logs
@@ -58,6 +66,33 @@ abstract contract InitializeModule is IInitialize, Base, BorrowUtils {
     // prevent initialization of the implementation contract
     constructor() {
         initialized = true;
+    }
+
+    /// @dev Calls the asset's symbol() method, taking care to handle MKR like tokens that return bytes32 instead of string
+    function getTokenSymbol(address asset) private view returns (string memory) {
+        (bool success, bytes memory data) = address(asset).staticcall(abi.encodeWithSelector(IERC20.symbol.selector));
+        if (!success) RevertBytes.revertBytes(data);
+        return data.length <= 32 ? string(data) : abi.decode(data, (string));
+    }
+
+    /// @dev Converts a uint256 to a decimal string representation
+    function uintToString(uint256 n) private pure returns (string memory) {
+        unchecked {
+            if (n == 0) return "0";
+
+            uint256 len;
+            for (uint256 m = n; m != 0; m /= 10) {
+                len++;
+            }
+
+            bytes memory output = new bytes(len);
+
+            for (; len > 0; n /= 10) {
+                output[--len] = bytes1(uint8(48 + n % 10)); // 48 is ASCII '0'
+            }
+
+            return string(output);
+        }
     }
 }
 

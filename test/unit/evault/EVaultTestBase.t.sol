@@ -34,6 +34,7 @@ import {MockBalanceTracker} from "../../mocks/MockBalanceTracker.sol";
 import {MockPriceOracle} from "../../mocks/MockPriceOracle.sol";
 import {IRMTestDefault} from "../../mocks/IRMTestDefault.sol";
 import {IHookTarget} from "src/interfaces/IHookTarget.sol";
+import {SequenceRegistry} from "src/SequenceRegistry/SequenceRegistry.sol";
 
 import {AssertionsCustomTypes} from "../../helpers/AssertionsCustomTypes.sol";
 import "./InvariantOverrides.sol";
@@ -50,6 +51,7 @@ contract EVaultTestBase is AssertionsCustomTypes, Test, DeployPermit2 {
     MockPriceOracle oracle;
     address unitOfAccount;
     address permit2;
+    address sequenceRegistry;
     GenericFactory public factory;
 
     Core public coreProductLine;
@@ -86,7 +88,9 @@ contract EVaultTestBase is AssertionsCustomTypes, Test, DeployPermit2 {
         oracle = new MockPriceOracle();
         unitOfAccount = address(1);
         permit2 = deployPermit2();
-        integrations = Base.Integrations(address(evc), address(protocolConfig), balanceTracker, permit2);
+        sequenceRegistry = address(new SequenceRegistry());
+        integrations =
+            Base.Integrations(address(evc), address(protocolConfig), balanceTracker, permit2, sequenceRegistry);
 
         if (deployOverrides) {
             initializeModule = address(new InitializeOverride(integrations));

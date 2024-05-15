@@ -160,12 +160,6 @@ contract MockHookTarget is Test, IHookTarget {
         eTST.convertFees();
 
         vm.expectRevert(Errors.E_Reentrancy.selector);
-        eTST.setName("");
-
-        vm.expectRevert(Errors.E_Reentrancy.selector);
-        eTST.setSymbol("");
-
-        vm.expectRevert(Errors.E_Reentrancy.selector);
         eTST.setGovernorAdmin(account1);
 
         vm.expectRevert(Errors.E_Reentrancy.selector);
@@ -396,12 +390,6 @@ contract ReentrancyTest is EVaultTestBase {
 
         vm.expectRevert(Errors.E_Reentrancy.selector);
         eTST.convertFees();
-
-        vm.expectRevert(Errors.E_Reentrancy.selector);
-        eTST.setName("");
-
-        vm.expectRevert(Errors.E_Reentrancy.selector);
-        eTST.setSymbol("");
 
         vm.expectRevert(Errors.E_Reentrancy.selector);
         eTST.setGovernorAdmin(account1);

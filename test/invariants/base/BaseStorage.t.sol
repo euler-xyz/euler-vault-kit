@@ -91,6 +91,9 @@ abstract contract BaseStorage {
     /// @notice Balance tracker mock contract
     address balanceTracker;
 
+    /// @notice SequenceRegistry mock contract
+    address sequenceRegistry;
+
     address feeReceiver;
 
     ///////////////////////////////////////////////////////////////////////////////////////////////

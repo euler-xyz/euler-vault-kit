@@ -439,14 +439,6 @@ interface IGovernance {
     /// @notice Splits accrued fees balance according to protocol fee share and transfers shares to the governor fee receiver and protocol fee receiver
     function convertFees() external;
 
-    /// @notice Set a new eToken name
-    /// @param newName The new name
-    function setName(string calldata newName) external;
-
-    /// @notice Set a new eToken symbol
-    /// @param newSymbol The new symbol
-    function setSymbol(string calldata newSymbol) external;
-
     /// @notice Set a new governor address
     /// @param newGovernorAdmin The new governor address
     function setGovernorAdmin(address newGovernorAdmin) external;

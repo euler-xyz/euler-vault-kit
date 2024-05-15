@@ -40,9 +40,6 @@ contract Core is BaseProductLine {
     {
         IEVault vault = makeNewVaultInternal(UPGRADEABLE, asset, oracle, unitOfAccount);
 
-        vault.setName(string.concat("Core vault: ", getTokenName(asset)));
-        vault.setSymbol(string.concat("e", getTokenSymbol(asset)));
-
         vault.setFeeReceiver(feeReceiver);
         vault.setGovernorAdmin(governor);
 

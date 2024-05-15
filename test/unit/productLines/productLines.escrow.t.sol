@@ -14,8 +14,6 @@ contract ProductLine_Escrow is EVaultTestBase {
 
         assertEq(factory.getProxyConfig(address(escrowTST)).upgradeable, false);
 
-        assertEq(escrowTST.name(), "Escrow vault: Test Token");
-        assertEq(escrowTST.symbol(), "eTST");
         assertEq(escrowTST.unitOfAccount(), address(0));
         assertEq(escrowTST.oracle(), address(0));
 
