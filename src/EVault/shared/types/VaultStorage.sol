@@ -21,7 +21,7 @@ struct VaultStorage {
     AmountCap borrowCap;
     // A bitfield of operations which trigger a hook call
     Flags hookedOps;
-    // A vault global re-entrancy protection flag
+    // A vault global reentrancy protection flag
     bool reentrancyLocked;
     // A flag indicating if the vault snapshot has already been initialized for the currently executing batch
     bool snapshotInitialized;
