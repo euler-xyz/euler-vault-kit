@@ -40,22 +40,22 @@ contract IRMLinearKink is IIRM {
     function computeInterestRateInternal(address, uint256 cash, uint256 borrows) internal view returns (uint256) {
         uint256 totalAssets = cash + borrows;
 
-        uint32 utilisation = totalAssets == 0
-            ? 0 // empty pool arbitrarily given utilisation of 0
+        uint32 utilization = totalAssets == 0
+            ? 0 // empty pool arbitrarily given utilization of 0
             : uint32(borrows * type(uint32).max / totalAssets);
 
         uint256 ir = baseRate;
 
-        if (utilisation <= kink) {
-            ir += utilisation * slope1;
+        if (utilization <= kink) {
+            ir += utilization * slope1;
         } else {
             ir += kink * slope1;
 
-            uint256 utilisationOverKink;
+            uint256 utilizationOverKink;
             unchecked {
-                utilisationOverKink = utilisation - kink;
+                utilizationOverKink = utilization - kink;
             }
-            ir += slope2 * utilisationOverKink;
+            ir += slope2 * utilizationOverKink;
         }
 
         return ir;
