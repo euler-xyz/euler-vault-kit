@@ -34,7 +34,7 @@ abstract contract Base is EVCClient, Cache {
 
     constructor(Integrations memory integrations) EVCClient(integrations.evc) {
         protocolConfig = IProtocolConfig(AddressUtils.checkContract(integrations.protocolConfig));
-        sequenceRegistry = ISequenceRegistry(integrations.sequenceRegistry);
+        sequenceRegistry = ISequenceRegistry(AddressUtils.checkContract(integrations.sequenceRegistry));
         balanceTracker = IBalanceTracker(integrations.balanceTracker);
         permit2 = integrations.permit2;
     }
