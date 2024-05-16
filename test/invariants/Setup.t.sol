@@ -69,7 +69,7 @@ contract Setup is BaseTest {
     function _deployVaults() internal {
         // Deploy the modules
         Base.Integrations memory integrations =
-            Base.Integrations(address(evc), address(protocolConfig), balanceTracker, permit2, sequenceRegistry);
+            Base.Integrations(address(evc), address(protocolConfig), sequenceRegistry, balanceTracker, permit2);
 
         Dispatch.DeployedModules memory modules = Dispatch.DeployedModules({
             initialize: address(new Initialize(integrations)),

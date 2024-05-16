@@ -20,23 +20,23 @@ import "./types/Types.sol";
 /// @notice Base contract for EVault modules with top level modifiers and utilities
 abstract contract Base is EVCClient, Cache {
     IProtocolConfig internal immutable protocolConfig;
+    ISequenceRegistry immutable sequenceRegistry;
     IBalanceTracker internal immutable balanceTracker;
     address internal immutable permit2;
-    ISequenceRegistry immutable sequenceRegistry;
 
     struct Integrations {
         address evc;
         address protocolConfig;
+        address sequenceRegistry;
         address balanceTracker;
         address permit2;
-        address sequenceRegistry;
     }
 
     constructor(Integrations memory integrations) EVCClient(integrations.evc) {
         protocolConfig = IProtocolConfig(AddressUtils.checkContract(integrations.protocolConfig));
+        sequenceRegistry = ISequenceRegistry(integrations.sequenceRegistry);
         balanceTracker = IBalanceTracker(integrations.balanceTracker);
         permit2 = integrations.permit2;
-        sequenceRegistry = ISequenceRegistry(integrations.sequenceRegistry);
     }
 
     modifier reentrantOK() {
