@@ -13,7 +13,7 @@ import {IEVC, EVCUtil} from "ethereum-vault-connector/utils/EVCUtil.sol";
 /// in other vaults.
 abstract contract ERC20Collateral is EVCUtil, ERC20Permit, ReentrancyGuard {
     constructor(IEVC _evc_, string memory _name_, string memory _symbol_)
-        EVCUtil(_evc_)
+        EVCUtil(address(_evc_))
         ERC20(_name_, _symbol_)
         ERC20Permit(_name_)
     {}

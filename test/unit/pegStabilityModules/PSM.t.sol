@@ -95,7 +95,7 @@ contract PSMTest is Test {
     }
 
     function testConstructorEVCZeroAddress() public {
-        vm.expectRevert(PegStabilityModule.E_ZeroAddress.selector);
+        vm.expectRevert(bytes4(keccak256("EVC_InvalidAddress()")));
         new PegStabilityModule(
             address(0), address(synth), address(underlying), TO_UNDERLYING_FEE, TO_SYNTH_FEE, CONVERSION_PRICE
         );
