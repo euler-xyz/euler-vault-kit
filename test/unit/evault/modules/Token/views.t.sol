@@ -19,7 +19,11 @@ contract ERC20Test_views is EVaultTestBase {
         // Numbers are incremented correctly
 
         for (uint256 i = 2; i < 120; i++) {
-            IEVault v = IEVault(coreProductLine.createVault(address(assetTST), address(oracle), unitOfAccount));
+            IEVault v = IEVault(
+                factory.createProxy(
+                    address(0), true, abi.encodePacked(address(assetTST), address(oracle), unitOfAccount)
+                )
+            );
             if (i == 8) assertEq(v.symbol(), "eTST-8");
             else if (i == 34) assertEq(v.symbol(), "eTST-34");
             else if (i == 106) assertEq(v.symbol(), "eTST-106");
@@ -28,7 +32,11 @@ contract ERC20Test_views is EVaultTestBase {
         // Each asset has its own counter
 
         {
-            IEVault v = IEVault(coreProductLine.createVault(address(assetTST2), address(oracle), unitOfAccount));
+            IEVault v = IEVault(
+                factory.createProxy(
+                    address(0), true, abi.encodePacked(address(assetTST2), address(oracle), unitOfAccount)
+                )
+            );
             assertEq(v.symbol(), "eTST2-2");
         }
     }
