@@ -84,8 +84,7 @@ abstract contract BalanceUtils is Base {
 
             user = vaultStorage.users[to];
 
-            (Shares origToBalance, bool toBalanceForwarderEnabled) =
-                user.getBalanceAndBalanceForwarder();
+            (Shares origToBalance, bool toBalanceForwarderEnabled) = user.getBalanceAndBalanceForwarder();
 
             Shares newToBalance = origToBalance + amount;
             user.setBalance(newToBalance);

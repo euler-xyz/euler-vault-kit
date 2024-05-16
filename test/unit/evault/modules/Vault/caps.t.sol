@@ -29,7 +29,9 @@ contract VaultTest_Caps is EVaultTestBase {
         user2 = makeAddr("user2");
 
         assetTST3 = new TestERC20("Test TST 3", "TST3", 18, false);
-        eTST3 = IEVault(factory.createProxy(address(0), true, abi.encodePacked(address(assetTST3), address(oracle), unitOfAccount)));
+        eTST3 = IEVault(
+            factory.createProxy(address(0), true, abi.encodePacked(address(assetTST3), address(oracle), unitOfAccount))
+        );
 
         eTST.setLTV(address(eTST2), 0.3e4, 0.3e4, 0);
         eTST.setLTV(address(eTST3), 1e4, 1e4, 0);
@@ -615,7 +617,6 @@ contract VaultTest_Caps is EVaultTestBase {
         vm.expectRevert(Errors.E_BorrowCapExceeded.selector);
         eTST.borrow(0.1e18, user1);
     }
-
 
     function test_deferralOfSupplyCapCheck() public {
         startHoax(user1);

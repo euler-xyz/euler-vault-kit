@@ -22,7 +22,9 @@ contract VaultTest_AmountLimits is EVaultTestBase {
         user2 = makeAddr("user2");
 
         assetTST3 = new TestERC20("Test TST 3", "TST3", 0, false);
-        eTST3 = IEVault(factory.createProxy(address(0), true, abi.encodePacked(address(assetTST3), address(oracle), unitOfAccount)));
+        eTST3 = IEVault(
+            factory.createProxy(address(0), true, abi.encodePacked(address(assetTST3), address(oracle), unitOfAccount))
+        );
 
         assetTST.mint(user1, type(uint256).max / 2);
         startHoax(user1);
