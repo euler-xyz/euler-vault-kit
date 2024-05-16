@@ -77,6 +77,7 @@ methods {
     // another unresolved call that havocs all contracts
     function _.requireVaultStatusCheck() external => NONDET;
     function _.requireAccountAndVaultStatusCheck(address account) external => NONDET;
+    function EthereumVaultConnector.getAccountOwner(address account) external returns address => CVLGetAccountOwner(account);
     // trySafeTransferFrom cannot be summarized as NONDET (due to return type
     // that includes bytes memory). So it is summarized as 
     // DummyERC20a.transferFrom
@@ -92,18 +93,22 @@ methods {
 // This is not in the scene for this config, so we just want it to be
 // an uninterpreted function rather than NONDET so that
 // we get the same value when this is called for different parts
-ghost CVLgetCurrentOnBehalfOfAccountAddr(address) returns address;
+ghost CVLgetCurrentOnBehalfOfAccountAddr(address) returns address {
+    axiom forall address x. CVLgetCurrentOnBehalfOfAccountAddr(x) != currentContract;
+}
 ghost CVLgetCurrentOnBehalfOfAccountBool(address) returns bool;
 function CVLgetCurrentOnBehalfOfAccount(address addr) returns (address, bool) {
     return (CVLgetCurrentOnBehalfOfAccountAddr(addr),
         CVLgetCurrentOnBehalfOfAccountBool(addr));
 }
+persistent ghost CVLGetAccountOwner(address) returns address;
 
 // Summarize trySafeTransferFrom as DummyERC20 transferFrom
 function CVLTrySafeTransferFrom(env e, address from, address to, uint256 value) returns (bool, bytes) {
     bytes ret; // Ideally bytes("") if there is a way to do this
     return (ERC20a.transferFrom(e, from, to, value), ret);
 }
+
 
 ////////////////////////////////////////////////////////////////////////////////
 ////           #  asset To shares mathematical properties                  /////
@@ -254,7 +259,7 @@ invariant noSupplyIfNoAssets(env e)
 
 
 
-ghost mathint sumOfBalances {
+persistent ghost mathint sumOfBalances {
     init_state axiom sumOfBalances == 0;
 }
 
@@ -277,6 +282,7 @@ hook Sload Vault.PackedUserSlot val currentContract.vaultStorage.users[KEY addre
 
 // passing: https://prover.certora.com/output/65266/de3636d287d2473294463c07263fc11e/?anonymousKey=ac8f74e6c5c1298f0954a21fafd41cccf32b9ffb
 invariant totalSupplyIsSumOfBalances(env e)
+    // to_mathint(totalSupply(e)) == sumOfBalances + accumulatedFees(e);
     to_mathint(totalSupply(e)) == sumOfBalances;
 
 
@@ -369,7 +375,10 @@ invariant vaultSolvency(env e)
     totalAssets(e) >= totalSupply(e)  && userAssets(e, currentContract) >= totalAssets(e)  {
       preserved {
             requireInvariant totalSupplyIsSumOfBalances(e);
+            require e.msg.sender == evc;
             require e.msg.sender != currentContract;
+            require actualCaller(e) != currentContract;
+            require actualCallerCheckController(e) != currentContract;
             require currentContract != asset(); 
         }
     }
@@ -582,5 +591,13 @@ rule sanity (method f) {
 //     env e;
 //     BaseHarness.VaultCache vaultCache;
 //     CVLInitVaultCache(e, vaultCache);
+//     assert false;
+// }
+
+// rule totalSupplySanity {
+//     env e;
+//     BaseHarness.VaultCache vaultCache;
+//     CVLInitVaultCache(e, vaultCache);
+//     totalSupply(e);
 //     assert false;
 // }
