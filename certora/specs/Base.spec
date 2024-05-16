@@ -19,13 +19,14 @@ methods {
 
     // ProxyUtils    
     function ProxyUtils.metadata() internal returns (address, address, address)=> CVLProxyMetadata();
+    function ProxyUtils.useViewCaller() internal returns (address) => CVLUseViewCaller();
 
     // IERC20
 	function _.name()                                external => DISPATCHER(true);
     function _.symbol()                              external => DISPATCHER(true);
     function _.decimals()                            external => DISPATCHER(true);
     function _.totalSupply()                         external => DISPATCHER(true);
-    // function _.balanceOf(address)                    external => DISPATCHER(true);
+    function _.balanceOf(address)                    external => DISPATCHER(true);
     function _.allowance(address,address)            external => DISPATCHER(true);
     function _.approve(address,uint256)              external => DISPATCHER(true);
     function _.transfer(address,uint256)             external => DISPATCHER(true);
@@ -48,10 +49,22 @@ function CVLGetQuotes(uint256 amount, address base, address quote) returns (uint
     );
 }
 
-ghost address oracleAddress;
-ghost address unitOfAccount;
+ghost address oracleAddress {
+    init_state axiom oracleAddress != 0;
+}
+ghost address unitOfAccount {
+    init_state axiom unitOfAccount != 0;
+}
 function CVLProxyMetadata() returns (address, address, address) {
+    // Require addresses not zero?
     return (erc20, oracleAddress, unitOfAccount);
+}
+persistent ghost address viewCallerGhost {
+    init_state axiom viewCallerGhost != 0;
+}
+function CVLUseViewCaller() returns address {
+    // require not zero?
+    return viewCallerGhost;
 }
 
 function LTVConfigAssumptions(env e, BaseHarness.LTVConfig ltvConfig) returns bool {
