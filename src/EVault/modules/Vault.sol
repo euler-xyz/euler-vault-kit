@@ -247,18 +247,20 @@ abstract contract VaultModule is IVault, Base, AssetTransfers, BalanceUtils {
         uint256 supply = totalAssetsInternal(vaultCache);
         if (supply >= vaultCache.supplyCap) return Shares.wrap(0); // at or over the supply cap already
 
-        // limit to supply cap
-        uint256 max = vaultCache.supplyCap - supply;
+        unchecked {
+            // limit to supply cap
+            uint256 max = vaultCache.supplyCap - supply;
 
-        // limit to cash remaining space
-        uint256 limit = MAX_SANE_AMOUNT - vaultCache.cash.toUint();
-        max = limit < max ? limit : max;
+            // limit to cash remaining space
+            uint256 limit = MAX_SANE_AMOUNT - vaultCache.cash.toUint();
+            max = limit < max ? limit : max;
 
-        // limit to total shares remaining space
-        max = max.toAssets().toSharesDownUint(vaultCache);
-        limit = MAX_SANE_AMOUNT - vaultCache.totalShares.toUint();
+            // limit to total shares remaining space
+            max = max.toAssets().toSharesDownUint(vaultCache);
+            limit = MAX_SANE_AMOUNT - vaultCache.totalShares.toUint();
 
-        return (limit < max ? limit : max).toShares();
+            return (limit < max ? limit : max).toShares();
+        }
     }
 }
 
