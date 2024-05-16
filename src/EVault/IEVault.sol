@@ -478,7 +478,7 @@ interface IGovernance {
     /// @param newDiscount New maximum liquidation discount in 1e4 scale
     function setMaxLiquidationDiscount(uint16 newDiscount) external;
 
-    /// @notice Retrieves liquidation cool off time, which must elapse after successful account status check before account can be liquidated
+    /// @notice Set a new liquidation cool off time, which must elapse after successful account status check before account can be liquidated
     /// @param newCoolOffTime The new liquidation cool off time in seconds
     function setLiquidationCoolOffTime(uint16 newCoolOffTime) external;
 
