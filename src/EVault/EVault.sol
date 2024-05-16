@@ -219,10 +219,6 @@ contract EVault is Dispatch {
 
     function convertFees() public virtual override callThroughEVC use(MODULE_GOVERNANCE) {}
 
-    function setName(string calldata newName) public virtual override use(MODULE_GOVERNANCE) {}
-
-    function setSymbol(string calldata newSymbol) public virtual override use(MODULE_GOVERNANCE) {}
-
     function setGovernorAdmin(address newGovernorAdmin) public virtual override use(MODULE_GOVERNANCE) {}
 
     function setFeeReceiver(address newFeeReceiver) public virtual override use(MODULE_GOVERNANCE) {}

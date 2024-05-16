@@ -31,14 +31,6 @@ abstract contract GovernanceModule is IGovernance, Base, BalanceUtils, BorrowUti
     // Higher bound of the guaranteed range
     uint16 internal constant GUARANTEED_INTEREST_FEE_MAX = 1e4;
 
-    /// @notice Set a name of the EVault's share token (eToken)
-    /// @param newName A new name of the eToken
-    event GovSetName(string newName);
-
-    /// @notice Set a symbol of the EVault's share token (eToken)
-    /// @param newSymbol A new symbol of the eToken
-    event GovSetSymbol(string newSymbol);
-
     /// @notice Set a governor address for the EVault
     /// @param newGovernorAdmin Address of the new governor
     event GovSetGovernorAdmin(address indexed newGovernorAdmin);
@@ -248,18 +240,6 @@ abstract contract GovernanceModule is IGovernance, Base, BalanceUtils, BorrowUti
         }
 
         emit ConvertFees(account, protocolReceiver, governorReceiver, protocolShares.toUint(), governorShares.toUint());
-    }
-
-    /// @inheritdoc IGovernance
-    function setName(string calldata newName) public virtual nonReentrant governorOnly {
-        vaultStorage.name = newName;
-        emit GovSetName(newName);
-    }
-
-    /// @inheritdoc IGovernance
-    function setSymbol(string calldata newSymbol) public virtual nonReentrant governorOnly {
-        vaultStorage.symbol = newSymbol;
-        emit GovSetSymbol(newSymbol);
     }
 
     /// @inheritdoc IGovernance

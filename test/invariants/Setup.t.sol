@@ -12,6 +12,7 @@ import {ProtocolConfig} from "src/ProtocolConfig/ProtocolConfig.sol";
 import {IRMTestDefault} from "../mocks/IRMTestDefault.sol";
 import {Base} from "src/EVault/shared/Base.sol";
 import {Dispatch} from "src/EVault/Dispatch.sol";
+import {SequenceRegistry} from "src/SequenceRegistry/SequenceRegistry.sol";
 
 // Modules
 import {Initialize} from "src/EVault/modules/Initialize.sol";
@@ -50,9 +51,10 @@ contract Setup is BaseTest {
         feeReceiver = _makeAddr("feeReceiver");
         protocolConfig = new ProtocolConfig(address(this), feeReceiver);
 
-        // Deploy the Balance Tracker and the Price Oracle
+        // Deploy the oracle and integrations
         balanceTracker = address(new MockBalanceTracker());
         oracle = new MockPriceOracle();
+        sequenceRegistry = address(new SequenceRegistry());
 
         // Deploy the mock assets
         assetTST = new TestERC20();
@@ -67,7 +69,7 @@ contract Setup is BaseTest {
     function _deployVaults() internal {
         // Deploy the modules
         Base.Integrations memory integrations =
-            Base.Integrations(address(evc), address(protocolConfig), balanceTracker, permit2);
+            Base.Integrations(address(evc), address(protocolConfig), balanceTracker, permit2, sequenceRegistry);
 
         Dispatch.DeployedModules memory modules = Dispatch.DeployedModules({
             initialize: address(new Initialize(integrations)),

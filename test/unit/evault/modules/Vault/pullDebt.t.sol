@@ -183,7 +183,7 @@ contract VaultTest_PullDebt is EVaultTestBase {
             data: abi.encodeWithSelector(eTST4.pullDebt.selector, 7000.01e6, user2)
         });
 
-        vm.expectRevert(Errors.E_InsufficientBalance.selector);
+        vm.expectRevert(Errors.E_InsufficientDebt.selector);
         evc.batch(items);
 
         skip(10);

@@ -85,7 +85,7 @@ abstract contract BorrowUtils is Base {
             amount = fromOwed;
         }
 
-        if (amount > fromOwed) revert E_InsufficientBalance();
+        if (amount > fromOwed) revert E_InsufficientDebt();
 
         fromOwed = fromOwed.subUnchecked(amount);
         setUserBorrow(vaultCache, from, fromOwed);
