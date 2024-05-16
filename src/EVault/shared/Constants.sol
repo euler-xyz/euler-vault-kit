@@ -42,12 +42,17 @@ uint32 constant OP_LIQUIDATE = 1 << 11;
 uint32 constant OP_FLASHLOAN = 1 << 12;
 uint32 constant OP_TOUCH = 1 << 13;
 uint32 constant OP_VAULT_STATUS_CHECK = 1 << 14;
+// Delimiter of possible operations
 uint32 constant OP_MAX_VALUE = 1 << 15;
 
 // Config Flags
 
+// When flag is set, debt socialization during liquidation is disabled
 uint32 constant CFG_DONT_SOCIALIZE_DEBT = 1 << 0;
+// When flag is set, asset is considered to be compatible with EVC sub-accounts and protections
+// against sending assets to sub-accounts are disabled
 uint32 constant CFG_EVC_COMPATIBLE_ASSET = 1 << 1;
+// Delimiter of possible config flags
 uint32 constant CFG_MAX_VALUE = 1 << 2;
 
 // EVC authentication

@@ -2,6 +2,9 @@
 
 pragma solidity ^0.8.0;
 
+/// @title MetaProxyDeployer
+/// @custom:security-contact security@euler.xyz
+/// @author Euler Labs (https://www.eulerlabs.com/)
 /// @notice Contract for deploying minimal proxies with metadata, based on EIP-3448.
 /// @dev The metadata of the proxies does not include the data length as defined by EIP-3448, saving gas at a cost of supporting variable size data.
 contract MetaProxyDeployer {

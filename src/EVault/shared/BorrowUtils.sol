@@ -13,8 +13,6 @@ import "./types/Types.sol";
 /// @author Euler Labs (https://www.eulerlabs.com/)
 /// @notice Utilities for tracking debt and interest rates
 abstract contract BorrowUtils is Base {
-    using TypesLib for uint256;
-
     function getCurrentOwed(VaultCache memory vaultCache, address account, Owed owed) internal view returns (Owed) {
         // Don't bother loading the user's accumulator
         if (owed.isZero()) return Owed.wrap(0);

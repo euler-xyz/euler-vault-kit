@@ -38,7 +38,7 @@ contract IRMSynthTest is Test {
         new IRMSynth(synth, REFERENCE_ASSET, address(0), TARGET_QUOTE);
     }
 
-    function testIRMSynth_Constructor_TargetQuote() public {
+    function testIRMSynth_Constructor_TargetQuote() public view {
         assertEq(irm.targetQuote(), TARGET_QUOTE);
     }
 

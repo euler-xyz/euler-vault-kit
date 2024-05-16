@@ -8,6 +8,7 @@ import {SafeERC20} from "openzeppelin-contracts/token/ERC20/utils/SafeERC20.sol"
 import {ESynth} from "./ESynth.sol";
 
 /// @title PegStabilityModule
+/// @custom:security-contact security@euler.xyz
 /// @author Euler Labs (https://www.eulerlabs.com/)
 /// @notice The PegStabilityModule is granted minting rights on the ESynth and must allow slippage-free conversion from
 /// and to the underlying asset as per configured conversionPrice. On deployment, the fee for swaps to synthetic asset

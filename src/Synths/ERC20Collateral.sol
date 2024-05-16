@@ -8,6 +8,7 @@ import {ReentrancyGuard} from "openzeppelin-contracts/utils/ReentrancyGuard.sol"
 import {IEVC, EVCUtil} from "ethereum-vault-connector/utils/EVCUtil.sol";
 
 /// @title ERC20Collateral
+/// @custom:security-contact security@euler.xyz
 /// @author Euler Labs (https://www.eulerlabs.com/)
 /// @notice ERC20Collateral is an ERC20-compatible token with the EVC support which allows it to be used as collateral
 /// in other vaults.

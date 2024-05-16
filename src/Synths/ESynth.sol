@@ -9,6 +9,7 @@ import {ERC20Collateral, ERC20, Context} from "./ERC20Collateral.sol";
 import {IEVault} from "../EVault/IEVault.sol";
 
 /// @title ESynth
+/// @custom:security-contact security@euler.xyz
 /// @author Euler Labs (https://www.eulerlabs.com/)
 /// @notice ESynth is an ERC20-compatible token with the EVC support which, thanks to relying on the EVC authentication
 /// and requesting the account status checks on token transfers and burns, allows it to be used as collateral in other

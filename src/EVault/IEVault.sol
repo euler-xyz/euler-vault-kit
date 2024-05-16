@@ -415,7 +415,7 @@ interface IGovernance {
     /// @return The maximum liquidation discount in 1e4 scale
     function maxLiquidationDiscount() external view returns (uint16);
 
-    /// @notice Retrieves liquidation cool off time, which must elapse after successful account status check before account can be liquidated
+    /// @notice Retrieves liquidation cool-off time, which must elapse after successful account status check before account can be liquidated
     /// @return The liquidation cool off time in seconds
     function liquidationCoolOffTime() external view returns (uint16);
 
@@ -506,6 +506,8 @@ interface IGovernance {
 }
 
 /// @title IEVault
+/// @custom:security-contact security@euler.xyz
+/// @author Euler Labs (https://www.eulerlabs.com/)
 /// @notice Interface of the EVault, an EVC enabled lending vault
 interface IEVault is
     IInitialize,

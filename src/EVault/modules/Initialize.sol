@@ -18,7 +18,9 @@ import "../shared/types/Types.sol";
 abstract contract InitializeModule is IInitialize, Base, BorrowUtils {
     using TypesLib for uint16;
 
-    uint256 internal constant INITIAL_INTEREST_ACCUMULATOR = 1e27; // 1 ray
+    // Initial value of the interest accumulator: 1 ray
+    uint256 internal constant INITIAL_INTEREST_ACCUMULATOR = 1e27;
+    // Default fee charged on newly accrued interest in CONFIG_SCALE: 10%
     uint16 internal constant DEFAULT_INTEREST_FEE = 0.1e4;
 
     /// @inheritdoc IInitialize

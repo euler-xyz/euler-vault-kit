@@ -16,7 +16,6 @@ import "./types/Types.sol";
 /// @notice Utilities for loading vault storage and updating it with interest accrued
 contract Cache is Storage, Errors {
     using TypesLib for uint256;
-    using SafeERC20Lib for IERC20;
 
     // Returns an updated VaultCache
     // If different from VaultStorage, updates VaultStorage

@@ -13,8 +13,6 @@ import "../shared/types/Types.sol";
 /// @author Euler Labs (https://www.eulerlabs.com/)
 /// @notice An EVault module handling risk management, including vault and account health checks
 abstract contract RiskManagerModule is IRiskManager, Base, LiquidityUtils {
-    using TypesLib for uint256;
-
     /// @inheritdoc IRiskManager
     function accountLiquidity(address account, bool liquidation)
         public

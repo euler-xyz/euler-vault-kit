@@ -7,6 +7,7 @@ import "../interfaces/IPriceOracle.sol";
 import {IERC20} from "../EVault/IEVault.sol";
 
 /// @title IRMSynth
+/// @custom:security-contact security@euler.xyz
 /// @author Euler Labs (https://www.eulerlabs.com/)
 /// @notice Synthetic asset vaults use a different interest rate model than the standard vaults. The IRMSynth interest
 /// rate model is a simple reactive rate model which adjusts the interest rate up when it trades below the targetQuote

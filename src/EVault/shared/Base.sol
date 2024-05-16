@@ -22,10 +22,16 @@ abstract contract Base is EVCClient, Cache {
     IBalanceTracker internal immutable balanceTracker;
     address internal immutable permit2;
 
+    /// @title Integrations
+    /// @notice Struct containing addresses of all of the contracts which EVault integrates with
     struct Integrations {
+        // Ethereum Vult Connector's address
         address evc;
+        // Address of the contract handling protocol level configurations
         address protocolConfig;
+        // Address of the contract which is called when user balances change
         address balanceTracker;
+        // Address of Uniswap's Permit2 contract
         address permit2;
     }
 
