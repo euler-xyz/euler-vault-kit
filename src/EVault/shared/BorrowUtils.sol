@@ -63,8 +63,9 @@ abstract contract BorrowUtils is Base {
         Owed owedRemaining = owed.subUnchecked(amount).toOwed();
 
         setUserBorrow(vaultCache, account, owedRemaining);
-        vaultStorage.totalBorrows = vaultCache.totalBorrows =
-            vaultCache.totalBorrows > owedExact ? vaultCache.totalBorrows - owedExact + owedRemaining : owedRemaining;
+        vaultStorage.totalBorrows = vaultCache.totalBorrows = vaultCache.totalBorrows > owedExact
+            ? vaultCache.totalBorrows.subUnchecked(owedExact).addUnchecked(owedRemaining)
+            : owedRemaining;
 
         logBorrowChange(account, prevOwed, owedRemaining);
     }
@@ -76,8 +77,10 @@ abstract contract BorrowUtils is Base {
         (Owed toOwed, Owed toOwedPrev) = loadUserBorrow(vaultCache, to);
 
         // If amount was rounded up, or dust is left over, transfer exact amount owed
-        if ((amount > fromOwed && (amount - fromOwed).isDust()) || (amount < fromOwed && (fromOwed - amount).isDust()))
-        {
+        if (
+            (amount > fromOwed && amount.subUnchecked(fromOwed).isDust())
+                || (amount < fromOwed && fromOwed.subUnchecked(amount).isDust())
+        ) {
             amount = fromOwed;
         }
 
