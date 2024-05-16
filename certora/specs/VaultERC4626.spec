@@ -93,12 +93,16 @@ methods {
 // This is not in the scene for this config, so we just want it to be
 // an uninterpreted function rather than NONDET so that
 // we get the same value when this is called for different parts
-ghost CVLgetCurrentOnBehalfOfAccountAddr(address) returns address {
-    axiom forall address x. CVLgetCurrentOnBehalfOfAccountAddr(x) != currentContract;
-}
+// ghost CVLgetCurrentOnBehalfOfAccountAddr(address) returns address {
+//     axiom forall address x. CVLgetCurrentOnBehalfOfAccountAddr(x) != currentContract;
+// }
+ghost address GhostOnBehalfOfAccount {
+    axiom GhostOnBehalfOfAccount != currentContract;
+    axiom GhostOnBehalfOfAccount != 0;
+} 
 ghost CVLgetCurrentOnBehalfOfAccountBool(address) returns bool;
 function CVLgetCurrentOnBehalfOfAccount(address addr) returns (address, bool) {
-    return (CVLgetCurrentOnBehalfOfAccountAddr(addr),
+    return (GhostOnBehalfOfAccount,
         CVLgetCurrentOnBehalfOfAccountBool(addr));
 }
 persistent ghost CVLGetAccountOwner(address) returns address;
@@ -233,8 +237,11 @@ invariant assetsMoreThanSupply(env e)
     {
         preserved {
             require e.msg.sender != currentContract;
+            require actualCaller(e) != currentContract;
+            require actualCallerCheckController(e) != currentContract;
             address any;
-            safeAssumptions(e, any , e.msg.sender);
+            safeAssumptions(e, any , actualCaller(e));
+            safeAssumptions(e, any , actualCallerCheckController(e));
         }
     }
 
@@ -245,7 +252,8 @@ invariant noAssetsIfNoSupply(env e)
     {
         preserved {
         address any;
-            safeAssumptions(e, any, e.msg.sender);
+            safeAssumptions(e, any, actualCaller(e));
+            safeAssumptions(e, any, actualCallerCheckController(e));
         }
     }
 
@@ -375,7 +383,6 @@ invariant vaultSolvency(env e)
     totalAssets(e) >= totalSupply(e)  && userAssets(e, currentContract) >= totalAssets(e)  {
       preserved {
             requireInvariant totalSupplyIsSumOfBalances(e);
-            require e.msg.sender == evc;
             require e.msg.sender != currentContract;
             require actualCaller(e) != currentContract;
             require actualCallerCheckController(e) != currentContract;
@@ -413,7 +420,7 @@ filtered {
 
     // need to minimize these
     require actualCaller(e) == contributor;
-    require contributor == CVLgetCurrentOnBehalfOfAccountAddr(0);
+    require contributor == GhostOnBehalfOfAccount;
     require actualCallerCheckController(e) == contributor;
 
     address receiver;
