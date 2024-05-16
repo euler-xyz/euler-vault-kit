@@ -34,6 +34,12 @@ library OwedLib {
         return TypesLib.toOwed(uint256(Owed.unwrap(self)) * multiplier / divisor);
     }
 
+    function addUnchecked(Owed self, Owed b) internal pure returns (Owed) {
+        unchecked {
+            return Owed.wrap(uint144(self.toUint() + b.toUint()));
+        }
+    }
+
     function subUnchecked(Owed self, Owed b) internal pure returns (Owed) {
         unchecked {
             return Owed.wrap(uint144(self.toUint() - b.toUint()));
