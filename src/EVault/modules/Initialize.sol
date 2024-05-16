@@ -50,12 +50,13 @@ abstract contract InitializeModule is IInitialize, Base, BorrowUtils {
         vaultStorage.interestFee = DEFAULT_INTEREST_FEE.toConfigAmount();
         vaultStorage.creator = vaultStorage.governorAdmin = proxyCreator;
 
-        vaultStorage.symbol = string(
-            abi.encodePacked(
-                "e", getTokenSymbol(address(asset)), "-", uintToString(sequenceRegistry.reserveSeqId(address(asset)))
-            )
-        );
-        vaultStorage.name = string(abi.encodePacked("EVK Vault ", vaultStorage.symbol));
+        {
+            string memory underlyingSymbol = getTokenSymbol(address(asset));
+            uint256 seqId = sequenceRegistry.reserveSeqId(underlyingSymbol);
+
+            vaultStorage.symbol = string(abi.encodePacked("e", underlyingSymbol, "-", uintToString(seqId)));
+            vaultStorage.name = string(abi.encodePacked("EVK Vault ", vaultStorage.symbol));
+        }
 
         snapshot.reset();
 
@@ -70,10 +71,11 @@ abstract contract InitializeModule is IInitialize, Base, BorrowUtils {
         initialized = true;
     }
 
-    /// @dev Calls the asset's symbol() method, taking care to handle MKR like tokens that return bytes32 instead of string
+    /// @dev Calls the asset's symbol() method, taking care to handle MKR-like tokens that return bytes32 instead of string.
+    /// For tokens that do not implement symbol(), "UNDEFINED" will be returned.
     function getTokenSymbol(address asset) private view returns (string memory) {
-        (bool success, bytes memory data) = address(asset).staticcall(abi.encodeWithSelector(IERC20.symbol.selector));
-        if (!success) RevertBytes.revertBytes(data);
+        (bool success, bytes memory data) = address(asset).staticcall(abi.encodeCall(IERC20.symbol, ()));
+        if (!success) return "UNDEFINED";
         return data.length <= 32 ? string(data) : abi.decode(data, (string));
     }
 
@@ -89,8 +91,9 @@ abstract contract InitializeModule is IInitialize, Base, BorrowUtils {
 
             bytes memory output = new bytes(len);
 
-            for (; len > 0; n /= 10) {
+            while (len > 0) {
                 output[--len] = bytes1(uint8(48 + n % 10)); // 48 is ASCII '0'
+                n /= 10;
             }
 
             return string(output);

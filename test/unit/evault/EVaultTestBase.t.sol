@@ -84,7 +84,7 @@ contract EVaultTestBase is AssertionsCustomTypes, Test, DeployPermit2 {
         permit2 = deployPermit2();
         sequenceRegistry = address(new SequenceRegistry());
         integrations =
-            Base.Integrations(address(evc), address(protocolConfig), balanceTracker, permit2, sequenceRegistry);
+            Base.Integrations(address(evc), address(protocolConfig), sequenceRegistry, balanceTracker, permit2);
 
         if (deployOverrides) {
             initializeModule = address(new InitializeOverride(integrations));

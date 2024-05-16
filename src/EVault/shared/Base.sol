@@ -20,9 +20,9 @@ import "./types/Types.sol";
 /// @notice Base contract for EVault modules with top level modifiers and utilities
 abstract contract Base is EVCClient, Cache {
     IProtocolConfig internal immutable protocolConfig;
+    ISequenceRegistry immutable sequenceRegistry;
     IBalanceTracker internal immutable balanceTracker;
     address internal immutable permit2;
-    ISequenceRegistry immutable sequenceRegistry;
 
     /// @title Integrations
     /// @notice Struct containing addresses of all of the contracts which EVault integrates with
@@ -31,18 +31,19 @@ abstract contract Base is EVCClient, Cache {
         address evc;
         // Address of the contract handling protocol level configurations
         address protocolConfig;
+        // Address of the contract providing a unique ID used in setting the vault's name and symbol
+        address sequenceRegistry;
         // Address of the contract which is called when user balances change
         address balanceTracker;
         // Address of Uniswap's Permit2 contract
         address permit2;
-        address sequenceRegistry;
     }
 
     constructor(Integrations memory integrations) EVCClient(integrations.evc) {
         protocolConfig = IProtocolConfig(AddressUtils.checkContract(integrations.protocolConfig));
+        sequenceRegistry = ISequenceRegistry(AddressUtils.checkContract(integrations.sequenceRegistry));
         balanceTracker = IBalanceTracker(integrations.balanceTracker);
         permit2 = integrations.permit2;
-        sequenceRegistry = ISequenceRegistry(integrations.sequenceRegistry);
     }
 
     modifier reentrantOK() {

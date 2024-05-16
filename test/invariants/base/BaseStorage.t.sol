@@ -83,6 +83,9 @@ abstract contract BaseStorage {
     /// @notice vault factory contract
     GenericFactory internal factory;
 
+    /// @notice SequenceRegistry contract
+    address sequenceRegistry;
+
     // MOCKS
 
     /// @notice Price oracle mock contract
@@ -90,9 +93,6 @@ abstract contract BaseStorage {
 
     /// @notice Balance tracker mock contract
     address balanceTracker;
-
-    /// @notice SequenceRegistry mock contract
-    address sequenceRegistry;
 
     address feeReceiver;
 
