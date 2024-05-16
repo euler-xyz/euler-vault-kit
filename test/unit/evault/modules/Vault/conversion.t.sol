@@ -39,7 +39,9 @@ contract VaultTest_Conversion is EVaultTestBase {
         vm.prank(admin);
         factory.setImplementation(evaultImpl);
 
-        eTST0 = EVaultHarness(coreProductLine.createVault(address(assetTST), address(oracle), unitOfAccount));
+        eTST0 = EVaultHarness(
+            factory.createProxy(address(0), true, abi.encodePacked(address(assetTST), address(oracle), unitOfAccount))
+        );
         eTST0.setInterestRateModel(address(new IRMTestDefault()));
     }
 
