@@ -215,7 +215,9 @@ contract ReentrancyTest is EVaultTestBase {
         vm.prank(admin);
         factory.setImplementation(evaultImpl);
 
-        eTST = IEVault(coreProductLine.createVault(address(assetTST), address(oracle), unitOfAccount));
+        eTST = IEVault(
+            factory.createProxy(address(0), true, abi.encodePacked(address(assetTST), address(oracle), unitOfAccount))
+        );
 
         vm.assume(sender != address(0) && sender != address(eTST));
 

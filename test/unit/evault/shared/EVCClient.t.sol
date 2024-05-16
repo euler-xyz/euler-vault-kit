@@ -53,7 +53,9 @@ contract EVCClientUnitTest is EVaultTestBase {
 
         // create third random vault
         assetTST3 = new TestERC20("Test Token 3", "TST3", 18, false);
-        eTST3 = IEVault(coreProductLine.createVault(address(assetTST3), address(oracle), unitOfAccount));
+        eTST3 = IEVault(
+            factory.createProxy(address(0), true, abi.encodePacked(address(assetTST3), address(oracle), unitOfAccount))
+        );
         eTST3.setInterestRateModel(address(new IRMTestDefault()));
     }
 

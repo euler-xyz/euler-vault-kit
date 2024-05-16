@@ -6,8 +6,8 @@ import "../../EVaultTestBase.t.sol";
 
 contract ERC20Test_views is EVaultTestBase {
     function test_basicViews() public view {
-        assertEq(eTST.name(), "Core vault: Test Token");
-        assertEq(eTST.symbol(), "eTST");
+        assertEq(eTST.name(), "Unnamed Euler Vault");
+        assertEq(eTST.symbol(), "UNKNOWN");
         assertEq(eTST.decimals(), assetTST.decimals());
     }
 }

@@ -26,7 +26,9 @@ contract VaultTest_Nested is EVaultTestBase {
     function setUp() public override {
         super.setUp();
 
-        eTSTNested = IEVault(coreProductLine.createVault(address(eTST), address(oracle), unitOfAccount));
+        eTSTNested = IEVault(
+            factory.createProxy(address(0), true, abi.encodePacked(address(eTST), address(oracle), unitOfAccount))
+        );
         eTSTNested.setInterestRateModel(address(new IRMTestDefault()));
 
         depositor = makeAddr("depositor");
@@ -138,7 +140,9 @@ contract VaultTest_Nested is EVaultTestBase {
     }
 
     function test_doubleNestedDepositAndBorrow() public {
-        eTSTDoubleNested = IEVault(coreProductLine.createVault(address(eTSTNested), address(oracle), unitOfAccount));
+        eTSTDoubleNested = IEVault(
+            factory.createProxy(address(0), true, abi.encodePacked(address(eTSTNested), address(oracle), unitOfAccount))
+        );
         eTSTDoubleNested.setInterestRateModel(address(new IRMTestDefault()));
 
         eTSTDoubleNested.setLTV(address(eTST2), 0.9e4, 0.9e4, 0);
