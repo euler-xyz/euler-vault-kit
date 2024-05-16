@@ -68,7 +68,8 @@ abstract contract InitializeModule is IInitialize, Base, BorrowUtils {
         initialized = true;
     }
 
-    /// @dev Calls the asset's symbol() method, taking care to handle MKR like tokens that return bytes32 instead of string
+    /// @dev Calls the asset's symbol() method, taking care to handle MKR-like tokens that return bytes32 instead of string.
+    /// For tokens that do not implement symbol(), "UNDEFINED" will be returned.
     function getTokenSymbol(address asset) private view returns (string memory) {
         (bool success, bytes memory data) = address(asset).staticcall(abi.encodeCall(IERC20.symbol, ()));
         if (!success) return "UNDEFINED";
