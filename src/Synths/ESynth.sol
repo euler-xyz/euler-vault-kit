@@ -8,6 +8,11 @@ import {IEVC, EVCUtil} from "ethereum-vault-connector/utils/EVCUtil.sol";
 import {ERC20Collateral, ERC20, Context} from "./ERC20Collateral.sol";
 import {IEVault} from "../EVault/IEVault.sol";
 
+/// @title ESynth
+/// @author Euler Labs (https://www.eulerlabs.com/)
+/// @notice ESynth is an ERC20-compatible token with the EVC support which, thanks to relying on the EVC authentication
+/// and requesting the account status checks on token transfers and burns, allows it to be used as collateral in other
+/// vault. It is meant to be used as an underlying asset of the synthetic asset vault.
 contract ESynth is ERC20Collateral, Ownable {
     using EnumerableSet for EnumerableSet.AddressSet;
 
@@ -22,6 +27,7 @@ contract ESynth is ERC20Collateral, Ownable {
     event MinterCapacitySet(address indexed minter, uint256 capacity);
 
     error E_CapacityReached();
+    error E_NotEVCCompatible();
 
     constructor(IEVC evc_, string memory name_, string memory symbol_)
         ERC20Collateral(evc_, name_, symbol_)
@@ -44,6 +50,11 @@ contract ESynth is ERC20Collateral, Ownable {
         address sender = _msgSender();
         MinterData memory minterCache = minters[sender];
 
+        // Return early if the amount is 0 to prevent emitting possible spam events.
+        if (amount == 0) {
+            return;
+        }
+
         if (
             amount > type(uint128).max - minterCache.minted
                 || minterCache.capacity < uint256(minterCache.minted) + amount
@@ -58,15 +69,19 @@ contract ESynth is ERC20Collateral, Ownable {
     }
 
     /// @notice Burns a certain amount of tokens from the accounts balance. Requires the account, except the owner to have an allowance for the sender.
-    /// @param account The account to burn the tokens from.
+    /// @param burnFrom The account to burn the tokens from.
     /// @param amount The amount of tokens to burn.
-    function burn(address account, uint256 amount) external nonReentrant {
+    function burn(address burnFrom, uint256 amount) external nonReentrant {
         address sender = _msgSender();
         MinterData memory minterCache = minters[sender];
 
+        if (amount == 0) {
+            return;
+        }
+
         // The allowance check should be performed if the spender is not the account with the exception of the owner burning from this contract.
-        if (account != sender && !(account == address(this) && sender == owner())) {
-            _spendAllowance(account, sender, amount);
+        if (burnFrom != sender && !(burnFrom == address(this) && sender == owner())) {
+            _spendAllowance(burnFrom, sender, amount);
         }
 
         // If burning more than minted, reset minted to 0
@@ -75,7 +90,7 @@ contract ESynth is ERC20Collateral, Ownable {
         }
         minters[sender] = minterCache;
 
-        _burn(account, amount);
+        _burn(burnFrom, amount);
     }
 
     /// @notice Deposit cash from this contract into the attached vault.
@@ -83,6 +98,9 @@ contract ESynth is ERC20Collateral, Ownable {
     /// @param vault The vault to deposit the cash in.
     /// @param amount The amount of cash to deposit.
     function allocate(address vault, uint256 amount) external onlyOwner {
+        if (IEVault(vault).EVC() != address(evc)) {
+            revert E_NotEVCCompatible();
+        }
         ignoredForTotalSupply.add(vault);
         _approve(address(this), vault, amount, true);
         IEVault(vault).deposit(amount, address(this));
