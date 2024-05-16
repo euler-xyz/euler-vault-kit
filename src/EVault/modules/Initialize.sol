@@ -8,6 +8,7 @@ import {BorrowUtils} from "../shared/BorrowUtils.sol";
 import {DToken} from "../DToken.sol";
 import {ProxyUtils} from "../shared/lib/ProxyUtils.sol";
 import {RevertBytes} from "../shared/lib/RevertBytes.sol";
+import {AddressUtils} from "../shared/lib/AddressUtils.sol";
 
 import "../shared/Constants.sol";
 import "../shared/types/Types.sol";
@@ -35,7 +36,7 @@ abstract contract InitializeModule is IInitialize, Base, BorrowUtils {
         if (msg.data.length != 4 + 32 + PROXY_METADATA_LENGTH) revert E_ProxyMetadata();
         (IERC20 asset,,) = ProxyUtils.metadata();
         // Make sure the asset is a contract. Token transfers using a library will not revert if address has no code.
-        if (address(asset).code.length == 0) revert E_BadAddress();
+        AddressUtils.checkContract(address(asset));
         // Other constraints on values should be enforced by product line
 
         // Create sidecar DToken
