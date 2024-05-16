@@ -155,17 +155,4 @@ contract VaultTest_AmountLimits is EVaultTestBase {
         vm.expectRevert(Errors.E_AmountTooLargeToEncode.selector);
         eTST.deposit(1, user2);
     }
-
-    function test_loop_totalBalancesTooLarge() public {
-        startHoax(user1);
-        eTST.deposit(MAX_SANE_AMOUNT, user1);
-
-        startHoax(user2);
-        vm.expectRevert(Errors.E_ControllerDisabled.selector);
-        eTST.loop(10, user2);
-
-        evc.enableController(user2, address(eTST));
-        vm.expectRevert(Errors.E_AmountTooLargeToEncode.selector);
-        eTST.loop(10, user2);
-    }
 }

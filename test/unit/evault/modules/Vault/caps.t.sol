@@ -154,8 +154,8 @@ contract VaultTest_Caps is EVaultTestBase {
 
         vm.revertTo(snapshot);
         if (shouldRevert) vm.expectRevert();
-        vm.prank(user);
-        eTST.mint(amount, user);
+        vm.prank(user1);
+        eTST.mint(amount, user1);
     }
 
     function test_SupplyCap_WhenAt_IncreasingActions(uint16 supplyCap, uint256 amount) public {
@@ -603,7 +603,11 @@ contract VaultTest_Caps is EVaultTestBase {
 
         // Repay still works, even though it's not enough repaid to solve the policy violation:
         startHoax(user1);
-        eTST.repay(0.15e18, user1);
+        eTST.repay(0.05e18, user1);
+
+        // Repay with shares also works
+
+        eTST.repayWithShares(0.1e18, user1);
 
         assertApproxEqAbs(eTST.totalBorrows(), 8.4e18, 0.001e18);
 
@@ -612,59 +616,6 @@ contract VaultTest_Caps is EVaultTestBase {
         eTST.borrow(0.1e18, user1);
     }
 
-    //supply and borrow cap for wind
-    function test_loop_supplyBorrowCap() public {
-        startHoax(user1);
-        eTST.deposit(10e18, user1);
-
-        assertEq(eTST.totalSupply(), 10e18);
-        assertEq(eTST.totalBorrows(), 0);
-
-        // Wind prevented:
-        startHoax(address(this));
-        eTST.setCaps(7699, 32018);
-        startHoax(user1);
-        vm.expectRevert(Errors.E_SupplyCapExceeded.selector);
-        eTST.loop(3e18, user1);
-
-        // Wind prevented:
-        startHoax(address(this));
-        eTST.setCaps(9619, 12818);
-        startHoax(user1);
-        vm.expectRevert(Errors.E_BorrowCapExceeded.selector);
-        eTST.loop(3e18, user1);
-
-        // Raise caps and it succeeds:
-        startHoax(address(this));
-        eTST.setCaps(9619, 32018);
-        startHoax(user1);
-        eTST.loop(3e18, user1);
-
-        // New limit prevents additional mints:
-        startHoax(user1);
-        vm.expectRevert(Errors.E_BorrowCapExceeded.selector);
-        eTST.loop(3e18, user1);
-
-        // Lower supply cap. Unwind still works, even though it's not enough burnt to solve the policy violation:
-        startHoax(address(this));
-        eTST.setCaps(6418, 6418);
-        startHoax(user1);
-        eTST.deloop(1e18, user1);
-        assertEq(eTST.totalSupply(), 12e18);
-        assertEq(eTST.totalBorrows(), 2e18);
-
-        // Deposit doesn't work
-        startHoax(user1);
-        vm.expectRevert(Errors.E_BorrowCapExceeded.selector);
-        eTST.loop(0.1e18, user1);
-
-        // Turn off supply cap. Wind still doesn't work because of borrow cap
-        startHoax(address(this));
-        eTST.setCaps(6418, 0);
-        startHoax(user1);
-        vm.expectRevert(Errors.E_SupplyCapExceeded.selector);
-        eTST.loop(0.1e18, user1);
-    }
 
     function test_deferralOfSupplyCapCheck() public {
         startHoax(user1);
@@ -781,7 +732,7 @@ contract VaultTest_Caps is EVaultTestBase {
 
     function test_simpleOperationPausing() public {
         startHoax(user1);
-        eTST.deposit(10e18, user1);
+        eTST.deposit(15e18, user1);
 
         // Deposit prevented:
         startHoax(address(this));
@@ -835,32 +786,6 @@ contract VaultTest_Caps is EVaultTestBase {
         startHoax(user1);
         eTST.redeem(5e18, user1, user1);
 
-        // Loop prevented:
-        startHoax(address(this));
-        eTST.setHookConfig(address(0), OP_LOOP);
-        startHoax(user1);
-        vm.expectRevert(Errors.E_OperationDisabled.selector);
-        eTST.loop(5e18, user1);
-
-        // Remove pause and it succeeds:
-        startHoax(address(this));
-        eTST.setHookConfig(address(0), 0);
-        startHoax(user1);
-        eTST.loop(5e18, user1);
-
-        // Deloop prevented:
-        startHoax(address(this));
-        eTST.setHookConfig(address(0), OP_DELOOP);
-        startHoax(user1);
-        vm.expectRevert(Errors.E_OperationDisabled.selector);
-        eTST.deloop(5e18, user1);
-
-        // Remove pause and it succeeds:
-        startHoax(address(this));
-        eTST.setHookConfig(address(0), 0);
-        startHoax(user1);
-        eTST.deloop(5e18, user1);
-
         // setup
         startHoax(user1);
         evc.enableController(user1, address(eTST));
@@ -884,13 +809,26 @@ contract VaultTest_Caps is EVaultTestBase {
         eTST.setHookConfig(address(0), OP_REPAY);
         startHoax(user1);
         vm.expectRevert(Errors.E_OperationDisabled.selector);
-        eTST.repay(type(uint256).max, user1);
+        eTST.repay(1e18, user1);
 
         // Remove pause and it succeeds:
         startHoax(address(this));
         eTST.setHookConfig(address(0), 0);
         startHoax(user1);
-        eTST.repay(type(uint256).max, user1);
+        eTST.repay(1e18, user1);
+
+        // Repay with shares prevented:
+        startHoax(address(this));
+        eTST.setHookConfig(address(0), OP_REPAY_WITH_SHARES);
+        startHoax(user1);
+        vm.expectRevert(Errors.E_OperationDisabled.selector);
+        eTST.repayWithShares(type(uint256).max, user1);
+
+        // Remove pause and it succeeds:
+        startHoax(address(this));
+        eTST.setHookConfig(address(0), 0);
+        startHoax(user1);
+        eTST.repayWithShares(type(uint256).max, user1);
 
         // eVault transfer prevented:
         startHoax(address(this));
@@ -1015,7 +953,7 @@ contract VaultTest_Caps is EVaultTestBase {
 
         eTST.setCaps(9619, 0);
         eTST2.setCaps(0, 32018);
-        eTST2.setHookConfig(address(0), OP_LOOP);
+        eTST2.setHookConfig(address(0), OP_REPAY_WITH_SHARES);
 
         // This won't work because the end state violates market policies:
 
@@ -1092,7 +1030,7 @@ contract VaultTest_Caps is EVaultTestBase {
 
         eTST.withdraw(4e18, user1, user1);
         eTST2.repay(type(uint256).max, user1);
-        // Fails again if wind item added:
+        // Fails again if repayWithShares item added:
         eTST.disableController();
 
         items[0] = IEVC.BatchItem({
@@ -1117,7 +1055,7 @@ contract VaultTest_Caps is EVaultTestBase {
             onBehalfOfAccount: user1,
             targetContract: address(eTST2),
             value: 0,
-            data: abi.encodeWithSelector(eTST2.loop.selector, 0, user1)
+            data: abi.encodeWithSelector(eTST2.repayWithShares.selector, 0, user1)
         });
         items[4] = IEVC.BatchItem({
             onBehalfOfAccount: user1,
@@ -1167,7 +1105,7 @@ contract VaultTest_Caps is EVaultTestBase {
             onBehalfOfAccount: user1,
             targetContract: address(eTST),
             value: 0,
-            data: abi.encodeWithSelector(eTST.loop.selector, 1e18, user1)
+            data: abi.encodeWithSelector(eTST.repayWithShares.selector, 0, user1)
         });
         items[5] = IEVC.BatchItem({
             onBehalfOfAccount: user1,
@@ -1198,7 +1136,7 @@ contract VaultTest_Caps is EVaultTestBase {
         evc.batch(items);
 
         // checkpoint:
-        assertEq(eTST.totalSupply(), 14e18);
+        assertEq(eTST.totalSupply(), 13e18);
         assertEq(eTST2.totalSupply(), 10e18);
         assertEq(eTST.totalBorrows(), 0);
         assertEq(eTST2.totalBorrows(), 0);
@@ -1207,6 +1145,7 @@ contract VaultTest_Caps is EVaultTestBase {
         startHoax(address(this));
         eTST.setCaps(6419, 6418);
         eTST2.setCaps(6418, 6418);
+        eTST2.setHookConfig(address(0), 0);
 
         items = new IEVC.BatchItem[](8);
 
@@ -1250,13 +1189,13 @@ contract VaultTest_Caps is EVaultTestBase {
             value: 0,
             data: abi.encodeWithSelector(eTST.deposit.selector, 1e18, user1)
         });
-        // this should deloop TST2 debt and deposits, leaving the TST2 borrow cap no longer violated
+        // this should repay TST2 debt and deposits, leaving the TST2 borrow cap no longer violated
         // TST2 supply cap is not an issue, although exceeded, total balances stayed the same within the transaction
         items[6] = IEVC.BatchItem({
             onBehalfOfAccount: getSubAccount(user1, 1),
             targetContract: address(eTST2),
             value: 0,
-            data: abi.encodeWithSelector(eTST2.deloop.selector, type(uint256).max, getSubAccount(user1, 1))
+            data: abi.encodeWithSelector(eTST2.repayWithShares.selector, type(uint256).max, getSubAccount(user1, 1))
         });
         // this should withdraw more TST than deposited, leaving the TST supply cap no longer violated
         items[7] = IEVC.BatchItem({
@@ -1269,7 +1208,7 @@ contract VaultTest_Caps is EVaultTestBase {
         startHoax(user1);
         evc.batch(items);
 
-        assertEq(eTST.totalSupply(), 13e18);
+        assertEq(eTST.totalSupply(), 12e18);
         assertEq(eTST2.totalSupply(), 10e18);
         assertEq(eTST.totalBorrows(), 0);
         assertEq(eTST2.totalBorrows(), 0);

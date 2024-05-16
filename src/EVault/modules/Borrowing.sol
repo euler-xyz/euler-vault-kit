@@ -94,11 +94,11 @@ abstract contract BorrowingModule is IBorrowing, Base, AssetTransfers, BalanceUt
     }
 
     /// @inheritdoc IBorrowing
-    function repayWithShares(uint256 amount, address receiver) public virtual nonReentrant returns (uint256, uint25) {
+    function repayWithShares(uint256 amount, address receiver) public virtual nonReentrant returns (uint256, uint256) {
         (VaultCache memory vaultCache, address account) = initOperation(OP_REPAY_WITH_SHARES, CHECKACCOUNT_CALLER);
 
         Assets owed = getCurrentOwed(vaultCache, receiver).toAssetsUp();
-        if (owed.isZero()) return 0;
+        if (owed.isZero()) return (0, 0);
 
         Assets assets;
         Shares shares;
