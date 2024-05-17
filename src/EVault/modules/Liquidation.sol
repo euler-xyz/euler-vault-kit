@@ -142,7 +142,11 @@ abstract contract LiquidationModule is ILiquidation, Base, BalanceUtils, Liquidi
             vaultCache.oracle.getQuote(collateralBalance, liqCache.collateral, vaultCache.unitOfAccount);
 
         if (collateralValue == 0) {
-            // worthless collateral can be claimed with no repay
+            // Worthless collateral can be claimed with no repay. The collateral can be actually worthless, or the amount of available
+            // collateral could be non-representable in the unit of account (rounded down to zero during conversion). In this case
+            // the liquidator is able to claim the collateral without repaying any debt. Note that it's not profitable as long as liquidation
+            // gas costs are larger than the value of a single wei of the reference asset. Care should be taken though when selecting
+            // unit of account and collateral assets.
             liqCache.yieldBalance = collateralBalance;
             return liqCache;
         }
