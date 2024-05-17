@@ -104,6 +104,7 @@ abstract contract BalanceUtils is Base {
         emit Approval(owner, spender, amount);
     }
 
+    /// @dev As gas saving optimization, consuming allowance doesn't emit the Approval event.
     function decreaseAllowance(address owner, address spender, Shares amount) internal virtual {
         if (amount.isZero()) return;
 
@@ -114,7 +115,6 @@ abstract contract BalanceUtils is Base {
                 allowance -= amount.toUint();
             }
             vaultStorage.users[owner].eTokenAllowance[spender] = allowance;
-            emit Approval(owner, spender, allowance);
         }
     }
 }
