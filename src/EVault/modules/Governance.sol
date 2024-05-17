@@ -86,7 +86,7 @@ abstract contract GovernanceModule is IGovernance, Base, BalanceUtils, BorrowUti
     event GovSetInterestFee(uint16 newFee);
 
     modifier governorOnly() {
-        if (vaultStorage.governorAdmin != EVCAuthenticate()) revert E_Unauthorized();
+        if (vaultStorage.governorAdmin != EVCAuthenticateGovernor()) revert E_Unauthorized();
         _;
     }
 
