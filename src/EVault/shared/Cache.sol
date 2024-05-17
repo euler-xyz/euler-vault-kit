@@ -107,7 +107,7 @@ contract Cache is Storage, Errors {
                 // interest is included in the total assets during the minting process, whereas during a regular user operation, the pre-money conversion
                 // is performed.
                 // This behavior is considered safe and reduces code complexity and gas costs, while its effect is positive for
-                // regular users.
+                // regular users (unless the exchange rate is abnormally < 1)
                 uint256 newTotalAssets = vaultCache.cash.toUint() + OwedLib.toAssetsUpUint(newTotalBorrows);
                 newTotalShares = newTotalAssets * newTotalShares / (newTotalAssets - feeAssets);
                 newAccumulatedFees += newTotalShares - vaultCache.totalShares.toUint();
