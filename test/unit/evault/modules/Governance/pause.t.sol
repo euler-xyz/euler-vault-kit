@@ -2,11 +2,11 @@
 
 pragma solidity ^0.8.0;
 
-import {EVaultTestBase, EthereumVaultConnector, IEVault} from "test/unit/evault/EVaultTestBase.t.sol";
-import {Errors} from "src/EVault/shared/Errors.sol";
-import "src/EVault/shared/Constants.sol";
-import "src/EVault/shared/types/Types.sol";
-import "src/EVault/shared/Events.sol";
+import {EVaultTestBase, EthereumVaultConnector, IEVault} from "../../EVaultTestBase.t.sol";
+import {Errors} from "../../../../../src/EVault/shared/Errors.sol";
+import "../../../../../src/EVault/shared/Constants.sol";
+import "../../../../../src/EVault/shared/types/Types.sol";
+import "../../../../../src/EVault/shared/Events.sol";
 import "forge-std/Vm.sol";
 
 contract Governance_PauseOps is EVaultTestBase {

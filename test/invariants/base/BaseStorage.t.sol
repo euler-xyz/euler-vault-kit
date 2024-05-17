@@ -3,8 +3,8 @@ pragma solidity ^0.8.19;
 
 // Contracts
 import {EthereumVaultConnector} from "ethereum-vault-connector/EthereumVaultConnector.sol";
-import {ProtocolConfig} from "src/ProtocolConfig/ProtocolConfig.sol";
-import "src/EVault/shared/Constants.sol";
+import {ProtocolConfig} from "../../../src/ProtocolConfig/ProtocolConfig.sol";
+import "../../../src/EVault/shared/Constants.sol";
 
 // Mock Contracts
 import {ERC20Mock as TestERC20} from "@openzeppelin/contracts/mocks/token/ERC20Mock.sol";

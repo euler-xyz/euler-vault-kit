@@ -3,16 +3,16 @@
 pragma solidity ^0.8.0;
 
 import {EVaultTestBase} from "../../EVaultTestBase.t.sol";
-import {Events} from "src/EVault/shared/Events.sol";
-import {SafeERC20Lib} from "src/EVault/shared/lib/SafeERC20Lib.sol";
+import {Events} from "../../../../../src/EVault/shared/Events.sol";
+import {SafeERC20Lib} from "../../../../../src/EVault/shared/lib/SafeERC20Lib.sol";
 import {IRMMax} from "../../../../mocks/IRMMax.sol";
 
 import {IEVault, IRMTestDefault} from "../../EVaultTestBase.t.sol";
 
 import "forge-std/console2.sol";
 
-import "src/EVault/shared/types/Types.sol";
-import "src/EVault/shared/Constants.sol";
+import "../../../../../src/EVault/shared/types/Types.sol";
+import "../../../../../src/EVault/shared/Constants.sol";
 
 contract VaultTest_Nested is EVaultTestBase {
     using TypesLib for uint256;

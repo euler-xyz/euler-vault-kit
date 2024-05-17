@@ -2,10 +2,10 @@
 
 pragma solidity ^0.8.0;
 
-import {EVaultTestBase, EthereumVaultConnector, IEVault} from "test/unit/evault/EVaultTestBase.t.sol";
-import {Errors} from "src/EVault/shared/Errors.sol";
-import {IHookTarget} from "src/interfaces/IHookTarget.sol";
-import "src/EVault/shared/Constants.sol";
+import {EVaultTestBase, EthereumVaultConnector, IEVault} from "../../EVaultTestBase.t.sol";
+import {Errors} from "../../../../../src/EVault/shared/Errors.sol";
+import {IHookTarget} from "../../../../../src/interfaces/IHookTarget.sol";
+import "../../../../../src/EVault/shared/Constants.sol";
 
 contract MockHookTarget is IHookTarget {
     bytes32 internal expectedDataHash;

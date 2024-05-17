@@ -3,16 +3,16 @@
 pragma solidity ^0.8.0;
 
 import {EVaultTestBase} from "../../EVaultTestBase.t.sol";
-import {Events} from "src/EVault/shared/Events.sol";
-import {SafeERC20Lib} from "src/EVault/shared/lib/SafeERC20Lib.sol";
+import {Events} from "../../../../../src/EVault/shared/Events.sol";
+import {SafeERC20Lib} from "../../../../../src/EVault/shared/lib/SafeERC20Lib.sol";
 import {IAllowanceTransfer} from "permit2/src/interfaces/IAllowanceTransfer.sol";
-import {IEVault} from "src/EVault/IEVault.sol";
+import {IEVault} from "../../../../../src/EVault/IEVault.sol";
 import {TestERC20} from "../../../../mocks/TestERC20.sol";
 import {IRMTestZero} from "../../../../mocks/IRMTestZero.sol";
-import {Errors} from "src/EVault/shared/Errors.sol";
+import {Errors} from "../../../../../src/EVault/shared/Errors.sol";
 
-import "src/EVault/shared/types/Types.sol";
-import "src/EVault/shared/Constants.sol";
+import "../../../../../src/EVault/shared/types/Types.sol";
+import "../../../../../src/EVault/shared/Constants.sol";
 
 import "forge-std/Test.sol";
 

@@ -3,13 +3,13 @@
 pragma solidity ^0.8.0;
 
 import {EVaultTestBase} from "../../EVaultTestBase.t.sol";
-import {IEVault} from "src/EVault/IEVault.sol";
+import {IEVault} from "../../../../../src/EVault/IEVault.sol";
 import {TestERC20} from "../../../../mocks/TestERC20.sol";
 import {IRMTestFixed} from "../../../../mocks/IRMTestFixed.sol";
 import {IRMTestZero} from "../../../../mocks/IRMTestZero.sol";
 import {IRMTestLinear} from "../../../../mocks/IRMTestLinear.sol";
-import {DToken} from "src/EVault/DToken.sol";
-import "src/EVault/shared/types/Types.sol";
+import {DToken} from "../../../../../src/EVault/DToken.sol";
+import "../../../../../src/EVault/shared/types/Types.sol";
 
 contract VaultTest_Decimals is EVaultTestBase {
     address user1;

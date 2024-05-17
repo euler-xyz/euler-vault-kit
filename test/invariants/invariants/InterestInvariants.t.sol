@@ -3,7 +3,7 @@ pragma solidity ^0.8.19;
 
 // Contracts
 import {ERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
-import "src/EVault/shared/Constants.sol";
+import "../../../src/EVault/shared/Constants.sol";
 
 // Base Contracts
 import {HandlerAggregator} from "../HandlerAggregator.t.sol";

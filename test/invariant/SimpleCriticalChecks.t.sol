@@ -5,7 +5,7 @@ pragma solidity ^0.8.0;
 import {Test} from "forge-std/Test.sol";
 import {IEVC} from "ethereum-vault-connector/interfaces/IEthereumVaultConnector.sol";
 import {EVaultTestBase} from "../unit/evault/EVaultTestBase.t.sol";
-import {IEVault} from "src/EVault/IEVault.sol";
+import {IEVault} from "../../src/EVault/IEVault.sol";
 import {IRMTestDefault} from "../mocks/IRMTestDefault.sol";
 import {MockPriceOracle} from "../mocks/MockPriceOracle.sol";
 import "forge-std/console.sol";

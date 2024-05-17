@@ -3,7 +3,7 @@
 pragma solidity ^0.8.0;
 
 import "../evault/EVaultTestBase.t.sol";
-import {BaseProductLine} from "src/ProductLines/BaseProductLine.sol";
+import {BaseProductLine} from "../../../src/ProductLines/BaseProductLine.sol";
 
 contract ErrorThrower {
     error NoGood();

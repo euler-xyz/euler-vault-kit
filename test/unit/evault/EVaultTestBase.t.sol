@@ -4,28 +4,28 @@ pragma solidity ^0.8.13;
 import {Test, console2, stdError} from "forge-std/Test.sol";
 import {DeployPermit2} from "permit2/test/utils/DeployPermit2.sol";
 
-import {GenericFactory} from "src/GenericFactory/GenericFactory.sol";
+import {GenericFactory} from "../../../src/GenericFactory/GenericFactory.sol";
 
-import {EVault} from "src/EVault/EVault.sol";
-import {ProtocolConfig} from "src/ProtocolConfig/ProtocolConfig.sol";
+import {EVault} from "../../../src/EVault/EVault.sol";
+import {ProtocolConfig} from "../../../src/ProtocolConfig/ProtocolConfig.sol";
 
-import {Dispatch} from "src/EVault/Dispatch.sol";
+import {Dispatch} from "../../../src/EVault/Dispatch.sol";
 
-import {Initialize} from "src/EVault/modules/Initialize.sol";
-import {Token} from "src/EVault/modules/Token.sol";
-import {Vault} from "src/EVault/modules/Vault.sol";
-import {Borrowing} from "src/EVault/modules/Borrowing.sol";
-import {Liquidation} from "src/EVault/modules/Liquidation.sol";
-import {BalanceForwarder} from "src/EVault/modules/BalanceForwarder.sol";
-import {Governance} from "src/EVault/modules/Governance.sol";
-import {RiskManager} from "src/EVault/modules/RiskManager.sol";
+import {Initialize} from "../../../src/EVault/modules/Initialize.sol";
+import {Token} from "../../../src/EVault/modules/Token.sol";
+import {Vault} from "../../../src/EVault/modules/Vault.sol";
+import {Borrowing} from "../../../src/EVault/modules/Borrowing.sol";
+import {Liquidation} from "../../../src/EVault/modules/Liquidation.sol";
+import {BalanceForwarder} from "../../../src/EVault/modules/BalanceForwarder.sol";
+import {Governance} from "../../../src/EVault/modules/Governance.sol";
+import {RiskManager} from "../../../src/EVault/modules/RiskManager.sol";
 
-import {IEVault, IERC20} from "src/EVault/IEVault.sol";
-import {TypesLib} from "src/EVault/shared/types/Types.sol";
-import {Base} from "src/EVault/shared/Base.sol";
+import {IEVault, IERC20} from "../../../src/EVault/IEVault.sol";
+import {TypesLib} from "../../../src/EVault/shared/types/Types.sol";
+import {Base} from "../../../src/EVault/shared/Base.sol";
 
-import {Core} from "src/ProductLines/Core.sol";
-import {Escrow} from "src/ProductLines/Escrow.sol";
+import {Core} from "../../../src/ProductLines/Core.sol";
+import {Escrow} from "../../../src/ProductLines/Escrow.sol";
 
 import {EthereumVaultConnector} from "ethereum-vault-connector/EthereumVaultConnector.sol";
 
@@ -33,12 +33,12 @@ import {TestERC20} from "../../mocks/TestERC20.sol";
 import {MockBalanceTracker} from "../../mocks/MockBalanceTracker.sol";
 import {MockPriceOracle} from "../../mocks/MockPriceOracle.sol";
 import {IRMTestDefault} from "../../mocks/IRMTestDefault.sol";
-import {IHookTarget} from "src/interfaces/IHookTarget.sol";
+import {IHookTarget} from "../../../src/interfaces/IHookTarget.sol";
 
 import {AssertionsCustomTypes} from "../../helpers/AssertionsCustomTypes.sol";
 import "./InvariantOverrides.sol";
 
-import "src/EVault/shared/Constants.sol";
+import "../../../src/EVault/shared/Constants.sol";
 
 contract EVaultTestBase is AssertionsCustomTypes, Test, DeployPermit2 {
     EthereumVaultConnector public evc;

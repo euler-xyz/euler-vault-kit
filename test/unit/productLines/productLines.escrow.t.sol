@@ -2,7 +2,7 @@
 
 pragma solidity ^0.8.0;
 
-import "src/ProductLines/Escrow.sol";
+import "../../../src/ProductLines/Escrow.sol";
 import "../evault/EVaultTestBase.t.sol";
 
 contract ProductLine_Escrow is EVaultTestBase {

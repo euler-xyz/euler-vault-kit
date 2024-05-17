@@ -3,14 +3,14 @@
 pragma solidity ^0.8.0;
 
 import {EVaultTestBase, Test} from "../../EVaultTestBase.t.sol";
-import {Events} from "src/EVault/shared/Events.sol";
+import {Events} from "../../../../../src/EVault/shared/Events.sol";
 
 import {console2} from "forge-std/Test.sol";
 
 import {IEVault} from "../../EVaultTestBase.t.sol";
 
-import "src/EVault/shared/types/Types.sol";
-import "src/EVault/shared/Constants.sol";
+import "../../../../../src/EVault/shared/types/Types.sol";
+import "../../../../../src/EVault/shared/Constants.sol";
 
 // From Borrowing.sol
 /// @notice Definition of callback method that flashLoan will invoke on your contract

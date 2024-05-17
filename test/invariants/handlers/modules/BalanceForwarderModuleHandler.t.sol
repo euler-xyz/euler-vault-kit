@@ -6,7 +6,7 @@ import {Actor} from "../../utils/Actor.sol";
 import {BaseHandler} from "../../base/BaseHandler.t.sol";
 
 // Interfaces
-import {IBalanceForwarder} from "src/EVault/IEVault.sol";
+import {IBalanceForwarder} from "../../../../src/EVault/IEVault.sol";
 
 /// @title BalanceForwarderModuleHandler
 /// @notice Handler test contract for the risk balance forwarder module actions

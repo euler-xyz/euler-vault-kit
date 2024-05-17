@@ -3,8 +3,8 @@
 pragma solidity ^0.8.0;
 
 import {EVaultTestBase} from "../../EVaultTestBase.t.sol";
-import {Events} from "src/EVault/shared/Events.sol";
-import {SafeERC20Lib} from "src/EVault/shared/lib/SafeERC20Lib.sol";
+import {Events} from "../../../../../src/EVault/shared/Events.sol";
+import {SafeERC20Lib} from "../../../../../src/EVault/shared/lib/SafeERC20Lib.sol";
 import {IAllowanceTransfer} from "permit2/src/interfaces/IAllowanceTransfer.sol";
 import {IRMMax} from "../../../../mocks/IRMMax.sol";
 import {IRMTestFixed} from "../../../../mocks/IRMTestFixed.sol";

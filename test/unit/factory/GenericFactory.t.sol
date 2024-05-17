@@ -2,7 +2,7 @@
 pragma solidity ^0.8.13;
 
 import {Test, console2, stdError} from "forge-std/Test.sol";
-import {GenericFactory} from "src/GenericFactory/GenericFactory.sol";
+import {GenericFactory} from "../../../src/GenericFactory/GenericFactory.sol";
 
 import {MockEVault} from "../../mocks/MockEVault.sol";
 import {TestERC20} from "../../mocks/TestERC20.sol";

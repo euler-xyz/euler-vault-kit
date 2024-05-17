@@ -2,8 +2,8 @@
 
 pragma solidity ^0.8.0;
 
-import {EVaultTestBase} from "test/unit/evault/EVaultTestBase.t.sol";
-import {Errors} from "src/EVault/shared/Errors.sol";
+import {EVaultTestBase} from "../../EVaultTestBase.t.sol";
+import {Errors} from "../../../../../src/EVault/shared/Errors.sol";
 
 contract Governance_SetSymbol is EVaultTestBase {
     address notGovernor;

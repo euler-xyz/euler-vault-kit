@@ -3,13 +3,13 @@
 pragma solidity ^0.8.0;
 
 import {EVaultTestBase} from "../../EVaultTestBase.t.sol";
-import {Events} from "src/EVault/shared/Events.sol";
-import {SafeERC20Lib} from "src/EVault/shared/lib/SafeERC20Lib.sol";
+import {Events} from "../../../../../src/EVault/shared/Events.sol";
+import {SafeERC20Lib} from "../../../../../src/EVault/shared/lib/SafeERC20Lib.sol";
 import {Permit2ECDSASigner} from "../../../../mocks/Permit2ECDSASigner.sol";
 import {IAllowanceTransfer} from "permit2/src/interfaces/IAllowanceTransfer.sol";
 import {IEVC} from "ethereum-vault-connector/interfaces/IEthereumVaultConnector.sol";
 
-import "src/EVault/shared/types/Types.sol";
+import "../../../../../src/EVault/shared/types/Types.sol";
 
 contract VaultTest_Deposit is EVaultTestBase {
     using TypesLib for uint256;

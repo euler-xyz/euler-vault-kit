@@ -3,14 +3,14 @@
 pragma solidity ^0.8.0;
 
 import {EVaultTestBase} from "../../EVaultTestBase.t.sol";
-import {Events} from "src/EVault/shared/Events.sol";
-import {SafeERC20Lib} from "src/EVault/shared/lib/SafeERC20Lib.sol";
+import {Events} from "../../../../../src/EVault/shared/Events.sol";
+import {SafeERC20Lib} from "../../../../../src/EVault/shared/lib/SafeERC20Lib.sol";
 import {IAllowanceTransfer} from "permit2/src/interfaces/IAllowanceTransfer.sol";
 
 import {console} from "forge-std/Test.sol";
 
-import "src/EVault/shared/types/Types.sol";
-import "src/EVault/shared/Constants.sol";
+import "../../../../../src/EVault/shared/types/Types.sol";
+import "../../../../../src/EVault/shared/Constants.sol";
 
 contract LiquidationUnitTest is EVaultTestBase {
     using TypesLib for uint256;

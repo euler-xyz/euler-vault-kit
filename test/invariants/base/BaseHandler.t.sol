@@ -4,7 +4,7 @@ pragma solidity ^0.8.19;
 // Libraries
 import {EnumerableSet} from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import {TestERC20} from "test/mocks/TestERC20.sol";
+import {TestERC20} from "../../mocks/TestERC20.sol";
 
 // Contracts
 import {Actor} from "../utils/Actor.sol";

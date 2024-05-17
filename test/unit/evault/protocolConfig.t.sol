@@ -2,12 +2,12 @@
 
 pragma solidity ^0.8.0;
 
-import {EVaultTestBase, ProtocolConfig} from "test/unit/evault/EVaultTestBase.t.sol";
-import {Errors} from "src/EVault/shared/Errors.sol";
-import {GovernanceModule} from "src/EVault/modules/Governance.sol";
-import "src/EVault/modules/Governance.sol";
-import "src/EVault/shared/Constants.sol";
-import "src/EVault/shared/types/Types.sol";
+import {EVaultTestBase, ProtocolConfig} from "./EVaultTestBase.t.sol";
+import {Errors} from "../../../src/EVault/shared/Errors.sol";
+import {GovernanceModule} from "../../../src/EVault/modules/Governance.sol";
+import "../../../src/EVault/modules/Governance.sol";
+import "../../../src/EVault/shared/Constants.sol";
+import "../../../src/EVault/shared/types/Types.sol";
 
 uint16 constant DEFAULT_INTEREST_FEE = 0.1e4;
 

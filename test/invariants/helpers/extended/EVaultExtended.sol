@@ -2,10 +2,10 @@
 pragma solidity ^0.8.0;
 
 // Contracts
-import {EVault} from "src/EVault/EVault.sol";
+import {EVault} from "../../../../src/EVault/EVault.sol";
 
 // Types
-import {Snapshot} from "src/EVault/shared/types/Types.sol";
+import {Snapshot} from "../../../../src/EVault/shared/types/Types.sol";
 
 contract EVaultExtended is EVault {
     constructor(Integrations memory integrations, DeployedModules memory modules) EVault(integrations, modules) {}

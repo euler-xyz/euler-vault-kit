@@ -9,7 +9,7 @@ import {Actor} from "../../utils/Actor.sol";
 import {BaseHandler} from "../../base/BaseHandler.t.sol";
 
 // Interfaces
-import {IGovernance} from "src/EVault/IEVault.sol";
+import {IGovernance} from "../../../../src/EVault/IEVault.sol";
 
 /// @title GovernanceModuleHandler
 /// @notice Handler test contract for the governance module actions

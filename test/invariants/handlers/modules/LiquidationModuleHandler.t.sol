@@ -6,7 +6,7 @@ import {Actor} from "../../utils/Actor.sol";
 import {BaseHandler} from "../../base/BaseHandler.t.sol";
 
 // Interfaces
-import {ILiquidation} from "src/EVault/IEVault.sol";
+import {ILiquidation} from "../../../../src/EVault/IEVault.sol";
 
 /// @title LiquidationModuleHandler
 /// @notice Handler test contract for the VaultRegularBorrowable actions
