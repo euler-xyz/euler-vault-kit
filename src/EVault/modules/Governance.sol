@@ -60,8 +60,8 @@ abstract contract GovernanceModule is IGovernance, Base, BalanceUtils, BorrowUti
     event GovSetInterestRateModel(address newInterestRateModel);
 
     /// @notice Set a maximum liquidation discount
-    /// @param newLiquidationDiscount The new maximum liquidation discount in 1e4 scale
-    event GovSetMaxLiquidationDiscount(uint16 newLiquidationDiscount);
+    /// @param newDiscount The new maximum liquidation discount in 1e4 scale
+    event GovSetMaxLiquidationDiscount(uint16 newDiscount);
 
     /// @notice Set a new liquidation cool off time, which must elapse after successful account status check, before account can be liquidated
     /// @param newCoolOffTime The new liquidation cool off time in seconds
