@@ -101,6 +101,13 @@ contract Cache is Storage, Errors {
                 / (uint256(CONFIG_SCALE) << INTERNAL_DEBT_PRECISION_SHIFT);
 
             if (feeAssets != 0) {
+                // Fee shares are minted at a slightly worse price than user deposits (unless the exchange rate of shares to assets is < 1,
+                // which is only possible in an extreme case of large debt socialization).
+                // The discrepancy arises because, firstly, the virtual deposit is not accounted for, and secondly, all new
+                // interest is included in the total assets during the minting process, whereas during a regular user operation, the pre-money conversion
+                // is performed.
+                // This behavior is considered safe and reduces code complexity and gas costs, while its effect is positive for
+                // regular users (unless the exchange rate is abnormally < 1)
                 uint256 newTotalAssets = vaultCache.cash.toUint() + OwedLib.toAssetsUpUint(newTotalBorrows);
                 newTotalShares = newTotalAssets * newTotalShares / (newTotalAssets - feeAssets);
                 newAccumulatedFees += newTotalShares - vaultCache.totalShares.toUint();
