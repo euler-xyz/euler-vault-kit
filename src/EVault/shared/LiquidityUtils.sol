@@ -64,8 +64,7 @@ abstract contract LiquidityUtils is BorrowUtils, LTVUtils {
 
             if (!isRecognizedCollateral(collateral)) continue;
 
-            uint256 balance = IERC20(collateral).balanceOf(account);
-            if (balance > 0) return false;
+            if (IERC20(collateral).balanceOf(account) > 0) return false;
         }
 
         return true;
