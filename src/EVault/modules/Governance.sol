@@ -255,6 +255,15 @@ abstract contract GovernanceModule is IGovernance, Base, BalanceUtils, BorrowUti
     }
 
     /// @inheritdoc IGovernance
+    /// @dev When the collateral asset is no longer deemed suitable to sustain debt (and not because of code issues, see `clearLTV`),
+    /// its LTV setting can be set to 0. Setting a zero liquidation LTV also enforces a zero borrowing LTV (`newBorrowLTV <= newLiquidationLTV`).
+    /// In such cases, the collateral becomes immediately ineffective for new borrows. However, for liquidation purposes, the LTV can be ramped down
+    /// over a period of time (`rampDuration`). This ramping helps users avoid hard liquidations with maximum discounts and gives them a chance to
+    /// close their positions in an orderly fashion. The choice of `rampDuration` depends on market conditions assessed by the governor.
+    /// They may decide to forgo the ramp entirely by setting the duration to zero, presumably in light of extreme market conditions, where ramping
+    /// would pose a threat to the vault's solvency.
+    /// In any case, when the liquidation LTV reaches its target of 0, this asset will no longer support the debt, but it will still be possible to
+    /// liquidate it at a discount and use the proceeds to repay an unhealthy loan.
     function setLTV(address collateral, uint16 borrowLTV, uint16 liquidationLTV, uint32 rampDuration)
         public
         virtual
