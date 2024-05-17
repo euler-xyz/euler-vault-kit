@@ -27,6 +27,7 @@ abstract contract LiquidationModule is ILiquidation, Base, BalanceUtils, Liquidi
     }
 
     /// @inheritdoc ILiquidation
+    /// @dev The function will not revert if the account is healthy and return (0, 0)
     function checkLiquidation(address liquidator, address violator, address collateral)
         public
         view
