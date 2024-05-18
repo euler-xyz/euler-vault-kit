@@ -449,6 +449,7 @@ interface IGovernance {
 
     /// @notice Set a new governor address
     /// @param newGovernorAdmin The new governor address
+    /// @dev Set to zero address to renounce privileges and make the vault non-governed
     function setGovernorAdmin(address newGovernorAdmin) external;
 
     /// @notice Set a new governor fee receiver address
