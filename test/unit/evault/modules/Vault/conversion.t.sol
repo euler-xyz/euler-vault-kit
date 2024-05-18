@@ -387,14 +387,13 @@ contract VaultTest_Conversion is EVaultTestBase {
     }
 
     function testFuzz_maxDeposit(uint256 cash, uint256 shares, uint256 borrows, uint16 supplyCap) public {
-        cash = bound(cash, 1, MAX_SANE_AMOUNT);
-        borrows = bound(borrows, 0, MAX_SANE_AMOUNT);
-        vm.assume(cash + borrows <= MAX_SANE_AMOUNT);
-        uint256 totalAssets = cash + borrows;
-
-        shares = bound(shares, totalAssets, MAX_SANE_AMOUNT);
         uint256 supplyCapAmount = AmountCap.wrap(supplyCap).resolve();
-        vm.assume(supplyCapAmount > shares && supplyCapAmount <= MAX_SANE_AMOUNT);
+        vm.assume(supplyCapAmount > 0 && supplyCapAmount <= MAX_SANE_AMOUNT);
+
+        cash = bound(cash, 1, supplyCapAmount);
+        borrows = bound(borrows, 0, supplyCapAmount - cash);
+
+        shares = bound(shares, cash + borrows, MAX_SANE_AMOUNT);
 
         startHoax(address(this));
         eTST0.setCaps(supplyCap, 0);
