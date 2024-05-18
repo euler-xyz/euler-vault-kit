@@ -92,7 +92,6 @@ contract GenericFactory is MetaProxyDeployer {
         _;
     }
 
-    /// @dev For non upgradeable factories, set zero address as the admin
     constructor(address admin) {
         emit Genesis();
 
@@ -156,8 +155,10 @@ contract GenericFactory is MetaProxyDeployer {
 
     /// @notice Transfer admin rights to a new address
     /// @param newUpgradeAdmin Address of the new admin
+    /// @dev For creating non upgradeable factories, or to finalize all upgradeable proxies to current implementation,
+    /// @dev set the admin to zero address.
+    /// @dev If setting to address zero, make sure the implementation contract is already set
     function setUpgradeAdmin(address newUpgradeAdmin) external nonReentrant adminOnly {
-        if (newUpgradeAdmin == address(0)) revert E_BadAddress();
         upgradeAdmin = newUpgradeAdmin;
         emit SetUpgradeAdmin(newUpgradeAdmin);
     }
