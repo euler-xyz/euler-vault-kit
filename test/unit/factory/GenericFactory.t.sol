@@ -278,14 +278,9 @@ contract FactoryTest is Test {
         factory.createProxy(address(0), true, abi.encodePacked(address(asset)));
     }
 
-    function test_RevertIfBadAddress() public {
-        vm.prank(upgradeAdmin);
+    function test_RevertIfWrongAdminInConstructor() public {
         vm.expectRevert(GenericFactory.E_BadAddress.selector);
-        factory.setImplementation(address(0));
-
-        vm.prank(upgradeAdmin);
-        vm.expectRevert(GenericFactory.E_BadAddress.selector);
-        factory.setUpgradeAdmin(address(0));
+        new GenericFactory(address(0));
     }
 
     function test_RevertIfErrorList_GetEVaultsList() public {
