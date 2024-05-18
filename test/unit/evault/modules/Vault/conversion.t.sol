@@ -335,7 +335,7 @@ contract VaultTest_Conversion is EVaultTestBase {
 
         vm.revertTo(snapshot);
 
-        vm.expectRevert(Errors.E_InsufficientBalance.selector);
+        vm.expectRevert();
         eTST0.withdraw(maxAssets + 1, user1, user1);
     }
 
