@@ -72,7 +72,8 @@ contract EulerSavingsRate is EVCUtil, ERC4626 {
     function maxRedeem(address owner) public view override returns (uint256) {
         // If account has borrows, withdrawal might be reverted by the controller during account status checks.
         // The collateral vault has no way to verify or enforce the behaviour of the controller, which the account owner
-        // has enabled. It will therefore assume that all of the assets would be withheld by the controller and
+        // The vault has no way to verify or enforce the behaviour of the controller, which the account owner
+        // has enabled. It will therefore assume that all of the assets would be witheld by the controller and
         // under-estimate the return amount to zero.
         // Integrators who handle borrowing should implement custom logic to work with the particular controllers
         // they want to support.
@@ -86,7 +87,8 @@ contract EulerSavingsRate is EVCUtil, ERC4626 {
     function maxWithdraw(address owner) public view override returns (uint256) {
         // If account has borrows, withdrawal might be reverted by the controller during account status checks.
         // The collateral vault has no way to verify or enforce the behaviour of the controller, which the account owner
-        // has enabled. It will therefore assume that all of the assets would be withheld by the controller and
+        // The vault has no way to verify or enforce the behaviour of the controller, which the account owner
+        // has enabled. It will therefore assume that all of the assets would be witheld by the controller and
         // under-estimate the return amount to zero.
         // Integrators who handle borrowing should implement custom logic to work with the particular controllers
         // they want to support.
