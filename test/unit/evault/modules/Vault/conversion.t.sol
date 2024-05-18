@@ -513,15 +513,7 @@ contract VaultTest_Conversion is EVaultTestBase {
 
         uint256 maxValue = eTST0.maxRedeem(user1);
 
-        uint256 predictedAssets = eTST0.convertToAssets(maxValue);
-
         startHoax(user1);
-
-        if (predictedAssets == 0) {
-            vm.expectRevert(Errors.E_ZeroAssets.selector);
-            eTST0.redeem(maxValue, user1, user1);
-            return;
-        }
 
         uint256 snapshot = vm.snapshot();
 
@@ -529,7 +521,46 @@ contract VaultTest_Conversion is EVaultTestBase {
 
         vm.revertTo(snapshot);
 
-        vm.expectRevert(Errors.E_InsufficientBalance.selector);
+        vm.expectRevert();
         eTST0.redeem(maxValue + 1, user1, user1);
+    }
+
+    function testFuzz_maxRedeemZeroAssets() public {
+        uint256 cash = 0;
+        uint256 shares = 0;
+        uint256 borrows = 2;
+        uint256 deposit = 0;
+
+        cash = bound(cash, 1, MAX_SANE_AMOUNT - 1);
+        borrows = bound(borrows, 0, MAX_SANE_AMOUNT);
+        vm.assume(cash + borrows <= MAX_SANE_AMOUNT);
+        shares = bound(shares, cash + borrows, MAX_SANE_AMOUNT);
+        deposit = bound(deposit, 1, cash);
+
+        startHoax(user1);
+        assetTST.mint(user1, deposit);
+        assetTST.mint(address(eTST0), type(uint256).max - deposit);
+        assetTST.approve(address(eTST0), type(uint256).max);
+        eTST0.deposit(deposit, user1);
+
+        startHoax(address(this));
+        eTST0.setCash_(cash);
+        eTST0.setTotalShares_(shares);
+        eTST0.setTotalBorrow_(borrows);
+
+        assertEq(eTST0.totalBorrowsExact(), borrows);
+        assertEq(eTST0.cash(), cash);
+        assertEq(eTST0.totalSupply(), shares);
+        assertEq(eTST0.balanceOf(user1), deposit);
+
+        // borrows exact = 2, total borrows rounded up = 1
+        // cash = 1
+        // total supply = 3
+        // => exchange rate = 2 / 3 < 1
+        // deposit = 1
+        // => balance = 1, but trying to withdraw it would round down to 0, throwing with E_ZeroAssetsS
+
+        assertEq(0, eTST0.maxRedeem(user1));
+        assertEq(0, eTST0.maxWithdraw(user1));
     }
 }

@@ -77,7 +77,7 @@ abstract contract VaultModule is IVault, Base, AssetTransfers, BalanceUtils {
 
         return isOperationDisabled(vaultCache.hookedOps, OP_WITHDRAW)
             ? 0
-            : maxRedeemInternal(owner).toAssetsDown(vaultCache).toUint();
+            : maxRedeemInternal(vaultCache, owner).toAssetsDown(vaultCache).toUint();
     }
 
     /// @inheritdoc IERC4626
@@ -88,7 +88,12 @@ abstract contract VaultModule is IVault, Base, AssetTransfers, BalanceUtils {
 
     /// @inheritdoc IERC4626
     function maxRedeem(address owner) public view virtual nonReentrantView returns (uint256) {
-        return isOperationDisabled(vaultStorage.hookedOps, OP_REDEEM) ? 0 : maxRedeemInternal(owner).toUint();
+        VaultCache memory vaultCache = loadVault();
+        if (isOperationDisabled(vaultStorage.hookedOps, OP_REDEEM)) return 0;
+
+        Shares max = maxRedeemInternal(vaultCache, owner);
+        // if shares round down to zero, redeem reverts with E_ZeroAssets
+        return max.toAssetsDown(vaultCache).toUint() == 0 ? 0 : max.toUint();
     }
 
     /// @inheritdoc IERC4626
@@ -224,7 +229,7 @@ abstract contract VaultModule is IVault, Base, AssetTransfers, BalanceUtils {
         pushAssets(vaultCache, receiver, assets);
     }
 
-    function maxRedeemInternal(address owner) private view returns (Shares) {
+    function maxRedeemInternal(VaultCache memory vaultCache, address owner) private view returns (Shares) {
         Shares max = vaultStorage.users[owner].getBalance();
 
         // If account has borrows, withdrawal might be reverted by the controller during account status checks.
@@ -234,8 +239,6 @@ abstract contract VaultModule is IVault, Base, AssetTransfers, BalanceUtils {
         // Integrators who handle borrowing should implement custom logic to work with the particular controllers
         // they want to support.
         if (max.isZero() || hasAnyControllerEnabled(owner)) return Shares.wrap(0);
-
-        VaultCache memory vaultCache = loadVault();
 
         Shares cash = vaultCache.cash.toSharesDown(vaultCache);
         max = max > cash ? cash : max;
