@@ -378,7 +378,7 @@ interface IGovernance {
     /// @return borrowCap The borrow cap in AmountCap format
     function caps() external view returns (uint16 supplyCap, uint16 borrowCap);
 
-    /// @notice Retrieves the borrow LTV of the collateral, which is used to determine if the account is healthy when originating a position
+    /// @notice Retrieves the borrow LTV of the collateral, which is used to determine if the account is healthy during account status checks.
     /// @param collateral The address of the collateral to query
     /// @return Borrowing LTV in 1e4 scale
     function LTVBorrow(address collateral) external view returns (uint16);
@@ -458,7 +458,7 @@ interface IGovernance {
 
     /// @notice Set a new LTV config
     /// @param collateral Address of collateral to set LTV for
-    /// @param borrowLTV New borrow LTV for originating positions in 1e4 scale
+    /// @param borrowLTV New borrow LTV, for assessing account's health during account status checks, in 1e4 scale
     /// @param liquidationLTV New liquidation LTV after ramp ends in 1e4 scale
     /// @param rampDuration Ramp duration in seconds
     function setLTV(address collateral, uint16 borrowLTV, uint16 liquidationLTV, uint32 rampDuration) external;
@@ -469,10 +469,12 @@ interface IGovernance {
 
     /// @notice Set a new maximum liquidation discount
     /// @param newDiscount New maximum liquidation discount in 1e4 scale
+    /// @dev If the discount is zero (the default), the liquidators will not be incentivized to liquidate unhealthy accounts
     function setMaxLiquidationDiscount(uint16 newDiscount) external;
 
     /// @notice Set a new liquidation cool off time, which must elapse after successful account status check before account can be liquidated
     /// @param newCoolOffTime The new liquidation cool off time in seconds
+    /// @dev Setting cool off time to zero allows liquidating the account in the same block as the last successful account status check
     function setLiquidationCoolOffTime(uint16 newCoolOffTime) external;
 
     /// @notice Set a new interest rate model contract
