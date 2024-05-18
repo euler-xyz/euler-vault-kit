@@ -422,7 +422,7 @@ contract VaultTest_Caps is EVaultTestBase {
             bound(supplyCapNow & 63, 0, supplyCapOrig & 63) | bound(supplyCapNow >> 6, 0, supplyCapOrig >> 6) << 6
         );
         vm.assume(supplyCapOrig != supplyCapNow);
-        
+
         uint256 supplyCapNewAmount = AmountCap.wrap(supplyCapNow).resolve();
         vm.assume(supplyCapNewAmount != 0 && supplyCapNewAmount < supplyCapOrigAmount);
 
