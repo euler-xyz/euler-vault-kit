@@ -46,11 +46,13 @@ abstract contract VaultModule is IVault, Base, AssetTransfers, BalanceUtils {
     /// @inheritdoc IERC4626
     function maxDeposit(address account) public view virtual nonReentrantView returns (uint256) {
         VaultCache memory vaultCache = loadVault();
+        if (isOperationDisabled(vaultCache.hookedOps, OP_DEPOSIT)) return 0;
 
-        // The result may underestimate due to rounding
-        return isOperationDisabled(vaultCache.hookedOps, OP_DEPOSIT)
-            ? 0
-            : maxMintInternal(vaultCache, account).toAssetsDown(vaultCache).toUint();
+        // the result may underestimate due to rounding
+        Assets max = maxMintInternal(vaultCache, account).toAssetsDown(vaultCache);
+
+        // if assets round down to zero, deposit reverts with E_ZeroShares
+        return max.toSharesDown(vaultCache).toUint() == 0 ? 0 : max.toUint();
     }
 
     /// @inheritdoc IERC4626

@@ -563,4 +563,35 @@ contract VaultTest_Conversion is EVaultTestBase {
         assertEq(0, eTST0.maxRedeem(user1));
         assertEq(0, eTST0.maxWithdraw(user1));
     }
+
+    function testFuzz_maxDepositZeroShares() public {
+        uint256 cash = MAX_SANE_AMOUNT / 4 * 3;
+        uint256 shares = MAX_SANE_AMOUNT - 1;
+        uint256 borrows = (MAX_SANE_AMOUNT << INTERNAL_DEBT_PRECISION_SHIFT) / 4 * 3;
+        uint256 deposit = 0;
+
+        startHoax(user1);
+        assetTST.mint(user1, deposit);
+        assetTST.mint(address(eTST0), type(uint256).max - deposit);
+        assetTST.approve(address(eTST0), type(uint256).max);
+        eTST0.deposit(deposit, user1);
+
+        startHoax(address(this));
+        eTST0.setCash_(cash);
+        eTST0.setTotalShares_(shares);
+        eTST0.setTotalBorrow_(borrows);
+
+        assertEq(eTST0.totalBorrowsExact(), borrows);
+        assertEq(eTST0.cash(), cash);
+        assertEq(eTST0.totalSupply(), shares);
+        assertEq(eTST0.balanceOf(user1), deposit);
+
+        assertEq(eTST0.maxMint(user1), 1);
+
+        // max mint = 1, to assets:  floor(1.5 / 1) = 1, to shares: floor(1 / 1.5) = 0
+        // trying to deposit 1 asset would round shares down to zero and revert with E_ZeroShares
+        assertEq(eTST0.maxDeposit(user1), 0);
+
+        eTST0.deposit(0, user1);
+    }
 }
