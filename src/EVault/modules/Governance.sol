@@ -17,7 +17,7 @@ import "../shared/types/Types.sol";
 /// @custom:security-contact security@euler.xyz
 /// @author Euler Labs (https://www.eulerlabs.com/)
 /// @notice An EVault module handling governance, including configuration and fees
-abstract contract GovernanceModule is IGovernance, Base, BalanceUtils, BorrowUtils, LTVUtils {
+abstract contract GovernanceModule is IGovernance, BalanceUtils, BorrowUtils, LTVUtils {
     using TypesLib for uint16;
 
     // Protocol guarantees for the governor
