@@ -239,6 +239,7 @@ contract VaultTest_Caps is EVaultTestBase {
     {
         setUpCollateral();
         setUpOverSupplyCap(supplyCapOrig, supplyCapNow);
+        (supplyCapNow,) = eTST.caps();
         amount = bound(amount, 1, AmountCap.wrap(supplyCapNow).resolve());
         uint256 snapshot = vm.snapshot();
 
@@ -415,9 +416,15 @@ contract VaultTest_Caps is EVaultTestBase {
 
     function setUpOverSupplyCap(uint16 supplyCapOrig, uint16 supplyCapNow) internal {
         uint256 supplyCapOrigAmount = AmountCap.wrap(supplyCapOrig).resolve();
-        uint256 supplyCapNowAmount = AmountCap.wrap(supplyCapNow).resolve();
         vm.assume(supplyCapOrigAmount > 1 && supplyCapOrigAmount <= MAX_SANE_AMOUNT);
-        vm.assume(supplyCapNowAmount != 0 && supplyCapNowAmount < supplyCapOrigAmount);
+
+        supplyCapNow = uint16(
+            bound(supplyCapNow & 63, 0, supplyCapOrig & 63) | bound(supplyCapNow >> 6, 0, supplyCapOrig >> 6) << 6
+        );
+        vm.assume(supplyCapOrig != supplyCapNow);
+
+        uint256 supplyCapNewAmount = AmountCap.wrap(supplyCapNow).resolve();
+        vm.assume(supplyCapNewAmount != 0 && supplyCapNewAmount < supplyCapOrigAmount);
 
         eTST.setCaps(supplyCapOrig, 0);
         vm.prank(user1);
@@ -457,9 +464,15 @@ contract VaultTest_Caps is EVaultTestBase {
 
     function setUpOverBorrowCap(uint16 borrowCapOrig, uint16 borrowCapNow) internal {
         uint256 borrowCapOrigAmount = AmountCap.wrap(borrowCapOrig).resolve();
-        uint256 borrowCapNowAmount = AmountCap.wrap(borrowCapNow).resolve();
         vm.assume(borrowCapOrigAmount > 1 && borrowCapOrigAmount <= MAX_SANE_AMOUNT);
-        vm.assume(borrowCapNowAmount != 0 && borrowCapNowAmount < borrowCapOrigAmount);
+
+        borrowCapNow = uint16(
+            bound(borrowCapNow & 63, 0, borrowCapOrig & 63) | bound(borrowCapNow >> 6, 0, borrowCapOrig >> 6) << 6
+        );
+        vm.assume(borrowCapOrig != borrowCapNow);
+
+        uint256 borrowCapNewAmount = AmountCap.wrap(borrowCapNow).resolve();
+        vm.assume(borrowCapNewAmount != 0 && borrowCapNewAmount < borrowCapOrigAmount);
 
         setUpCollateral();
 
