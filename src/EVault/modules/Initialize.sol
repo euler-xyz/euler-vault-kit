@@ -17,7 +17,7 @@ import "../shared/types/Types.sol";
 /// @custom:security-contact security@euler.xyz
 /// @author Euler Labs (https://www.eulerlabs.com/)
 /// @notice An EVault module implementing the initialization of the new vault contract
-abstract contract InitializeModule is IInitialize, Base, BorrowUtils {
+abstract contract InitializeModule is IInitialize, BorrowUtils {
     using TypesLib for uint16;
 
     // Initial value of the interest accumulator: 1 ray

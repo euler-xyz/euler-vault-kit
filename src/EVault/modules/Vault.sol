@@ -15,7 +15,7 @@ import "../shared/types/Types.sol";
 /// @custom:security-contact security@euler.xyz
 /// @author Euler Labs (https://www.eulerlabs.com/)
 /// @notice An EVault module handling ERC4626 standard behaviour
-abstract contract VaultModule is IVault, Base, AssetTransfers, BalanceUtils {
+abstract contract VaultModule is IVault, AssetTransfers, BalanceUtils {
     using TypesLib for uint256;
     using SafeERC20Lib for IERC20;
 

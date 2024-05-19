@@ -13,7 +13,7 @@ import "../shared/types/Types.sol";
 /// @custom:security-contact security@euler.xyz
 /// @author Euler Labs (https://www.eulerlabs.com/)
 /// @notice An EVault module handling ERC20 behaviour of vault shares
-abstract contract TokenModule is IToken, Base, BalanceUtils {
+abstract contract TokenModule is IToken, BalanceUtils {
     using TypesLib for uint256;
 
     /// @inheritdoc IERC20

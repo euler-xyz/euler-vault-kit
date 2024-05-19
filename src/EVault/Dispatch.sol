@@ -21,7 +21,6 @@ import "./shared/Constants.sol";
 /// @author Euler Labs (https://www.eulerlabs.com/)
 /// @notice Contract which ties in the EVault modules and provides utilities for routing calls to modules and the EVC
 abstract contract Dispatch is
-    Base,
     InitializeModule,
     TokenModule,
     VaultModule,

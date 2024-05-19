@@ -13,7 +13,7 @@ import "../shared/types/Types.sol";
 /// @custom:security-contact security@euler.xyz
 /// @author Euler Labs (https://www.eulerlabs.com/)
 /// @notice An EVault module handling liquidations of unhealthy accounts
-abstract contract LiquidationModule is ILiquidation, Base, BalanceUtils, LiquidityUtils {
+abstract contract LiquidationModule is ILiquidation, BalanceUtils, LiquidityUtils {
     using TypesLib for uint256;
 
     struct LiquidationCache {
