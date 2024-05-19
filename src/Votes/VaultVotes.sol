@@ -8,10 +8,14 @@ pragma solidity ^0.8.0;
 contract VaultVotes is IBalanceTracker, Votes {
     mapping(address => uint256) public votingUnitsOf;
 
+    address public vault;
 
-    constructor(string memory name, string memory version) EIP712(name, version) { }
+    constructor(address vault_, string memory name, string memory version) EIP712(name, version) {
+        vault = vault_;
+    }
 
     function balanceTrackerHook(address account, uint256 newAccountBalance, bool forfeitRecentReward) external {
+        require(msg.sender == vault, "VaultVotes: caller is not the vault");
         uint256 votingUnits = votingUnitsOf[account];
 
         if (newAccountBalance > votingUnits) {
