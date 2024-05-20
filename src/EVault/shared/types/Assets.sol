@@ -34,7 +34,8 @@ library AssetsLib {
     function toSharesUp(Assets amount, VaultCache memory vaultCache) internal pure returns (Shares) {
         (uint256 totalAssets, uint256 totalShares) = ConversionHelpers.conversionTotals(vaultCache);
         unchecked {
-            return TypesLib.toShares((amount.toUint() * totalShares + (totalAssets - 1)) / totalAssets); // totalAssets >= VIRTUAL_DEPOSIT_AMOUNT > 1
+            // totalAssets >= VIRTUAL_DEPOSIT_AMOUNT > 1
+            return TypesLib.toShares((amount.toUint() * totalShares + (totalAssets - 1)) / totalAssets);
         }
     }
 

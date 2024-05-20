@@ -32,7 +32,8 @@ library LTVConfigLib {
         return self.targetTimestamp != 0;
     }
 
-    // Get current LTV of the collateral. When liquidation LTV is lowered, it is ramped down to the target value over a period of time.
+    // Get current LTV of the collateral. When liquidation LTV is lowered, it is ramped down to the target value over a
+    // period of time.
     function getLTV(LTVConfig memory self, bool liquidation) internal view returns (ConfigAmount) {
         if (!liquidation) {
             return self.borrowLTV;

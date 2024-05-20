@@ -41,11 +41,15 @@ abstract contract GovernanceModule is IGovernance, BalanceUtils, BorrowUtils, LT
 
     /// @notice Set new LTV configuration for a collateral
     /// @param collateral Address of the collateral
-    /// @param borrowLTV The new LTV for the collateral, used to determine health of the account during regular operations, in 1e4 scale
-    /// @param liquidationLTV The new LTV for the collateral, used to determine health of the account during liquidations, in 1e4 scale
+    /// @param borrowLTV The new LTV for the collateral, used to determine health of the account during regular
+    /// operations, in 1e4 scale
+    /// @param liquidationLTV The new LTV for the collateral, used to determine health of the account during
+    /// liquidations, in 1e4 scale
     /// @param initialLiquidationLTV The previous liquidation LTV at the moment a new configuration was set
-    /// @param targetTimestamp If the LTV is lowered, the timestamp when the ramped liquidation LTV will merge with the `targetLTV`
-    /// @param rampDuration If the LTV is lowered, duration in seconds, during which the liquidation LTV will be merging with `targetLTV`
+    /// @param targetTimestamp If the LTV is lowered, the timestamp when the ramped liquidation LTV will merge with the
+    /// `targetLTV`
+    /// @param rampDuration If the LTV is lowered, duration in seconds, during which the liquidation LTV will be merging
+    /// with `targetLTV`
     event GovSetLTV(
         address indexed collateral,
         uint16 borrowLTV,
@@ -63,7 +67,8 @@ abstract contract GovernanceModule is IGovernance, BalanceUtils, BorrowUtils, LT
     /// @param newDiscount The new maximum liquidation discount in 1e4 scale
     event GovSetMaxLiquidationDiscount(uint16 newDiscount);
 
-    /// @notice Set a new liquidation cool off time, which must elapse after successful account status check, before account can be liquidated
+    /// @notice Set a new liquidation cool off time, which must elapse after successful account status check, before
+    /// account can be liquidated
     /// @param newCoolOffTime The new liquidation cool off time in seconds
     event GovSetLiquidationCoolOffTime(uint16 newCoolOffTime);
 
@@ -230,7 +235,8 @@ abstract contract GovernanceModule is IGovernance, BalanceUtils, BorrowUtils, LT
 
         vaultStorage.accumulatedFees = vaultCache.accumulatedFees = Shares.wrap(0);
 
-        // For the Deposit events in increaseBalance the assets amount is zero - the shares are covered with the accrued interest
+        // For the Deposit events in increaseBalance the assets amount is zero - the shares are covered with the accrued
+        // interest
         if (!governorShares.isZero()) {
             increaseBalance(vaultCache, governorReceiver, address(0), governorShares, Assets.wrap(0));
         }
@@ -255,15 +261,16 @@ abstract contract GovernanceModule is IGovernance, BalanceUtils, BorrowUtils, LT
     }
 
     /// @inheritdoc IGovernance
-    /// @dev When the collateral asset is no longer deemed suitable to sustain debt (and not because of code issues, see `clearLTV`),
-    /// its LTV setting can be set to 0. Setting a zero liquidation LTV also enforces a zero borrowing LTV (`newBorrowLTV <= newLiquidationLTV`).
-    /// In such cases, the collateral becomes immediately ineffective for new borrows. However, for liquidation purposes, the LTV can be ramped down
-    /// over a period of time (`rampDuration`). This ramping helps users avoid hard liquidations with maximum discounts and gives them a chance to
-    /// close their positions in an orderly fashion. The choice of `rampDuration` depends on market conditions assessed by the governor.
-    /// They may decide to forgo the ramp entirely by setting the duration to zero, presumably in light of extreme market conditions, where ramping
-    /// would pose a threat to the vault's solvency.
-    /// In any case, when the liquidation LTV reaches its target of 0, this asset will no longer support the debt, but it will still be possible to
-    /// liquidate it at a discount and use the proceeds to repay an unhealthy loan.
+    /// @dev When the collateral asset is no longer deemed suitable to sustain debt (and not because of code issues, see
+    /// `clearLTV`), its LTV setting can be set to 0. Setting a zero liquidation LTV also enforces a zero borrowing LTV
+    /// (`newBorrowLTV <= newLiquidationLTV`). In such cases, the collateral becomes immediately ineffective for new
+    /// borrows. However, for liquidation purposes, the LTV can be ramped down over a period of time (`rampDuration`).
+    /// This ramping helps users avoid hard liquidations with maximum discounts and gives them a chance to close their
+    /// positions in an orderly fashion. The choice of `rampDuration` depends on market conditions assessed by the
+    /// governor. They may decide to forgo the ramp entirely by setting the duration to zero, presumably in light of
+    /// extreme market conditions, where ramping would pose a threat to the vault's solvency. In any case, when the
+    /// liquidation LTV reaches its target of 0, this asset will no longer support the debt, but it will still be
+    /// possible to liquidate it at a discount and use the proceeds to repay an unhealthy loan.
     function setLTV(address collateral, uint16 borrowLTV, uint16 liquidationLTV, uint32 rampDuration)
         public
         virtual

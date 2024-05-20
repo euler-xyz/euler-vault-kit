@@ -139,7 +139,8 @@ interface IERC4626 {
     /// @param amount Amount of assets to deposit (use max uint256 for full underlying token balance)
     /// @param receiver An account to receive the shares
     /// @return Amount of shares minted
-    /// @dev Deposit will round down the amount of assets that are converted to shares. To prevent losses consider using mint instead.
+    /// @dev Deposit will round down the amount of assets that are converted to shares. To prevent losses consider using
+    /// mint instead.
     function deposit(uint256 amount, address receiver) external returns (uint256);
 
     /// @notice Transfer underlying tokens from sender to the vault pool in return for requested amount of shares
@@ -182,7 +183,8 @@ interface IVault is IERC4626 {
     /// @param amount Amount of assets to claim (use max uint256 to claim all available assets)
     /// @param receiver An account to receive the shares
     /// @return Amount of shares minted
-    /// @dev Could be used as an alternative deposit flow in certain scenarios. E.g. swap directly to the vault, call `skim` to claim deposit.
+    /// @dev Could be used as an alternative deposit flow in certain scenarios. E.g. swap directly to the vault, call
+    /// `skim` to claim deposit.
     function skim(uint256 amount, address receiver) external returns (uint256);
 }
 
@@ -193,7 +195,8 @@ interface IBorrowing {
     /// @return The total borrows in asset units
     function totalBorrows() external view returns (uint256);
 
-    /// @notice Sum of all outstanding debts, in underlying units scaled up by shifting INTERNAL_DEBT_PRECISION_SHIFT bits
+    /// @notice Sum of all outstanding debts, in underlying units scaled up by shifting
+    /// INTERNAL_DEBT_PRECISION_SHIFT bits
     /// @return The total borrows in internal debt precision
     function totalBorrowsExact() external view returns (uint256);
 
@@ -206,7 +209,8 @@ interface IBorrowing {
     /// @return The debt of the account in asset units
     function debtOf(address account) external view returns (uint256);
 
-    /// @notice Debt owed by a particular account, in underlying units scaled up by shifting INTERNAL_DEBT_PRECISION_SHIFT bits
+    /// @notice Debt owed by a particular account, in underlying units scaled up by shifting
+    /// INTERNAL_DEBT_PRECISION_SHIFT bits
     /// @param account Address to query
     /// @return The debt of the account in internal precision
     function debtOfExact(address account) external view returns (uint256);
@@ -249,12 +253,15 @@ interface IBorrowing {
     /// @return Amount of debt pulled in asset units.
     function pullDebt(uint256 amount, address from) external returns (uint256);
 
-    /// @notice Request a flash-loan. A onFlashLoan() callback in msg.sender will be invoked, which must repay the loan to the main Euler address prior to returning.
+    /// @notice Request a flash-loan. A onFlashLoan() callback in msg.sender will be invoked, which must repay the loan
+    /// to the main Euler address prior to returning.
     /// @param amount In asset units
-    /// @param data Passed through to the onFlashLoan() callback, so contracts don't need to store transient data in storage
+    /// @param data Passed through to the onFlashLoan() callback, so contracts don't need to store transient data in
+    /// storage
     function flashLoan(uint256 amount, bytes calldata data) external;
 
-    /// @notice Updates interest accumulator and totalBorrows, credits reserves, re-targets interest rate, and logs vault status
+    /// @notice Updates interest accumulator and totalBorrows, credits reserves, re-targets interest rate, and logs
+    /// vault status
     function touch() external;
 }
 
@@ -266,7 +273,8 @@ interface ILiquidation {
     /// @param violator Address that may be in collateral violation
     /// @param collateral Collateral which is to be seized
     /// @return maxRepay Max amount of debt that can be repaid, in asset units
-    /// @return maxYield Yield in collateral corresponding to max allowed amount of debt to be repaid, in collateral balance (shares for vaults)
+    /// @return maxYield Yield in collateral corresponding to max allowed amount of debt to be repaid, in collateral
+    /// balance (shares for vaults)
     function checkLiquidation(address liquidator, address violator, address collateral)
         external
         view
@@ -275,8 +283,10 @@ interface ILiquidation {
     /// @notice Attempts to perform a liquidation
     /// @param violator Address that may be in collateral violation
     /// @param collateral Collateral which is to be seized
-    /// @param repayAssets The amount of underlying debt to be transferred from violator to sender, in asset units (use max uint256 to repay the maximum possible amount).
-    /// @param minYieldBalance The minimum acceptable amount of collateral to be transferred from violator to sender, in collateral balance units (shares for vaults)
+    /// @param repayAssets The amount of underlying debt to be transferred from violator to sender, in asset units (use
+    /// max uint256 to repay the maximum possible amount).
+    /// @param minYieldBalance The minimum acceptable amount of collateral to be transferred from violator to sender, in
+    /// collateral balance units (shares for vaults)
     function liquidate(address violator, address collateral, uint256 repayAssets, uint256 minYieldBalance) external;
 }
 
@@ -285,7 +295,8 @@ interface ILiquidation {
 interface IRiskManager is IEVCVault {
     /// @notice Retrieve account's total liquidity
     /// @param account Account holding debt in this vault
-    /// @param liquidation Flag to indicate if the calculation should be performed in liquidation vs account status check mode, where different LTV values might apply.
+    /// @param liquidation Flag to indicate if the calculation should be performed in liquidation vs account status
+    /// check mode, where different LTV values might apply.
     /// @return collateralValue Total risk adjusted value of all collaterals in unit of account
     /// @return liabilityValue Value of debt in unit of account
     function accountLiquidity(address account, bool liquidation)
@@ -295,9 +306,11 @@ interface IRiskManager is IEVCVault {
 
     /// @notice Retrieve account's liquidity per collateral
     /// @param account Account holding debt in this vault
-    /// @param liquidation Flag to indicate if the calculation should be performed in liquidation vs account status check mode, where different LTV values might apply.
+    /// @param liquidation Flag to indicate if the calculation should be performed in liquidation vs account status
+    /// check mode, where different LTV values might apply.
     /// @return collaterals Array of collaterals enabled
-    /// @return collateralValues Array of risk adjusted collateral values corresponding to items in collaterals array. In unit of account
+    /// @return collateralValues Array of risk adjusted collateral values corresponding to items in collaterals array.
+    /// In unit of account
     /// @return liabilityValue Value of debt in unit of account
     function accountLiquidityFull(address account, bool liquidation)
         external
@@ -309,12 +322,14 @@ interface IRiskManager is IEVCVault {
 
     /// @notice Checks the status of an account and reverts if account is not healthy
     /// @param account The address of the account to be checked
-    /// @return magicValue Must return the bytes4 magic value 0xb168c58f (which is a selector of this function) when account status is valid, or revert otherwise.
+    /// @return magicValue Must return the bytes4 magic value 0xb168c58f (which is a selector of this function) when
+    /// account status is valid, or revert otherwise.
     /// @dev Only callable by EVC during status checks
     function checkAccountStatus(address account, address[] calldata collaterals) external returns (bytes4);
 
     /// @notice Checks the status of the vault and reverts if caps are exceeded
-    /// @return magicValue Must return the bytes4 magic value 0x4b3d1223 (which is a selector of this function) when account status is valid, or revert otherwise.
+    /// @return magicValue Must return the bytes4 magic value 0x4b3d1223 (which is a selector of this function) when
+    /// account status is valid, or revert otherwise.
     /// @dev Only callable by EVC during status checks
     function checkVaultStatus() external returns (bytes4);
 }
@@ -378,12 +393,14 @@ interface IGovernance {
     /// @return borrowCap The borrow cap in AmountCap format
     function caps() external view returns (uint16 supplyCap, uint16 borrowCap);
 
-    /// @notice Retrieves the borrow LTV of the collateral, which is used to determine if the account is healthy during account status checks.
+    /// @notice Retrieves the borrow LTV of the collateral, which is used to determine if the account is healthy during
+    /// account status checks.
     /// @param collateral The address of the collateral to query
     /// @return Borrowing LTV in 1e4 scale
     function LTVBorrow(address collateral) external view returns (uint16);
 
-    /// @notice Retrieves the current liquidation LTV, which is used to determine if the account is eligible for liquidation
+    /// @notice Retrieves the current liquidation LTV, which is used to determine if the account is eligible for
+    /// liquidation
     /// @param collateral The address of the collateral to query
     /// @return Liquidation LTV in 1e4 scale
     function LTVLiquidation(address collateral) external view returns (uint16);
@@ -394,7 +411,8 @@ interface IGovernance {
     /// @return liquidationLTV The value of fully converged liquidation LTV
     /// @return initialLiquidationLTV The initial value of the liquidation LTV, when the ramp began
     /// @return targetTimestamp The timestamp when the liquidation LTV is considered fully converged
-    /// @return rampDuration The time it takes for the liquidation LTV to converge from the initial value to the fully converged value
+    /// @return rampDuration The time it takes for the liquidation LTV to converge from the initial value to the fully
+    /// converged value
     function LTVFull(address collateral)
         external
         view
@@ -415,7 +433,8 @@ interface IGovernance {
     /// @return The maximum liquidation discount in 1e4 scale
     function maxLiquidationDiscount() external view returns (uint16);
 
-    /// @notice Retrieves liquidation cool-off time, which must elapse after successful account status check before account can be liquidated
+    /// @notice Retrieves liquidation cool-off time, which must elapse after successful account status check before
+    /// account can be liquidated
     /// @return The liquidation cool off time in seconds
     function liquidationCoolOffTime() external view returns (uint16);
 
@@ -444,7 +463,8 @@ interface IGovernance {
     /// @return The address of the Permit2 contract
     function permit2Address() external view returns (address);
 
-    /// @notice Splits accrued fees balance according to protocol fee share and transfers shares to the governor fee receiver and protocol fee receiver
+    /// @notice Splits accrued fees balance according to protocol fee share and transfers shares to the governor fee
+    /// receiver and protocol fee receiver
     function convertFees() external;
 
     /// @notice Set a new governor address
@@ -463,25 +483,30 @@ interface IGovernance {
     /// @param rampDuration Ramp duration in seconds
     function setLTV(address collateral, uint16 borrowLTV, uint16 liquidationLTV, uint32 rampDuration) external;
 
-    /// @notice Completely clears LTV configuratrion, signalling the collateral is not considered safe to liquidate anymore
+    /// @notice Completely clears LTV configuratrion, signalling the collateral is not considered safe to liquidate
+    /// anymore
     /// @param collateral Address of the collateral
     function clearLTV(address collateral) external;
 
     /// @notice Set a new maximum liquidation discount
     /// @param newDiscount New maximum liquidation discount in 1e4 scale
-    /// @dev If the discount is zero (the default), the liquidators will not be incentivized to liquidate unhealthy accounts
+    /// @dev If the discount is zero (the default), the liquidators will not be incentivized to liquidate unhealthy
+    /// accounts
     function setMaxLiquidationDiscount(uint16 newDiscount) external;
 
-    /// @notice Set a new liquidation cool off time, which must elapse after successful account status check before account can be liquidated
+    /// @notice Set a new liquidation cool off time, which must elapse after successful account status check before
+    /// account can be liquidated
     /// @param newCoolOffTime The new liquidation cool off time in seconds
-    /// @dev Setting cool off time to zero allows liquidating the account in the same block as the last successful account status check
+    /// @dev Setting cool off time to zero allows liquidating the account in the same block as the last successful
+    /// account status check
     function setLiquidationCoolOffTime(uint16 newCoolOffTime) external;
 
     /// @notice Set a new interest rate model contract
     /// @param newModel The new IRM address
     function setInterestRateModel(address newModel) external;
 
-    /// @notice Set a new hook target and a new bitmap indicating which operations should call the hook target. Operations are defined in Constants.sol
+    /// @notice Set a new hook target and a new bitmap indicating which operations should call the hook target.
+    /// Operations are defined in Constants.sol
     /// @param newHookTarget The new hook target address
     /// @param newHookedOps Bitmask with the new hooked operations
     function setHookConfig(address newHookTarget, uint32 newHookedOps) external;
