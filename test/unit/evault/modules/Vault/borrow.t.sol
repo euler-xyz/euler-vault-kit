@@ -8,6 +8,9 @@ import {SafeERC20Lib} from "../../../../../src/EVault/shared/lib/SafeERC20Lib.so
 import {IAllowanceTransfer} from "permit2/src/interfaces/IAllowanceTransfer.sol";
 import {IRMMax} from "../../../../mocks/IRMMax.sol";
 import {IRMTestFixed} from "../../../../mocks/IRMTestFixed.sol";
+import {IRMFailed} from "../../../../mocks/IRMFailed.sol";
+import {IRMOverBound} from "../../../../mocks/IRMOverBound.sol";
+import {Events as EVCEvents} from "ethereum-vault-connector/Events.sol";
 import "forge-std/Test.sol";
 
 import "../../../../../src/EVault/shared/types/Types.sol";
@@ -724,6 +727,140 @@ contract VaultTest_Borrow is EVaultTestBase {
         eTST.pullDebt(2, borrower);
 
         assertEq(vm.getRecordedLogs().length, 11); // InterestAccrued would be the 12th event
+    }
+
+    function test_noIRM() public {
+        uint256 amount = 1e18;
+
+        startHoax(address(this));
+        eTST.setInterestRateModel(address(0));
+
+        assertEq(eTST.interestRateModel(), address(0));
+
+        uint256 ir = eTST.interestRate();
+        assertEq(ir, 0);
+
+        startHoax(borrower);
+        evc.enableController(borrower, address(eTST));
+        evc.enableCollateral(borrower, address(eTST2));
+
+        eTST.borrow(amount, borrower);
+
+        assertEq(eTST.debtOf(borrower), amount);
+
+        skip(100 days);
+
+        assertEq(eTST.debtOf(borrower), amount);
+    }
+
+    function test_failIRM() public {
+        uint256 amount = 1e18;
+
+        startHoax(address(this));
+        eTST.setInterestRateModel(address(new IRMFailed()));
+
+        uint256 ir = eTST.interestRate();
+        assertEq(ir, 0);
+
+        startHoax(borrower);
+        evc.enableController(borrower, address(eTST));
+        evc.enableCollateral(borrower, address(eTST2));
+
+        eTST.borrow(amount, borrower);
+
+        assertEq(eTST.debtOf(borrower), amount);
+
+        skip(100 days);
+
+        assertEq(eTST.debtOf(borrower), amount);
+    }
+
+    function test_outOfBoundIRM() public {
+        uint256 amount = 1e18;
+
+        startHoax(address(this));
+        eTST.setInterestRateModel(address(new IRMOverBound()));
+
+        uint256 ir = eTST.interestRate();
+        assertEq(ir, MAX_ALLOWED_INTEREST_RATE);
+
+        startHoax(borrower);
+        evc.enableController(borrower, address(eTST));
+        evc.enableCollateral(borrower, address(eTST2));
+
+        eTST.borrow(amount, borrower);
+
+        assertEq(eTST.debtOf(borrower), amount);
+
+        skip(100 days);
+
+        assertGt(eTST.debtOf(borrower), amount);
+    }
+
+    function test_pullDebt_noDust() public {
+        uint256 amountToBorrow = 5e18;
+
+        startHoax(borrower);
+        evc.enableCollateral(borrower, address(eTST2));
+        evc.enableController(borrower, address(eTST));
+        eTST.borrow(amountToBorrow, borrower);
+
+        assertEq(assetTST.balanceOf(borrower), amountToBorrow);
+
+        assetTST2.transfer(borrower2, 10e18);
+
+        startHoax(borrower2);
+        assetTST2.approve(address(eTST2), type(uint256).max);
+        eTST2.deposit(10e18, borrower2);
+        evc.enableCollateral(borrower2, address(eTST2));
+        evc.enableController(borrower2, address(eTST));
+
+        skip(10 days);
+
+        uint256 borrowed = eTST.debtOf(borrower);
+
+        // try to pull a little bit more than owed
+        vm.expectRevert(Errors.E_InsufficientDebt.selector);
+        eTST.pullDebt(borrowed + 1, borrower);
+
+        //try to pull a little bit less than owed
+        eTST.pullDebt(borrowed - 1, borrower);
+
+        assertEq(assetTST.balanceOf(borrower), amountToBorrow);
+        assertEq(assetTST.balanceOf(borrower2), 0);
+        assertEq(eTST.debtOf(borrower), 0);
+        assertEq(eTST.debtOf(borrower2), borrowed);
+    }
+
+    function test_repay_onlyInterest() public {
+        uint256 amountToBorrow = 5e18;
+
+        startHoax(borrower);
+        assetTST.approve(address(eTST), type(uint256).max);
+        evc.enableCollateral(borrower, address(eTST2));
+        evc.enableController(borrower, address(eTST));
+        eTST.borrow(amountToBorrow, borrower);
+
+        assertEq(assetTST.balanceOf(borrower), amountToBorrow);
+
+        skip(10 days);
+
+        uint256 borrowed = eTST.debtOf(borrower);
+
+        vm.recordLogs();
+
+        eTST.repay(borrowed - amountToBorrow, borrower);
+
+        Vm.Log[] memory entries = vm.getRecordedLogs();
+
+        //event DToken aren't emitted
+        assertEq(entries.length, 6);
+        assertEq(entries[0].topics[0], EVCEvents.CallWithContext.selector);
+        assertEq(entries[1].topics[0], Events.Transfer.selector);
+        assertEq(entries[2].topics[0], Events.InterestAccrued.selector);
+        assertEq(entries[3].topics[0], Events.Repay.selector);
+        assertEq(entries[4].topics[0], Events.VaultStatus.selector);
+        assertEq(entries[5].topics[0], EVCEvents.VaultStatusCheck.selector);
     }
 
     function owedTo1e5(uint256 debt) internal pure returns (uint256) {
