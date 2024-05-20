@@ -20,10 +20,12 @@ int_types = "long"
 quote_style = "double"
 number_underscore = "preserve"
 override_spacing = true
+wrap_comments = true
 ignore = [
     "src/EVault/EVault.sol",
     "src/EVault/shared/types/VaultStorage.sol",
-    "src/EVault/shared/types/VaultCache.sol"
+    "src/EVault/shared/types/VaultCache.sol",
+    "test/mocks/TestERC20.sol"
 ]
 
 

@@ -11,7 +11,8 @@ interface IPriceOracle {
     /// @return The name of the oracle.
     function name() external view returns (string memory);
 
-    /// @notice One-sided price: How much quote token you would get for inAmount of base token, assuming no price spread.
+    /// @notice One-sided price: How much quote token you would get for inAmount of base token, assuming no price
+    /// spread.
     /// @param inAmount The amount of `base` to convert.
     /// @param base The token that is being priced.
     /// @param quote The token that is the unit of account.

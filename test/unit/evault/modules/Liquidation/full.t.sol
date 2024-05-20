@@ -340,7 +340,8 @@ contract VaultLiquidation_Test is EVaultTestBase {
 
         (uint256 maxRepay,) = eTST.checkLiquidation(lender, borrower, address(eTST2));
 
-        // set the liquidator to be operator of the violator in order to be able act on violator's account and defer its liquidity check
+        // set the liquidator to be operator of the violator in order to be able act on violator's account and defer its
+        // liquidity check
         evc.setAccountOperator(borrower, lender, true);
 
         IEVC.BatchItem[] memory items = new IEVC.BatchItem[](2);

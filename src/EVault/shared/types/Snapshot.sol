@@ -5,7 +5,8 @@ pragma solidity ^0.8.0;
 import {Assets} from "./Types.sol";
 
 /// @title Snapshot
-/// @notice This struct is used to store a snapshot of the vault's cash and total borrows at the beginning of an operation (or a batch thereof)
+/// @notice This struct is used to store a snapshot of the vault's cash and total borrows at the beginning of an
+/// operation (or a batch thereof)
 struct Snapshot {
     // Packed slot: 14 + 14 + 4 = 32
     // vault's cash holdings

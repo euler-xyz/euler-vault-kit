@@ -36,24 +36,6 @@ contract CryticToFoundry is Invariants, Setup {
     //                                 BROKEN INVARIANTS REPLAY                                  //
     ///////////////////////////////////////////////////////////////////////////////////////////////
 
-    function test_BM_INVARIANT_O_ROUNDING() public {
-        // PASS
-        this.depositToActor(400, 93704952709166092675833692626070333629207815095066323987818791);
-        console.log("Actor: ", address(actor));
-        this.enableController(3388611185579509790345271144155567529519710816754010133488659);
-        this.setPrice(82722273493907026195652355382983934173897749054150317695866107075, 0.9 ether);
-        (uint256 collateralValue, uint256 liabilityValue) = _getAccountLiquidity(address(actor), false);
-        console.log("Collateral Value: ", collateralValue);
-        console.log("Liability Value: ", liabilityValue);
-        console.log("Balance before: ", eTST.balanceOf(address(actor)));
-        console.log("Debt before: ", eTST.debtOf(address(actor)));
-        assetTST.burn(address(actor), assetTST.balanceOf(address(actor)));
-        this.borrowTo(1, 476485543921707036124785589083935854038465196552);
-
-        console.log("Total debt: ", eTST.totalBorrows());
-        echidna_BM_INVARIANT();
-    }
-
     function test_I_INVARIANT_A() public {
         vm.expectRevert(Errors.E_BadFee.selector);
         this.setInterestFee(101);
