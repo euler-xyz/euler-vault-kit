@@ -129,15 +129,17 @@ abstract contract Dispatch is
     function delegateToModuleView(address module) private view {
         assembly {
             // Construct optimized custom call data for `this.viewDelegate()`
-            // [selector 4B][module address 32B][calldata with stripped proxy metadata][caller address 32B]
+            // [selector 4B][module address 32B][calldata with stripped proxy metadata][caller address 20B]
             // Proxy metadata will be appended back by the proxy on staticcall
             mstore(0, 0x1fe8b95300000000000000000000000000000000000000000000000000000000)
-            mstore(4, module)
             let strippedCalldataSize := sub(calldatasize(), PROXY_METADATA_LENGTH)
+            // we do the mstore first offset by -12 so the 20 address bytes align right behind 36 + strippedCalldataSize
+            // note that it can write into the module address if the calldata is less than 12 bytes, therefore write before we write module
+            mstore(add(24, strippedCalldataSize), caller())
+            mstore(4, module)
             calldatacopy(36, 0, strippedCalldataSize)
-            mstore(add(36, strippedCalldataSize), caller())
-            // insize: stripped calldatasize + 36 (signature and module address) + 32 (caller address)
-            let result := staticcall(gas(), address(), 0, add(strippedCalldataSize, 68), 0, 0)
+            // insize: stripped calldatasize + 36 (signature and module address) + 20 (caller address)
+            let result := staticcall(gas(), address(), 0, add(strippedCalldataSize, 56), 0, 0)
             returndatacopy(0, 0, returndatasize())
             switch result
             case 0 { revert(0, returndatasize()) }
