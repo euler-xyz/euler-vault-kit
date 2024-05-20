@@ -76,7 +76,7 @@ library TypesLib {
     }
 
     function toConfigAmount(uint16 amount) internal pure returns (ConfigAmount) {
-        ConfigAmountLib.validate(amount);
+        if (amount > CONFIG_SCALE) revert Errors.E_ConfigAmountTooLargeToEncode();
         return ConfigAmount.wrap(amount);
     }
 }
