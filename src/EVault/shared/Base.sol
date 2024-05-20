@@ -27,7 +27,7 @@ abstract contract Base is EVCClient, Cache {
     /// @title Integrations
     /// @notice Struct containing addresses of all of the contracts which EVault integrates with
     struct Integrations {
-        // Ethereum Vult Connector's address
+        // Ethereum Vault Connector's address
         address evc;
         // Address of the contract handling protocol level configurations
         address protocolConfig;
