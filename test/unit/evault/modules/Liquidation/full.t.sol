@@ -4,9 +4,9 @@ pragma solidity ^0.8.0;
 
 import {EVaultTestBase} from "../../EVaultTestBase.t.sol";
 
-import {Events} from "src/EVault/shared/Events.sol";
-import {Errors} from "src/EVault/shared/Errors.sol";
-import {IEVault} from "src/EVault/IEVault.sol";
+import {Events} from "../../../../../src/EVault/shared/Events.sol";
+import {Errors} from "../../../../../src/EVault/shared/Errors.sol";
+import {IEVault} from "../../../../../src/EVault/IEVault.sol";
 import {IEVC} from "ethereum-vault-connector/interfaces/IEthereumVaultConnector.sol";
 import {TestERC20} from "../../../../mocks/TestERC20.sol";
 import {IRMTestFixed} from "../../../../mocks/IRMTestFixed.sol";

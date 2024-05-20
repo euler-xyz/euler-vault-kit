@@ -3,14 +3,14 @@
 pragma solidity ^0.8.0;
 
 import {EVaultTestBase} from "../../EVaultTestBase.t.sol";
-import {Errors} from "src/EVault/shared/Errors.sol";
-import {Events} from "src/EVault/shared/Events.sol";
-import {SafeERC20Lib} from "src/EVault/shared/lib/SafeERC20Lib.sol";
+import {Errors} from "../../../../../src/EVault/shared/Errors.sol";
+import {Events} from "../../../../../src/EVault/shared/Events.sol";
+import {SafeERC20Lib} from "../../../../../src/EVault/shared/lib/SafeERC20Lib.sol";
 import {IAllowanceTransfer} from "permit2/src/interfaces/IAllowanceTransfer.sol";
 import {IRMTestFixed} from "../../../../mocks/IRMTestFixed.sol";
 import {IRMTestZero} from "../../../../mocks/IRMTestZero.sol";
-import {RPow} from "src/EVault/shared/lib/RPow.sol";
-import {IEVault} from "src/EVault/IEVault.sol";
+import {RPow} from "../../../../../src/EVault/shared/lib/RPow.sol";
+import {IEVault} from "../../../../../src/EVault/IEVault.sol";
 
 contract VaultTest_BalancesWithInterest is EVaultTestBase {
     uint256 SECONDS_PER_YEAR = 365.2425 days;

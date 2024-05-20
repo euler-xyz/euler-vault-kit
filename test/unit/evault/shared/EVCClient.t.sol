@@ -11,8 +11,8 @@ import {
     IRMTestDefault,
     TestERC20
 } from "../EVaultTestBase.t.sol";
-import {EVCClient, IEVC} from "src/EVault/shared/EVCClient.sol";
-import "src/EVault/shared/types/Types.sol";
+import {EVCClient, IEVC} from "../../../../src/EVault/shared/EVCClient.sol";
+import "../../../../src/EVault/shared/types/Types.sol";
 import {stdError} from "forge-std/StdError.sol";
 
 contract EVCClientUnitTest is EVaultTestBase {

@@ -2,8 +2,8 @@
 
 pragma solidity ^0.8.0;
 
-import "src/EVault/shared/AssetTransfers.sol";
-import "src/EVault/shared/Errors.sol";
+import "../../../../src/EVault/shared/AssetTransfers.sol";
+import "../../../../src/EVault/shared/Errors.sol";
 
 import "../EVaultTestBase.t.sol";
 

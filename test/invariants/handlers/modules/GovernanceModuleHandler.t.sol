@@ -2,14 +2,14 @@
 pragma solidity ^0.8.19;
 
 // Libraries
-import "src/EVault/shared/Constants.sol";
+import "../../../../src/EVault/shared/Constants.sol";
 
 // Test Contracts
 import {Actor} from "../../utils/Actor.sol";
 import {BaseHandler} from "../../base/BaseHandler.t.sol";
 
 // Interfaces
-import {IGovernance} from "src/EVault/IEVault.sol";
+import {IGovernance} from "../../../../src/EVault/IEVault.sol";
 
 /// @title GovernanceModuleHandler
 /// @notice Handler test contract for the governance module actions

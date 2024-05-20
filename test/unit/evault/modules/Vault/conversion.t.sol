@@ -3,9 +3,9 @@
 pragma solidity ^0.8.0;
 
 import "../../EVaultTestBase.t.sol";
-import {EVault} from "src/EVault/EVault.sol";
+import {EVault} from "../../../../../src/EVault/EVault.sol";
 
-import "src/EVault/shared/types/Types.sol";
+import "../../../../../src/EVault/shared/types/Types.sol";
 
 contract EVaultHarness is EVault {
     using TypesLib for uint256;

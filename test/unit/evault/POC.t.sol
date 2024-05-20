@@ -3,8 +3,8 @@
 pragma solidity ^0.8.0;
 
 import {EVaultTestBase} from "./EVaultTestBase.t.sol";
-import "src/EVault/shared/types/Types.sol";
-import "src/EVault/shared/Constants.sol";
+import "../../../src/EVault/shared/types/Types.sol";
+import "../../../src/EVault/shared/Constants.sol";
 
 contract POC_Test is EVaultTestBase {
     using TypesLib for uint256;
