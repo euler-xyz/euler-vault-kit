@@ -15,14 +15,16 @@ import {Dispatch} from "src/EVault/Dispatch.sol";
 import {SequenceRegistry} from "src/SequenceRegistry/SequenceRegistry.sol";
 
 // Modules
-import {Initialize} from "src/EVault/modules/Initialize.sol";
-import {Token} from "src/EVault/modules/Token.sol";
-import {Vault} from "src/EVault/modules/Vault.sol";
-import {Borrowing} from "src/EVault/modules/Borrowing.sol";
-import {Liquidation} from "src/EVault/modules/Liquidation.sol";
-import {BalanceForwarder} from "src/EVault/modules/BalanceForwarder.sol";
-import {Governance} from "src/EVault/modules/Governance.sol";
-import {RiskManager} from "src/EVault/modules/RiskManager.sol";
+import {
+    BalanceForwarderExtended,
+    BorrowingExtended,
+    GovernanceExtended,
+    InitializeExtended,
+    LiquidationExtended,
+    RiskManagerExtended,
+    TokenExtended,
+    VaultExtended
+} from "test/invariants/helpers/extended/ModulesExtended.sol";
 
 // Test Contracts
 import {ERC20Mock as TestERC20} from "@openzeppelin/contracts/mocks/token/ERC20Mock.sol";
@@ -72,14 +74,14 @@ contract Setup is BaseTest {
             Base.Integrations(address(evc), address(protocolConfig), sequenceRegistry, balanceTracker, permit2);
 
         Dispatch.DeployedModules memory modules = Dispatch.DeployedModules({
-            initialize: address(new Initialize(integrations)),
-            token: address(new Token(integrations)),
-            vault: address(new Vault(integrations)),
-            borrowing: address(new Borrowing(integrations)),
-            liquidation: address(new Liquidation(integrations)),
-            riskManager: address(new RiskManager(integrations)),
-            balanceForwarder: address(new BalanceForwarder(integrations)),
-            governance: address(new Governance(integrations))
+            initialize: address(new InitializeExtended(integrations)),
+            token: address(new TokenExtended(integrations)),
+            vault: address(new VaultExtended(integrations)),
+            borrowing: address(new BorrowingExtended(integrations)),
+            liquidation: address(new LiquidationExtended(integrations)),
+            riskManager: address(new RiskManagerExtended(integrations)),
+            balanceForwarder: address(new BalanceForwarderExtended(integrations)),
+            governance: address(new GovernanceExtended(integrations))
         });
 
         // Deploy the vault implementation

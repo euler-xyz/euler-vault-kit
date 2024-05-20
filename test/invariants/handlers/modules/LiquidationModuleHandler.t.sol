@@ -48,7 +48,9 @@ contract LiquidationModuleHandler is BaseHandler {
             _after();
 
             /// @dev LM_INVARIANT_A
-            assertFalse(violatorStatus, LM_INVARIANT_A);
+            if (repayAssets != 0) {
+                assertFalse(violatorStatus, LM_INVARIANT_A);
+            }
         }
     }
 

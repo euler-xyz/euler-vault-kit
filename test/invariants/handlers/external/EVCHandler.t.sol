@@ -25,10 +25,6 @@ contract EVCHandler is BaseHandler {
     //                                           ACTIONS                                         //
     ///////////////////////////////////////////////////////////////////////////////////////////////
 
-    // TODO:
-    // - setNonce
-    // - setOperator
-
     function setAccountOperator(uint256 i, uint256 j, bool authorised) external setup {
         bool success;
         bytes memory returnData;
@@ -65,7 +61,6 @@ contract EVCHandler is BaseHandler {
 
         if (success) {
             ghost_accountCollaterals[address(actor)].add(vaultAddress);
-            assert(true);
         }
     }
 
@@ -85,7 +80,6 @@ contract EVCHandler is BaseHandler {
 
         if (success) {
             ghost_accountCollaterals[address(actor)].remove(vaultAddress);
-            assert(true);
         }
     }
 
@@ -160,12 +154,6 @@ contract EVCHandler is BaseHandler {
             abi.encodeWithSelector(EthereumVaultConnector.requireAccountStatusCheck.selector, account)
         );
     }
-
-    //TODO:
-    // - batch
-    // - batchRevert
-    // - forgiveAccountStatusCheck
-    // - requireVaultStatusCheck
 
     ///////////////////////////////////////////////////////////////////////////////////////////////
     //                                           HELPERS                                         //

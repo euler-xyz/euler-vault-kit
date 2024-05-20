@@ -17,6 +17,8 @@ import "forge-std/console.sol";
 /// @notice Helper contract for before and after hooks
 /// @dev This contract is inherited by handlers
 abstract contract VaultBeforeAfterHooks is BaseHooks {
+    uint32 internal constant INIT_OPERATION_FLAG = 1 << 31;
+
     using Strings for string;
     using Pretty for uint256;
     using Pretty for int256;
@@ -45,6 +47,11 @@ abstract contract VaultBeforeAfterHooks is BaseHooks {
     VaultVars vaultVars;
 
     function _vaultHooksBefore() internal {
+        // Clears the helper flag needed to verify whether the initOperation function was
+        // called (as per test/invariants/helpers/extended/FunctionOverrides.sol)
+        (address hookTarget, uint32 hookedOps) = eTST.hookConfig();
+        eTST.setHookConfig(hookTarget, hookedOps & ~INIT_OPERATION_FLAG);
+
         // Exchange Rate
         vaultVars.exchangeRateBefore = _calculateExchangeRate();
         // ERC4626

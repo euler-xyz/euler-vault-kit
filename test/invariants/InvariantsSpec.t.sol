@@ -15,6 +15,18 @@ abstract contract InvariantsSpec {
     string constant BASE_INVARIANT_B = "BASE_INVARIANT_B: snapshot should be reseted after every action";
 
     ///////////////////////////////////////////////////////////////////////////////////////////////
+    //                          INTERNAL INVARIANTS: LOW-LEVEL FUNCTIONS                         //
+    ///////////////////////////////////////////////////////////////////////////////////////////////
+
+    string constant INTERNAL_INVARIANT_A = "INTERNAL_INVARIANT_A: initOperation is called in low-level functions";
+
+    string constant INTERNAL_INVARIANT_B = "INTERNAL_INVARIANT_B: vault status check is deferred in low-level functions";
+
+    string constant INTERNAL_INVARIANT_C = "INTERNAL_INVARIANT_C: account status check is deferred if needed";
+
+    string constant INTERNAL_INVARIANT_D = "INTERNAL_INVARIANT_D: controller is enabled if needed";
+
+    ///////////////////////////////////////////////////////////////////////////////////////////////
     //                                       TOKEN MODULE                                        //
     ///////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -107,15 +119,13 @@ abstract contract InvariantsSpec {
 
     string constant BM_INVARIANT_B = "BM_INVARIANT_B: totalBorrowed = sum of all user debt";
 
-    // TODO: Discarded
     string constant BM_INVARIANT_C = "BM_INVARIANT_C: sum of all user debt == 0 <=> totalBorrowed == 0";
 
     string constant BM_INVARIANT_D = "BM_INVARIANT_D: User liability should always decrease after repayment";
 
     string constant BM_INVARIANT_E = "BM_INVARIANT_E: Unhealthy users can not borrow";
 
-    // TODO: Discarded
-    string constant BM_INVARIANT_F = "BM_INVARIANT_F: If theres at least one borrow, the asset.balanceOf(vault) > 0";
+    string constant BM_INVARIANT_F = "BM_INVARIANT_F: If theres at least one borrow, the asset.balanceOf(vault) > 0"; // Discarded
 
     string constant BM_INVARIANT_G =
         "BM_INVARIANT_G: a user should always be able to withdraw all if there is no outstanding debt";
@@ -169,6 +179,4 @@ abstract contract InvariantsSpec {
 
     string constant LM_INVARIANT_D =
         "LM_INVARIANT_D: Only liquidations can deteriorate health score of an already unhealthy account";
-
-    //TODO exchangeRate > exchangeRate' -> liquidation
 }

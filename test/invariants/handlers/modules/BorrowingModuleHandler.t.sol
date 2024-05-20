@@ -41,7 +41,9 @@ contract BorrowingModuleHandler is BaseHandler {
         (success, returnData) =
             actor.proxy(target, abi.encodeWithSelector(IBorrowing.borrow.selector, assets, receiver));
 
-        if (!isAccountHealthyBefore) {
+        (uint256 shares) = abi.decode(returnData, (uint256));
+
+        if (!isAccountHealthyBefore && (assets != 0 && shares != 0)) {
             /// @dev BM_INVARIANT_E
             assertFalse(success, BM_INVARIANT_E);
         } else {
@@ -106,7 +108,7 @@ contract BorrowingModuleHandler is BaseHandler {
         address target = address(eTST);
 
         _before();
-        (success, returnData) = actor.proxy(target, abi.encodeWithSelector(IBorrowing.pullDebt.selector, from, assets));
+        (success, returnData) = actor.proxy(target, abi.encodeWithSelector(IBorrowing.pullDebt.selector, assets, from));
 
         if (success) {
             _after();

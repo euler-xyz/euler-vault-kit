@@ -5,9 +5,7 @@ import {BaseHandler} from "../../base/BaseHandler.t.sol";
 
 /// @title PriceOracleHandler
 /// @notice Handler test contract for the  PriceOracle actions
-contract PriceOracleHandler is
-    BaseHandler // TODO: Update this contract to match the actual implementation
-{
+contract PriceOracleHandler is BaseHandler {
     ///////////////////////////////////////////////////////////////////////////////////////////////
     //                                      STATE VARIABLES                                      //
     ///////////////////////////////////////////////////////////////////////////////////////////////
