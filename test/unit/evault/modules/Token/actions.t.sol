@@ -2,11 +2,11 @@
 
 pragma solidity ^0.8.0;
 
-import "test/unit/evault/EVaultTestBase.t.sol";
+import "../../EVaultTestBase.t.sol";
 import {Errors as EVCErrors} from "ethereum-vault-connector/Errors.sol";
 import {IEVC} from "ethereum-vault-connector/interfaces/IEthereumVaultConnector.sol";
-import {Errors} from "src/EVault/shared/Errors.sol";
-import {Events} from "src/EVault/shared/Events.sol";
+import {Errors} from "../../../../../src/EVault/shared/Errors.sol";
+import {Events} from "../../../../../src/EVault/shared/Events.sol";
 
 contract ERC20Test_Actions is EVaultTestBase {
     address alice = makeAddr("alice");

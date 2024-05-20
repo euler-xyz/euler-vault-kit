@@ -3,9 +3,9 @@ pragma solidity ^0.8.20;
 
 import {ESynthTest} from "./lib/ESynthTest.sol";
 import {stdError} from "forge-std/Test.sol";
-import {Errors} from "src/EVault/shared/Errors.sol";
-import {ESynth} from "src/Synths/ESynth.sol";
-import {MockWrongEVC} from "test/mocks/MockWrongEVC.sol";
+import {Errors} from "../../../src/EVault/shared/Errors.sol";
+import {ESynth} from "../../../src/Synths/ESynth.sol";
+import {MockWrongEVC} from "../../mocks/MockWrongEVC.sol";
 
 contract ESynthGeneralTest is ESynthTest {
     uint128 constant MAX_ALLOWED = type(uint128).max;

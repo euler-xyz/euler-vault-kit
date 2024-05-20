@@ -2,15 +2,15 @@
 
 pragma solidity ^0.8.0;
 
-import {EVault} from "src/EVault/EVault.sol";
-import "src/EVault/modules/BalanceForwarder.sol";
-import "src/EVault/modules/Borrowing.sol";
-import "src/EVault/modules/Governance.sol";
-import "src/EVault/modules/Initialize.sol";
-import "src/EVault/modules/Liquidation.sol";
-import "src/EVault/modules/RiskManager.sol";
-import "src/EVault/modules/Token.sol";
-import "src/EVault/modules/Vault.sol";
+import {EVault} from "../../../src/EVault/EVault.sol";
+import "../../../src/EVault/modules/BalanceForwarder.sol";
+import "../../../src/EVault/modules/Borrowing.sol";
+import "../../../src/EVault/modules/Governance.sol";
+import "../../../src/EVault/modules/Initialize.sol";
+import "../../../src/EVault/modules/Liquidation.sol";
+import "../../../src/EVault/modules/RiskManager.sol";
+import "../../../src/EVault/modules/Token.sol";
+import "../../../src/EVault/modules/Vault.sol";
 import "forge-std/console.sol";
 
 // Abstract contract to override functions and check invariants.

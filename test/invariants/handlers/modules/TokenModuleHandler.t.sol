@@ -6,7 +6,7 @@ import {Actor} from "../../utils/Actor.sol";
 import {BaseHandler} from "../../base/BaseHandler.t.sol";
 
 // Interfaces
-import {IERC20} from "src/EVault/IEVault.sol";
+import {IERC20} from "../../../../src/EVault/IEVault.sol";
 
 /// @title  TokenModuleHandler
 /// @notice Handler test contract for ERC20 contacts

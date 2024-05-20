@@ -4,7 +4,7 @@ pragma solidity ^0.8.0;
 
 import {IEVC} from "ethereum-vault-connector/interfaces/IEthereumVaultConnector.sol";
 import {EVaultTestBase} from "../../EVaultTestBase.t.sol";
-import {Errors} from "src/EVault/shared/Errors.sol";
+import {Errors} from "../../../../../src/EVault/shared/Errors.sol";
 
 contract MaliciousController {
     IEVC immutable evc;

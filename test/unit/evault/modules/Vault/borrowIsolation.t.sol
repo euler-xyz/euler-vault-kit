@@ -3,13 +3,13 @@
 pragma solidity ^0.8.0;
 
 import {EVaultTestBase} from "../../EVaultTestBase.t.sol";
-import {Errors} from "src/EVault/shared/Errors.sol";
+import {Errors} from "../../../../../src/EVault/shared/Errors.sol";
 import {Errors as EVCErrors} from "ethereum-vault-connector/Errors.sol";
-import {IEVault} from "src/EVault/IEVault.sol";
+import {IEVault} from "../../../../../src/EVault/IEVault.sol";
 import {IEVC} from "ethereum-vault-connector/interfaces/IEthereumVaultConnector.sol";
 import {TestERC20} from "../../../../mocks/TestERC20.sol";
 import {IRMTestZero} from "../../../../mocks/IRMTestZero.sol";
-import "src/EVault/shared/types/Types.sol";
+import "../../../../../src/EVault/shared/types/Types.sol";
 
 contract VaultTest_BorrowIsolation is EVaultTestBase {
     address user1;

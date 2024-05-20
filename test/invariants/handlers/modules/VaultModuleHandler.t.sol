@@ -9,7 +9,7 @@ import {Actor} from "../../utils/Actor.sol";
 import {BaseHandler} from "../../base/BaseHandler.t.sol";
 
 // Interfaces
-import {IERC4626} from "src/EVault/IEVault.sol";
+import {IERC4626} from "../../../../src/EVault/IEVault.sol";
 
 /// @title VaultModuleHandler
 /// @notice Handler test contract for the generic ERC4626 vault actions

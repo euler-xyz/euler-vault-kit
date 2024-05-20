@@ -5,9 +5,9 @@ pragma solidity ^0.8.0;
 import {EVaultTestBase} from "../../EVaultTestBase.t.sol";
 import {IRMTestZero} from "../../../../mocks/IRMTestZero.sol";
 import {IRMTestFixed} from "../../../../mocks/IRMTestFixed.sol";
-import {Errors} from "src/EVault/shared/Errors.sol";
-import {Events} from "src/EVault/shared/Events.sol";
-import "src/EVault/shared/types/Types.sol";
+import {Errors} from "../../../../../src/EVault/shared/Errors.sol";
+import {Events} from "../../../../../src/EVault/shared/Events.sol";
+import "../../../../../src/EVault/shared/types/Types.sol";
 
 contract VaultTest_BorrowBasic is EVaultTestBase {
     using TypesLib for uint256;

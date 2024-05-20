@@ -9,7 +9,7 @@ import {Actor} from "../../utils/Actor.sol";
 import {BaseHandler} from "../../base/BaseHandler.t.sol";
 
 // Interfaces
-import {IBorrowing, IERC4626} from "src/EVault/IEVault.sol";
+import {IBorrowing, IERC4626} from "../../../../src/EVault/IEVault.sol";
 
 /// @title BorrowingModuleHandler
 /// @notice Handler test contract for the BorrowingModule actions

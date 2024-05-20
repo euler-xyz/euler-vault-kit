@@ -3,16 +3,16 @@ pragma solidity ^0.8.19;
 
 // Libraries
 import {EthereumVaultConnector} from "ethereum-vault-connector/EthereumVaultConnector.sol";
-import {DeployPermit2} from "test/invariants/utils/DeployPermit2.sol";
+import {DeployPermit2} from "./utils/DeployPermit2.sol";
 
 // Contracts
-import {GenericFactory} from "src/GenericFactory/GenericFactory.sol";
-import {EVault} from "src/EVault/EVault.sol";
-import {ProtocolConfig} from "src/ProtocolConfig/ProtocolConfig.sol";
+import {GenericFactory} from "../../src/GenericFactory/GenericFactory.sol";
+import {EVault} from "../../src/EVault/EVault.sol";
+import {ProtocolConfig} from "../../src/ProtocolConfig/ProtocolConfig.sol";
 import {IRMTestDefault} from "../mocks/IRMTestDefault.sol";
-import {Base} from "src/EVault/shared/Base.sol";
-import {Dispatch} from "src/EVault/Dispatch.sol";
-import {SequenceRegistry} from "src/SequenceRegistry/SequenceRegistry.sol";
+import {Base} from "../../src/EVault/shared/Base.sol";
+import {Dispatch} from "../../src/EVault/Dispatch.sol";
+import {SequenceRegistry} from "../../src/SequenceRegistry/SequenceRegistry.sol";
 
 // Modules
 import {
@@ -24,7 +24,7 @@ import {
     RiskManagerExtended,
     TokenExtended,
     VaultExtended
-} from "test/invariants/helpers/extended/ModulesExtended.sol";
+} from "./helpers/extended/ModulesExtended.sol";
 
 // Test Contracts
 import {ERC20Mock as TestERC20} from "@openzeppelin/contracts/mocks/token/ERC20Mock.sol";
@@ -32,7 +32,7 @@ import {MockBalanceTracker} from "../mocks/MockBalanceTracker.sol";
 import {MockPriceOracle} from "../mocks/MockPriceOracle.sol";
 import {Actor} from "./utils/Actor.sol";
 import {BaseTest} from "./base/BaseTest.t.sol";
-import {EVaultExtended} from "test/invariants/helpers/extended/EVaultExtended.sol";
+import {EVaultExtended} from "./helpers/extended/EVaultExtended.sol";
 
 /// @title Setup
 /// @notice Setup contract for the invariant test Suite, inherited by Tester

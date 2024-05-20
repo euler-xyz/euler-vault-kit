@@ -2,16 +2,16 @@
 pragma solidity ^0.8.0;
 
 // Function Overrides
-import {FunctionOverrides} from "test/invariants/helpers/extended/FunctionOverrides.sol";
+import {FunctionOverrides} from "./FunctionOverrides.sol";
 
 // Contracts
-import {Base} from "src/EVault/shared/Base.sol";
-import {BalanceUtils} from "src/EVault/shared/BalanceUtils.sol";
-import {BorrowUtils} from "src/EVault/shared/BorrowUtils.sol";
-import {EVault} from "src/EVault/EVault.sol";
+import {Base} from "../../../../src/EVault/shared/Base.sol";
+import {BalanceUtils} from "../../../../src/EVault/shared/BalanceUtils.sol";
+import {BorrowUtils} from "../../../../src/EVault/shared/BorrowUtils.sol";
+import {EVault} from "../../../../src/EVault/EVault.sol";
 
 // Types
-import "src/EVault/shared/types/Types.sol";
+import "../../../../src/EVault/shared/types/Types.sol";
 
 contract EVaultExtended is EVault, FunctionOverrides {
     constructor(Integrations memory integrations, DeployedModules memory modules) EVault(integrations, modules) {}

@@ -6,7 +6,7 @@ import {Actor} from "../../utils/Actor.sol";
 import {BaseHandler} from "../../base/BaseHandler.t.sol";
 
 // Interfaces
-import {IRiskManager} from "src/EVault/IEVault.sol";
+import {IRiskManager} from "../../../../src/EVault/IEVault.sol";
 
 /// @title RiskManagerModuleHandler
 /// @notice Handler test contract for the risk manager module actions
