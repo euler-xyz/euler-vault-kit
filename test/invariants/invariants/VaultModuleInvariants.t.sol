@@ -134,11 +134,12 @@ abstract contract VaultModuleInvariants is HandlerAggregator {
     //                                        DISCARDED                                          //
     ///////////////////////////////////////////////////////////////////////////////////////////////
 
-    /*  function assert_VaultSimple_invariantA(address _vault) internal {
-        uint256 totalAssets = eTST.totalAssets();
-
-        assertEq(totalAssets, ghost_sumBalances[_vault], string.concat("VaultSimple_invariantA: ", vaultNames[_vault]));
-    } */
+    //function assert_VaultSimple_invariantA(address _vault) internal {
+    //    uint256 totalAssets = eTST.totalAssets();
+    //
+    //    assertEq(totalAssets, ghost_sumBalances[_vault], string.concat("VaultSimple_invariantA: ",
+    // vaultNames[_vault]));
+    //}
 
     ///////////////////////////////////////////////////////////////////////////////////////////////
     //                                         UTILS                                             //

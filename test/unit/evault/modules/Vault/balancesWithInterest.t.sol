@@ -71,7 +71,8 @@ contract VaultTest_BalancesWithInterest is EVaultTestBase {
         assertEq(assetTST.balanceOf(user3), 1e18);
         assertEq(eTST.debtOf(user3), 1e18);
 
-        // Go ahead 1 year (+ 1 second because I did it this way by accident at first, don't want to bother redoing calculations below)
+        // Go ahead 1 year (+ 1 second because I did it this way by accident at first, don't want to bother redoing
+        // calculations below)
         skip(365 days + 1);
         startHoax(address(this));
         eTST.setInterestRateModel(address(new IRMTestZero()));
@@ -146,7 +147,8 @@ contract VaultTest_BalancesWithInterest is EVaultTestBase {
         // eVault balanceOf unchanged:
         assertEq(eTST.balanceOf(user1), 1e18);
 
-        // eVault maxWithdraw increases. 10% less than the amount owed, because of reserve fee. Matches "untouchedSupplyAPY" above:
+        // eVault maxWithdraw increases. 10% less than the amount owed, because of reserve fee. Matches
+        // "untouchedSupplyAPY" above:
         assertApproxEqAbs(eTST.convertToAssets(1e18), 1.094719911470713189e18, 0.00000001e18);
 
         // Conversion methods
@@ -193,7 +195,8 @@ contract VaultTest_BalancesWithInterest is EVaultTestBase {
         // Same as in basic case:
         assertEq(eTST.debtOf(user3), 1.10524434607857021e18);
 
-        // eVault maxWithdraw increases. 10% less than the amount owed, because of reserve fee. Matches untouchedSupplyAPY above:
+        // eVault maxWithdraw increases. 10% less than the amount owed, because of reserve fee. Matches
+        // untouchedSupplyAPY above:
         assertEq(eTST.convertToAssets(eTST.balanceOf(user1)), 1.047359955735333033e18);
         assertEq(eTST.convertToAssets(eTST.balanceOf(user2)), 1.047359955735333033e18);
 

@@ -43,55 +43,41 @@ contract ProtocolConfig is IProtocolConfig {
     /// @dev per-vault configuration of protocol fee config, takes priority over defaults
     mapping(address vault => ProtocolFeeConfig) internal _protocolFeeConfig;
 
-    /**
-     * @notice Set global default allowed interest fee limits
-     * @param newMinInterestFee lower limit of allowed interest fee
-     * @param newMaxInterestFee upper limit of allowed interest fee
-     */
+    /// @notice Set global default allowed interest fee limits
+    /// @param newMinInterestFee lower limit of allowed interest fee
+    /// @param newMaxInterestFee upper limit of allowed interest fee
     event SetInterestFeeRange(uint16 newMinInterestFee, uint16 newMaxInterestFee);
 
-    /**
-     * @notice Set new fee receiver address
-     * @param newFeeReceiver new fee receiver address
-     */
+    /// @notice Set new fee receiver address
+    /// @param newFeeReceiver new fee receiver address
     event SetFeeReceiver(address indexed newFeeReceiver);
 
-    /**
-     * @notice Set allowed interest fee limits override for a vault
-     * @param vault address of the vault
-     * @param exists if true a new setting was recorded, if false the override was disabled for the vault
-     * @param minInterestFee lower limit of allowed interest fee
-     * @param maxInterestFee upper limit of allowed interest fee
-     */
+    /// @notice Set allowed interest fee limits override for a vault
+    /// @param vault address of the vault
+    /// @param exists if true a new setting was recorded, if false the override was disabled for the vault
+    /// @param minInterestFee lower limit of allowed interest fee
+    /// @param maxInterestFee upper limit of allowed interest fee
     event SetVaultInterestFeeRange(address indexed vault, bool exists, uint16 minInterestFee, uint16 maxInterestFee);
 
-    /**
-     * @notice Set interest fee configuration override for a vault
-     * @param vault address of the vault
-     * @param exists if true a new setting was recorded, if false the override was disabled for the vault
-     * @param feeReceiver address to receive protocol fees
-     * @param protocolFeeShare new protocol fee share
-     */
+    /// @notice Set interest fee configuration override for a vault
+    /// @param vault address of the vault
+    /// @param exists if true a new setting was recorded, if false the override was disabled for the vault
+    /// @param feeReceiver address to receive protocol fees
+    /// @param protocolFeeShare new protocol fee share
     event SetFeeConfigSetting(address indexed vault, bool exists, address indexed feeReceiver, uint16 protocolFeeShare);
 
-    /**
-     * @notice Set a new global default protocol fee share
-     * @param protocolFeeShare previous default protocol fee share
-     * @param newProtocolFeeShare new default protocol fee share
-     */
+    /// @notice Set a new global default protocol fee share
+    /// @param protocolFeeShare previous default protocol fee share
+    /// @param newProtocolFeeShare new default protocol fee share
     event SetProtocolFeeShare(uint16 protocolFeeShare, uint16 newProtocolFeeShare);
 
-    /**
-     * @notice Transfer admin rights to a new address
-     * @param newAdmin address of the new admin
-     */
+    /// @notice Transfer admin rights to a new address
+    /// @param newAdmin address of the new admin
     event SetAdmin(address indexed newAdmin);
 
-    /**
-     * @dev constructor
-     * @param admin_ admin's address
-     * @param feeReceiver_ the address of the protocol fee receiver
-     */
+    /// @dev constructor
+    /// @param admin_ admin's address
+    /// @param feeReceiver_ the address of the protocol fee receiver
     constructor(address admin_, address feeReceiver_) {
         if (admin_ == address(0)) revert E_InvalidAdmin();
         if (feeReceiver_ == address(0)) revert E_InvalidReceiver();
@@ -146,10 +132,8 @@ contract ProtocolConfig is IProtocolConfig {
         _;
     }
 
-    /**
-     * @notice set admin address
-     * @param newAdmin admin's address
-     */
+    /// @notice set admin address
+    /// @param newAdmin admin's address
     function setAdmin(address newAdmin) external onlyAdmin {
         if (newAdmin == address(0)) revert E_InvalidAdmin();
 
@@ -158,11 +142,9 @@ contract ProtocolConfig is IProtocolConfig {
         emit SetAdmin(newAdmin);
     }
 
-    /**
-     * @notice set protocol fee receiver
-     * @dev can only be called by admin
-     * @param newReceiver new receiver address
-     */
+    /// @notice set protocol fee receiver
+    /// @dev can only be called by admin
+    /// @param newReceiver new receiver address
     function setFeeReceiver(address newReceiver) external onlyAdmin {
         if (newReceiver == address(0)) revert E_InvalidReceiver();
 
@@ -171,11 +153,9 @@ contract ProtocolConfig is IProtocolConfig {
         emit SetFeeReceiver(newReceiver);
     }
 
-    /**
-     * @notice set protocol fee share
-     * @dev can only be called by admin
-     * @param newProtocolFeeShare new protocol fee share
-     */
+    /// @notice set protocol fee share
+    /// @dev can only be called by admin
+    /// @param newProtocolFeeShare new protocol fee share
     function setProtocolFeeShare(uint16 newProtocolFeeShare) external onlyAdmin {
         if (newProtocolFeeShare > CONFIG_SCALE) revert E_InvalidConfigValue();
 
@@ -184,12 +164,10 @@ contract ProtocolConfig is IProtocolConfig {
         protocolFeeShare = newProtocolFeeShare;
     }
 
-    /**
-     * @notice set generic min interest fee
-     * @dev can only be called by admin
-     * @param minInterestFee_ new min interest fee
-     * @param maxInterestFee_ new max interest fee
-     */
+    /// @notice set generic min interest fee
+    /// @dev can only be called by admin
+    /// @param minInterestFee_ new min interest fee
+    /// @param maxInterestFee_ new max interest fee
     function setInterestFeeRange(uint16 minInterestFee_, uint16 maxInterestFee_) external onlyAdmin {
         if (maxInterestFee_ > CONFIG_SCALE || minInterestFee_ > maxInterestFee_) revert E_InvalidConfigValue();
 
@@ -199,14 +177,12 @@ contract ProtocolConfig is IProtocolConfig {
         emit SetInterestFeeRange(minInterestFee_, maxInterestFee_);
     }
 
-    /**
-     * @notice set interest fee range for specific vault
-     * @dev can only be called by admin
-     * @param vault vault's address
-     * @param exists_ a boolean to set or unset the ranges. When false, the generic ranges will be used for the vault
-     * @param minInterestFee_ min interest fee
-     * @param maxInterestFee_ max interest fee
-     */
+    /// @notice set interest fee range for specific vault
+    /// @dev can only be called by admin
+    /// @param vault vault's address
+    /// @param exists_ a boolean to set or unset the ranges. When false, the generic ranges will be used for the vault
+    /// @param minInterestFee_ min interest fee
+    /// @param maxInterestFee_ max interest fee
     function setVaultInterestFeeRange(address vault, bool exists_, uint16 minInterestFee_, uint16 maxInterestFee_)
         external
         onlyAdmin
@@ -220,14 +196,12 @@ contract ProtocolConfig is IProtocolConfig {
         emit SetVaultInterestFeeRange(vault, exists_, minInterestFee_, maxInterestFee_);
     }
 
-    /**
-     * @notice set protocol fee config for specific vault
-     * @dev can only be called by admin
-     * @param vault vault's address
-     * @param exists_ a boolean to set or unset the config. When false, the generic config will be used for the vault
-     * @param feeReceiver_ fee receiver address
-     * @param protocolFeeShare_ fee share
-     */
+    /// @notice set protocol fee config for specific vault
+    /// @dev can only be called by admin
+    /// @param vault vault's address
+    /// @param exists_ a boolean to set or unset the config. When false, the generic config will be used for the vault
+    /// @param feeReceiver_ fee receiver address
+    /// @param protocolFeeShare_ fee share
     function setVaultFeeConfig(address vault, bool exists_, address feeReceiver_, uint16 protocolFeeShare_)
         external
         onlyAdmin

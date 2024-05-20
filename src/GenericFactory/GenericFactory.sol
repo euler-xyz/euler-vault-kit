@@ -16,7 +16,8 @@ interface IComponent {
 /// @title GenericFactory
 /// @custom:security-contact security@euler.xyz
 /// @author Euler Labs (https://www.eulerlabs.com/)
-/// @notice The factory allows permissionless creation of upgradeable or non-upgradeable proxy contracts and serves as a beacon for the upgradeable ones
+/// @notice The factory allows permissionless creation of upgradeable or non-upgradeable proxy contracts and serves as a
+/// beacon for the upgradeable ones
 contract GenericFactory is MetaProxyDeployer {
     // Constants
 
@@ -105,8 +106,10 @@ contract GenericFactory is MetaProxyDeployer {
     }
 
     /// @notice A permissionless funtion to deploy new proxies
-    /// @param desiredImplementation Address of the implementation contract expected to be registered in the factory during proxy creation
-    /// @param upgradeable If true, the proxy will be an instance of the BeaconProxy. If false, a minimal meta proxy will be deployed
+    /// @param desiredImplementation Address of the implementation contract expected to be registered in the factory
+    /// during proxy creation
+    /// @param upgradeable If true, the proxy will be an instance of the BeaconProxy. If false, a minimal meta proxy
+    /// will be deployed
     /// @param trailingData Metadata to be attached to every call passing through the new proxy
     /// @return The address of the new proxy
     /// @dev The desired implementation serves as a protection against (unintentional) front-running of upgrades

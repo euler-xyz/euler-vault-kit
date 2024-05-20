@@ -528,7 +528,8 @@ contract VaultTest_Caps is EVaultTestBase {
         vm.expectRevert(Errors.E_SupplyCapExceeded.selector);
         eTST.deposit(2e18, user1);
 
-        // Lower supply cap. Withdrawal still works, even though it's not enough withdrawn to solve the policy violation:
+        // Lower supply cap. Withdrawal still works, even though it's not enough withdrawn to solve the policy
+        // violation:
         startHoax(address(this));
         eTST.setCaps(32018, 0);
         assertEq(eTST.maxDeposit(user1), 0);
@@ -564,7 +565,8 @@ contract VaultTest_Caps is EVaultTestBase {
         vm.expectRevert(Errors.E_SupplyCapExceeded.selector);
         eTST.mint(2e18, user1);
 
-        // Lower supply cap. Withdrawal still works, even though it's not enough withdrawn to solve the policy violation:
+        // Lower supply cap. Withdrawal still works, even though it's not enough withdrawn to solve the policy
+        // violation:
         startHoax(address(this));
         eTST.setCaps(32018, 0);
         startHoax(user1);
