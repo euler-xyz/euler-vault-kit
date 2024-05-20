@@ -36,7 +36,7 @@ abstract contract EVCClient is Storage, Events, Errors {
         evc.disableController(account);
     }
 
-    // Authenticate account and controller, making sure the call is made through EVC and the status checks are deferred
+    // Authenticate the account and the controller, making sure the call is made through EVC and the status checks are deferred
     function EVCAuthenticateDeferred(bool checkController) internal view virtual returns (address) {
         assert(msg.sender == address(evc)); // this ensures that callThroughEVC modifier was utilized
 
@@ -48,9 +48,27 @@ abstract contract EVCClient is Storage, Events, Errors {
         return onBehalfOfAccount;
     }
 
+    // Authenticate the account
     function EVCAuthenticate() internal view virtual returns (address) {
         if (msg.sender == address(evc)) {
             (address onBehalfOfAccount,) = evc.getCurrentOnBehalfOfAccount(address(0));
+
+            return onBehalfOfAccount;
+        }
+        return msg.sender;
+    }
+
+    // Authenticate the governor, making sure neither a sub-account nor operator is used. Prohibit the use of control collateral
+    function EVCAuthenticateGovernor() internal view virtual returns (address) {
+        if (msg.sender == address(evc)) {
+            (address onBehalfOfAccount,) = evc.getCurrentOnBehalfOfAccount(address(0));
+
+            if (
+                isKnownNonOwnerAccount(onBehalfOfAccount) || evc.isOperatorAuthenticated()
+                    || evc.isControlCollateralInProgress()
+            ) {
+                revert E_Unauthorized();
+            }
 
             return onBehalfOfAccount;
         }
