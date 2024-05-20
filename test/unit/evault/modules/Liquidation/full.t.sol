@@ -1383,6 +1383,7 @@ contract VaultLiquidation_Test is EVaultTestBase {
         IEVault eTSTx =
             IEVault(factory.createProxy(true, abi.encodePacked(address(assetTST), address(oracle), address(assetTST))));
         eTSTx.setLTV(address(eTST2), 0.95e4, 0);
+        eTSTx.setMaxLiquidationDiscount(0.2e4);
 
         oracle.setPrice(address(assetTST2), address(assetTST), 0.5e18);
 
@@ -1431,6 +1432,249 @@ contract VaultLiquidation_Test is EVaultTestBase {
         // violator:
         assertEq(eTSTx.debtOf(borrower), 0);
         assertEq(eTST2.balanceOf(borrower), violatorsOriginalCollateral - maxYield);
+    }
+
+    function test_setMaxLiquidationDiscount() public {
+        // unauthorized
+        startHoax(lender);
+        vm.expectRevert(Errors.E_Unauthorized.selector);
+        eTST.setMaxLiquidationDiscount(0.1e4);
+
+        // too big
+        startHoax(address(this));
+        vm.expectRevert(Errors.E_InvalidConfigAmount.selector);
+        eTST.setMaxLiquidationDiscount(1e4 + 1);
+
+        // set ok
+        eTST.setMaxLiquidationDiscount(0.111e4);
+        assertEq(0.111e4, eTST.maxLiquidationDiscount());
+    }
+
+    function test_liquidationWithCustomMaxDiscount() public {
+        // set up liquidator to support the debt
+        startHoax(lender);
+        evc.enableController(lender, address(eTST));
+        evc.enableCollateral(lender, address(eTST3));
+        evc.enableCollateral(lender, address(eTST2));
+
+        startHoax(borrower);
+        evc.enableController(borrower, address(eTST));
+        eTST.borrow(5e18, borrower);
+
+        startHoax(address(this));
+        eTST.setLTV(address(eTST3), 0.95e4, 0);
+
+        // enable collateral with no deposit to verify accountLiquidityFull behavior
+        vm.stopPrank();
+        vm.prank(borrower);
+        evc.enableCollateral(borrower, address(eTST3));
+        startHoax(address(this));
+
+        oracle.setPrice(address(assetTST), unitOfAccount, 2.8e18);
+
+        (uint256 collateralValue, uint256 liabilityValue) = eTST.accountLiquidity(borrower, false);
+
+        uint256 healthScore = collateralValue * 1e18 / liabilityValue;
+        assertApproxEqAbs(healthScore, 0.857e18, 0.001e18);
+
+        uint256 snapshot = vm.snapshot();
+
+        // set custom max discount - 11%
+        {
+            startHoax(address(this));
+            eTST.setMaxLiquidationDiscount(0.11e4);
+            uint256 expectedDiscountFactor = 0.89e18;
+
+            (uint256 maxRepay, uint256 maxYield) = eTST.checkLiquidation(lender, borrower, address(eTST2));
+
+            uint256 yieldAssets = eTST2.convertToAssets(maxYield);
+            uint256 valYield = oracle.getQuote(yieldAssets, address(eTST2), unitOfAccount);
+            uint256 valRepay = oracle.getQuote(maxRepay, address(assetTST), unitOfAccount);
+
+            assertApproxEqAbs(valRepay, valYield * expectedDiscountFactor / 1e18, 0.000000001e18);
+
+            // repay full debt
+            uint256 debtOf = eTST.debtOf(borrower);
+            assertEq(debtOf, maxRepay);
+
+            startHoax(lender);
+            eTST.liquidate(borrower, address(eTST2), maxRepay, 0);
+
+            // liquidator:
+            debtOf = eTST.debtOf(lender);
+            assertEq(debtOf, maxRepay);
+
+            uint256 balance = eTST2.balanceOf(lender);
+            assertEq(balance, maxYield);
+
+            // violator:
+            startHoax(borrower);
+            assertEq(eTST.debtOf(borrower), 0);
+
+            eTST.disableController();
+            assertEq(evc.getControllers(borrower).length, 0);
+            assertApproxEqAbs(eTST2.balanceOf(borrower), 100e18 - maxYield, 0.0000000000011e18);
+        }
+
+        vm.revertTo(snapshot);
+        snapshot = vm.snapshot();
+
+        // set custom max discount - 1%
+        {
+            startHoax(address(this));
+            eTST.setMaxLiquidationDiscount(0.01e4);
+            uint256 expectedDiscountFactor = 0.99e18;
+
+            (uint256 maxRepay, uint256 maxYield) = eTST.checkLiquidation(lender, borrower, address(eTST2));
+
+            uint256 yieldAssets = eTST2.convertToAssets(maxYield);
+            uint256 valYield = oracle.getQuote(yieldAssets, address(eTST2), unitOfAccount);
+            uint256 valRepay = oracle.getQuote(maxRepay, address(assetTST), unitOfAccount);
+
+            assertApproxEqAbs(valRepay, valYield * expectedDiscountFactor / 1e18, 0.000000001e18);
+
+            // repay full debt
+            uint256 debtOf = eTST.debtOf(borrower);
+            assertEq(debtOf, maxRepay);
+
+            startHoax(lender);
+            eTST.liquidate(borrower, address(eTST2), maxRepay, 0);
+
+            // liquidator:
+            debtOf = eTST.debtOf(lender);
+            assertEq(debtOf, maxRepay);
+
+            uint256 balance = eTST2.balanceOf(lender);
+            assertEq(balance, maxYield);
+
+            // violator:
+            startHoax(borrower);
+            assertEq(eTST.debtOf(borrower), 0);
+
+            eTST.disableController();
+            assertEq(evc.getControllers(borrower).length, 0);
+            assertApproxEqAbs(eTST2.balanceOf(borrower), 100e18 - maxYield, 0.0000000000011e18);
+        }
+
+        vm.revertTo(snapshot);
+        snapshot = vm.snapshot();
+
+        // set custom max discount - 0%
+        {
+            startHoax(address(this));
+            eTST.setMaxLiquidationDiscount(0);
+            uint256 expectedDiscountFactor = 1e18;
+
+            (uint256 maxRepay, uint256 maxYield) = eTST.checkLiquidation(lender, borrower, address(eTST2));
+
+            uint256 yieldAssets = eTST2.convertToAssets(maxYield);
+            uint256 valYield = oracle.getQuote(yieldAssets, address(eTST2), unitOfAccount);
+            uint256 valRepay = oracle.getQuote(maxRepay, address(assetTST), unitOfAccount);
+
+            assertApproxEqAbs(valRepay, valYield * expectedDiscountFactor / 1e18, 0.000000001e18);
+
+            // repay full debt
+            uint256 debtOf = eTST.debtOf(borrower);
+            assertEq(debtOf, maxRepay);
+
+            startHoax(lender);
+            eTST.liquidate(borrower, address(eTST2), maxRepay, 0);
+
+            // liquidator:
+            debtOf = eTST.debtOf(lender);
+            assertEq(debtOf, maxRepay);
+
+            uint256 balance = eTST2.balanceOf(lender);
+            assertEq(balance, maxYield);
+
+            // violator:
+            startHoax(borrower);
+            assertEq(eTST.debtOf(borrower), 0);
+
+            eTST.disableController();
+            assertEq(evc.getControllers(borrower).length, 0);
+            assertApproxEqAbs(eTST2.balanceOf(borrower), 100e18 - maxYield, 0.0000000000011e18);
+        }
+
+        vm.revertTo(snapshot);
+        snapshot = vm.snapshot();
+
+        // set custom max discount - 0.0001% (min)
+        {
+            startHoax(address(this));
+            eTST.setMaxLiquidationDiscount(1);
+            uint256 expectedDiscountFactor = 0.9999e18;
+
+            (uint256 maxRepay, uint256 maxYield) = eTST.checkLiquidation(lender, borrower, address(eTST2));
+
+            uint256 yieldAssets = eTST2.convertToAssets(maxYield);
+            uint256 valYield = oracle.getQuote(yieldAssets, address(eTST2), unitOfAccount);
+            uint256 valRepay = oracle.getQuote(maxRepay, address(assetTST), unitOfAccount);
+
+            assertApproxEqAbs(valRepay, valYield * expectedDiscountFactor / 1e18, 0.000000001e18);
+
+            // repay full debt
+            uint256 debtOf = eTST.debtOf(borrower);
+            assertEq(debtOf, maxRepay);
+
+            startHoax(lender);
+            eTST.liquidate(borrower, address(eTST2), maxRepay, 0);
+
+            // liquidator:
+            debtOf = eTST.debtOf(lender);
+            assertEq(debtOf, maxRepay);
+
+            uint256 balance = eTST2.balanceOf(lender);
+            assertEq(balance, maxYield);
+
+            // violator:
+            startHoax(borrower);
+            assertEq(eTST.debtOf(borrower), 0);
+
+            eTST.disableController();
+            assertEq(evc.getControllers(borrower).length, 0);
+            assertApproxEqAbs(eTST2.balanceOf(borrower), 100e18 - maxYield, 0.0000000000011e18);
+        }
+
+        vm.revertTo(snapshot);
+        snapshot = vm.snapshot();
+
+        // set custom max discount - 15% - still above the health score
+        {
+            startHoax(address(this));
+            eTST.setMaxLiquidationDiscount(0.15e4);
+            uint256 expectedDiscountFactor = healthScore;
+
+            (uint256 maxRepay, uint256 maxYield) = eTST.checkLiquidation(lender, borrower, address(eTST2));
+
+            uint256 yieldAssets = eTST2.convertToAssets(maxYield);
+            uint256 valYield = oracle.getQuote(yieldAssets, address(eTST2), unitOfAccount);
+            uint256 valRepay = oracle.getQuote(maxRepay, address(assetTST), unitOfAccount);
+
+            assertApproxEqAbs(valRepay, valYield * expectedDiscountFactor / 1e18, 0.000000001e18);
+
+            // repay full debt
+            uint256 debtOf = eTST.debtOf(borrower);
+            assertEq(debtOf, maxRepay);
+
+            startHoax(lender);
+            eTST.liquidate(borrower, address(eTST2), maxRepay, 0);
+
+            // liquidator:
+            debtOf = eTST.debtOf(lender);
+            assertEq(debtOf, maxRepay);
+
+            uint256 balance = eTST2.balanceOf(lender);
+            assertEq(balance, maxYield);
+
+            // violator:
+            startHoax(borrower);
+            assertEq(eTST.debtOf(borrower), 0);
+
+            eTST.disableController();
+            assertEq(evc.getControllers(borrower).length, 0);
+            assertApproxEqAbs(eTST2.balanceOf(borrower), 100e18 - maxYield, 0.0000000000011e18);
+        }
     }
 
     function getRiskAdjustedValue(uint256 amount, uint256 price, uint256 factor) public pure returns (uint256) {

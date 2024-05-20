@@ -15,9 +15,6 @@ import "../shared/types/Types.sol";
 abstract contract LiquidationModule is ILiquidation, Base, BalanceUtils, LiquidityUtils {
     using TypesLib for uint256;
 
-    // Maximum liquidation discount that can be awarded under any conditions in wad.
-    uint256 internal constant MAXIMUM_LIQUIDATION_DISCOUNT = 0.2e18;
-
     struct LiquidationCache {
         address liquidator;
         address violator;
@@ -125,9 +122,13 @@ abstract contract LiquidationModule is ILiquidation, Base, BalanceUtils, Liquidi
         // Compute discount
 
         uint256 discountFactor = liquidityCollateralValue * 1e18 / liquidityLiabilityValue; // discountFactor = health score = 1 - discount
-
-        if (discountFactor < 1e18 - MAXIMUM_LIQUIDATION_DISCOUNT) {
-            discountFactor = 1e18 - MAXIMUM_LIQUIDATION_DISCOUNT;
+        {
+            uint256 minDiscountFactor;
+            unchecked {
+                // discount <= config scale, so discount factor >= 0
+                minDiscountFactor = 1e18 - uint256(1e18) * vaultStorage.maxLiquidationDiscount.toUint16() / CONFIG_SCALE;
+            }
+            if (discountFactor < minDiscountFactor) discountFactor = minDiscountFactor;
         }
 
         // Compute maximum yield using mid-point prices
