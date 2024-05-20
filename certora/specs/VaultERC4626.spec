@@ -87,7 +87,17 @@ methods {
     function _.safeTransferFrom(address token, address from, address to, uint256 value, address permit2) internal with (env e)=> CVLTrySafeTransferFrom(e, from, to, value) expect (bool, bytes memory);
     function _.tryBalanceTrackerHook(address account, uint256 newAccountBalance, bool forfeitRecentReward) internal => NONDET;
     function _.balanceTrackerHook(address account, uint256 newAccountBalance, bool forfeitRecentReward) external => NONDET;
+    // Type Conversions
+    function _.toShares(uint256 amount) internal => CVLToShares(amount) expect (BaseHarness.Shares);
+    function _.toAssets(uint256 amount) internal => CVLToAssets(amount) expect (BaseHarness.Assets);
 
+}
+
+function CVLToShares(uint256 amount) returns BaseHarness.Shares {
+    return require_uint112(amount);
+}
+function CVLToAssets(uint256 amount) returns BaseHarness.Assets {
+    return require_uint112(amount);
 }
 
 // This is not in the scene for this config, so we just want it to be
@@ -380,7 +390,7 @@ rule dustFavorsTheHouse(uint assetsIn )
 
 
 invariant vaultSolvency(env e)
-    totalAssets(e) >= totalSupply(e)  && userAssets(e, currentContract) >= totalAssets(e)  {
+    totalAssets(e) >= totalSupply(e)  && userAssets(e, currentContract) >= require_uint256(cache_cash(e))  {
       preserved {
             requireInvariant totalSupplyIsSumOfBalances(e);
             require e.msg.sender != currentContract;
