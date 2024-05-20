@@ -13,7 +13,7 @@ contract MaliciousController {
         evc = _evc;
     }
 
-    function checkAccountStatus(address, address[] calldata) external returns (bytes4) {
+    function checkAccountStatus(address, address[] calldata) external pure returns (bytes4) {
         return this.checkAccountStatus.selector;
     }
 
