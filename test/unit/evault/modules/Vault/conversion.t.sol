@@ -453,6 +453,47 @@ contract VaultTest_Conversion is EVaultTestBase {
         eTST0.mint(maxShares + 2, user1); // TODO fix exact underestimation
     }
 
+    function testFuzz_maxMintXX() public {
+        uint256 cash = 100000000;
+        uint256 shares = 0;
+        uint256 borrows = 43720241;
+        uint16 supplyCap = 905;
+
+        uint256 supplyCapAmount = AmountCap.wrap(supplyCap).resolve();
+        vm.assume(supplyCapAmount > 1 && supplyCapAmount <= MAX_SANE_AMOUNT);
+
+        cash = bound(cash, 1e8, MAX_SANE_AMOUNT);
+        borrows = bound(borrows, 0, MAX_SANE_AMOUNT);
+        vm.assume(cash + borrows <= MAX_SANE_AMOUNT);
+        uint256 totalAssets = cash + borrows;
+
+        shares = bound(shares, totalAssets, MAX_SANE_AMOUNT);
+
+        startHoax(address(this));
+        eTST0.setCaps(supplyCap, 0);
+        eTST0.setCash_(cash);
+        eTST0.setTotalBorrow_(borrows);
+        eTST0.setTotalShares_(shares);
+
+        assertEq(eTST0.totalBorrowsExact(), borrows);
+        assertEq(eTST0.cash(), cash);
+        assertEq(eTST0.totalSupply(), shares);
+
+        uint256 maxShares = eTST0.maxMint(user1);
+
+        vm.assume(maxShares < MAX_SANE_AMOUNT);
+
+        startHoax(user1);
+        assetTST.mint(user1, type(uint256).max);
+        assetTST.approve(address(eTST0), type(uint256).max);
+
+        uint256 snapshot = vm.snapshot();
+
+        eTST0.mint(maxShares, user1);
+
+        vm.revertTo(snapshot);
+    }
+
     function testFuzz_previewMint(uint256 cash, uint256 shares, uint256 borrows, uint256 mint) public {
         cash = bound(cash, 1, MAX_SANE_AMOUNT / 1000);
         borrows = bound(borrows, 0, MAX_SANE_AMOUNT / 1000);
