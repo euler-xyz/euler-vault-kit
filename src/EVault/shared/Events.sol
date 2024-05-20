@@ -24,17 +24,17 @@ abstract contract Events {
     // ERC4626
 
     /// @notice Deposit assets into an ERC4626 vault
-    /// @param sender Address initiaiting the deposit
+    /// @param sender Address initiating the deposit
     /// @param owner Address holding the assets
     /// @param assets Amount of assets deposited
-    /// @param shares Amount of shares minted as recipt for the deposit
+    /// @param shares Amount of shares minted as receipt for the deposit
     event Deposit(address indexed sender, address indexed owner, uint256 assets, uint256 shares);
 
     /// @notice Withdraw from an ERC4626 vault
     /// @param sender Address initiating the withdrawal
     /// @param receiver Address receiving the assets
     /// @param owner Address holding the shares
-    /// @param assets Amount of assets sent to receiver
+    /// @param assets Amount of assets sent to the receiver
     /// @param shares Amount of shares burned
     event Withdraw(
         address indexed sender, address indexed receiver, address indexed owner, uint256 assets, uint256 shares

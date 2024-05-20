@@ -13,11 +13,8 @@ import "../shared/types/Types.sol";
 /// @custom:security-contact security@euler.xyz
 /// @author Euler Labs (https://www.eulerlabs.com/)
 /// @notice An EVault module handling liquidations of unhealthy accounts
-abstract contract LiquidationModule is ILiquidation, Base, BalanceUtils, LiquidityUtils {
+abstract contract LiquidationModule is ILiquidation, BalanceUtils, LiquidityUtils {
     using TypesLib for uint256;
-
-    // Maximum liquidation discount that can be awarded under any conditions.
-    uint256 internal constant MAXIMUM_LIQUIDATION_DISCOUNT = 0.2e18;
 
     struct LiquidationCache {
         address liquidator;
@@ -30,6 +27,7 @@ abstract contract LiquidationModule is ILiquidation, Base, BalanceUtils, Liquidi
     }
 
     /// @inheritdoc ILiquidation
+    /// @dev The function will not revert if the account is healthy and return (0, 0)
     function checkLiquidation(address liquidator, address violator, address collateral)
         public
         view
@@ -78,7 +76,7 @@ abstract contract LiquidationModule is ILiquidation, Base, BalanceUtils, Liquidi
 
         // Checks
 
-        // Self liquidation is not allowed
+        // Same account self-liquidation is not allowed
         if (liqCache.violator == liqCache.liquidator) revert E_SelfLiquidation();
         // Only liquidate trusted collaterals to make sure yield transfer has no side effects.
         if (!isRecognizedCollateral(liqCache.collateral)) revert E_BadCollateral();
@@ -89,6 +87,8 @@ abstract contract LiquidationModule is ILiquidation, Base, BalanceUtils, Liquidi
         // Violator's health check must not be deferred, meaning no prior operations on violator's account
         // would possibly be forgiven after the enforced collateral transfer to the liquidator
         if (isAccountStatusCheckDeferred(violator)) revert E_ViolatorLiquidityDeferred();
+        // A cool off time must elapse since successful account status check in order to mitigate self-liquidaition attacks
+        if (isInLiquidationCoolOff(violator)) revert E_LiquidationCoolOff();
 
         // Violator has no liabilities, liquidation is a no-op
         if (liqCache.liability.isZero()) return liqCache;
@@ -117,18 +117,22 @@ abstract contract LiquidationModule is ILiquidation, Base, BalanceUtils, Liquidi
     {
         // Check account health
 
-        (uint256 liquidityCollateralValue, uint256 liquidityLiabilityValue) =
+        (uint256 collateralAdjustedValue, uint256 liabilityValue) =
             calculateLiquidity(vaultCache, liqCache.violator, liqCache.collaterals, true);
 
         // no violation
-        if (liquidityCollateralValue > liquidityLiabilityValue) return liqCache;
+        if (collateralAdjustedValue > liabilityValue) return liqCache;
 
         // Compute discount
 
-        uint256 discountFactor = liquidityCollateralValue * 1e18 / liquidityLiabilityValue; // discountFactor = health score = 1 - discount
-
-        if (discountFactor < 1e18 - MAXIMUM_LIQUIDATION_DISCOUNT) {
-            discountFactor = 1e18 - MAXIMUM_LIQUIDATION_DISCOUNT;
+        uint256 discountFactor = collateralAdjustedValue * 1e18 / liabilityValue; // discountFactor = health score = 1 - discount
+        {
+            uint256 minDiscountFactor;
+            unchecked {
+                // discount <= config scale, so discount factor >= 0
+                minDiscountFactor = 1e18 - uint256(1e18) * vaultStorage.maxLiquidationDiscount.toUint16() / CONFIG_SCALE;
+            }
+            if (discountFactor < minDiscountFactor) discountFactor = minDiscountFactor;
         }
 
         // Compute maximum yield using mid-point prices
@@ -138,15 +142,13 @@ abstract contract LiquidationModule is ILiquidation, Base, BalanceUtils, Liquidi
             vaultCache.oracle.getQuote(collateralBalance, liqCache.collateral, vaultCache.unitOfAccount);
 
         if (collateralValue == 0) {
-            // worthless collateral can be claimed with no repay
+            // Worthless collateral can be claimed with no repay. The collateral can be actually worthless, or the amount of available
+            // collateral could be non-representable in the unit of account (rounded down to zero during conversion). In this case
+            // the liquidator is able to claim the collateral without repaying any debt. Note that it's not profitable as long as liquidation
+            // gas costs are larger than the value of a single wei of the reference asset. Care should be taken though when selecting
+            // unit of account and collateral assets.
             liqCache.yieldBalance = collateralBalance;
             return liqCache;
-        }
-
-        uint256 liabilityValue = liqCache.liability.toUint();
-        if (address(vaultCache.asset) != vaultCache.unitOfAccount) {
-            liabilityValue =
-                vaultCache.oracle.getQuote(liabilityValue, address(vaultCache.asset), vaultCache.unitOfAccount);
         }
 
         uint256 maxRepayValue = liabilityValue;
@@ -175,7 +177,9 @@ abstract contract LiquidationModule is ILiquidation, Base, BalanceUtils, Liquidi
 
         // Handle repay: liquidator takes on violator's debt:
 
-        transferBorrow(vaultCache, liqCache.violator, liqCache.liquidator, liqCache.repay);
+        if (liqCache.repay.toUint() > 0) {
+            transferBorrow(vaultCache, liqCache.violator, liqCache.liquidator, liqCache.repay);
+        }
 
         // Handle yield: liquidator receives violator's collateral
 
@@ -216,6 +220,12 @@ abstract contract LiquidationModule is ILiquidation, Base, BalanceUtils, Liquidi
         emit Liquidate(
             liqCache.liquidator, liqCache.violator, liqCache.collateral, liqCache.repay.toUint(), liqCache.yieldBalance
         );
+    }
+
+    function isInLiquidationCoolOff(address account) private view returns (bool) {
+        unchecked {
+            return block.timestamp < getLastAccountStatusCheckTimestamp(account) + vaultStorage.liquidationCoolOffTime;
+        }
     }
 }
 

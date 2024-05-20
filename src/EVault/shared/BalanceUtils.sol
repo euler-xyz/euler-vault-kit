@@ -3,7 +3,6 @@
 pragma solidity ^0.8.0;
 
 import {Base} from "./Base.sol";
-import {IBalanceTracker} from "../../interfaces/IBalanceTracker.sol";
 
 import "./types/Types.sol";
 
@@ -12,8 +11,6 @@ import "./types/Types.sol";
 /// @author Euler Labs (https://www.eulerlabs.com/)
 /// @notice Utilities for tracking share balances and allowances
 abstract contract BalanceUtils is Base {
-    using TypesLib for uint256;
-
     // Balances
 
     function increaseBalance(
@@ -70,27 +67,33 @@ abstract contract BalanceUtils is Base {
     }
 
     function transferBalance(address from, address to, Shares amount) internal virtual {
+        if (to == address(0)) revert E_BadSharesReceiver();
+
         if (!amount.isZero()) {
-            UserStorage storage userFrom = vaultStorage.users[from];
-            UserStorage storage userTo = vaultStorage.users[to];
+            // update from
 
-            (Shares origFromBalance, bool fromBalanceForwarderEnabled) = userFrom.getBalanceAndBalanceForwarder();
+            UserStorage storage user = vaultStorage.users[from];
 
-            (Shares origToBalance, bool toBalanceForwarderEnabled) = userTo.getBalanceAndBalanceForwarder();
-
+            (Shares origFromBalance, bool fromBalanceForwarderEnabled) = user.getBalanceAndBalanceForwarder();
             if (origFromBalance < amount) revert E_InsufficientBalance();
 
             Shares newFromBalance = origFromBalance.subUnchecked(amount);
-            Shares newToBalance = origToBalance + amount;
+            user.setBalance(newFromBalance);
 
-            userFrom.setBalance(newFromBalance);
-            userTo.setBalance(newToBalance);
+            // update to
+
+            user = vaultStorage.users[to];
+
+            (Shares origToBalance, bool toBalanceForwarderEnabled) = user.getBalanceAndBalanceForwarder();
+
+            Shares newToBalance = origToBalance + amount;
+            user.setBalance(newToBalance);
 
             if (fromBalanceForwarderEnabled) {
                 balanceTracker.balanceTrackerHook(from, newFromBalance.toUint(), isControlCollateralInProgress());
             }
 
-            if (toBalanceForwarderEnabled) {
+            if (toBalanceForwarderEnabled && from != to) {
                 balanceTracker.balanceTrackerHook(to, newToBalance.toUint(), false);
             }
         }
@@ -107,6 +110,7 @@ abstract contract BalanceUtils is Base {
         emit Approval(owner, spender, amount);
     }
 
+    /// @dev As gas saving optimization, consuming allowance doesn't emit the Approval event.
     function decreaseAllowance(address owner, address spender, Shares amount) internal virtual {
         if (amount.isZero() || owner == spender) return;
         UserStorage storage user = vaultStorage.users[owner];
@@ -118,7 +122,6 @@ abstract contract BalanceUtils is Base {
                 allowance -= amount.toUint();
             }
             user.eTokenAllowance[spender] = allowance;
-            emit Approval(owner, spender, allowance);
         }
     }
 }

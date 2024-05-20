@@ -21,7 +21,7 @@ struct Snapshot {
 /// @author Euler Labs (https://www.eulerlabs.com/)
 /// @notice Library for working with the `Snapshot` struct
 library SnapshotLib {
-    uint32 constant STAMP = 1; // non zero initial value of the snapshot slot to save gas on SSTORE
+    uint32 private constant STAMP = 1; // non zero initial value of the snapshot slot to save gas on SSTORE
 
     function set(Snapshot storage self, Assets cash, Assets borrows) internal {
         self.cash = cash;

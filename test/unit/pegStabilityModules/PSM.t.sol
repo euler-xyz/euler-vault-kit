@@ -8,11 +8,14 @@ import {PegStabilityModule, EVCUtil} from "../../../src/Synths/PegStabilityModul
 import {ESynth, IEVC} from "../../../src/Synths/ESynth.sol";
 import {TestERC20} from "../../mocks/TestERC20.sol";
 import {EthereumVaultConnector} from "ethereum-vault-connector/EthereumVaultConnector.sol";
+import {EVCUtil} from "ethereum-vault-connector/utils/EVCUtil.sol";
 
 contract PSMTest is Test {
     uint256 public TO_UNDERLYING_FEE = 30;
     uint256 public TO_SYNTH_FEE = 30;
     uint256 public BPS_SCALE = 10000;
+    uint256 public CONVERSION_PRICE = 1e18;
+    uint256 public PRICE_SCALE = 1e18;
 
     ESynth public synth;
     TestERC20 public underlying;
@@ -38,7 +41,9 @@ contract PSMTest is Test {
 
         // Deploy PSM
         vm.prank(owner);
-        psm = new PegStabilityModule(address(evc), address(synth), address(underlying), TO_UNDERLYING_FEE, TO_SYNTH_FEE);
+        psm = new PegStabilityModule(
+            address(evc), address(synth), address(underlying), TO_UNDERLYING_FEE, TO_SYNTH_FEE, CONVERSION_PRICE
+        );
 
         // Give PSM and wallets some underlying
         underlying.mint(address(psm), 100e18);
@@ -77,27 +82,37 @@ contract PSMTest is Test {
 
     function testConstructorToUnderlyingFeeExceedsBPS() public {
         vm.expectRevert(PegStabilityModule.E_FeeExceedsBPS.selector);
-        new PegStabilityModule(address(evc), address(synth), address(underlying), BPS_SCALE + 1, TO_SYNTH_FEE);
+        new PegStabilityModule(
+            address(evc), address(synth), address(underlying), BPS_SCALE + 1, TO_SYNTH_FEE, CONVERSION_PRICE
+        );
     }
 
     function testConstructorToSynthFeeExceedsBPS() public {
         vm.expectRevert(PegStabilityModule.E_FeeExceedsBPS.selector);
-        new PegStabilityModule(address(evc), address(synth), address(underlying), TO_UNDERLYING_FEE, BPS_SCALE + 1);
+        new PegStabilityModule(
+            address(evc), address(synth), address(underlying), TO_UNDERLYING_FEE, BPS_SCALE + 1, CONVERSION_PRICE
+        );
     }
 
     function testConstructorEVCZeroAddress() public {
-        vm.expectRevert(EVCUtil.EVC_InvalidAddress.selector);
-        new PegStabilityModule(address(0), address(synth), address(underlying), TO_UNDERLYING_FEE, TO_SYNTH_FEE);
+        vm.expectRevert(bytes4(keccak256("EVC_InvalidAddress()")));
+        new PegStabilityModule(
+            address(0), address(synth), address(underlying), TO_UNDERLYING_FEE, TO_SYNTH_FEE, CONVERSION_PRICE
+        );
     }
 
     function testConstructorSynthZeroAddress() public {
         vm.expectRevert(PegStabilityModule.E_ZeroAddress.selector);
-        new PegStabilityModule(address(evc), address(0), address(underlying), TO_UNDERLYING_FEE, TO_SYNTH_FEE);
+        new PegStabilityModule(
+            address(evc), address(0), address(underlying), TO_UNDERLYING_FEE, TO_SYNTH_FEE, CONVERSION_PRICE
+        );
     }
 
     function testConstructorUnderlyingZeroAddress() public {
         vm.expectRevert(PegStabilityModule.E_ZeroAddress.selector);
-        new PegStabilityModule(address(evc), address(synth), address(0), TO_UNDERLYING_FEE, TO_SYNTH_FEE);
+        new PegStabilityModule(
+            address(evc), address(synth), address(0), TO_UNDERLYING_FEE, TO_SYNTH_FEE, CONVERSION_PRICE
+        );
     }
 
     function testSwapToUnderlyingGivenIn() public {
@@ -215,5 +230,31 @@ contract PSMTest is Test {
         uint256 amountIn = psm.quoteToSynthGivenOut(amountOut);
 
         assertEq(amountIn, expectedAmountIn);
+    }
+
+    function testSanityPriceConversionToSynth() public {
+        uint256 price = 0.25e18;
+
+        uint256 synthAmount = 1e18;
+        uint256 underlyingAmount = 0.25e18;
+
+        PegStabilityModule psmNoFee =
+            new PegStabilityModule(address(evc), address(synth), address(underlying), 0, 0, price);
+
+        assertEq(psmNoFee.quoteToSynthGivenIn(underlyingAmount), synthAmount);
+        assertEq(psmNoFee.quoteToSynthGivenOut(synthAmount), underlyingAmount);
+    }
+
+    function testSanityPriceConversionToUnderlying() public {
+        uint256 price = 0.25e18;
+
+        uint256 synthAmount = 1e18;
+        uint256 underlyingAmount = 0.25e18;
+
+        PegStabilityModule psmNoFee =
+            new PegStabilityModule(address(evc), address(synth), address(underlying), 0, 0, price);
+
+        assertEq(psmNoFee.quoteToUnderlyingGivenIn(synthAmount), underlyingAmount);
+        assertEq(psmNoFee.quoteToUnderlyingGivenOut(underlyingAmount), synthAmount);
     }
 }

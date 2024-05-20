@@ -35,7 +35,7 @@ contract EVCClientUnitTest is EVaultTestBase {
         oracle.setPrice(address(assetTST), unitOfAccount, 1e18);
         oracle.setPrice(address(assetTST2), unitOfAccount, 1e18);
 
-        eTST.setLTV(address(eTST2), 0.9e4, 0);
+        eTST.setLTV(address(eTST2), 0.9e4, 0.9e4, 0);
 
         // Depositor
         startHoax(depositor);
@@ -53,7 +53,9 @@ contract EVCClientUnitTest is EVaultTestBase {
 
         // create third random vault
         assetTST3 = new TestERC20("Test Token 3", "TST3", 18, false);
-        eTST3 = IEVault(coreProductLine.createVault(address(assetTST3), address(oracle), unitOfAccount));
+        eTST3 = IEVault(
+            factory.createProxy(address(0), true, abi.encodePacked(address(assetTST3), address(oracle), unitOfAccount))
+        );
         eTST3.setInterestRateModel(address(new IRMTestDefault()));
     }
 
@@ -80,10 +82,6 @@ contract EVCClientUnitTest is EVaultTestBase {
 
         vm.expectRevert(Errors.E_ControllerDisabled.selector);
         eTST.borrow(5e18, borrower);
-
-        // OP_LOOP
-        vm.expectRevert(Errors.E_ControllerDisabled.selector);
-        eTST.loop(5e18, borrower);
 
         // OP_PULL_DEBT
         vm.expectRevert(Errors.E_ControllerDisabled.selector);
@@ -170,8 +168,9 @@ contract EVCClientUnitTest is EVaultTestBase {
         GenericFactory factory = new GenericFactory(admin);
 
         factory.setImplementation(address(bVaultImpl));
-        IEVault v =
-            IEVault(factory.createProxy(true, abi.encodePacked(address(assetTST2), address(oracle), unitOfAccount)));
+        IEVault v = IEVault(
+            factory.createProxy(address(0), true, abi.encodePacked(address(assetTST2), address(oracle), unitOfAccount))
+        );
         v.setInterestRateModel(address(new IRMTestDefault()));
 
         return address(v);

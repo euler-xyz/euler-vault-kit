@@ -24,6 +24,14 @@ contract ERC4626Test_ProtocolConfig is EVaultTestBase {
         assetTST.approve(address(eTST), type(uint256).max);
     }
 
+    function test_contructor_badAdminOrReceiver() public {
+        vm.expectRevert(ProtocolConfig.E_InvalidAdmin.selector);
+        new ProtocolConfig(address(0), address(1));
+
+        vm.expectRevert(ProtocolConfig.E_InvalidReceiver.selector);
+        new ProtocolConfig(address(1), address(0));
+    }
+
     function test_interestFees_normal() public {
         assertEq(eTST.interestFee(), DEFAULT_INTEREST_FEE);
 

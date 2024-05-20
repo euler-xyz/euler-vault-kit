@@ -105,28 +105,37 @@ contract GenericFactory is MetaProxyDeployer {
     }
 
     /// @notice A permissionless funtion to deploy new proxies
+    /// @param desiredImplementation Address of the implementation contract expected to be registered in the factory during proxy creation
     /// @param upgradeable If true, the proxy will be an instance of the BeaconProxy. If false, a minimal meta proxy will be deployed
     /// @param trailingData Metadata to be attached to every call passing through the new proxy
     /// @return The address of the new proxy
-    function createProxy(bool upgradeable, bytes memory trailingData) external nonReentrant returns (address) {
-        if (implementation == address(0)) revert E_Implementation();
+    /// @dev The desired implementation serves as a protection against (unintentional) front-running of upgrades
+    function createProxy(address desiredImplementation, bool upgradeable, bytes memory trailingData)
+        external
+        nonReentrant
+        returns (address)
+    {
+        address _implementation = implementation;
+        if (desiredImplementation == address(0)) desiredImplementation = _implementation;
+
+        if (desiredImplementation == address(0) || desiredImplementation != _implementation) revert E_Implementation();
 
         address proxy;
 
         if (upgradeable) {
             proxy = address(new BeaconProxy(trailingData));
         } else {
-            proxy = deployMetaProxy(implementation, trailingData);
+            proxy = deployMetaProxy(desiredImplementation, trailingData);
         }
 
         proxyLookup[proxy] =
-            ProxyConfig({upgradeable: upgradeable, implementation: implementation, trailingData: trailingData});
+            ProxyConfig({upgradeable: upgradeable, implementation: desiredImplementation, trailingData: trailingData});
 
         proxyList.push(proxy);
 
         IComponent(proxy).initialize(msg.sender);
 
-        emit ProxyCreated(proxy, upgradeable, implementation, trailingData);
+        emit ProxyCreated(proxy, upgradeable, desiredImplementation, trailingData);
 
         return proxy;
     }
@@ -146,8 +155,10 @@ contract GenericFactory is MetaProxyDeployer {
 
     /// @notice Transfer admin rights to a new address
     /// @param newUpgradeAdmin Address of the new admin
+    /// @dev For creating non upgradeable factories, or to finalize all upgradeable proxies to current implementation,
+    /// @dev set the admin to zero address.
+    /// @dev If setting to address zero, make sure the implementation contract is already set
     function setUpgradeAdmin(address newUpgradeAdmin) external nonReentrant adminOnly {
-        if (newUpgradeAdmin == address(0)) revert E_BadAddress();
         upgradeAdmin = newUpgradeAdmin;
         emit SetUpgradeAdmin(newUpgradeAdmin);
     }

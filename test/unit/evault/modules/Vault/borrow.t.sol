@@ -32,7 +32,7 @@ contract VaultTest_Borrow is EVaultTestBase {
         oracle.setPrice(address(assetTST), unitOfAccount, 1e18);
         oracle.setPrice(address(assetTST2), unitOfAccount, 1e18);
 
-        eTST.setLTV(address(eTST2), 0.9e4, 0);
+        eTST.setLTV(address(eTST2), 0.9e4, 0.9e4, 0);
 
         // Depositor
 
@@ -142,20 +142,7 @@ contract VaultTest_Borrow is EVaultTestBase {
         assertEq(eTST.totalBorrowsExact(), 0);
     }
 
-    function test_loopNoop() public {
-        startHoax(borrower);
-
-        evc.enableCollateral(borrower, address(eTST2));
-        evc.enableController(borrower, address(eTST));
-
-        assertEq(eTST.balanceOf(borrower), 0);
-        assertEq(eTST.debtOf(borrower), 0);
-        eTST.loop(0, borrower);
-        assertEq(eTST.balanceOf(borrower), 0);
-        assertEq(eTST.debtOf(borrower), 0);
-    }
-
-    function test_deloopWithExtra() public {
+    function test_repayWithSharesWithExtra() public {
         startHoax(borrower);
 
         evc.enableCollateral(borrower, address(eTST2));
@@ -164,13 +151,13 @@ contract VaultTest_Borrow is EVaultTestBase {
         assetTST.mint(borrower, 100e18);
         assetTST.approve(address(eTST), type(uint256).max);
 
-        eTST.loop(2e18, borrower);
-        eTST.deposit(1e18, borrower);
+        eTST.deposit(3e18, borrower);
+        eTST.borrow(2e18, borrower);
 
         assertEq(eTST.balanceOf(borrower), 3e18);
         assertEq(eTST.debtOf(borrower), 2e18);
 
-        eTST.deloop(type(uint256).max, borrower);
+        eTST.repayWithShares(type(uint256).max, borrower);
 
         assertEq(eTST.balanceOf(borrower), 1e18);
         assertEq(eTST.debtOf(borrower), 0);
@@ -310,9 +297,6 @@ contract VaultTest_Borrow is EVaultTestBase {
 
         vm.expectRevert(Errors.E_ControllerDisabled.selector);
         IEVault(controller).borrow(amount, account);
-
-        vm.expectRevert(Errors.E_ControllerDisabled.selector);
-        IEVault(controller).loop(amount, account);
 
         vm.expectRevert(Errors.E_ControllerDisabled.selector);
         IEVault(controller).pullDebt(amount, account);

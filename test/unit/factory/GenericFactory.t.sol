@@ -50,7 +50,7 @@ contract FactoryTest is Test {
         assertEq(factory.implementation(), address(2));
     }
 
-    function test_activateVault() public {
+    function test_activateVaultDefaultImplementation() public {
         // Create and install mock eVault impl
         MockEVault mockEvaultImpl = new MockEVault(address(factory), address(1));
         vm.prank(upgradeAdmin);
@@ -59,7 +59,8 @@ contract FactoryTest is Test {
         // Create token and activate it
         TestERC20 asset = new TestERC20("Test Token", "TST", 17, false);
 
-        MockEVault eTST = MockEVault(factory.createProxy(true, abi.encodePacked(address(asset))));
+        // pass address(0) to indicate default desired implementation address
+        MockEVault eTST = MockEVault(factory.createProxy(address(0), true, abi.encodePacked(address(asset))));
 
         // Verify proxying behaves as intended
         assertEq(eTST.implementation(), "TRANSPARENT");
@@ -77,6 +78,41 @@ contract FactoryTest is Test {
         }
     }
 
+    function testFuzz_activateVaultDesiredImplementation(address differentAddress) public {
+        // Create and install mock eVault impl
+        MockEVault mockEvaultImpl = new MockEVault(address(factory), address(1));
+        vm.assume(differentAddress != address(0) && differentAddress != address(mockEvaultImpl));
+
+        vm.prank(upgradeAdmin);
+        factory.setImplementation(address(mockEvaultImpl));
+
+        // Create token and activate it
+        TestERC20 asset = new TestERC20("Test Token", "TST", 17, false);
+
+        // pass the desired implementation address
+        MockEVault eTST =
+            MockEVault(factory.createProxy(address(mockEvaultImpl), true, abi.encodePacked(address(asset))));
+
+        // Verify proxying behaves as intended
+        assertEq(eTST.implementation(), "TRANSPARENT");
+
+        {
+            string memory inputArg = "hello world! 12345678900987654321";
+
+            address randomUser = vm.addr(5000);
+            vm.prank(randomUser);
+            (string memory outputArg, address theMsgSender, address vaultAsset) = eTST.arbitraryFunction(inputArg);
+
+            assertEq(outputArg, inputArg);
+            assertEq(theMsgSender, randomUser);
+            assertEq(vaultAsset, address(asset));
+        }
+
+        // reverts if the desired implementation doesn't match
+        vm.expectRevert(GenericFactory.E_Implementation.selector);
+        eTST = MockEVault(factory.createProxy(differentAddress, true, abi.encodePacked(address(asset))));
+    }
+
     function test_getEVaultsListLength() public {
         // Create and install mock eVault impl
         MockEVault mockEvaultImpl = new MockEVault(address(factory), address(1));
@@ -87,7 +123,7 @@ contract FactoryTest is Test {
         uint256 amountEVault = 10;
         for (uint256 i; i < amountEVault; i++) {
             TestERC20 TST = new TestERC20("Test Token", "TST", 18, false);
-            MockEVault(factory.createProxy(true, abi.encodePacked(address(TST))));
+            MockEVault(factory.createProxy(address(0), true, abi.encodePacked(address(TST))));
         }
 
         uint256 lenEVaultList = factory.getProxyListLength();
@@ -108,7 +144,7 @@ contract FactoryTest is Test {
 
         for (uint256 i; i < amountEVaults; i++) {
             TestERC20 TST = new TestERC20("Test Token", "TST", 18, false);
-            MockEVault eVault = MockEVault(factory.createProxy(true, abi.encodePacked(address(TST))));
+            MockEVault eVault = MockEVault(factory.createProxy(address(0), true, abi.encodePacked(address(TST))));
             eVaultsList[i] = address(eVault);
         }
 
@@ -148,14 +184,14 @@ contract FactoryTest is Test {
 
         // Create Tokens and activate Vaults
         TestERC20 TST = new TestERC20("Test Token", "TST", 18, false);
-        MockEVault eVault = MockEVault(factory.createProxy(true, abi.encodePacked(address(TST))));
+        MockEVault eVault = MockEVault(factory.createProxy(address(0), true, abi.encodePacked(address(TST))));
 
         GenericFactory.ProxyConfig memory config = factory.getProxyConfig(address(eVault));
 
         assertEq(config.trailingData, abi.encodePacked(address(TST)));
 
         TST = new TestERC20("Test Token", "TST", 18, false);
-        eVault = MockEVault(factory.createProxy(true, abi.encodePacked(address(TST))));
+        eVault = MockEVault(factory.createProxy(address(0), true, abi.encodePacked(address(TST))));
 
         config = factory.getProxyConfig(address(eVault));
 
@@ -173,7 +209,7 @@ contract FactoryTest is Test {
 
         // Create a Token and activate Vault
         TestERC20 TST = new TestERC20("Test Token", "TST", 18, false);
-        proxy = factory.createProxy(true, abi.encodePacked(address(TST)));
+        proxy = factory.createProxy(address(0), true, abi.encodePacked(address(TST)));
 
         assertEq(factory.isProxy(proxy), true);
     }
@@ -190,7 +226,7 @@ contract FactoryTest is Test {
         vm.expectEmit(false, true, true, true);
         emit GenericFactory.ProxyCreated(address(1), true, address(mockEvaultImpl), abi.encodePacked(address(asset)));
 
-        factory.createProxy(true, abi.encodePacked(address(asset)));
+        factory.createProxy(address(0), true, abi.encodePacked(address(asset)));
     }
 
     function test_Event_SetEVaultImplementation() public {
@@ -232,24 +268,19 @@ contract FactoryTest is Test {
         address asset = vm.addr(1);
 
         vm.expectRevert(GenericFactory.E_Reentrancy.selector);
-        factory.createProxy(false, abi.encodePacked(address(asset)));
+        factory.createProxy(address(0), false, abi.encodePacked(address(asset)));
     }
 
     function test_RevertIfImplementation_ActivateVault() public {
         address asset = vm.addr(1);
 
         vm.expectRevert(GenericFactory.E_Implementation.selector);
-        factory.createProxy(true, abi.encodePacked(address(asset)));
+        factory.createProxy(address(0), true, abi.encodePacked(address(asset)));
     }
 
-    function test_RevertIfBadAddress() public {
-        vm.prank(upgradeAdmin);
+    function test_RevertIfWrongAdminInConstructor() public {
         vm.expectRevert(GenericFactory.E_BadAddress.selector);
-        factory.setImplementation(address(0));
-
-        vm.prank(upgradeAdmin);
-        vm.expectRevert(GenericFactory.E_BadAddress.selector);
-        factory.setUpgradeAdmin(address(0));
+        new GenericFactory(address(0));
     }
 
     function test_RevertIfErrorList_GetEVaultsList() public {
@@ -265,7 +296,7 @@ contract FactoryTest is Test {
 
         for (uint256 i; i < amountEVaults; i++) {
             TestERC20 TST = new TestERC20("Test Token", "TST", 18, false);
-            MockEVault eVault = MockEVault(factory.createProxy(true, abi.encodePacked(address(TST))));
+            MockEVault eVault = MockEVault(factory.createProxy(address(0), true, abi.encodePacked(address(TST))));
             eVaultsList[i] = address(eVault);
         }
 
@@ -292,7 +323,7 @@ contract FactoryTest is Test {
 
         // Create non-upgradeable proxy
         TestERC20 TST = new TestERC20("Test Token", "TST", 18, false);
-        MockEVault eVaultNonUpg = MockEVault(factory.createProxy(false, abi.encodePacked(address(TST))));
+        MockEVault eVaultNonUpg = MockEVault(factory.createProxy(address(0), false, abi.encodePacked(address(TST))));
 
         config = factory.getProxyConfig(address(eVaultNonUpg));
 
@@ -321,7 +352,7 @@ contract FactoryTest is Test {
 
         // BeaconProxy (upgradeable)
         {
-            MockEVault eTST = MockEVault(factory.createProxy(true, abi.encodePacked(address(asset))));
+            MockEVault eTST = MockEVault(factory.createProxy(address(0), true, abi.encodePacked(address(asset))));
 
             assertEq(address(eTST).balance, 0);
             eTST.payMe{value: 12345}();
@@ -330,7 +361,7 @@ contract FactoryTest is Test {
 
         // MetaProxy (non-upgradeable)
         {
-            MockEVault eTST = MockEVault(factory.createProxy(false, abi.encodePacked(address(asset))));
+            MockEVault eTST = MockEVault(factory.createProxy(address(0), false, abi.encodePacked(address(asset))));
 
             assertEq(address(eTST).balance, 0);
             eTST.payMe{value: 12345}();

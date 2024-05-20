@@ -22,7 +22,9 @@ contract VaultTest_AmountLimits is EVaultTestBase {
         user2 = makeAddr("user2");
 
         assetTST3 = new TestERC20("Test TST 3", "TST3", 0, false);
-        eTST3 = IEVault(factory.createProxy(true, abi.encodePacked(address(assetTST3), address(oracle), unitOfAccount)));
+        eTST3 = IEVault(
+            factory.createProxy(address(0), true, abi.encodePacked(address(assetTST3), address(oracle), unitOfAccount))
+        );
 
         assetTST.mint(user1, type(uint256).max / 2);
         startHoax(user1);
@@ -154,18 +156,5 @@ contract VaultTest_AmountLimits is EVaultTestBase {
         startHoax(user2);
         vm.expectRevert(Errors.E_AmountTooLargeToEncode.selector);
         eTST.deposit(1, user2);
-    }
-
-    function test_loop_totalBalancesTooLarge() public {
-        startHoax(user1);
-        eTST.deposit(MAX_SANE_AMOUNT, user1);
-
-        startHoax(user2);
-        vm.expectRevert(Errors.E_ControllerDisabled.selector);
-        eTST.loop(10, user2);
-
-        evc.enableController(user2, address(eTST));
-        vm.expectRevert(Errors.E_AmountTooLargeToEncode.selector);
-        eTST.loop(10, user2);
     }
 }

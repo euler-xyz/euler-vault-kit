@@ -34,7 +34,9 @@ contract VaultTest_Withdraw is EVaultTestBase {
         // Setup
 
         assetTST3 = new TestERC20("Test TST 3", "TST3", 18, false);
-        eTST3 = IEVault(factory.createProxy(true, abi.encodePacked(address(assetTST3), address(oracle), unitOfAccount)));
+        eTST3 = IEVault(
+            factory.createProxy(address(0), true, abi.encodePacked(address(assetTST3), address(oracle), unitOfAccount))
+        );
 
         eTST.setInterestRateModel(address(new IRMTestZero()));
         eTST2.setInterestRateModel(address(new IRMTestZero()));
@@ -44,7 +46,7 @@ contract VaultTest_Withdraw is EVaultTestBase {
         oracle.setPrice(address(eTST2), unitOfAccount, 0.4e18);
         oracle.setPrice(address(eTST3), unitOfAccount, 2.2e18);
 
-        eTST.setLTV(address(eTST2), 0.3e4, 0);
+        eTST.setLTV(address(eTST2), 0.3e4, 0.3e4, 0);
 
         // Lender
 
@@ -112,10 +114,6 @@ contract VaultTest_Withdraw is EVaultTestBase {
         assertEq(eTST2.maxWithdraw(borrower), 10e18);
 
         evc.enableController(borrower, address(eTST));
-        assertEq(eTST2.maxWithdraw(borrower), 10e18);
-
-        // both controller and collateral enabled - collateral could be witheld
-        evc.enableCollateral(borrower, address(eTST2));
         assertEq(eTST2.maxWithdraw(borrower), 0);
 
         eTST.disableController();
@@ -165,10 +163,6 @@ contract VaultTest_Withdraw is EVaultTestBase {
         assertEq(eTST2.maxRedeem(borrower), 10e18);
 
         evc.enableController(borrower, address(eTST));
-        assertEq(eTST2.maxRedeem(borrower), 10e18);
-
-        // both controller and collateral enabled - collateral could be witheld
-        evc.enableCollateral(borrower, address(eTST2));
         assertEq(eTST2.maxRedeem(borrower), 0);
 
         eTST.disableController();
@@ -284,7 +278,7 @@ contract VaultTest_Withdraw is EVaultTestBase {
         evc.enableCollateral(lender, address(eTST3));
 
         startHoax(address(this));
-        eTST.setLTV(address(eTST3), 0.95e4, 0);
+        eTST.setLTV(address(eTST3), 0.95e4, 0.95e4, 0);
 
         (uint256 collateralValue, uint256 liabilityValue) = eTST.accountLiquidity(borrower, false);
         assertApproxEqAbs(collateralValue * 1e18 / liabilityValue, 1.09e18, 0.01e18);
@@ -294,7 +288,7 @@ contract VaultTest_Withdraw is EVaultTestBase {
         assetTST3.approve(address(eTST3), type(uint256).max);
         eTST3.deposit(1e18, borrower);
 
-        assertEq(eTST3.maxRedeem(borrower), 1e18);
+        assertEq(eTST3.maxRedeem(borrower), 0);
 
         oracle.setPrice(address(eTST), unitOfAccount, 2.5e18);
         oracle.setPrice(address(eTST3), unitOfAccount, 2.5e18);
@@ -302,7 +296,11 @@ contract VaultTest_Withdraw is EVaultTestBase {
         (collateralValue, liabilityValue) = eTST.accountLiquidity(borrower, false);
         assertApproxEqAbs(collateralValue * 1e18 / liabilityValue, 0.96e18, 0.001e18);
 
-        // TST3 is not enabled as collateral, so withdrawal is NOT prevented in unhealthy state
-        assertEq(eTST3.maxRedeem(borrower), 1e18);
+        // TST3 is not enabled as collateral, but it's withdrawal is prevented in unhealthy state
+
+        vm.expectRevert(Errors.E_AccountLiquidity.selector);
+        eTST3.redeem(1, borrower, borrower);
+
+        assertEq(eTST3.maxRedeem(borrower), 0);
     }
 }

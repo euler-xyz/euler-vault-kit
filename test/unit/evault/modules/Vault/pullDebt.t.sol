@@ -30,8 +30,12 @@ contract VaultTest_PullDebt is EVaultTestBase {
         assetTST3 = new TestERC20("Test TST 3", "TST3", 18, false);
         assetTST4 = new TestERC20("Test TST 3", "TST3", 6, false);
 
-        eTST3 = IEVault(factory.createProxy(true, abi.encodePacked(address(assetTST3), address(oracle), unitOfAccount)));
-        eTST4 = IEVault(factory.createProxy(true, abi.encodePacked(address(assetTST4), address(oracle), unitOfAccount)));
+        eTST3 = IEVault(
+            factory.createProxy(address(0), true, abi.encodePacked(address(assetTST3), address(oracle), unitOfAccount))
+        );
+        eTST4 = IEVault(
+            factory.createProxy(address(0), true, abi.encodePacked(address(assetTST4), address(oracle), unitOfAccount))
+        );
 
         eTST.setInterestRateModel(address(new IRMTestZero()));
         eTST4.setInterestRateModel(address(new IRMTestZero()));
@@ -79,10 +83,10 @@ contract VaultTest_PullDebt is EVaultTestBase {
         skip(31 * 60);
 
         startHoax(address(this));
-        eTST.setLTV(address(eTST2), 0.3e4, 0);
-        eTST.setLTV(address(eTST3), 0.95e4, 0);
-        eTST4.setLTV(address(eTST2), 0.3e4, 0);
-        eTST4.setLTV(address(eTST3), 0.95e4, 0);
+        eTST.setLTV(address(eTST2), 0.3e4, 0.3e4, 0);
+        eTST.setLTV(address(eTST3), 0.95e4, 0.95e4, 0);
+        eTST4.setLTV(address(eTST2), 0.3e4, 0.3e4, 0);
+        eTST4.setLTV(address(eTST3), 0.95e4, 0.95e4, 0);
     }
 
     //basic transfers to self

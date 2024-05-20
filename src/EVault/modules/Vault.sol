@@ -15,7 +15,7 @@ import "../shared/types/Types.sol";
 /// @custom:security-contact security@euler.xyz
 /// @author Euler Labs (https://www.eulerlabs.com/)
 /// @notice An EVault module handling ERC4626 standard behaviour
-abstract contract VaultModule is IVault, Base, AssetTransfers, BalanceUtils {
+abstract contract VaultModule is IVault, AssetTransfers, BalanceUtils {
     using TypesLib for uint256;
     using SafeERC20Lib for IERC20;
 
@@ -46,8 +46,13 @@ abstract contract VaultModule is IVault, Base, AssetTransfers, BalanceUtils {
     /// @inheritdoc IERC4626
     function maxDeposit(address account) public view virtual nonReentrantView returns (uint256) {
         VaultCache memory vaultCache = loadVault();
+        if (isOperationDisabled(vaultCache.hookedOps, OP_DEPOSIT)) return 0;
 
-        return isOperationDisabled(vaultCache.hookedOps, OP_DEPOSIT) ? 0 : maxDepositInternal(vaultCache, account);
+        // the result may underestimate due to rounding
+        Assets max = maxMintInternal(vaultCache, account).toAssetsDown(vaultCache);
+
+        // if assets round down to zero, deposit reverts with E_ZeroShares
+        return max.toSharesDown(vaultCache).toUint() == 0 ? 0 : max.toUint();
     }
 
     /// @inheritdoc IERC4626
@@ -59,12 +64,7 @@ abstract contract VaultModule is IVault, Base, AssetTransfers, BalanceUtils {
     function maxMint(address account) public view virtual nonReentrantView returns (uint256) {
         VaultCache memory vaultCache = loadVault();
 
-        if (isOperationDisabled(vaultCache.hookedOps, OP_MINT)) return 0;
-
-        // make sure to not revert on conversion
-        uint256 shares = maxDepositInternal(vaultCache, account).toAssets().toSharesDownUint256(vaultCache);
-
-        return shares < MAX_SANE_AMOUNT ? shares : MAX_SANE_AMOUNT;
+        return isOperationDisabled(vaultCache.hookedOps, OP_MINT) ? 0 : maxMintInternal(vaultCache, account).toUint();
     }
 
     /// @inheritdoc IERC4626
@@ -79,7 +79,7 @@ abstract contract VaultModule is IVault, Base, AssetTransfers, BalanceUtils {
 
         return isOperationDisabled(vaultCache.hookedOps, OP_WITHDRAW)
             ? 0
-            : maxRedeemInternal(owner).toAssetsDown(vaultCache).toUint();
+            : maxRedeemInternal(vaultCache, owner).toAssetsDown(vaultCache).toUint();
     }
 
     /// @inheritdoc IERC4626
@@ -90,7 +90,12 @@ abstract contract VaultModule is IVault, Base, AssetTransfers, BalanceUtils {
 
     /// @inheritdoc IERC4626
     function maxRedeem(address owner) public view virtual nonReentrantView returns (uint256) {
-        return isOperationDisabled(vaultStorage.hookedOps, OP_REDEEM) ? 0 : maxRedeemInternal(owner).toUint();
+        VaultCache memory vaultCache = loadVault();
+        if (isOperationDisabled(vaultStorage.hookedOps, OP_REDEEM)) return 0;
+
+        Shares max = maxRedeemInternal(vaultCache, owner);
+        // if shares round down to zero, redeem reverts with E_ZeroAssets
+        return max.toAssetsDown(vaultCache).toUint() == 0 ? 0 : max.toUint();
     }
 
     /// @inheritdoc IERC4626
@@ -192,8 +197,8 @@ abstract contract VaultModule is IVault, Base, AssetTransfers, BalanceUtils {
         Shares shares = assets.toSharesDown(vaultCache);
         if (shares.isZero()) revert E_ZeroShares();
 
-        increaseBalance(vaultCache, receiver, account, shares, assets);
         vaultStorage.cash = vaultCache.cash = vaultCache.cash + assets;
+        increaseBalance(vaultCache, receiver, account, shares, assets);
 
         return shares.toUint();
     }
@@ -226,19 +231,16 @@ abstract contract VaultModule is IVault, Base, AssetTransfers, BalanceUtils {
         pushAssets(vaultCache, receiver, assets);
     }
 
-    function maxRedeemInternal(address owner) internal view returns (Shares) {
+    function maxRedeemInternal(VaultCache memory vaultCache, address owner) private view returns (Shares) {
         Shares max = vaultStorage.users[owner].getBalance();
-        if (max.isZero()) return Shares.wrap(0);
 
         // If account has borrows, withdrawal might be reverted by the controller during account status checks.
-        // The collateral vault has no way to verify or enforce the behaviour of the controller, which the account owner
+        // The vault has no way to verify or enforce the behaviour of the controller, which the account owner
         // has enabled. It will therefore assume that all of the assets would be withheld by the controller and
         // under-estimate the return amount to zero.
         // Integrators who handle borrowing should implement custom logic to work with the particular controllers
         // they want to support.
-        if (isCollateralEnabled(owner, address(this)) && hasControllerEnabled(owner)) return Shares.wrap(0);
-
-        VaultCache memory vaultCache = loadVault();
+        if (max.isZero() || hasAnyControllerEnabled(owner)) return Shares.wrap(0);
 
         Shares cash = vaultCache.cash.toSharesDown(vaultCache);
         max = max > cash ? cash : max;
@@ -246,18 +248,24 @@ abstract contract VaultModule is IVault, Base, AssetTransfers, BalanceUtils {
         return max;
     }
 
-    function maxDepositInternal(VaultCache memory vaultCache, address) private pure returns (uint256) {
+    function maxMintInternal(VaultCache memory vaultCache, address) private pure returns (Shares) {
         uint256 supply = totalAssetsInternal(vaultCache);
-        if (supply >= vaultCache.supplyCap) return 0;
+        if (supply >= vaultCache.supplyCap) return Shares.wrap(0); // at or over the supply cap already
 
-        uint256 remainingSupply;
         unchecked {
-            remainingSupply = vaultCache.supplyCap - supply;
+            // limit to supply cap
+            uint256 max = vaultCache.supplyCap - supply;
+
+            // limit to cash remaining space
+            uint256 limit = MAX_SANE_AMOUNT - vaultCache.cash.toUint();
+            max = limit < max ? limit : max;
+
+            // limit to total shares remaining space
+            max = max.toAssets().toSharesDownUint(vaultCache);
+            limit = MAX_SANE_AMOUNT - vaultCache.totalShares.toUint();
+
+            return (limit < max ? limit : max).toShares();
         }
-
-        uint256 remainingCash = MAX_SANE_AMOUNT - vaultCache.cash.toUint();
-
-        return remainingCash < remainingSupply ? remainingCash : remainingSupply;
     }
 }
 

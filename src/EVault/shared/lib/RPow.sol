@@ -3,10 +3,10 @@
 pragma solidity ^0.8.0;
 
 /// @notice Arithmetic library with operations for fixed-point numbers.
+/// @custom:security-contact security@euler.xyz
 /// @author Solmate (https://github.com/transmissions11/solmate/blob/main/src/utils/FixedPointMathLib.sol)
 /// @author Inspired by USM (https://github.com/usmfum/USM/blob/master/contracts/WadMath.sol)
-/// @author Modified by Euler to return an `overflow` bool instead of reverting
-
+/// @author Modified by Euler Labs (https://www.eulerlabs.com/) to return an `overflow` bool instead of reverting
 library RPow {
     /// @dev If overflow is true, an overflow occurred and the value of z is undefined
     function rpow(uint256 x, uint256 n, uint256 scalar) internal pure returns (uint256 z, bool overflow) {

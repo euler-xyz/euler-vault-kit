@@ -10,10 +10,12 @@ import {IRMTestDefault} from "../mocks/IRMTestDefault.sol";
 import {MockPriceOracle} from "../mocks/MockPriceOracle.sol";
 import "forge-std/console.sol";
 
+interface IGovernanceOverride {
+    function resetInitOperationFlag() external;
+}
+
 // Entry Point contract for the fuzzer. Bounds the inputs and prepares the environment for the tests.
 contract EntryPoint is Test {
-    uint32 internal constant INIT_OPERATION_FLAG = 1 << 31;
-
     error EVault_Panic();
 
     IEVC immutable evc;
@@ -79,23 +81,18 @@ contract EntryPoint is Test {
         vm.stopPrank();
         vm.startPrank(governor);
         selectedVault = eTST[seed % eTST.length];
-        (address hookTarget, uint32 hookedOps) = selectedVault.hookConfig();
-        selectedVault.setHookConfig(hookTarget, hookedOps & ~INIT_OPERATION_FLAG);
+        // this will fail if there's no overrides on
+        try IGovernanceOverride(address(selectedVault)).resetInitOperationFlag() {} catch {}
         vm.stopPrank();
 
         vm.startPrank(msg.sender);
 
         try selectedVault.disableController() {
             if (selectedVault.debtOf(msg.sender) != 0) errors.push("EVault Panic on disableController");
-        } catch {
-            assertTrue(true);
-        }
+        } catch {}
 
-        try evc.enableController(msg.sender, address(eTST[uint256(keccak256(abi.encode(seed))) % eTST.length])) {
-            assertTrue(true);
-        } catch {
-            assertTrue(true);
-        }
+        try evc.enableController(msg.sender, address(eTST[uint256(keccak256(abi.encode(seed))) % eTST.length])) {}
+            catch {}
     }
 
     function boundAmount(uint256 amount) private pure returns (uint256) {
@@ -248,28 +245,15 @@ contract EntryPoint is Test {
         }
     }
 
-    function loop(uint256 seed, uint256 amount, address sharesReceiver) public afterCall {
+    function repayWithShares(uint256 seed, uint256 amount, address receiver) public afterCall {
         setupEnvironment(seed);
 
-        amount = boundAmount(amount);
-        sharesReceiver = boundAddress(sharesReceiver);
+        receiver = boundAddress(receiver);
 
-        try selectedVault.loop(amount, sharesReceiver) {
+        try selectedVault.repayWithShares(amount, receiver) {
             assertTrue(true);
         } catch (bytes memory reason) {
-            if (bytes4(reason) == EVault_Panic.selector) errors.push("EVault Panic on loop");
-        }
-    }
-
-    function deloop(uint256 seed, uint256 amount, address debtFrom) public afterCall {
-        setupEnvironment(seed);
-
-        debtFrom = boundAddress(debtFrom);
-
-        try selectedVault.deloop(amount, debtFrom) {
-            assertTrue(true);
-        } catch (bytes memory reason) {
-            if (bytes4(reason) == EVault_Panic.selector) errors.push("EVault Panic on deloop");
+            if (bytes4(reason) == EVault_Panic.selector) errors.push("EVault Panic on repayWithShares");
         }
     }
 
@@ -346,8 +330,8 @@ contract EVault_SimpleCriticalChecks is EVaultTestBase {
         oracle.setPrice(address(eTST), unitOfAccount, 1e18);
         oracle.setPrice(address(eTST2), unitOfAccount, 1e18);
 
-        eTST.setLTV(address(eTST2), 0.9e4, 0);
-        eTST2.setLTV(address(eTST), 0.5e4, 0);
+        eTST.setLTV(address(eTST2), 0.9e4, 0.9e4, 0);
+        eTST2.setLTV(address(eTST), 0.5e4, 0.5e4, 0);
 
         // accounts
 

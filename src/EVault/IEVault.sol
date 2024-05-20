@@ -235,20 +235,13 @@ interface IBorrowing {
     /// @return Amount of assets repaid
     function repay(uint256 amount, address receiver) external returns (uint256);
 
-    /// @notice Mint shares and a corresponding amount of debt ("self-borrow")
-    /// @param amount In asset units
-    /// @param sharesReceiver Account to receive the created shares
-    /// @return Amount of shares created
-    /// @dev Equivalent to looping borrows and deposits
-    /// @dev The amount requested will be adjusted up when creating debt, to precisely match the exchange rate with shares minted
-    function loop(uint256 amount, address sharesReceiver) external returns (uint256);
-
     /// @notice Pay off liability with shares ("self-repay")
-    /// @param amount In asset units (use max uint256 to repay the debt in full or up to the available underlying balance)
-    /// @param debtFrom Account to remove debt from by burning sender's shares
-    /// @return Amount of shares burned
-    /// @dev Equivalent to withdrawing and repaying
-    function deloop(uint256 amount, address debtFrom) external returns (uint256);
+    /// @param amount In asset units (use max uint256 to repay the debt in full or up to the available deposit)
+    /// @param receiver Account to remove debt from by burning sender's shares
+    /// @return shares Amount of shares burned
+    /// @return debt Amount of debt removed in assets
+    /// @dev Equivalent to withdrawing and repaying, but no assets are needed to be present in the vault
+    function repayWithShares(uint256 amount, address receiver) external returns (uint256 shares, uint256 debt);
 
     /// @notice Take over debt from another account
     /// @param amount Amount of debt in asset units (use max uint256 for all the account's debt)
@@ -385,31 +378,46 @@ interface IGovernance {
     /// @return borrowCap The borrow cap in AmountCap format
     function caps() external view returns (uint16 supplyCap, uint16 borrowCap);
 
-    /// @notice Retrieves regular LTV, set for the collateral, which is used to determine the health of the account
+    /// @notice Retrieves the borrow LTV of the collateral, which is used to determine if the account is healthy during account status checks.
     /// @param collateral The address of the collateral to query
     /// @return Borrowing LTV in 1e4 scale
-    function borrowingLTV(address collateral) external view returns (uint16);
+    function LTVBorrow(address collateral) external view returns (uint16);
 
-    /// @notice Retrieves current ramped value of LTV, which is used to determine liquidation penalty
+    /// @notice Retrieves the current liquidation LTV, which is used to determine if the account is eligible for liquidation
     /// @param collateral The address of the collateral to query
     /// @return Liquidation LTV in 1e4 scale
-    function liquidationLTV(address collateral) external view returns (uint16);
+    function LTVLiquidation(address collateral) external view returns (uint16);
 
-    /// @notice Retrieves LTV detailed config for a collateral
-    /// @param collateral The address of the collateral to query
-    /// @return targetTimestamp the timestamp when the ramp ends
-    /// @return targetLTV current regular LTV or target LTV that the ramped LTV will reach after ramp is over
-    /// @return rampDuration ramp duration in seconds
-    /// @return originalLTV previous LTV value, where the ramp starts
+    /// @notice Retrieves LTV configuration for the collateral
+    /// @param collateral Collateral asset
+    /// @return borrowLTV The current value of borrow LTV for originating positions
+    /// @return liquidationLTV The value of fully converged liquidation LTV
+    /// @return initialLiquidationLTV The initial value of the liquidation LTV, when the ramp began
+    /// @return targetTimestamp The timestamp when the liquidation LTV is considered fully converged
+    /// @return rampDuration The time it takes for the liquidation LTV to converge from the initial value to the fully converged value
     function LTVFull(address collateral)
         external
         view
-        returns (uint48 targetTimestamp, uint16 targetLTV, uint32 rampDuration, uint16 originalLTV);
+        returns (
+            uint16 borrowLTV,
+            uint16 liquidationLTV,
+            uint16 initialLiquidationLTV,
+            uint48 targetTimestamp,
+            uint32 rampDuration
+        );
 
     /// @notice Retrieves a list of collaterals with configured LTVs
     /// @return List of asset collaterals
     /// @dev Returned assets could have the ltv disabled (set to zero)
     function LTVList() external view returns (address[] memory);
+
+    /// @notice Retrieves the maximum liquidation discount
+    /// @return The maximum liquidation discount in 1e4 scale
+    function maxLiquidationDiscount() external view returns (uint16);
+
+    /// @notice Retrieves liquidation cool-off time, which must elapse after successful account status check before account can be liquidated
+    /// @return The liquidation cool off time in seconds
+    function liquidationCoolOffTime() external view returns (uint16);
 
     /// @notice Retrieves a hook target and a bitmask indicating which operations call the hook target
     /// @return hookTarget Address of the hook target contract
@@ -439,16 +447,9 @@ interface IGovernance {
     /// @notice Splits accrued fees balance according to protocol fee share and transfers shares to the governor fee receiver and protocol fee receiver
     function convertFees() external;
 
-    /// @notice Set a new eToken name
-    /// @param newName The new name
-    function setName(string calldata newName) external;
-
-    /// @notice Set a new eToken symbol
-    /// @param newSymbol The new symbol
-    function setSymbol(string calldata newSymbol) external;
-
     /// @notice Set a new governor address
     /// @param newGovernorAdmin The new governor address
+    /// @dev Set to zero address to renounce privileges and make the vault non-governed
     function setGovernorAdmin(address newGovernorAdmin) external;
 
     /// @notice Set a new governor fee receiver address
@@ -457,13 +458,24 @@ interface IGovernance {
 
     /// @notice Set a new LTV config
     /// @param collateral Address of collateral to set LTV for
-    /// @param ltv New LTV in 1e4 scale
+    /// @param borrowLTV New borrow LTV, for assessing account's health during account status checks, in 1e4 scale
+    /// @param liquidationLTV New liquidation LTV after ramp ends in 1e4 scale
     /// @param rampDuration Ramp duration in seconds
-    function setLTV(address collateral, uint16 ltv, uint32 rampDuration) external;
+    function setLTV(address collateral, uint16 borrowLTV, uint16 liquidationLTV, uint32 rampDuration) external;
 
     /// @notice Completely clears LTV configuratrion, signalling the collateral is not considered safe to liquidate anymore
     /// @param collateral Address of the collateral
     function clearLTV(address collateral) external;
+
+    /// @notice Set a new maximum liquidation discount
+    /// @param newDiscount New maximum liquidation discount in 1e4 scale
+    /// @dev If the discount is zero (the default), the liquidators will not be incentivized to liquidate unhealthy accounts
+    function setMaxLiquidationDiscount(uint16 newDiscount) external;
+
+    /// @notice Set a new liquidation cool off time, which must elapse after successful account status check before account can be liquidated
+    /// @param newCoolOffTime The new liquidation cool off time in seconds
+    /// @dev Setting cool off time to zero allows liquidating the account in the same block as the last successful account status check
+    function setLiquidationCoolOffTime(uint16 newCoolOffTime) external;
 
     /// @notice Set a new interest rate model contract
     /// @param newModel The new IRM address
@@ -489,6 +501,8 @@ interface IGovernance {
 }
 
 /// @title IEVault
+/// @custom:security-contact security@euler.xyz
+/// @author Euler Labs (https://www.eulerlabs.com/)
 /// @notice Interface of the EVault, an EVC enabled lending vault
 interface IEVault is
     IInitialize,

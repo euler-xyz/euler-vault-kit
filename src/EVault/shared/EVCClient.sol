@@ -86,7 +86,7 @@ abstract contract EVCClient is Storage, Events, Errors {
         evc.forgiveAccountStatusCheck(account);
     }
 
-    function hasControllerEnabled(address account) internal view returns (bool) {
+    function hasAnyControllerEnabled(address account) internal view returns (bool) {
         return evc.getControllers(account).length > 0;
     }
 
@@ -108,6 +108,10 @@ abstract contract EVCClient is Storage, Events, Errors {
 
     function isControlCollateralInProgress() internal view returns (bool) {
         return evc.isControlCollateralInProgress();
+    }
+
+    function getLastAccountStatusCheckTimestamp(address account) internal view returns (uint256) {
+        return evc.getLastAccountStatusCheckTimestamp(account);
     }
 
     function validateController(address account) internal view {

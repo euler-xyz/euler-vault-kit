@@ -21,7 +21,6 @@ import "./shared/Constants.sol";
 /// @author Euler Labs (https://www.eulerlabs.com/)
 /// @notice Contract which ties in the EVault modules and provides utilities for routing calls to modules and the EVC
 abstract contract Dispatch is
-    Base,
     InitializeModule,
     TokenModule,
     VaultModule,
@@ -31,21 +30,21 @@ abstract contract Dispatch is
     BalanceForwarderModule,
     GovernanceModule
 {
-    /// @notice Addresses of the Initialize module
+    /// @notice Address of the Initialize module
     address public immutable MODULE_INITIALIZE;
-    /// @notice Addresses of the Token module
+    /// @notice Address of the Token module
     address public immutable MODULE_TOKEN;
-    /// @notice Addresses of the Vault module
+    /// @notice Address of the Vault module
     address public immutable MODULE_VAULT;
-    /// @notice Addresses of the Borrowing module
+    /// @notice Address of the Borrowing module
     address public immutable MODULE_BORROWING;
-    /// @notice Addresses of the Liquidation module
+    /// @notice Address of the Liquidation module
     address public immutable MODULE_LIQUIDATION;
-    /// @notice Addresses of the RiskManager module
+    /// @notice Address of the RiskManager module
     address public immutable MODULE_RISKMANAGER;
-    /// @notice Addresses of the BalanceForwarder module
+    /// @notice Address of the BalanceForwarder module
     address public immutable MODULE_BALANCE_FORWARDER;
-    /// @notice Addresses of the Governance module
+    /// @notice Address of the Governance module
     address public immutable MODULE_GOVERNANCE;
 
     /// @title DeployedModules
@@ -74,14 +73,14 @@ abstract contract Dispatch is
 
     // Modifier proxies the function call to a module and low-level returns the result
     modifier use(address module) {
-        _; // when using the modifier, it is assumed the function body is empty and no code will run before delegating to module.
+        _; // when using the modifier, it is assumed the function body is empty.
         delegateToModule(module);
     }
 
     // Delegate call can't be used in a view function. To work around this limitation,
     // static call `this.viewDelegate()` function, which in turn will delegate the payload to a module.
     modifier useView(address module) {
-        _; // when using the modifier, it is assumed the function body is empty and no code will run before delegating to module.
+        _; // when using the modifier, it is assumed the function body is empty.
         delegateToModuleView(module);
     }
 
