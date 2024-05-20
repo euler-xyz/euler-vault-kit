@@ -206,16 +206,19 @@ interface IBorrowing {
     /// @notice Mint shares and a corresponding amount of debt ("self-borrow")
     /// @param amount In asset units
     /// @param sharesReceiver Account to receive the created shares
-    /// @return Amount of shares created
+    /// @return shares Amount of shares created
+    /// @return debt Amount of debt created in assets
     /// @dev Equivalent to looping borrows and deposits
-    function loop(uint256 amount, address sharesReceiver) external returns (uint256);
+    /// @dev The amount requested will be adjusted up when creating debt, to precisely match the exchange rate with shares minted
+    function loop(uint256 amount, address sharesReceiver) external returns (uint256 shares, uint256 debt);
 
     /// @notice Pay off liability with shares ("self-repay")
     /// @param amount In asset units (use max uint256 to repay the debt in full or up to the available underlying balance)
     /// @param debtFrom Account to remove debt from by burning sender's shares
-    /// @return Amount of shares burned
+    /// @return shares Amount of shares burned
+    /// @return debt Amount of debt removed in assets
     /// @dev Equivalent to withdrawing and repaying
-    function deloop(uint256 amount, address debtFrom) external returns (uint256);
+    function deloop(uint256 amount, address debtFrom) external returns (uint256 shares, uint256 debt);
 
     /// @notice Take over debt from another account
     /// @param amount Amount of debt in asset units (use max uint256 for all the account's debt)
