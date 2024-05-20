@@ -137,9 +137,9 @@ abstract contract InvariantsSpec {
 
     string constant BM_INVARIANT_J = "BM_INVARIANT_J: relation between debtOf and debtOfExact";
 
-    string constant BM_INVARIANT_K = "BM_INVARIANT_K: Functions that wont operate when user is unhealthy"; //TODO
+    string constant BM_INVARIANT_K = "BM_INVARIANT_K: Functions that wont operate when user is unhealthy";
 
-    string constant BM_INVARIANT_L = "BM_INVARIANT_L: Functions that can operate when user is unhealthy"; //TODO
+    string constant BM_INVARIANT_L = "BM_INVARIANT_L: Functions that can operate when user is unhealthy";
 
     string constant BM_INVARIANT_M = "";
 

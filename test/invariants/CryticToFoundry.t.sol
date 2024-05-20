@@ -115,7 +115,6 @@ contract CryticToFoundry is Invariants, Setup {
     }
 
     function test_echidna_VM_INVARIANT_C1() public {
-        //@audit-issue totalSupply == 0 !=> totalAssets == 0
         vm.skip(true);
         this.setLTV(161537350060562470698068789285938700031433026666990925968846691117425, 1, 1, 0);
         this.mintToActor(2, 0);
@@ -201,21 +200,21 @@ contract CryticToFoundry is Invariants, Setup {
     }
 
     function test_VM_INVARIANT5() public {
-        vm.skip(true);
         this.setLTV(22366818273602115439851901107761977982005180121616743889078085180117, 1, 1, 0);
         this.mintToActor(1, 0);
         this.enableCollateral(0);
         this.setPrice(167287376704962748125159831258059871163051958738722404000304447051, 11);
         this.enableController(0);
         this.borrowTo(1, 0);
-        _delay(1);
-        this.assert_BM_INVARIANT_P();
-        console.log("totalAssets: ", eTST.totalAssets());
-        console.log("totalSupply: ", eTST.totalSupply());
-        this.assert_BM_INVARIANT_G();
-        console.log("totalAssets: ", eTST.totalAssets());
-        console.log("totalSupply: ", eTST.totalSupply());
-        echidna_VM_INVARIANT();
+        this.repayTo(1, 0);
+    }
+
+    function test_borrowing_coverage() public {
+        this.enableController(0);
+        this.borrowTo(
+            115792089237316195423570985008687907853269984665640564039457584007913129639935,
+            1210346675714198101847835018885699222114751859615
+        );
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////////

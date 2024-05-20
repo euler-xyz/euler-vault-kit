@@ -13,7 +13,7 @@ import {EVault} from "src/EVault/EVault.sol";
 // Types
 import "src/EVault/shared/types/Types.sol";
 
-contract EVaultExtended is EVault, FunctionOverrides {
+contract EVaultExtended is EVault {
     constructor(Integrations memory integrations, DeployedModules memory modules) EVault(integrations, modules) {}
 
     function getReentrancyLock() external view returns (bool) {
@@ -35,7 +35,7 @@ contract EVaultExtended is EVault, FunctionOverrides {
     function isFlagSet(uint32 bitMask) external view returns (bool) {
         return vaultStorage.configFlags.isSet(bitMask);
     }
-
+    /* 
     function initOperation(uint32 operation, address accountToCheck)
         internal
         override (Base, FunctionOverrides)
@@ -91,5 +91,5 @@ contract EVaultExtended is EVault, FunctionOverrides {
         override (BorrowUtils, FunctionOverrides)
     {
         FunctionOverrides.transferBorrow(vaultCache, from, to, assets);
-    }
+    }*/
 }
