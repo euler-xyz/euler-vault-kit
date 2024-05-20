@@ -34,7 +34,6 @@ import {
     Vault
 } from "test/invariants/helpers/extended/ModulesExtended.sol";
 
-
 // Test Contracts
 import {ERC20Mock as TestERC20} from "@openzeppelin/contracts/mocks/token/ERC20Mock.sol";
 import {MockBalanceTracker} from "../mocks/MockBalanceTracker.sol";
