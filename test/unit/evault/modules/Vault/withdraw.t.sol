@@ -95,10 +95,6 @@ contract VaultTest_withdraw is EVaultTestBase {
         assertEq(eTST2.maxWithdraw(borrower), 10e18);
 
         evc.enableController(borrower, address(eTST));
-        assertEq(eTST2.maxWithdraw(borrower), 10e18);
-
-        // both controller and collateral enabled - collateral could be witheld
-        evc.enableCollateral(borrower, address(eTST2));
         assertEq(eTST2.maxWithdraw(borrower), 0);
 
         eTST.disableController();
@@ -148,10 +144,6 @@ contract VaultTest_withdraw is EVaultTestBase {
         assertEq(eTST2.maxRedeem(borrower), 10e18);
 
         evc.enableController(borrower, address(eTST));
-        assertEq(eTST2.maxRedeem(borrower), 10e18);
-
-        // both controller and collateral enabled - collateral could be witheld
-        evc.enableCollateral(borrower, address(eTST2));
         assertEq(eTST2.maxRedeem(borrower), 0);
 
         eTST.disableController();
