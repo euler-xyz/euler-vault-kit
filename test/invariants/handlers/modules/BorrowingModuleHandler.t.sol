@@ -174,7 +174,8 @@ contract BorrowingModuleHandler is BaseHandler {
 
         // if (success) {
         //     (success, returnData) =
-        //         actor.proxy(address(eTST), abi.encodeWithSelector(IBorrowing.borrow.selector, amount, address(actor)));
+        //         actor.proxy(address(eTST), abi.encodeWithSelector(IBorrowing.borrow.selector, amount,
+        // address(actor)));
         // }
 
         // if (success) {

@@ -69,7 +69,8 @@ contract ESynth is ERC20Collateral, Ownable {
         _mint(account, amount);
     }
 
-    /// @notice Burns a certain amount of tokens from the accounts balance. Requires the account, except the owner to have an allowance for the sender.
+    /// @notice Burns a certain amount of tokens from the accounts balance. Requires the account, except the owner to
+    /// have an allowance for the sender.
     /// @param burnFrom The account to burn the tokens from.
     /// @param amount The amount of tokens to burn.
     function burn(address burnFrom, uint256 amount) external nonReentrant {
@@ -80,14 +81,16 @@ contract ESynth is ERC20Collateral, Ownable {
             return;
         }
 
-        // The allowance check should be performed if the spender is not the account with the exception of the owner burning from this contract.
+        // The allowance check should be performed if the spender is not the account with the exception of the owner
+        // burning from this contract.
         if (burnFrom != sender && !(burnFrom == address(this) && sender == owner())) {
             _spendAllowance(burnFrom, sender, amount);
         }
 
         // If burning more than minted, reset minted to 0
         unchecked {
-            minterCache.minted = minterCache.minted > amount ? minterCache.minted - uint128(amount) : 0; // down-casting is safe because amount < minted <= max uint128
+            // down-casting is safe because amount < minted <= max uint128
+            minterCache.minted = minterCache.minted > amount ? minterCache.minted - uint128(amount) : 0;
         }
         minters[sender] = minterCache;
 

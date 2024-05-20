@@ -14,7 +14,8 @@ library SafeERC20Lib {
     error E_TransferFromFailed(bytes errorTransferFrom, bytes errorPermit2);
     error E_Permit2AmountOverflow();
 
-    // If no code exists under the token address, the function will succeed. EVault ensures this is not the case in `initialize`.
+    // If no code exists under the token address, the function will succeed. EVault ensures this is not the case in
+    // `initialize`.
     function trySafeTransferFrom(IERC20 token, address from, address to, uint256 value)
         internal
         returns (bool, bytes memory)
@@ -39,7 +40,8 @@ library SafeERC20Lib {
         if (!success) revert E_TransferFromFailed(tryData, fallbackData);
     }
 
-    // If no code exists under the token address, the function will succeed. EVault ensures this is not the case in `initialize`.
+    // If no code exists under the token address, the function will succeed. EVault ensures this is not the case in
+    // `initialize`.
     function safeTransfer(IERC20 token, address to, uint256 value) internal {
         (bool success, bytes memory data) = address(token).call(abi.encodeCall(IERC20.transfer, (to, value)));
         if (!isEmptyOrTrueReturn(success, data)) RevertBytes.revertBytes(data);

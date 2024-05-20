@@ -9,8 +9,8 @@ import "../Constants.sol";
 /// @custom:security-contact security@euler.xyz
 /// @author Euler Labs (https://www.eulerlabs.com/)
 /// @notice Library for `Owed` custom type
-/// @dev The owed type tracks borrowed funds in asset units scaled up by shifting left INTERNAL_DEBT_PRECISION_SHIFT bits.
-/// @dev Increased precision allows for accurate interest accounting.
+/// @dev The owed type tracks borrowed funds in asset units scaled up by shifting left INTERNAL_DEBT_PRECISION_SHIFT
+/// bits. Increased precision allows for accurate interest accounting.
 library OwedLib {
     function toUint(Owed self) internal pure returns (uint256) {
         return Owed.unwrap(self);
@@ -23,7 +23,8 @@ library OwedLib {
     }
 
     function isDust(Owed self) internal pure returns (bool) {
-        return Owed.unwrap(self) < (1 << INTERNAL_DEBT_PRECISION_SHIFT); // less than a minimum representable internal debt amount
+        // less than a minimum representable internal debt amount
+        return Owed.unwrap(self) < (1 << INTERNAL_DEBT_PRECISION_SHIFT);
     }
 
     function isZero(Owed self) internal pure returns (bool) {

@@ -61,10 +61,11 @@ abstract contract RiskManagerModule is IRiskManager, LiquidityUtils {
     }
 
     /// @inheritdoc IRiskManager
-    /// @dev The function doesn't have a reentrancy lock, because onlyEVCChecks provides equivalent behaviour. It ensures that the caller
-    /// is the EVC, in 'checks in progress' state. In this state EVC will not accept any calls. Since all the functions which modify
-    /// vault state use callThroughEVC modifier, they are effectively blocked while the function executes. There are non-view functions without
-    /// callThroughEVC modifier (`flashLoan`, `disableCollateral`), but they don't change the vault's storage.
+    /// @dev The function doesn't have a reentrancy lock, because onlyEVCChecks provides equivalent behaviour. It
+    /// ensures that the caller is the EVC, in 'checks in progress' state. In this state EVC will not accept any calls.
+    /// Since all the functions which modify vault state use callThroughEVC modifier, they are effectively blocked while
+    /// the function executes. There are non-view functions without callThroughEVC modifier (`flashLoan`,
+    /// `disableCollateral`), but they don't change the vault's storage.
     function checkAccountStatus(address account, address[] calldata collaterals)
         public
         virtual
@@ -81,15 +82,16 @@ abstract contract RiskManagerModule is IRiskManager, LiquidityUtils {
     /// @dev See comment about reentrancy for `checkAccountStatus`
     function checkVaultStatus() public virtual reentrantOK onlyEVCChecks returns (bytes4 magicValue) {
         // Use the updating variant to make sure interest is accrued in storage before the interest rate update.
-        // Because of interest rate retargetting during the vault status check, the vault status check must not be forgiven.
+        // Because of interest rate retargetting during the vault status check, the vault status check must not be
+        // forgiven.
         VaultCache memory vaultCache = updateVault();
         uint256 newInterestRate = computeInterestRate(vaultCache);
 
         logVaultStatus(vaultCache, newInterestRate);
 
-        // We use the snapshot to check if the borrows or supply grew, and if so then we check the borrow and supply caps.
-        // If snapshot is initialized, then caps are configured.
-        // If caps are set in the middle of a batch, then snapshots represent the state of the vault at that time.
+        // We use the snapshot to check if the borrows or supply grew, and if so then we check the borrow and supply
+        // caps. If snapshot is initialized, then caps are configured. If caps are set in the middle of a batch, then
+        // snapshots represent the state of the vault at that time.
         if (vaultCache.snapshotInitialized) {
             vaultStorage.snapshotInitialized = vaultCache.snapshotInitialized = false;
 

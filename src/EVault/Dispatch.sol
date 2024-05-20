@@ -98,9 +98,9 @@ abstract contract Dispatch is
         }
     }
 
-    // External function which is only callable by the EVault itself. Its purpose is to be static called by `delegateToModuleView`
-    // which allows view functions to be implemented in modules, even though delegatecall cannot be directly used within
-    // view functions.
+    // External function which is only callable by the EVault itself. Its purpose is to be static called by
+    // `delegateToModuleView` which allows view functions to be implemented in modules, even though delegatecall cannot
+    // be directly used within view functions.
     function viewDelegate() external payable {
         if (msg.sender != address(this)) revert E_Unauthorized();
 
@@ -134,7 +134,8 @@ abstract contract Dispatch is
             mstore(0, 0x1fe8b95300000000000000000000000000000000000000000000000000000000)
             let strippedCalldataSize := sub(calldatasize(), PROXY_METADATA_LENGTH)
             // we do the mstore first offset by -12 so the 20 address bytes align right behind 36 + strippedCalldataSize
-            // note that it can write into the module address if the calldata is less than 12 bytes, therefore write before we write module
+            // note that it can write into the module address if the calldata is less than 12 bytes, therefore write
+            // before we write module
             mstore(add(24, strippedCalldataSize), caller())
             mstore(4, module)
             calldatacopy(36, 0, strippedCalldataSize)

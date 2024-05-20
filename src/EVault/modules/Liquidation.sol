@@ -87,7 +87,8 @@ abstract contract LiquidationModule is ILiquidation, BalanceUtils, LiquidityUtil
         // Violator's health check must not be deferred, meaning no prior operations on violator's account
         // would possibly be forgiven after the enforced collateral transfer to the liquidator
         if (isAccountStatusCheckDeferred(violator)) revert E_ViolatorLiquidityDeferred();
-        // A cool off time must elapse since successful account status check in order to mitigate self-liquidaition attacks
+        // A cool off time must elapse since successful account status check in order to mitigate self-liquidaition
+        // attacks
         if (isInLiquidationCoolOff(violator)) revert E_LiquidationCoolOff();
 
         // Violator has no liabilities, liquidation is a no-op
@@ -125,7 +126,8 @@ abstract contract LiquidationModule is ILiquidation, BalanceUtils, LiquidityUtil
 
         // Compute discount
 
-        uint256 discountFactor = collateralAdjustedValue * 1e18 / liabilityValue; // discountFactor = health score = 1 - discount
+        // discountFactor = health score = 1 - discount
+        uint256 discountFactor = collateralAdjustedValue * 1e18 / liabilityValue;
         {
             uint256 minDiscountFactor;
             unchecked {
@@ -142,11 +144,12 @@ abstract contract LiquidationModule is ILiquidation, BalanceUtils, LiquidityUtil
             vaultCache.oracle.getQuote(collateralBalance, liqCache.collateral, vaultCache.unitOfAccount);
 
         if (collateralValue == 0) {
-            // Worthless collateral can be claimed with no repay. The collateral can be actually worthless, or the amount of available
-            // collateral could be non-representable in the unit of account (rounded down to zero during conversion). In this case
-            // the liquidator is able to claim the collateral without repaying any debt. Note that it's not profitable as long as liquidation
-            // gas costs are larger than the value of a single wei of the reference asset. Care should be taken though when selecting
-            // unit of account and collateral assets.
+            // Worthless collateral can be claimed with no repay. The collateral can be actually worthless, or the
+            // amount of available collateral could be non-representable in the unit of account (rounded down to zero
+            // during conversion). In this case the liquidator is able to claim the collateral without repaying any
+            // debt. Note that it's not profitable as long as liquidation gas costs are larger than the value of a
+            // single wei of the reference asset. Care should be taken though when selecting unit of account and
+            // collateral assets.
             liqCache.yieldBalance = collateralBalance;
             return liqCache;
         }
@@ -154,8 +157,8 @@ abstract contract LiquidationModule is ILiquidation, BalanceUtils, LiquidityUtil
         uint256 maxRepayValue = liabilityValue;
         uint256 maxYieldValue = maxRepayValue * 1e18 / discountFactor;
 
-        // Limit yield to borrower's available collateral, and reduce repay if necessary
-        // This can happen when borrower has multiple collaterals and seizing all of this one won't bring the violator back to solvency
+        // Limit yield to borrower's available collateral, and reduce repay if necessary. This can happen when borrower
+        // has multiple collaterals and seizing all of this one won't bring the violator back to solvency
 
         if (collateralValue < maxYieldValue) {
             maxRepayValue = collateralValue * discountFactor / 1e18;
@@ -183,9 +186,9 @@ abstract contract LiquidationModule is ILiquidation, BalanceUtils, LiquidityUtil
 
         // Handle yield: liquidator receives violator's collateral
 
-        // Impersonate violator on the EVC to seize collateral. The yield transfer will trigger a health check on the violator's
-        // account, which should be forgiven, because the violator's account is not guaranteed to be healthy after liquidation.
-        // This operation is safe, because:
+        // Impersonate violator on the EVC to seize collateral. The yield transfer will trigger a health check on the
+        // violator's account, which should be forgiven, because the violator's account is not guaranteed to be healthy
+        // after liquidation. This operation is safe, because:
         // 1. `liquidate` function is enforcing that the violator is not in deferred checks state,
         //    therefore there were no prior batch operations that could have registered a health check,
         //    and if the check is present now, it must have been triggered by the enforced transfer.
@@ -212,7 +215,8 @@ abstract contract LiquidationModule is ILiquidation, BalanceUtils, LiquidityUtil
             Assets owedRemaining = liqCache.liability.subUnchecked(liqCache.repay);
             decreaseBorrow(vaultCache, liqCache.violator, owedRemaining);
 
-            // decreaseBorrow emits Repay without any assets entering the vault. Emit Withdraw from and to zero address to cover the missing amount for offchain trackers.
+            // decreaseBorrow emits Repay without any assets entering the vault. Emit Withdraw from and to zero address
+            // to cover the missing amount for offchain trackers.
             emit Withdraw(liqCache.liquidator, address(0), address(0), owedRemaining.toUint(), 0);
             emit DebtSocialized(liqCache.violator, owedRemaining.toUint());
         }

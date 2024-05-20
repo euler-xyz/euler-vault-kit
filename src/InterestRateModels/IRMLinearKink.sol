@@ -7,7 +7,8 @@ import "./IIRM.sol";
 /// @title IRMLinearKink
 /// @custom:security-contact security@euler.xyz
 /// @author Euler Labs (https://www.eulerlabs.com/)
-/// @notice Implementation of an interest rate model, where interest rate grows linearly with utilization, and spikes after reaching kink
+/// @notice Implementation of an interest rate model, where interest rate grows linearly with utilization, and spikes
+/// after reaching kink
 contract IRMLinearKink is IIRM {
     /// @notice Base interest rate applied when utilization is equal zero
     uint256 public immutable baseRate;
