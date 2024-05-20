@@ -47,7 +47,7 @@ abstract contract VaultBeforeAfterHooks is BaseHooks {
     VaultVars vaultVars;
 
     function _vaultHooksBefore() internal {
-        // Clears the helper flag needed to verify whether the initOperation function was 
+        // Clears the helper flag needed to verify whether the initOperation function was
         // called (as per test/invariants/helpers/extended/FunctionOverrides.sol)
         (address hookTarget, uint32 hookedOps) = eTST.hookConfig();
         eTST.setHookConfig(hookTarget, hookedOps & ~INIT_OPERATION_FLAG);

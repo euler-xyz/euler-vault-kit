@@ -20,8 +20,13 @@ abstract contract FunctionOverrides is BalanceUtils, BorrowUtils, StdAsserts, In
     function checkInvariants(address checkedAccount, address controllerEnabled) internal {
         assertTrue(Flags.unwrap(vaultStorage.hookedOps) & INIT_OPERATION_FLAG != 0, INTERNAL_INVARIANT_A);
         assertTrue(evc.isVaultStatusCheckDeferred(address(this)), INTERNAL_INVARIANT_B);
-        assertTrue(checkedAccount == address(0) || evc.isAccountStatusCheckDeferred(checkedAccount), INTERNAL_INVARIANT_C);
-        assertTrue(controllerEnabled == address(0) || evc.isControllerEnabled(controllerEnabled, address(this)), INTERNAL_INVARIANT_D);
+        assertTrue(
+            checkedAccount == address(0) || evc.isAccountStatusCheckDeferred(checkedAccount), INTERNAL_INVARIANT_C
+        );
+        assertTrue(
+            controllerEnabled == address(0) || evc.isControllerEnabled(controllerEnabled, address(this)),
+            INTERNAL_INVARIANT_D
+        );
     }
 
     function initOperation(uint32 operation, address accountToCheck)
