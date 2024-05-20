@@ -35,7 +35,12 @@ abstract contract GovernanceModule is IGovernance, Base, BalanceUtils, BorrowUti
     event GovSetGovernorAdmin(address indexed newGovernorAdmin);
     event GovSetFeeReceiver(address indexed newFeeReceiver);
     event GovSetLTV(
-        address indexed collateral, uint48 targetTimestamp, uint16 targetLTV, uint32 rampDuration, uint16 originalLTV
+        address indexed collateral,
+        uint48 targetTimestamp,
+        uint16 targetLTV,
+        uint32 rampDuration,
+        uint16 originalLTV,
+        bool initialized
     );
     /// @notice Set a maximum liquidation discount
     /// @param newLiquidationDiscount The new maximum liquidation discount in 1e4 scale
@@ -232,7 +237,8 @@ abstract contract GovernanceModule is IGovernance, Base, BalanceUtils, BorrowUti
             newLTV.targetTimestamp,
             newLTV.targetLTV.toUint16(),
             newLTV.rampDuration,
-            newLTV.originalLTV.toUint16()
+            newLTV.originalLTV.toUint16(),
+            !origLTV.initialized
         );
     }
 
@@ -244,7 +250,7 @@ abstract contract GovernanceModule is IGovernance, Base, BalanceUtils, BorrowUti
         uint16 originalLTV = getLTV(collateral, true).toUint16();
         vaultStorage.ltvLookup[collateral].clear();
 
-        emit GovSetLTV(collateral, 0, 0, 0, originalLTV);
+        emit GovSetLTV(collateral, 0, 0, 0, originalLTV, false);
     }
 
     /// @inheritdoc IGovernance
