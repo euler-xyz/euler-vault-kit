@@ -98,7 +98,7 @@ contract Cache is Storage, Errors {
             uint256 newAccumulatedFees = vaultCache.accumulatedFees.toUint();
             uint256 newTotalShares = vaultCache.totalShares.toUint();
             uint256 feeAssets = (newTotalBorrows - vaultCache.totalBorrows.toUint()) * interestFee.toUint16()
-                / (1e4 << INTERNAL_DEBT_PRECISION_SHIFT);
+                / (uint256(CONFIG_SCALE) << INTERNAL_DEBT_PRECISION_SHIFT);
 
             if (feeAssets != 0) {
                 uint256 newTotalAssets = vaultCache.cash.toUint() + OwedLib.toAssetsUpUint256(newTotalBorrows);
