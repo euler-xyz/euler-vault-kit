@@ -37,6 +37,9 @@ contract ERC4626Harness is VaultModule, TokenModule, AbstractBaseHarness {
         }
         return vaultCache;
     }
+    function cache_cash() public view returns (Assets) {
+        return loadVault().cash;
+    }
 
     // VaultStorage Accessors:
     function storage_lastInterestAccumulatorUpdate() public view returns (uint48) {
