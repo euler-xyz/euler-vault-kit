@@ -63,14 +63,14 @@ abstract contract Dispatch is
 
     // Modifier proxies the function call to a module and low-level returns the result
     modifier use(address module) {
-        _; // when using the modifier, it is assumed the function body is empty and no code will run before delegating to module.
+        _; // when using the modifier, it is assumed the function body is empty.
         delegateToModule(module);
     }
 
     // Delegate call can't be used in a view function. To work around this limitation,
     // static call `this.viewDelegate()` function, which in turn will delegate the payload to a module.
     modifier useView(address module) {
-        _; // when using the modifier, it is assumed the function body is empty and no code will run before delegating to module.
+        _; // when using the modifier, it is assumed the function body is empty.
         delegateToModuleView(module);
     }
 
@@ -133,7 +133,7 @@ abstract contract Dispatch is
     // It is accomplished by intercepting calls incoming directly to the vault and passing them
     // to the EVC.call function. EVC calls the vault back with original calldata. As a result, the account
     // and vault status checks are always executed in the checks deferral frame, at the end of the call,
-    // outside of the vault's re-entrancy protections.
+    // outside of the vault's reentrancy protections.
     // The modifier is applied to all functions which schedule account or vault status checks.
     function callThroughEVCInternal() private {
         address _evc = address(evc);

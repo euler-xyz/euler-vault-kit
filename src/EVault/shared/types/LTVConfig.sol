@@ -41,7 +41,7 @@ library LTVConfigLib {
             uint256 targetLTV = self.targetLTV.toUint16();
             uint256 timeRemaining = self.targetTimestamp - block.timestamp;
 
-            // targetLTV < originalLTV and timeRemaining < rampDuration
+            // targetLTV < originalLTV and timeRemaining <= rampDuration
             currentLTV = targetLTV + (currentLTV - targetLTV) * timeRemaining / self.rampDuration;
         }
         // because ramping happens only when LTV decreases, it's safe to down-cast the new value

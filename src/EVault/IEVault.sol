@@ -365,7 +365,7 @@ interface IGovernance {
 
     /// @notice Retrieves a list of collaterals with configured LTVs
     /// @return List of asset collaterals
-    /// @dev The list can have duplicates. Returned assets could have the ltv disabled (set to zero)
+    /// @dev Returned assets could have the ltv disabled (set to zero)
     function LTVList() external view returns (address[] memory);
 
     /// @notice Retrieves the maximum liquidation discount
