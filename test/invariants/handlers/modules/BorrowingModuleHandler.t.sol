@@ -64,8 +64,6 @@ contract BorrowingModuleHandler is BaseHandler {
 
         (, uint256 liabilityValueBefore) = _getAccountLiquidity(receiver, false);
 
-        require(eTST.debtOf(receiver) > 0, "BorrowingModuleHandler: No debt to repay");
-
         _before();
         (success, returnData) = actor.proxy(target, abi.encodeWithSelector(IBorrowing.repay.selector, assets, receiver));
 
@@ -160,39 +158,6 @@ contract BorrowingModuleHandler is BaseHandler {
 
         assertTrue(success, BM_INVARIANT_P);
         assertEq(eTST.debtOf(address(actor)), 0, BM_INVARIANT_P);
-    }
-
-    function assert_BM_INVARIANT_N(uint256 amount) external setup {
-        // FIXME
-
-        // bool success;
-        // bytes memory returnData;
-
-        // uint256 debtBefore = eTST.debtOf(address(actor));
-        // uint256 balanceBefore = eTST.balanceOf(address(actor));
-
-        // (success, returnData) =
-        //     actor.proxy(address(eTST), abi.encodeWithSelector(IERC4626.deposit.selector, amount, address(actor)));
-
-        // if (success) {
-        //     (success, returnData) =
-        //         actor.proxy(address(eTST), abi.encodeWithSelector(IBorrowing.borrow.selector, amount,
-        // address(actor)));
-        // }
-
-        // if (success) {
-        //     (success, returnData) = actor.proxy(
-        //         address(eTST), abi.encodeWithSelector(IBorrowing.repayWithShares.selector, amount, address(actor))
-        //     );
-        // }
-
-        // if (success) {
-        //     uint256 debtAfter = eTST.debtOf(address(actor));
-        //     uint256 balanceAfter = eTST.balanceOf(address(actor));
-
-        //     assertGe(balanceBefore, balanceAfter, BM_INVARIANT_N1);
-        //     assertLe(debtBefore, debtAfter, BM_INVARIANT_N2);
-        // }
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////////
