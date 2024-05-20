@@ -16,6 +16,14 @@ import {SequenceRegistry} from "../../src/SequenceRegistry/SequenceRegistry.sol"
 
 // Modules
 import {
+    BalanceForwarder,
+    Borrowing,
+    Governance,
+    Initialize,
+    Liquidation,
+    RiskManager,
+    Token,
+    Vault,
     BalanceForwarderExtended,
     BorrowingExtended,
     GovernanceExtended,
@@ -32,7 +40,7 @@ import {MockBalanceTracker} from "../mocks/MockBalanceTracker.sol";
 import {MockPriceOracle} from "../mocks/MockPriceOracle.sol";
 import {Actor} from "./utils/Actor.sol";
 import {BaseTest} from "./base/BaseTest.t.sol";
-import {EVaultExtended} from "./helpers/extended/EVaultExtended.sol";
+import {EVaultExtended, EVaultExtendedExtended} from "./helpers/extended/EVaultExtended.sol";
 
 /// @title Setup
 /// @notice Setup contract for the invariant test Suite, inherited by Tester
@@ -74,14 +82,14 @@ contract Setup is BaseTest {
             Base.Integrations(address(evc), address(protocolConfig), sequenceRegistry, balanceTracker, permit2);
 
         Dispatch.DeployedModules memory modules = Dispatch.DeployedModules({
-            initialize: address(new InitializeExtended(integrations)),
-            token: address(new TokenExtended(integrations)),
-            vault: address(new VaultExtended(integrations)),
-            borrowing: address(new BorrowingExtended(integrations)),
-            liquidation: address(new LiquidationExtended(integrations)),
-            riskManager: address(new RiskManagerExtended(integrations)),
-            balanceForwarder: address(new BalanceForwarderExtended(integrations)),
-            governance: address(new GovernanceExtended(integrations))
+            initialize: address(new Initialize(integrations)),
+            token: address(new Token(integrations)),
+            vault: address(new Vault(integrations)),
+            borrowing: address(new Borrowing(integrations)),
+            liquidation: address(new Liquidation(integrations)),
+            riskManager: address(new RiskManager(integrations)),
+            balanceForwarder: address(new BalanceForwarder(integrations)),
+            governance: address(new Governance(integrations))
         });
 
         // Deploy the vault implementation
