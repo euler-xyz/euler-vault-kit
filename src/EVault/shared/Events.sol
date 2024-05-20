@@ -3,6 +3,7 @@
 pragma solidity ^0.8.0;
 
 /// @title Events
+/// @custom:security-contact security@euler.xyz
 /// @author Euler Labs (https://www.eulerlabs.com/)
 /// @notice Contract implementing EVault's events
 abstract contract Events {
@@ -23,17 +24,17 @@ abstract contract Events {
     // ERC4626
 
     /// @notice Deposit assets into an ERC4626 vault
-    /// @param sender Address initiaiting the deposit
+    /// @param sender Address initiating the deposit
     /// @param owner Address holding the assets
     /// @param assets Amount of assets deposited
-    /// @param shares Amount of shares minted as recipt for the deposit
+    /// @param shares Amount of shares minted as receipt for the deposit
     event Deposit(address indexed sender, address indexed owner, uint256 assets, uint256 shares);
 
     /// @notice Withdraw from an ERC4626 vault
     /// @param sender Address initiating the withdrawal
     /// @param receiver Address receiving the assets
     /// @param owner Address holding the shares
-    /// @param assets Amount of assets sent to receiver
+    /// @param assets Amount of assets sent to the receiver
     /// @param shares Amount of shares burned
     event Withdraw(
         address indexed sender, address indexed receiver, address indexed owner, uint256 assets, uint256 shares
@@ -75,12 +76,17 @@ abstract contract Events {
     /// @param assets Amount of debt removed in assets
     event Repay(address indexed account, uint256 assets);
 
+    /// @notice Account's debt was increased due to interest
+    /// @param account Address being charged interest
+    /// @param assets Amount of debt added in assets
+    event InterestAccrued(address indexed account, uint256 assets);
+
     /// @notice Liquidate unhealthy account
     /// @param liquidator Address executing the liquidation
     /// @param violator Address holding an unhealthy borrow
     /// @param collateral Address of the asset seized
-    /// @param repayAssets Amount of debt in assets transfered from violator to liquidator
-    /// @param yieldBalance Amount of collateral asset's balance transfered from violator to liquidator
+    /// @param repayAssets Amount of debt in assets transferred from violator to liquidator
+    /// @param yieldBalance Amount of collateral asset's balance transferred from violator to liquidator
     event Liquidate(
         address indexed liquidator,
         address indexed violator,

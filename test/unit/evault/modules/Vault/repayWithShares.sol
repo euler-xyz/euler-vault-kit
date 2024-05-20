@@ -10,7 +10,7 @@ import {TestERC20} from "../../../../mocks/TestERC20.sol";
 import {IRMTestZero} from "../../../../mocks/IRMTestZero.sol";
 import "src/EVault/shared/types/Types.sol";
 
-contract VaultTest_LoopDeloop is EVaultTestBase {
+contract VaultTest_RepayWithShares is EVaultTestBase {
     address user1;
     address user2;
     address user3;
@@ -27,17 +27,19 @@ contract VaultTest_LoopDeloop is EVaultTestBase {
 
         assetTST3 = new TestERC20("Test TST 3", "TST3", 18, false);
 
-        eTST3 = IEVault(factory.createProxy(true, abi.encodePacked(address(assetTST3), address(oracle), unitOfAccount)));
+        eTST3 = IEVault(
+            factory.createProxy(address(0), true, abi.encodePacked(address(assetTST3), address(oracle), unitOfAccount))
+        );
 
         startHoax(address(this));
         eTST.setInterestRateModel(address(new IRMTestZero()));
         eTST2.setInterestRateModel(address(new IRMTestZero()));
         eTST3.setInterestRateModel(address(new IRMTestZero()));
 
-        eTST.setLTV(address(eTST2), 0.3e4, 0);
-        eTST2.setLTV(address(eTST), 0.3e4, 0);
-        eTST3.setLTV(address(eTST), 0.3e4, 0);
-        eTST3.setLTV(address(eTST2), 0.3e4, 0);
+        eTST.setLTV(address(eTST2), 0.3e4, 0.3e4, 0);
+        eTST2.setLTV(address(eTST), 0.3e4, 0.3e4, 0);
+        eTST3.setLTV(address(eTST), 0.3e4, 0.3e4, 0);
+        eTST3.setLTV(address(eTST2), 0.3e4, 0.3e4, 0);
 
         startHoax(user1);
         assetTST.approve(address(eTST), type(uint256).max);
@@ -73,44 +75,8 @@ contract VaultTest_LoopDeloop is EVaultTestBase {
         skip(31 * 60);
     }
 
-    function test_loop_noLiquidity() public {
-        startHoax(user3);
-        evc.enableController(user3, address(eTST));
-        vm.expectRevert(Errors.E_AccountLiquidity.selector);
-        eTST.loop(1e18, user3);
-    }
-
-    //borrow on empty pool, and repay
-    function test_loopDeloop_emptyPool() public {
-        startHoax(address(this));
-        eTST3.setInterestRateModel(address(new IRMTestZero()));
-
-        assertEq(eTST3.totalSupply(), 0);
-        assertEq(eTST3.totalBorrows(), 0);
-
-        startHoax(user1);
-        evc.enableController(user1, address(eTST3));
-        eTST3.loop(1e18, user1);
-
-        assertEq(eTST3.balanceOf(user1), 1e18);
-        assertEq(eTST3.debtOf(user1), 1e18);
-
-        eTST3.deloop(1e18, user1);
-
-        assertEq(eTST3.debtOf(user1), 0);
-
-        assetTST3.approve(address(eTST3), type(uint256).max);
-        assetTST3.mint(user1, 1e18);
-        eTST3.deposit(1e18, user1);
-
-        assertEq(eTST3.balanceOf(user1), 1e18);
-        assertEq(eTST3.debtOf(user1), 0);
-        assertEq(eTST3.totalSupply(), 1e18);
-        assertEq(eTST3.totalBorrows(), 0);
-    }
-
-    //deloop for 0 is a no-op
-    function test_deloop_forZero() public {
+    //repayWithShares for 0 is a no-op
+    function test_repayWithShares_forZero() public {
         startHoax(user2);
         eTST2.deposit(40e18, user2);
 
@@ -128,12 +94,12 @@ contract VaultTest_LoopDeloop is EVaultTestBase {
         assertEq(eTST.balanceOf(user2), 0);
         assertEq(eTST.debtOf(user2), 0.5e18);
 
-        // delooping 0 is a no-op
-        eTST.deloop(0, user2);
+        // repayWithShares 0 is a no-op
+        eTST.repayWithShares(0, user2);
     }
 
-    //deloop when owed amount is 0 is a no-op
-    function test_deloop_whenOwedAmountZero() public {
+    //repayWithShares when owed amount is 0 is a no-op
+    function test_repayWithShares_whenOwedAmountZero() public {
         assertEq(evc.getCollaterals(user2)[0], address(eTST2));
 
         startHoax(user2);
@@ -144,15 +110,15 @@ contract VaultTest_LoopDeloop is EVaultTestBase {
         assertEq(eTST.debtOf(user2), 0);
 
         evc.enableController(user2, address(eTST));
-        eTST.deloop(type(uint256).max, user2);
+        eTST.repayWithShares(type(uint256).max, user2);
 
         assertEq(assetTST.balanceOf(user2), 99e18);
         assertEq(eTST.balanceOf(user2), 1e18);
         assertEq(eTST.debtOf(user2), 0);
     }
 
-    //deloop with max_uint256 repays the debt in full or up to the available underlying balance
-    function test_deloop_withMaxRepays() public {
+    //repayWithShares with max_uint256 repays the debt in full or up to the available underlying balance
+    function test_repayWithShares_withMaxRepays() public {
         startHoax(user2);
         eTST2.deposit(40e18, user2);
 
@@ -185,8 +151,8 @@ contract VaultTest_LoopDeloop is EVaultTestBase {
         // No interest was charged
         assertEq(eTST.debtOf(user2), 0.5e18);
 
-        // nothing to deloop
-        eTST.deloop(type(uint256).max, user2);
+        // nothing to repay
+        eTST.repayWithShares(type(uint256).max, user2);
 
         assertEq(assetTST.balanceOf(user2), 100.5e18);
         assertEq(eTST.balanceOf(user2), 0);
@@ -194,7 +160,7 @@ contract VaultTest_LoopDeloop is EVaultTestBase {
 
         // eVault balance is less than debt
         eTST.deposit(0.1e18, user2);
-        eTST.deloop(type(uint256).max, user2);
+        eTST.repayWithShares(type(uint256).max, user2);
 
         assertEq(assetTST.balanceOf(user2), 100.4e18);
         assertEq(eTST.balanceOf(user2), 0);
@@ -203,11 +169,14 @@ contract VaultTest_LoopDeloop is EVaultTestBase {
 
         // eVault balance is greater than debt
         eTST.deposit(1e18, user2);
-        eTST.deloop(type(uint256).max, user2);
+        eTST.repayWithShares(type(uint256).max, user2);
 
         assertEq(assetTST.balanceOf(user2), 99.4e18);
         assertEq(eTST.balanceOf(user2), 0.6e18);
-        assertEq(eTST.maxWithdraw(user2), 0.6e18);
+        assertEq(eTST.maxWithdraw(user2), 0);
         assertEq(eTST.debtOf(user2), 0);
+
+        eTST.disableController();
+        assertEq(eTST.maxWithdraw(user2), 0.6e18);
     }
 }

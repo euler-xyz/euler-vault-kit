@@ -9,11 +9,10 @@ import {IIRM} from "../../InterestRateModels/IIRM.sol";
 import "./types/Types.sol";
 
 /// @title BorrowUtils
+/// @custom:security-contact security@euler.xyz
 /// @author Euler Labs (https://www.eulerlabs.com/)
 /// @notice Utilities for tracking debt and interest rates
 abstract contract BorrowUtils is Base {
-    using TypesLib for uint256;
-
     function getCurrentOwed(VaultCache memory vaultCache, address account, Owed owed) internal view returns (Owed) {
         // Don't bother loading the user's accumulator
         if (owed.isZero()) return Owed.wrap(0);
@@ -51,47 +50,58 @@ abstract contract BorrowUtils is Base {
         setUserBorrow(vaultCache, account, owed);
         vaultStorage.totalBorrows = vaultCache.totalBorrows = vaultCache.totalBorrows + amount;
 
-        logBorrowChange(account, prevOwed, owed);
+        logBorrow(account, assets, prevOwed.toAssetsUp(), owed.toAssetsUp());
     }
 
-    function decreaseBorrow(VaultCache memory vaultCache, address account, Assets amount) internal virtual {
+    /// @dev Contrary to `increaseBorrow` and `transferBorrow` this function does the accounting in Assets
+    /// by first rounding up the user's debt. The rounding is an additional cost to the user and is recorded
+    /// both in user's account and in `totalBorrows`
+    function decreaseBorrow(VaultCache memory vaultCache, address account, Assets assets) internal virtual {
         (Owed owedExact, Owed prevOwed) = loadUserBorrow(vaultCache, account);
         Assets owed = owedExact.toAssetsUp();
 
-        if (amount > owed) revert E_RepayTooMuch();
+        if (assets > owed) revert E_RepayTooMuch();
 
-        Owed owedRemaining = owed.subUnchecked(amount).toOwed();
+        Owed owedRemaining = owed.subUnchecked(assets).toOwed();
 
         setUserBorrow(vaultCache, account, owedRemaining);
-        vaultStorage.totalBorrows = vaultCache.totalBorrows =
-            vaultCache.totalBorrows > owedExact ? vaultCache.totalBorrows - owedExact + owedRemaining : owedRemaining;
+        vaultStorage.totalBorrows = vaultCache.totalBorrows = vaultCache.totalBorrows > owedExact
+            ? vaultCache.totalBorrows.subUnchecked(owedExact).addUnchecked(owedRemaining)
+            : owedRemaining;
 
-        logBorrowChange(account, prevOwed, owedRemaining);
+        logRepay(account, assets, prevOwed.toAssetsUp(), owedRemaining.toAssetsUp());
     }
 
     function transferBorrow(VaultCache memory vaultCache, address from, address to, Assets assets) internal virtual {
         Owed amount = assets.toOwed();
 
         (Owed fromOwed, Owed fromOwedPrev) = loadUserBorrow(vaultCache, from);
-        (Owed toOwed, Owed toOwedPrev) = loadUserBorrow(vaultCache, to);
 
         // If amount was rounded up, or dust is left over, transfer exact amount owed
-        if ((amount > fromOwed && (amount - fromOwed).isDust()) || (amount < fromOwed && (fromOwed - amount).isDust()))
-        {
+        if (
+            (amount > fromOwed && amount.subUnchecked(fromOwed).isDust())
+                || (amount < fromOwed && fromOwed.subUnchecked(amount).isDust())
+        ) {
             amount = fromOwed;
         }
 
-        if (amount > fromOwed) revert E_InsufficientBalance();
+        if (amount > fromOwed) revert E_InsufficientDebt();
 
         fromOwed = fromOwed.subUnchecked(amount);
+        setUserBorrow(vaultCache, from, fromOwed);
+
+        (Owed toOwed, Owed toOwedPrev) = loadUserBorrow(vaultCache, to);
 
         toOwed = toOwed + amount;
-
-        setUserBorrow(vaultCache, from, fromOwed);
         setUserBorrow(vaultCache, to, toOwed);
 
-        logBorrowChange(from, fromOwedPrev, fromOwed);
-        logBorrowChange(to, toOwedPrev, toOwed);
+        logRepay(from, assets, fromOwedPrev.toAssetsUp(), fromOwed.toAssetsUp());
+
+        // with small fractional debt amounts the interest calculation could be negative in `logBorrow`
+        Assets toPrevAssets = toOwedPrev.toAssetsUp();
+        Assets toAssets = toOwed.toAssetsUp();
+        if (assets + toPrevAssets > toAssets) assets = toAssets - toPrevAssets;
+        logBorrow(to, assets, toPrevAssets, toAssets);
     }
 
     function computeInterestRate(VaultCache memory vaultCache) internal virtual returns (uint256) {
@@ -153,17 +163,28 @@ abstract contract BorrowUtils is Base {
         }
     }
 
-    function logBorrowChange(address account, Owed prevOwed, Owed owed) private {
+    function logBorrow(address account, Assets amount, Assets prevOwed, Assets owed) private {
+        Assets interest = owed.subUnchecked(prevOwed).subUnchecked(amount);
+        if (!interest.isZero()) emit InterestAccrued(account, interest.toUint());
+        if (!amount.isZero()) emit Borrow(account, amount.toUint());
+        logDToken(account, prevOwed, owed);
+    }
+
+    function logRepay(address account, Assets amount, Assets prevOwed, Assets owed) private {
+        Assets interest = owed.addUnchecked(amount).subUnchecked(prevOwed);
+        if (!interest.isZero()) emit InterestAccrued(account, interest.toUint());
+        if (!amount.isZero()) emit Repay(account, amount.toUint());
+        logDToken(account, prevOwed, owed);
+    }
+
+    function logDToken(address account, Assets prevOwed, Assets owed) private {
         address dTokenAddress = calculateDTokenAddress();
 
         if (owed > prevOwed) {
-            uint256 change = owed.toAssetsUp().subUnchecked(prevOwed.toAssetsUp()).toUint();
-            emit Borrow(account, change);
+            uint256 change = owed.subUnchecked(prevOwed).toUint();
             DToken(dTokenAddress).emitTransfer(address(0), account, change);
         } else if (prevOwed > owed) {
-            uint256 change = prevOwed.toAssetsUp().subUnchecked(owed.toAssetsUp()).toUint();
-
-            emit Repay(account, change);
+            uint256 change = prevOwed.subUnchecked(owed).toUint();
             DToken(dTokenAddress).emitTransfer(account, address(0), change);
         }
     }

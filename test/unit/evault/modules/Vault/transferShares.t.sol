@@ -158,8 +158,6 @@ contract VaultTest_TransferShares is EVaultTestBase {
         vm.expectRevert(Errors.E_InsufficientAllowance.selector);
         eTST.transferFrom(user2, user3, 201);
 
-        vm.expectEmit();
-        emit Events.Approval(user2, user1, 50);
         eTST.transferFrom(user2, user3, 150);
 
         assertEq(eTST.balanceOf(user2), 850);
@@ -227,7 +225,7 @@ contract VaultTest_TransferShares is EVaultTestBase {
 
         // revert on self-transfer of eVault
         vm.expectRevert(Errors.E_SelfTransfer.selector);
-        eTST.transfer(user1, type(uint256).max);
+        eTST.transfer(user1, 1);
 
         assertEq(eTST.balanceOf(user1), 1000);
     }

@@ -21,7 +21,7 @@ struct VaultStorage {
     AmountCap borrowCap;
     // A bitfield of operations which trigger a hook call
     Flags hookedOps;
-    // A vault global re-entrancy protection flag
+    // A vault global reentrancy protection flag
     bool reentrancyLocked;
     // A flag indicating if the vault snapshot has already been initialized for the currently executing batch
     bool snapshotInitialized;
@@ -32,9 +32,13 @@ struct VaultStorage {
     // Sum of all user debts
     Owed totalBorrows;
 
-    // Packed slot 14 + 4 = 18
+    // Packed slot 14 + 2 + 2 + 4 = 22
     // Interest fees accrued since the last fee conversion
     Shares accumulatedFees;
+    // Maximum liquidation discount
+    ConfigAmount maxLiquidationDiscount;
+    // Amount of time in seconds that must pass after a successful account status check before liquidation is possible
+    uint16 liquidationCoolOffTime;
     // A bitfield of vault configuration options
     Flags configFlags;
 

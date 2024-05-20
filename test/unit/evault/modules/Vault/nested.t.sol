@@ -26,7 +26,9 @@ contract VaultTest_Nested is EVaultTestBase {
     function setUp() public override {
         super.setUp();
 
-        eTSTNested = IEVault(coreProductLine.createVault(address(eTST), address(oracle), unitOfAccount));
+        eTSTNested = IEVault(
+            factory.createProxy(address(0), true, abi.encodePacked(address(eTST), address(oracle), unitOfAccount))
+        );
         eTSTNested.setInterestRateModel(address(new IRMTestDefault()));
 
         depositor = makeAddr("depositor");
@@ -36,9 +38,9 @@ contract VaultTest_Nested is EVaultTestBase {
 
         oracle.setPrice(address(assetTST), unitOfAccount, 1e18);
         oracle.setPrice(address(eTST2), unitOfAccount, 1e18);
-        eTST.setLTV(address(eTST2), 0.9e4, 0);
+        eTST.setLTV(address(eTST2), 0.9e4, 0.9e4, 0);
 
-        eTSTNested.setLTV(address(eTST2), 0.8e4, 0);
+        eTSTNested.setLTV(address(eTST2), 0.8e4, 0.8e4, 0);
 
         // Depositor
 
@@ -138,10 +140,12 @@ contract VaultTest_Nested is EVaultTestBase {
     }
 
     function test_doubleNestedDepositAndBorrow() public {
-        eTSTDoubleNested = IEVault(coreProductLine.createVault(address(eTSTNested), address(oracle), unitOfAccount));
+        eTSTDoubleNested = IEVault(
+            factory.createProxy(address(0), true, abi.encodePacked(address(eTSTNested), address(oracle), unitOfAccount))
+        );
         eTSTDoubleNested.setInterestRateModel(address(new IRMTestDefault()));
 
-        eTSTDoubleNested.setLTV(address(eTST2), 0.9e4, 0);
+        eTSTDoubleNested.setLTV(address(eTST2), 0.9e4, 0.9e4, 0);
 
         startHoax(depositor);
 
@@ -211,14 +215,14 @@ contract VaultTest_Nested is EVaultTestBase {
         evc.enableController(borrower, address(eTSTNested));
 
         vm.stopPrank();
-        eTSTNested.setLTV(address(eTST2), 0, 0);
+        eTSTNested.setLTV(address(eTST2), 0, 0, 0);
         startHoax(borrower);
         // try to borrow, fails because LTV is too low
         vm.expectRevert(Errors.E_AccountLiquidity.selector);
         eTSTNested.borrow(5e18, borrower);
 
         vm.stopPrank();
-        eTSTNested.setLTV(address(eTST2), 0.8e4, 0);
+        eTSTNested.setLTV(address(eTST2), 0.8e4, 0.8e4, 0);
         startHoax(borrower);
 
         // successful borrow
@@ -310,7 +314,7 @@ contract VaultTest_Nested is EVaultTestBase {
         evc.enableController(borrower, address(eTSTNested));
 
         vm.stopPrank();
-        eTSTNested.setLTV(address(eTST2), 0.8e4, 0);
+        eTSTNested.setLTV(address(eTST2), 0.8e4, 0.8e4, 0);
         startHoax(borrower);
         eTSTNested.borrow(5e18, borrower);
 

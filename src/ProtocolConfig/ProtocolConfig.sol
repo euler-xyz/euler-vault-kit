@@ -43,11 +43,48 @@ contract ProtocolConfig is IProtocolConfig {
     /// @dev per-vault configuration of protocol fee config, takes priority over defaults
     mapping(address vault => ProtocolFeeConfig) internal _protocolFeeConfig;
 
+    /**
+     * @notice Set global default allowed interest fee limits
+     * @param newMinInterestFee lower limit of allowed interest fee
+     * @param newMaxInterestFee upper limit of allowed interest fee
+     */
     event SetInterestFeeRange(uint16 newMinInterestFee, uint16 newMaxInterestFee);
+
+    /**
+     * @notice Set new fee receiver address
+     * @param newFeeReceiver new fee receiver address
+     */
     event SetFeeReceiver(address indexed newFeeReceiver);
+
+    /**
+     * @notice Set allowed interest fee limits override for a vault
+     * @param vault address of the vault
+     * @param exists if true a new setting was recorded, if false the override was disabled for the vault
+     * @param minInterestFee lower limit of allowed interest fee
+     * @param maxInterestFee upper limit of allowed interest fee
+     */
     event SetVaultInterestFeeRange(address indexed vault, bool exists, uint16 minInterestFee, uint16 maxInterestFee);
-    event SetFeeConfigSetting(address indexed ault, bool exists, address indexed feeReceiver, uint16 protocolFeeShare);
+
+    /**
+     * @notice Set interest fee configuration override for a vault
+     * @param vault address of the vault
+     * @param exists if true a new setting was recorded, if false the override was disabled for the vault
+     * @param feeReceiver address to receive protocol fees
+     * @param protocolFeeShare new protocol fee share
+     */
+    event SetFeeConfigSetting(address indexed vault, bool exists, address indexed feeReceiver, uint16 protocolFeeShare);
+
+    /**
+     * @notice Set a new global default protocol fee share
+     * @param protocolFeeShare previous default protocol fee share
+     * @param newProtocolFeeShare new default protocol fee share
+     */
     event SetProtocolFeeShare(uint16 protocolFeeShare, uint16 newProtocolFeeShare);
+
+    /**
+     * @notice Transfer admin rights to a new address
+     * @param newAdmin address of the new admin
+     */
     event SetAdmin(address indexed newAdmin);
 
     /**
@@ -148,7 +185,7 @@ contract ProtocolConfig is IProtocolConfig {
     }
 
     /**
-     * @notice set generic min intereset fee
+     * @notice set generic min interest fee
      * @dev can only be called by admin
      * @param minInterestFee_ new min interest fee
      * @param maxInterestFee_ new max interest fee
@@ -196,6 +233,7 @@ contract ProtocolConfig is IProtocolConfig {
         onlyAdmin
     {
         if (vault == address(0)) revert E_InvalidVault();
+        if (exists_ && feeReceiver_ == address(0)) revert E_InvalidReceiver();
         if (protocolFeeShare_ > CONFIG_SCALE) revert E_InvalidConfigValue();
 
         _protocolFeeConfig[vault] =

@@ -8,8 +8,10 @@ import {ReentrancyGuard} from "openzeppelin-contracts/utils/ReentrancyGuard.sol"
 import {IEVC, EVCUtil} from "ethereum-vault-connector/utils/EVCUtil.sol";
 
 /// @title ERC20Collateral
-/// @notice It extends the ERC20 token standard to add the EVC authentication and account status checks so that the
-/// token contract can be used as collateral in the EVC ecosystem.
+/// @custom:security-contact security@euler.xyz
+/// @author Euler Labs (https://www.eulerlabs.com/)
+/// @notice ERC20Collateral is an ERC20-compatible token with the EVC support which allows it to be used as collateral
+/// in other vaults.
 abstract contract ERC20Collateral is EVCUtil, ERC20Permit, ReentrancyGuard {
     constructor(IEVC _evc_, string memory _name_, string memory _symbol_)
         EVCUtil(address(_evc_))
@@ -18,7 +20,7 @@ abstract contract ERC20Collateral is EVCUtil, ERC20Permit, ReentrancyGuard {
     {}
 
     /// @notice Transfers a certain amount of tokens to a recipient.
-    /// @dev Overriden to add re-entrancy protection.
+    /// @dev Overriden to add reentrancy protection.
     /// @param to The recipient of the transfer.
     /// @param amount The amount shares to transfer.
     /// @return A boolean indicating whether the transfer was successful.
@@ -27,7 +29,7 @@ abstract contract ERC20Collateral is EVCUtil, ERC20Permit, ReentrancyGuard {
     }
 
     /// @notice Transfers a certain amount of tokens from a sender to a recipient.
-    /// @dev Overriden to add re-entrancy protection.
+    /// @dev Overriden to add reentrancy protection.
     /// @param from The sender of the transfer.
     /// @param to The recipient of the transfer.
     /// @param amount The amount of shares to transfer.

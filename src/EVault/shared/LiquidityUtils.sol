@@ -8,6 +8,7 @@ import {LTVUtils} from "./LTVUtils.sol";
 import "./types/Types.sol";
 
 /// @title LiquidityUtils
+/// @custom:security-contact security@euler.xyz
 /// @author Euler Labs (https://www.eulerlabs.com/)
 /// @notice Utilities for calculating account liquidity and health status
 abstract contract LiquidityUtils is BorrowUtils, LTVUtils {
@@ -63,8 +64,7 @@ abstract contract LiquidityUtils is BorrowUtils, LTVUtils {
 
             if (!isRecognizedCollateral(collateral)) continue;
 
-            uint256 balance = IERC20(collateral).balanceOf(account);
-            if (balance > 0) return false;
+            if (IERC20(collateral).balanceOf(account) > 0) return false;
         }
 
         return true;
@@ -116,7 +116,7 @@ abstract contract LiquidityUtils is BorrowUtils, LTVUtils {
             (currentCollateralValue,) = vaultCache.oracle.getQuotes(balance, collateral, vaultCache.unitOfAccount);
         }
 
-        return currentCollateralValue * ltv.toUint16() / 1e4;
+        return currentCollateralValue * ltv.toUint16() / CONFIG_SCALE;
     }
 
     function validateOracle(VaultCache memory vaultCache) internal pure {

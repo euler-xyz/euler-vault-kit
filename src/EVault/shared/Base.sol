@@ -10,26 +10,38 @@ import {AddressUtils} from "./lib/AddressUtils.sol";
 
 import {IProtocolConfig} from "../../ProtocolConfig/IProtocolConfig.sol";
 import {IBalanceTracker} from "../../interfaces/IBalanceTracker.sol";
+import {ISequenceRegistry} from "../../interfaces/ISequenceRegistry.sol";
 
 import "./types/Types.sol";
 
 /// @title Base
+/// @custom:security-contact security@euler.xyz
 /// @author Euler Labs (https://www.eulerlabs.com/)
 /// @notice Base contract for EVault modules with top level modifiers and utilities
 abstract contract Base is EVCClient, Cache {
     IProtocolConfig internal immutable protocolConfig;
+    ISequenceRegistry immutable sequenceRegistry;
     IBalanceTracker internal immutable balanceTracker;
     address internal immutable permit2;
 
+    /// @title Integrations
+    /// @notice Struct containing addresses of all of the contracts which EVault integrates with
     struct Integrations {
+        // Ethereum Vault Connector's address
         address evc;
+        // Address of the contract handling protocol level configurations
         address protocolConfig;
+        // Address of the contract providing a unique ID used in setting the vault's name and symbol
+        address sequenceRegistry;
+        // Address of the contract which is called when user balances change
         address balanceTracker;
+        // Address of Uniswap's Permit2 contract
         address permit2;
     }
 
     constructor(Integrations memory integrations) EVCClient(integrations.evc) {
         protocolConfig = IProtocolConfig(AddressUtils.checkContract(integrations.protocolConfig));
+        sequenceRegistry = ISequenceRegistry(AddressUtils.checkContract(integrations.sequenceRegistry));
         balanceTracker = IBalanceTracker(integrations.balanceTracker);
         permit2 = integrations.permit2;
     }
@@ -80,9 +92,10 @@ abstract contract Base is EVCClient, Cache {
         // The snapshot is used only to verify that supply increased when checking the supply cap, and to verify that the borrows
         // increased when checking the borrowing cap. Caps are not checked when the capped variables decrease (become safer).
         // For this reason, the snapshot is disabled if both caps are disabled.
+        // The snapshot is cleared during the vault status check hence the vault status check must not be forgiven.
         if (
             !vaultCache.snapshotInitialized
-                && (vaultCache.supplyCap < type(uint256).max || vaultCache.borrowCap < type(uint256).max)
+                && !(vaultCache.supplyCap == type(uint256).max && vaultCache.borrowCap == type(uint256).max)
         ) {
             vaultStorage.snapshotInitialized = vaultCache.snapshotInitialized = true;
             snapshot.set(vaultCache.cash, vaultCache.totalBorrows.toAssetsUp());

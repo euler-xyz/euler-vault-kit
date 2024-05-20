@@ -141,12 +141,15 @@ abstract contract InvariantsSpec {
 
     string constant BM_INVARIANT_L = "BM_INVARIANT_L: Functions that can operate when user is unhealthy"; //TODO
 
-    string constant BM_INVARIANT_M =
-        "BM_INVARIANT_M: Loop should get to the same state as depositing and borrowing in loop"; //TODO
+    string constant BM_INVARIANT_M = "";
 
-    string constant BM_INVARIANT_N1 = "BM_INVARIANT_N1: loop(x) -> deloop(x), deltaShares > 0 => previewDeposit(deltaDebt) >= deltaShares";
+    string constant BM_INVARIANT_N1 =
+        "BM_INVARIANT_N1: borrow/deposit(x) => repayWithShares(x) users shouldn't gain any asset";
 
-    string constant BM_INVARIANT_N2 = "BM_INVARIANT_N2: loop(x) -> deloop(x), users debt shouldn't decrease";
+    string constant BM_INVARIANT_N2 =
+        "BM_INVARIANT_N2: borrow/deposit(x) => repayWithShares(x) users debt shouldn't decrease";
+
+    string constant BM_INVARIANT_O = "BM_INVARIANT_O: debt(user) != 0 => collateralValue != 0";
 
     string constant BM_INVARIANT_P = "BM_INVARIANT_P: a user can always repay debt in full";
 

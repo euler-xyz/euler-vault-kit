@@ -8,8 +8,9 @@ import {IPriceOracle} from "../../../interfaces/IPriceOracle.sol";
 import "../Constants.sol";
 
 /// @title ProxyUtils Library
+/// @custom:security-contact security@euler.xyz
 /// @author Euler Labs (https://www.eulerlabs.com/)
-/// @notice The library provides a helper function for working with proxy meta data
+/// @notice The library provides helper functions for working with proxy meta data
 library ProxyUtils {
     function metadata() internal pure returns (IERC20 asset, IPriceOracle oracle, address unitOfAccount) {
         assembly {
@@ -19,6 +20,7 @@ library ProxyUtils {
         }
     }
 
+    // When `useView` modifier is used, the original caller's address is attached to the call data along with the metadata
     function useViewCaller() internal pure returns (address viewCaller) {
         assembly {
             viewCaller := shr(96, calldataload(sub(calldatasize(), add(PROXY_METADATA_LENGTH, 20))))

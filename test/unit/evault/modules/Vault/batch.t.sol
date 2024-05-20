@@ -27,17 +27,19 @@ contract VaultTest_Batch is EVaultTestBase {
 
         assetTST3 = new TestERC20("Test TST 3", "TST3", 18, false);
 
-        eTST3 = IEVault(factory.createProxy(true, abi.encodePacked(address(assetTST3), address(oracle), unitOfAccount)));
+        eTST3 = IEVault(
+            factory.createProxy(address(0), true, abi.encodePacked(address(assetTST3), address(oracle), unitOfAccount))
+        );
 
         startHoax(address(this));
         eTST.setInterestRateModel(address(new IRMTestZero()));
         eTST2.setInterestRateModel(address(new IRMTestZero()));
         eTST3.setInterestRateModel(address(new IRMTestZero()));
 
-        eTST2.setLTV(address(eTST), 0.3e4, 0);
-        eTST.setLTV(address(eTST2), 0.3e4, 0);
-        eTST3.setLTV(address(eTST), 0.3e4, 0);
-        eTST3.setLTV(address(eTST2), 0.3e4, 0);
+        eTST2.setLTV(address(eTST), 0.3e4, 0.3e4, 0);
+        eTST.setLTV(address(eTST2), 0.3e4, 0.3e4, 0);
+        eTST3.setLTV(address(eTST), 0.3e4, 0.3e4, 0);
+        eTST3.setLTV(address(eTST2), 0.3e4, 0.3e4, 0);
 
         startHoax(user1);
         assetTST.approve(address(eTST), type(uint256).max);
@@ -173,7 +175,7 @@ contract VaultTest_Batch is EVaultTestBase {
             value: 0,
             data: abi.encodeWithSelector(
                 eTST.transferFrom.selector, getSubAccount(user1, 1), getSubAccount(user1, 2), 0.6e18
-                )
+            )
         });
         items[3] = IEVC.BatchItem({
             onBehalfOfAccount: address(0),
@@ -321,7 +323,7 @@ contract VaultTest_Batch is EVaultTestBase {
                 0,
                 bytes32("0"),
                 bytes32("0")
-                )
+            )
         });
         items[2] = IEVC.BatchItem({
             onBehalfOfAccount: user1,

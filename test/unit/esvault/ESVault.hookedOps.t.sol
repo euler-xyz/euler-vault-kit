@@ -32,11 +32,7 @@ contract ESVaultTestHookedOps is ESVaultTestBase {
         vm.expectRevert(Errors.E_OperationDisabled.selector);
         eTST.skim(100, address(this));
 
-        evc.enableController(address(this), address(eTST));
         vm.expectRevert(Errors.E_OperationDisabled.selector);
-        eTST.loop(100, address(this));
-
-        vm.expectRevert(Errors.E_OperationDisabled.selector);
-        eTST.deloop(100, address(this));
+        eTST.repayWithShares(100, address(this));
     }
 }

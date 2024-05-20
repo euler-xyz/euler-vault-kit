@@ -8,8 +8,9 @@ import {Base} from "../shared/Base.sol";
 import "../shared/types/Types.sol";
 
 /// @title BalanceForwarderModule
+/// @custom:security-contact security@euler.xyz
 /// @author Euler Labs (https://www.eulerlabs.com/)
-/// @notice An EVault module handling communication a with balance tracker contract.
+/// @notice An EVault module handling communication with a balance tracker contract.
 abstract contract BalanceForwarderModule is IBalanceForwarder, Base {
     /// @inheritdoc IBalanceForwarder
     function balanceTrackerAddress() public view virtual reentrantOK returns (address) {
@@ -23,7 +24,7 @@ abstract contract BalanceForwarderModule is IBalanceForwarder, Base {
 
     /// @inheritdoc IBalanceForwarder
     function enableBalanceForwarder() public virtual nonReentrant {
-        if (address(balanceTracker) == address(0)) revert E_BalanceForwarderUnsupported();
+        if (address(balanceTracker) == address(0)) revert E_NotSupported();
 
         address account = EVCAuthenticate();
         UserStorage storage user = vaultStorage.users[account];
@@ -38,7 +39,7 @@ abstract contract BalanceForwarderModule is IBalanceForwarder, Base {
 
     /// @inheritdoc IBalanceForwarder
     function disableBalanceForwarder() public virtual nonReentrant {
-        if (address(balanceTracker) == address(0)) revert E_BalanceForwarderUnsupported();
+        if (address(balanceTracker) == address(0)) revert E_NotSupported();
 
         address account = EVCAuthenticate();
         UserStorage storage user = vaultStorage.users[account];

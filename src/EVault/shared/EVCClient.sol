@@ -14,6 +14,7 @@ import {IERC20} from "../IEVault.sol";
 import {IEVC} from "ethereum-vault-connector/interfaces/IEthereumVaultConnector.sol";
 
 /// @title EVCClient
+/// @custom:security-contact security@euler.xyz
 /// @author Euler Labs (https://www.eulerlabs.com/)
 /// @notice Utilities for interacting with the EVC (Ethereum Vault Connector)
 abstract contract EVCClient is Storage, Events, Errors {
@@ -35,7 +36,7 @@ abstract contract EVCClient is Storage, Events, Errors {
         evc.disableController(account);
     }
 
-    // Authenticate account and controller, making sure the call is made through EVC and the status checks are deferred
+    // Authenticate the account and the controller, making sure the call is made through EVC and the status checks are deferred
     function EVCAuthenticateDeferred(bool checkController) internal view virtual returns (address) {
         assert(msg.sender == address(evc)); // this ensures that callThroughEVC modifier was utilized
 
@@ -47,9 +48,27 @@ abstract contract EVCClient is Storage, Events, Errors {
         return onBehalfOfAccount;
     }
 
+    // Authenticate the account
     function EVCAuthenticate() internal view virtual returns (address) {
         if (msg.sender == address(evc)) {
             (address onBehalfOfAccount,) = evc.getCurrentOnBehalfOfAccount(address(0));
+
+            return onBehalfOfAccount;
+        }
+        return msg.sender;
+    }
+
+    // Authenticate the governor, making sure neither a sub-account nor operator is used. Prohibit the use of control collateral
+    function EVCAuthenticateGovernor() internal view virtual returns (address) {
+        if (msg.sender == address(evc)) {
+            (address onBehalfOfAccount,) = evc.getCurrentOnBehalfOfAccount(address(0));
+
+            if (
+                isKnownNonOwnerAccount(onBehalfOfAccount) || evc.isOperatorAuthenticated()
+                    || evc.isControlCollateralInProgress()
+            ) {
+                revert E_Unauthorized();
+            }
 
             return onBehalfOfAccount;
         }
@@ -85,7 +104,7 @@ abstract contract EVCClient is Storage, Events, Errors {
         evc.forgiveAccountStatusCheck(account);
     }
 
-    function hasControllerEnabled(address account) internal view returns (bool) {
+    function hasAnyControllerEnabled(address account) internal view returns (bool) {
         return evc.getControllers(account).length > 0;
     }
 
@@ -109,8 +128,12 @@ abstract contract EVCClient is Storage, Events, Errors {
         return evc.isControlCollateralInProgress();
     }
 
+    function getLastAccountStatusCheckTimestamp(address account) internal view returns (uint256) {
+        return evc.getLastAccountStatusCheckTimestamp(account);
+    }
+
     function validateController(address account) internal view {
-        address[] memory controllers = IEVC(evc).getControllers(account);
+        address[] memory controllers = evc.getControllers(account);
 
         if (controllers.length > 1) revert E_TransientState();
         if (controllers.length == 0) revert E_NoLiability();
