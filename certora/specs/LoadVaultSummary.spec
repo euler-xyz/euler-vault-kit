@@ -1,7 +1,7 @@
 import "./Base.spec";
 methods {
     // function Cache.loadVault() internal returns (BaseHarness.VaultCache memory) with (env e) => CVLLoadVault(e);
-    function Cache.loadVault() internal returns (BaseHarness.VaultCache memory) with (env e) => CVLLoadVaultAssumeNoUpdate(e);
+    // function Cache.loadVault() internal returns (BaseHarness.VaultCache memory) with (env e) => CVLLoadVaultAssumeNoUpdate(e);
     // function Cache.initVaultCache(BaseHarness.VaultCache memory vaultCache) internal returns (bool) with (env e) => CVLInitVaultCache(e, vaultCache);
     // function Cache.initVaultCache(BaseHarness.VaultCache memory vaultCache) internal returns (bool) with (env e) => CVLInitVaultCacheSimpleCopy(e, vaultCache);
 
