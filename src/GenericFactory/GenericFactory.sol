@@ -75,25 +75,32 @@ contract GenericFactory is MetaProxyDeployer {
         emit SetUpgradeAdmin(admin);
     }
 
-    function createProxy(bool upgradeable, bytes memory trailingData) external nonReentrant returns (address) {
-        if (implementation == address(0)) revert E_Implementation();
+    function createProxy(address desiredImplementation, bool upgradeable, bytes memory trailingData)
+        external
+        nonReentrant
+        returns (address)
+    {
+        address _implementation = implementation;
+        if (desiredImplementation == address(0)) desiredImplementation = _implementation;
+
+        if (desiredImplementation == address(0) || desiredImplementation != _implementation) revert E_Implementation();
 
         address proxy;
 
         if (upgradeable) {
             proxy = address(new BeaconProxy(trailingData));
         } else {
-            proxy = deployMetaProxy(implementation, trailingData);
+            proxy = deployMetaProxy(desiredImplementation, trailingData);
         }
 
         proxyLookup[proxy] =
-            ProxyConfig({upgradeable: upgradeable, implementation: implementation, trailingData: trailingData});
+            ProxyConfig({upgradeable: upgradeable, implementation: desiredImplementation, trailingData: trailingData});
 
         proxyList.push(proxy);
 
         IComponent(proxy).initialize(msg.sender);
 
-        emit ProxyCreated(proxy, upgradeable, implementation, trailingData);
+        emit ProxyCreated(proxy, upgradeable, desiredImplementation, trailingData);
 
         return proxy;
     }

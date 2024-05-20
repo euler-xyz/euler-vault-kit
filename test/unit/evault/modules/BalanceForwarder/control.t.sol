@@ -29,7 +29,9 @@ contract BalanceForwarderTest_Control is EVaultTestBase {
         factoryNoTracker.setImplementation(evaultImpl);
 
         eTSTNoTracker = IEVault(
-            factoryNoTracker.createProxy(true, abi.encodePacked(address(assetTST), address(oracle), unitOfAccount))
+            factoryNoTracker.createProxy(
+                address(0), true, abi.encodePacked(address(assetTST), address(oracle), unitOfAccount)
+            )
         );
     }
 

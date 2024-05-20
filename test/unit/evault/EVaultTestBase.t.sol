@@ -148,7 +148,9 @@ contract EVaultTestBase is AssertionsCustomTypes, Test, DeployPermit2 {
     uint32 internal constant SYNTH_VAULT_HOOKED_OPS = OP_DEPOSIT | OP_MINT | OP_REDEEM | OP_SKIM | OP_LOOP | OP_DELOOP;
 
     function createSynthEVault(address asset) internal returns (IEVault) {
-        IEVault v = IEVault(factory.createProxy(true, abi.encodePacked(address(asset), address(oracle), unitOfAccount)));
+        IEVault v = IEVault(
+            factory.createProxy(address(0), true, abi.encodePacked(address(asset), address(oracle), unitOfAccount))
+        );
         v.setInterestRateModel(address(new IRMTestDefault()));
 
         v.setInterestFee(1e4);
