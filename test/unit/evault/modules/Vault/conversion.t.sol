@@ -418,7 +418,7 @@ contract VaultTest_Conversion is EVaultTestBase {
         eTST0.deposit(maxAssets, user1);
     }
 
-    function testFuzz_maxMint(uint256 cash, uint256 shares, uint256 borrows, uint16 supplyCap) public {        
+    function testFuzz_maxMint(uint256 cash, uint256 shares, uint256 borrows, uint16 supplyCap) public {
         uint256 supplyCapAmount = AmountCap.wrap(supplyCap).resolve();
         vm.assume(supplyCapAmount > 1 && supplyCapAmount <= MAX_SANE_AMOUNT);
 
