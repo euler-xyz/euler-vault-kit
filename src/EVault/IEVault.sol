@@ -195,8 +195,8 @@ interface IBorrowing {
     /// @return The total borrows in asset units
     function totalBorrows() external view returns (uint256);
 
-    /// @notice Sum of all outstanding debts, in underlying units scaled up by shifting INTERNAL_DEBT_PRECISION_SHIFT
-    /// bits
+    /// @notice Sum of all outstanding debts, in underlying units scaled up by shifting
+    /// INTERNAL_DEBT_PRECISION_SHIFT bits
     /// @return The total borrows in internal debt precision
     function totalBorrowsExact() external view returns (uint256);
 
@@ -309,8 +309,8 @@ interface IRiskManager is IEVCVault {
     /// @param liquidation Flag to indicate if the calculation should be performed in liquidation vs account status
     /// check mode, where different LTV values might apply.
     /// @return collaterals Array of collaterals enabled
-    /// @return collateralValues Array of risk adjusted collateral values corresponding to items in collaterals array. In
-    /// unit of account
+    /// @return collateralValues Array of risk adjusted collateral values corresponding to items in collaterals array.
+    /// In unit of account
     /// @return liabilityValue Value of debt in unit of account
     function accountLiquidityFull(address account, bool liquidation)
         external

@@ -11,11 +11,9 @@ interface IProtocolConfig {
     /// @param vault address of the vault
     /// @param interestFee an interest fee value to check
     /// @dev an interest fee is considered valid only when it is greater than or equal the min interest fee and less
-    /// than
-    /// or equal the max interest fee
+    /// than or equal the max interest fee
     /// @dev if a vault has a specific interest fee ranges set by admin, it will be used, otherwise the generic ones
-    /// will
-    /// bech checked against
+    /// will be checked against
     /// @return bool true for valid, else false
     function isValidInterestFee(address vault, uint16 interestFee) external view returns (bool);
 

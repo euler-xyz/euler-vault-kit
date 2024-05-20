@@ -37,8 +37,8 @@ contract PegStabilityModule is EVCUtil {
     /// @param _underlying The address of the underlying asset.
     /// @param toUnderlyingFeeBPS The fee for swapping to the underlying asset in basis points. eg: 100 = 1%
     /// @param toSynthFeeBPS The fee for swapping to the synthetic asset in basis points. eg: 100 = 1%
-    /// @param _conversionPrice The conversion price between the synthetic and underlying asset. eg: 1e18 = 1 SYNTH == 1
-    /// UNDERLYING, 0.01e18 = 1 SYNTH == 0.01 UNDERLYING
+    /// @param _conversionPrice The conversion price between the synthetic and underlying asset.
+    /// eg: 1e18 = 1 SYNTH == 1 UNDERLYING, 0.01e18 = 1 SYNTH == 0.01 UNDERLYING
     constructor(
         address _evc,
         address _synth,
