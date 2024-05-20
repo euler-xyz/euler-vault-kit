@@ -2,22 +2,22 @@
 
 pragma solidity ^0.8.0;
 
-import {FunctionOverrides} from "test/invariants/helpers/extended/FunctionOverrides.sol";
+import {FunctionOverrides} from "./FunctionOverrides.sol";
 
-import {Base} from "src/EVault/shared/Base.sol";
-import {BalanceUtils} from "src/EVault/shared/BalanceUtils.sol";
-import {BorrowUtils} from "src/EVault/shared/BorrowUtils.sol";
+import {Base} from "../../../../src/EVault/shared/Base.sol";
+import {BalanceUtils} from "../../../../src/EVault/shared/BalanceUtils.sol";
+import {BorrowUtils} from "../../../../src/EVault/shared/BorrowUtils.sol";
 
-import {Initialize} from "src/EVault/modules/Initialize.sol";
-import {Token} from "src/EVault/modules/Token.sol";
-import {Vault} from "src/EVault/modules/Vault.sol";
-import {Borrowing} from "src/EVault/modules/Borrowing.sol";
-import {Liquidation} from "src/EVault/modules/Liquidation.sol";
-import {BalanceForwarder} from "src/EVault/modules/BalanceForwarder.sol";
-import {Governance} from "src/EVault/modules/Governance.sol";
-import {RiskManager} from "src/EVault/modules/RiskManager.sol";
+import {Initialize} from "../../../../src/EVault/modules/Initialize.sol";
+import {Token} from "../../../../src/EVault/modules/Token.sol";
+import {Vault} from "../../../../src/EVault/modules/Vault.sol";
+import {Borrowing} from "../../../../src/EVault/modules/Borrowing.sol";
+import {Liquidation} from "../../../../src/EVault/modules/Liquidation.sol";
+import {BalanceForwarder} from "../../../../src/EVault/modules/BalanceForwarder.sol";
+import {Governance} from "../../../../src/EVault/modules/Governance.sol";
+import {RiskManager} from "../../../../src/EVault/modules/RiskManager.sol";
 
-import "src/EVault/shared/types/Types.sol";
+import "../../../../src/EVault/shared/types/Types.sol";
 
 // Modules and EVault overrides.
 contract BalanceForwarderExtended is BalanceForwarder, FunctionOverrides {

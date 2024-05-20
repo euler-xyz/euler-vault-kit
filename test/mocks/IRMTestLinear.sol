@@ -2,8 +2,8 @@
 
 pragma solidity ^0.8.0;
 
-import "src/InterestRateModels/IIRM.sol";
-import "src/EVault/shared/Constants.sol";
+import "../../src/InterestRateModels/IIRM.sol";
+import "../../src/EVault/shared/Constants.sol";
 
 contract IRMTestLinear is IIRM {
     uint256 internal constant MAX_IR = uint256(1e27 * 0.1) / SECONDS_PER_YEAR;

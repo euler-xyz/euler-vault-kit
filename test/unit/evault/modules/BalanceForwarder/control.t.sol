@@ -2,9 +2,9 @@
 
 pragma solidity ^0.8.0;
 
-import "test/unit/evault/EVaultTestBase.t.sol";
-import {Errors} from "src/EVault/shared/Errors.sol";
-import {Events} from "src/EVault/shared/Events.sol";
+import "../../EVaultTestBase.t.sol";
+import {Errors} from "../../../../../src/EVault/shared/Errors.sol";
+import {Events} from "../../../../../src/EVault/shared/Events.sol";
 import "forge-std/Test.sol";
 
 contract BalanceForwarderTest_Control is EVaultTestBase {

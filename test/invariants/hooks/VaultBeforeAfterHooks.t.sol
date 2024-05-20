@@ -2,8 +2,8 @@
 pragma solidity ^0.8.19;
 
 // Contracts
-import "src/EVault/shared/types/Types.sol";
-import "src/EVault/shared/types/AmountCap.sol";
+import "../../../src/EVault/shared/types/Types.sol";
+import "../../../src/EVault/shared/types/AmountCap.sol";
 
 // Test Helpers
 import {Pretty, Strings} from "../utils/Pretty.sol";

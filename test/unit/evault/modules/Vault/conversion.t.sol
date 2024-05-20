@@ -3,9 +3,9 @@
 pragma solidity ^0.8.0;
 
 import "../../EVaultTestBase.t.sol";
-import {EVault} from "src/EVault/EVault.sol";
+import {EVault} from "../../../../../src/EVault/EVault.sol";
 
-import "src/EVault/shared/types/Types.sol";
+import "../../../../../src/EVault/shared/types/Types.sol";
 
 contract EVaultHarness is EVault {
     using TypesLib for uint256;
@@ -17,6 +17,10 @@ contract EVaultHarness is EVault {
     }
 
     function setTotalBorrow_(uint256 value) public {
+        vaultStorage.totalBorrows = Owed.wrap(uint144(value << INTERNAL_DEBT_PRECISION_SHIFT));
+    }
+
+    function setTotalBorrowExact_(uint256 value) public {
         vaultStorage.totalBorrows = Owed.wrap(uint144(value));
     }
 
@@ -216,7 +220,7 @@ contract VaultTest_Conversion is EVaultTestBase {
         eTST0.setTotalShares_(shares);
         eTST0.setTotalBorrow_(borrows);
 
-        assertEq(eTST0.totalBorrowsExact(), borrows);
+        assertEq(eTST0.totalBorrows(), borrows);
         assertEq(eTST0.cash(), cash);
         assertEq(eTST0.totalSupply(), shares);
 
@@ -263,7 +267,7 @@ contract VaultTest_Conversion is EVaultTestBase {
         eTST0.setTotalShares_(shares);
         eTST0.setTotalBorrow_(borrows);
 
-        assertEq(eTST0.totalBorrowsExact(), borrows);
+        assertEq(eTST0.totalBorrows(), borrows);
         assertEq(eTST0.cash(), cash);
         assertEq(eTST0.totalSupply(), shares);
 
@@ -323,7 +327,7 @@ contract VaultTest_Conversion is EVaultTestBase {
 
         assertEq(eTST0.cash(), cash);
         assertEq(eTST0.totalSupply(), shares);
-        assertEq(eTST0.totalBorrowsExact(), borrows);
+        assertEq(eTST0.totalBorrows(), borrows);
 
         uint256 maxAssets = eTST0.maxWithdraw(user1);
 
@@ -356,7 +360,7 @@ contract VaultTest_Conversion is EVaultTestBase {
         eTST0.setCash_(cash);
         eTST0.setTotalBorrow_(borrows);
 
-        assertEq(eTST0.totalBorrowsExact(), borrows);
+        assertEq(eTST0.totalBorrows(), borrows);
         assertEq(eTST0.cash(), cash);
         assertEq(eTST0.totalSupply(), shares);
         assertEq(eTST0.balanceOf(user1), 0);
@@ -401,7 +405,7 @@ contract VaultTest_Conversion is EVaultTestBase {
         eTST0.setTotalBorrow_(borrows);
         eTST0.setTotalShares_(shares);
 
-        assertEq(eTST0.totalBorrowsExact(), borrows);
+        assertEq(eTST0.totalBorrows(), borrows);
         assertEq(eTST0.cash(), cash);
         assertEq(eTST0.totalSupply(), shares);
 
@@ -431,7 +435,7 @@ contract VaultTest_Conversion is EVaultTestBase {
         eTST0.setTotalBorrow_(borrows);
         eTST0.setTotalShares_(shares);
 
-        assertEq(eTST0.totalBorrowsExact(), borrows);
+        assertEq(eTST0.totalBorrows(), borrows);
         assertEq(eTST0.cash(), cash);
         assertEq(eTST0.totalSupply(), shares);
 
@@ -446,6 +450,9 @@ contract VaultTest_Conversion is EVaultTestBase {
         eTST0.mint(maxShares, user1);
 
         vm.revertTo(snapshot);
+
+        vm.expectRevert();
+        eTST0.mint(maxShares + 1, user1);
     }
 
     function testFuzz_previewMint(uint256 cash, uint256 shares, uint256 borrows, uint256 mint) public {
@@ -462,7 +469,7 @@ contract VaultTest_Conversion is EVaultTestBase {
         eTST0.setCash_(cash);
         eTST0.setTotalBorrow_(borrows);
 
-        assertEq(eTST0.totalBorrowsExact(), borrows);
+        assertEq(eTST0.totalBorrows(), borrows);
         assertEq(eTST0.cash(), cash);
         assertEq(eTST0.totalSupply(), shares);
         assertEq(eTST0.balanceOf(user1), 0);
@@ -500,7 +507,7 @@ contract VaultTest_Conversion is EVaultTestBase {
         eTST0.setTotalShares_(shares);
         eTST0.setTotalBorrow_(borrows);
 
-        assertEq(eTST0.totalBorrowsExact(), borrows);
+        assertEq(eTST0.totalBorrows(), borrows);
         assertEq(eTST0.cash(), cash);
         assertEq(eTST0.totalSupply(), shares);
         assertEq(eTST0.balanceOf(user1), deposit);
@@ -540,7 +547,7 @@ contract VaultTest_Conversion is EVaultTestBase {
         startHoax(address(this));
         eTST0.setCash_(cash);
         eTST0.setTotalShares_(shares);
-        eTST0.setTotalBorrow_(borrows);
+        eTST0.setTotalBorrowExact_(borrows);
 
         assertEq(eTST0.totalBorrowsExact(), borrows);
         assertEq(eTST0.cash(), cash);
@@ -573,7 +580,7 @@ contract VaultTest_Conversion is EVaultTestBase {
         startHoax(address(this));
         eTST0.setCash_(cash);
         eTST0.setTotalShares_(shares);
-        eTST0.setTotalBorrow_(borrows);
+        eTST0.setTotalBorrowExact_(borrows);
 
         assertEq(eTST0.totalBorrowsExact(), borrows);
         assertEq(eTST0.cash(), cash);

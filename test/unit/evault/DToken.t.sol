@@ -2,10 +2,10 @@
 
 pragma solidity ^0.8.0;
 
-import "test/unit/evault/EVaultTestBase.t.sol";
-import {DToken} from "src/EVault/DToken.sol";
-import {Errors} from "src/EVault/shared/Errors.sol";
-import {Events} from "src/EVault/shared/Events.sol";
+import "./EVaultTestBase.t.sol";
+import {DToken} from "../../../src/EVault/DToken.sol";
+import {Errors} from "../../../src/EVault/shared/Errors.sol";
+import {Events} from "../../../src/EVault/shared/Events.sol";
 
 contract DTokenTest is EVaultTestBase {
     address user = makeAddr("user");

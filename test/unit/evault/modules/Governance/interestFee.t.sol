@@ -3,9 +3,9 @@
 pragma solidity ^0.8.0;
 
 import {EVaultTestBase} from "../../EVaultTestBase.t.sol";
-import {GovernanceModule} from "src/EVault/modules/Governance.sol";
+import {GovernanceModule} from "../../../../../src/EVault/modules/Governance.sol";
 
-import "src/EVault/shared/types/Types.sol";
+import "../../../../../src/EVault/shared/types/Types.sol";
 
 contract GovernanceTest_InterestFee is EVaultTestBase {
     using TypesLib for uint256;

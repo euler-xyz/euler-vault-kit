@@ -3,16 +3,16 @@ pragma solidity ^0.8.19;
 
 // Contracts
 import {EthereumVaultConnector} from "ethereum-vault-connector/EthereumVaultConnector.sol";
-import {ProtocolConfig} from "src/ProtocolConfig/ProtocolConfig.sol";
-import "src/EVault/shared/Constants.sol";
+import {ProtocolConfig} from "../../../src/ProtocolConfig/ProtocolConfig.sol";
+import "../../../src/EVault/shared/Constants.sol";
 
 // Mock Contracts
 import {ERC20Mock as TestERC20} from "@openzeppelin/contracts/mocks/token/ERC20Mock.sol";
-import {GenericFactory} from "src/GenericFactory/GenericFactory.sol";
+import {GenericFactory} from "../../../src/GenericFactory/GenericFactory.sol";
 import {MockPriceOracle} from "../../mocks/MockPriceOracle.sol";
 
 // Test Contracts
-import {EVaultExtended} from "test/invariants/helpers/extended/EVaultExtended.sol";
+import {EVaultExtended} from "../helpers/extended/EVaultExtended.sol";
 
 // Utils
 import {Actor} from "../utils/Actor.sol";

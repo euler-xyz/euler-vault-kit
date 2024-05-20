@@ -2,7 +2,7 @@
 
 pragma solidity ^0.8.0;
 
-import {EVaultTestBase} from "test/unit/evault/EVaultTestBase.t.sol";
+import {EVaultTestBase} from "../../EVaultTestBase.t.sol";
 
 contract Governance_views is EVaultTestBase {
     function test_protocolFeeShare() public {

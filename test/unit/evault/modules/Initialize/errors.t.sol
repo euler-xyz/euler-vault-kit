@@ -2,11 +2,11 @@
 
 pragma solidity ^0.8.0;
 
-import "test/unit/evault/EVaultTestBase.t.sol";
-import {Errors} from "src/EVault/shared/Errors.sol";
-import {Events} from "src/EVault/shared/Events.sol";
-import {IComponent} from "src/GenericFactory/GenericFactory.sol";
-import {MetaProxyDeployer} from "src/GenericFactory/MetaProxyDeployer.sol";
+import "../../EVaultTestBase.t.sol";
+import {Errors} from "../../../../../src/EVault/shared/Errors.sol";
+import {Events} from "../../../../../src/EVault/shared/Events.sol";
+import {IComponent} from "../../../../../src/GenericFactory/GenericFactory.sol";
+import {MetaProxyDeployer} from "../../../../../src/GenericFactory/MetaProxyDeployer.sol";
 
 contract InitializeTests is EVaultTestBase, MetaProxyDeployer {
     function test_cant_reinitialize() public {

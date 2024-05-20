@@ -3,13 +3,13 @@
 pragma solidity ^0.8.0;
 
 // Contracts
-import {BalanceUtils} from "src/EVault/shared/BalanceUtils.sol";
-import {BorrowUtils} from "src/EVault/shared/BorrowUtils.sol";
-import "src/EVault/shared/types/Types.sol";
+import {BalanceUtils} from "../../../../src/EVault/shared/BalanceUtils.sol";
+import {BorrowUtils} from "../../../../src/EVault/shared/BorrowUtils.sol";
+import "../../../../src/EVault/shared/types/Types.sol";
 
 // Utils
-import "test/invariants/InvariantsSpec.t.sol";
-import "test/invariants/utils/StdAsserts.sol";
+import "../../InvariantsSpec.t.sol";
+import "../../utils/StdAsserts.sol";
 
 /// @notice Abstract contract to override functions and check internal invariants.
 abstract contract FunctionOverrides is BalanceUtils, BorrowUtils, StdAsserts, InvariantsSpec {

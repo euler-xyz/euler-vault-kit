@@ -2,9 +2,9 @@
 
 pragma solidity ^0.8.0;
 
-import {EVault} from "src/EVault/EVault.sol";
-import {Errors} from "src/EVault/shared/Errors.sol";
-import {IHookTarget} from "src/interfaces/IHookTarget.sol";
+import {EVault} from "../../../../src/EVault/EVault.sol";
+import {Errors} from "../../../../src/EVault/shared/Errors.sol";
+import {IHookTarget} from "../../../../src/interfaces/IHookTarget.sol";
 
 import "../EVaultTestBase.t.sol";
 

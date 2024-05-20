@@ -5,7 +5,7 @@ pragma solidity ^0.8.19;
 import {HandlerAggregator} from "../HandlerAggregator.t.sol";
 
 // Types
-import {Snapshot, Assets} from "src/EVault/shared/types/Types.sol";
+import {Snapshot, Assets} from "../../../src/EVault/shared/types/Types.sol";
 
 /// @title BaseInvariants
 /// @notice Implements Invariants for the protocol

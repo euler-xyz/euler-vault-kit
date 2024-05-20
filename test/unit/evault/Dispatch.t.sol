@@ -3,8 +3,8 @@
 pragma solidity ^0.8.0;
 
 import "./EVaultTestBase.t.sol";
-import {Errors} from "src/EVault/shared/Errors.sol";
-import {EVault} from "src/EVault/EVault.sol";
+import {Errors} from "../../../src/EVault/shared/Errors.sol";
+import {EVault} from "../../../src/EVault/EVault.sol";
 
 contract DispatchTest is EVaultTestBase {
     function test_Dispatch_moduleGetters() public view {
