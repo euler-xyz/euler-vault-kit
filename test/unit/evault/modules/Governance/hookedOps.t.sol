@@ -294,10 +294,14 @@ contract Governance_HookedOps is EVaultTestBase {
         }
 
         if (hookedOps & OP_TRANSFER != 0) {
+            vm.assume(address1 != address(0));
+
             bytes memory data = getHookCalldata(abi.encodeCall(IEVault(eTST).transfer, (address1, amount)), sender);
             MockHookTarget(hookTarget).setExpectedDataHash(keccak256(data));
             vm.expectRevert(MockHookTarget.ExpectedData.selector);
             eTST.transfer(address1, amount);
+
+            vm.assume(address1 != CHECKACCOUNT_CALLER && address2 != address(0));
 
             data = getHookCalldata(abi.encodeCall(IEVault(eTST).transferFrom, (address1, address2, amount)), sender);
             MockHookTarget(hookTarget).setExpectedDataHash(keccak256(data));

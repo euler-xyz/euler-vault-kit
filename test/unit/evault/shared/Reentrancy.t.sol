@@ -431,12 +431,12 @@ contract ReentrancyTest is EVaultTestBase {
         eTST.setInterestFee(uint16(bound(amount1, 0, type(uint16).max)));
     }
 
-    function testFuzz_hookTargetAllowed_nonReentrantView() public {
+    function test_hookTargetAllowed_nonReentrantView() public {
         address hookTarget = address(new MockHookTarget());
 
         eTST.setHookConfig(hookTarget, OP_TRANSFER);
         MockHookTarget(hookTarget).setEVault(address(eTST));
 
-        eTST.transfer(address(0), 0);
+        eTST.transfer(address(2), 0);
     }
 }

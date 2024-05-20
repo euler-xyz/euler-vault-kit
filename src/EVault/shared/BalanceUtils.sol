@@ -65,6 +65,8 @@ abstract contract BalanceUtils is Base {
     }
 
     function transferBalance(address from, address to, Shares amount) internal virtual {
+        if (to == address(0)) revert E_BadSharesReceiver();
+
         if (!amount.isZero()) {
             (Shares origFromBalance, bool fromBalanceForwarderEnabled) =
                 vaultStorage.users[from].getBalanceAndBalanceForwarder();
