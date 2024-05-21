@@ -116,7 +116,7 @@ contract VaultTest_Caps is EVaultTestBase {
     }
 
     function test_SetCaps_AccessControl(address caller) public {
-        vm.assume(caller != eTST.governorAdmin());
+        vm.assume(caller != eTST.governorAdmin() && caller != eTST.EVC());
         vm.expectRevert(Errors.E_Unauthorized.selector);
         vm.prank(caller);
         eTST.setCaps(0, 0);
