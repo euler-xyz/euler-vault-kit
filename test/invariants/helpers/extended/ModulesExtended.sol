@@ -96,6 +96,10 @@ contract BorrowingExtended is Borrowing, FunctionOverrides {
 contract GovernanceExtended is Governance, FunctionOverrides {
     constructor(Integrations memory integrations) Governance(integrations) {}
 
+    function resetInitOperationFlag() public governorOnly {
+        initOperationFlag = false;
+    }
+
     function initOperation(uint32 operation, address accountToCheck)
         internal
         override (Base, FunctionOverrides)

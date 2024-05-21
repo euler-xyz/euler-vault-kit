@@ -13,6 +13,10 @@ import {BaseHooks} from "../base/BaseHooks.t.sol";
 
 import "forge-std/console.sol";
 
+interface IGovernanceOverride {
+    function resetInitOperationFlag() external;
+}
+
 /// @title Vault Before After Hooks
 /// @notice Helper contract for before and after hooks
 /// @dev This contract is inherited by handlers
@@ -47,6 +51,9 @@ abstract contract VaultBeforeAfterHooks is BaseHooks {
     VaultVars vaultVars;
 
     function _vaultHooksBefore() internal {
+        // this will fail if there's no overrides on
+        try IGovernanceOverride(address(eTST)).resetInitOperationFlag() {} catch {}
+
         // Exchange Rate
         vaultVars.exchangeRateBefore = _calculateExchangeRate();
         // ERC4626

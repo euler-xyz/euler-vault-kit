@@ -13,12 +13,12 @@ import "../../utils/StdAsserts.sol";
 
 /// @notice Abstract contract to override functions and check internal invariants.
 abstract contract FunctionOverrides is BalanceUtils, BorrowUtils, StdAsserts, InvariantsSpec {
-    uint32 internal constant INIT_OPERATION_FLAG = 1 << 31;
+    bool public initOperationFlag;
 
     /// @notice Internal invariants for low level operations
     /// @dev Similar to Postconditions but checked internally within the transaction
     function checkInvariants(address checkedAccount, address controllerEnabled) internal {
-        assertTrue(Flags.unwrap(vaultStorage.hookedOps) & INIT_OPERATION_FLAG != 0, INTERNAL_INVARIANT_A);
+        assertTrue(initOperationFlag, INTERNAL_INVARIANT_A);
         assertTrue(evc.isVaultStatusCheckDeferred(address(this)), INTERNAL_INVARIANT_B);
         assertTrue(
             checkedAccount == address(0) || evc.isAccountStatusCheckDeferred(checkedAccount), INTERNAL_INVARIANT_C
@@ -36,7 +36,7 @@ abstract contract FunctionOverrides is BalanceUtils, BorrowUtils, StdAsserts, In
         returns (VaultCache memory vaultCache, address account)
     {
         (vaultCache, account) = super.initOperation(operation, accountToCheck);
-        vaultStorage.hookedOps = Flags.wrap(Flags.unwrap(vaultStorage.hookedOps) | INIT_OPERATION_FLAG);
+        initOperationFlag = true;
     }
 
     function increaseBalance(
