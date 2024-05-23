@@ -64,7 +64,7 @@ abstract contract LiquidationModule is ILiquidation, Base, BalanceUtils, Liquidi
         address violator,
         address collateral,
         uint256 desiredRepay
-    ) private view returns (LiquidationCache memory liqCache) {
+    ) internal view returns (LiquidationCache memory liqCache) {
         // Init cache
 
         liqCache.liquidator = liquidator;
@@ -167,7 +167,7 @@ abstract contract LiquidationModule is ILiquidation, Base, BalanceUtils, Liquidi
     }
 
     function executeLiquidation(VaultCache memory vaultCache, LiquidationCache memory liqCache, uint256 minYieldBalance)
-        private
+        internal
     {
         // Check minimum yield.
 
