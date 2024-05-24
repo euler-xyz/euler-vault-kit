@@ -9,13 +9,13 @@ import {Ownable} from "openzeppelin-contracts/access/Ownable.sol";
 /// @custom:security-contact security@euler.xyz
 /// @author Euler Labs (https://www.eulerlabs.com/)
 /// @notice Implementaion on an interest rate model, which can be set by the owner of this contract
-contract IRMGovernable is IIRM {
+contract IRMGovernable is IIRM, Ownable {
     uint256 public immutable maxRate;
     uint256 public rate;
 
     error RateExceedsMaxRate();
     
-    constructor(uint256 maxRate_, uint256 initialRate) Ownable() {
+    constructor(uint256 maxRate_, uint256 initialRate) Ownable(msg.sender) {
         maxRate = maxRate_;
         initialRate = rate;
     }
@@ -28,7 +28,7 @@ contract IRMGovernable is IIRM {
     }
 
     /// @inheritdoc IIRM
-    function computeInterestRate(address vault, uint256 cash, uint256 borrows)
+    function computeInterestRate(address, uint256, uint256)
         external
         view
         override
@@ -38,7 +38,7 @@ contract IRMGovernable is IIRM {
     }
 
     /// @inheritdoc IIRM
-    function computeInterestRateView(address vault, uint256 cash, uint256 borrows)
+    function computeInterestRateView(address, uint256, uint256)
         external
         view
         override
