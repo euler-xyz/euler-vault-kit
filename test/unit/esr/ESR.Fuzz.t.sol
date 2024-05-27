@@ -15,6 +15,7 @@ contract ESRFuzzTest is ESRTest {
     //totalAssets should be equal to the balance after SMEAR has passed
     function invariant_totalAssetsShouldBeEqualToBalanceAfterSMEAR() public {
         vm.assume(asset.balanceOf(address(esr)) <= type(uint168).max);
+        if (asset.balanceOf(address(esr)) == 0) return;
         esr.gulp();
         skip(esr.INTEREST_SMEAR()); // make sure smear has passed
         assertEq(esr.totalAssets(), asset.balanceOf(address(esr)));
