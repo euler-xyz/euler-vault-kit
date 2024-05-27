@@ -375,7 +375,7 @@ contract VaultTest_BalancesWithInterest is EVaultTestBase {
         assertEq(eTST.accumulatedFeesAssets(), 0);
         assertEq(eTST.totalSupply(), 0);
 
-        assertGe(eTST.cash(), 0);
+        assertGt(eTST.cash(), 0);
     }
 
     function test_repayWithShares_exchangeRateRounding() public {
