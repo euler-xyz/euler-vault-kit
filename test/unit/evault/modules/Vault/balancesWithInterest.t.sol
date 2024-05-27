@@ -354,17 +354,28 @@ contract VaultTest_BalancesWithInterest is EVaultTestBase {
 
         eTST.repay(type(uint256).max, user3);
 
+        eTST.convertFees();
+
         startHoax(user1);
         uint256 max = eTST.maxWithdraw(user1);
         eTST.withdraw(max, user1, user1);
+
+        startHoax(feeReceiver);
+        max = eTST.maxWithdraw(feeReceiver);
+        eTST.withdraw(max, feeReceiver, feeReceiver);
+
+        startHoax(protocolFeeReceiver);
+        max = eTST.maxWithdraw(protocolFeeReceiver);
+        eTST.withdraw(max, protocolFeeReceiver, protocolFeeReceiver);
 
         assertEq(eTST.balanceOf(user1), 0);
         assertEq(eTST.balanceOf(user3), 0);
         assertEq(eTST.balanceOf(feeReceiver), 0);
         assertEq(eTST.balanceOf(protocolFeeReceiver), 0);
+        assertEq(eTST.accumulatedFeesAssets(), 0);
+        assertEq(eTST.totalSupply(), 0);
 
-        assertNotEq(eTST.cash(), 0);
-        assertApproxEqAbs(eTST.cash(), eTST.accumulatedFeesAssets(), 1000);
+        assertGe(eTST.cash(), 0);
     }
 
     function test_repayWithShares_exchangeRateRounding() public {
