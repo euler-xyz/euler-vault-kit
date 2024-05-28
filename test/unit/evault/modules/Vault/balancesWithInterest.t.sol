@@ -330,6 +330,54 @@ contract VaultTest_BalancesWithInterest is EVaultTestBase {
         assertEq(assetTST.balanceOf(user1), 100e18);
     }
 
+    function test_withdraw_interestLeftOver() public {
+        startHoax(address(this));
+        eTST.setInterestRateModel(address(new IRMTestFixed()));
+
+        startHoax(user1);
+        assetTST.mint(user1, 20e18);
+        eTST.deposit(20e18, user1);
+
+        startHoax(user3);
+        assetTST.mint(user3, 20e18);
+        assetTST.approve(address(eTST), type(uint256).max);
+        evc.enableController(user3, address(eTST));
+        eTST.borrow(1e18, user3);
+
+        assertEq(eTST.balanceOf(user1), 20e18);
+        assertEq(eTST.balanceOf(user3), 0);
+        assertEq(eTST.balanceOf(feeReceiver), 0);
+        assertEq(eTST.balanceOf(protocolFeeReceiver), 0);
+        assertEq(eTST.cash(), 19e18);
+
+        skip(10 days);
+
+        eTST.repay(type(uint256).max, user3);
+
+        eTST.convertFees();
+
+        startHoax(user1);
+        uint256 max = eTST.maxWithdraw(user1);
+        eTST.withdraw(max, user1, user1);
+
+        startHoax(feeReceiver);
+        max = eTST.maxWithdraw(feeReceiver);
+        eTST.withdraw(max, feeReceiver, feeReceiver);
+
+        startHoax(protocolFeeReceiver);
+        max = eTST.maxWithdraw(protocolFeeReceiver);
+        eTST.withdraw(max, protocolFeeReceiver, protocolFeeReceiver);
+
+        assertEq(eTST.balanceOf(user1), 0);
+        assertEq(eTST.balanceOf(user3), 0);
+        assertEq(eTST.balanceOf(feeReceiver), 0);
+        assertEq(eTST.balanceOf(protocolFeeReceiver), 0);
+        assertEq(eTST.accumulatedFeesAssets(), 0);
+        assertEq(eTST.totalSupply(), 0);
+
+        assertGt(eTST.cash(), 0);
+    }
+
     function test_repayWithShares_exchangeRateRounding() public {
         startHoax(user2);
         eTST.deposit(1e18, user2);
