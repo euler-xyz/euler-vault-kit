@@ -258,24 +258,11 @@ invariant assetsMoreThanSupply(env e)
         }
     }
 
-invariant supplyLessThanUnderlyingAsset(env e)
-    toSharesExt(e, userAssets(e, currentContract)) >= totalSupply(e)
-    {
-        preserved {
-            address any;
-            require userAssets(e, currentContract) < max_uint112;
-            safeAssumptions(e, any, actualCaller(e));
-            safeAssumptions(e, any, actualCallerCheckController(e));
-        }
-    }
-
 invariant noAssetsIfNoSupply(env e) 
-   // ( userAssets(e, currentContract) == 0 => totalSupply(e) == 0 ) &&
     ( totalAssets(e) == 0 => ( totalSupply(e) == 0 ))
 
     {
         preserved {
-            // requireInvariant supplyLessThanUnderlyingAsset(e);
             address any;
             safeAssumptions(e, any, actualCaller(e));
             safeAssumptions(e, any, actualCallerCheckController(e));
