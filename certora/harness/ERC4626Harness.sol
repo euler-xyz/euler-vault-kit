@@ -5,6 +5,7 @@ pragma solidity ^0.8.0;
 import "../../certora/harness/AbstractBaseHarness.sol";
 import "../../src/EVault/modules/Vault.sol";
 import "../../src/EVault/modules/Token.sol";
+// import "../../src/EVault/shared/types/Types.sol";
 
 contract ERC4626Harness is VaultModule, TokenModule, AbstractBaseHarness {
     constructor(Integrations memory integrations) Base(integrations) {}
@@ -37,43 +38,15 @@ contract ERC4626Harness is VaultModule, TokenModule, AbstractBaseHarness {
         }
         return vaultCache;
     }
+
+    function toSharesExt(uint256 amount) external view returns (uint256) {
+        require(amount < MAX_SANE_AMOUNT, "Assets are really uint112");
+        VaultCache memory vaultCache = loadVault();
+        return Assets.wrap(uint112(amount)).toSharesDownUint256(vaultCache);
+    }
+
     function cache_cash() public view returns (Assets) {
         return loadVault().cash;
     }
 
-    // VaultStorage Accessors:
-    function storage_lastInterestAccumulatorUpdate() public view returns (uint48) {
-        return vaultStorage.lastInterestAccumulatorUpdate;
-    }
-    function storage_cash() public view returns (Assets) {
-        return vaultStorage.cash;
-    }
-    function storage_supplyCap() public view returns (uint256) {
-        return vaultStorage.supplyCap.resolve();
-    }
-    function storage_borrowCap() public view returns (uint256) {
-        return vaultStorage.borrowCap.resolve();
-    }
-    // reentrancyLocked seems not direclty used in loadVault
-    function storage_hookedOps() public view returns (Flags) {
-        return vaultStorage.hookedOps;
-    }
-    function storage_snapshotInitialized() public view returns (bool) {
-        return vaultStorage.snapshotInitialized;
-    }
-    function storage_totalShares() public view returns (Shares) {
-        return vaultStorage.totalShares;
-    }
-    function storage_totalBorrows() public view returns (Owed) {
-        return vaultStorage.totalBorrows;
-    }
-    function storage_accumulatedFees() public view returns (Shares) {
-        return vaultStorage.accumulatedFees;
-    }
-    function storage_interestAccumulator() public view returns (uint256) {
-        return vaultStorage.interestAccumulator;
-    }
-    function storage_configFlags() public view returns (Flags) {
-        return vaultStorage.configFlags;
-    }
 }

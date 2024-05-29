@@ -90,6 +90,9 @@ methods {
     // Type Conversions
     function _.toShares(uint256 amount) internal => CVLToShares(amount) expect (BaseHarness.Shares);
     function _.toAssets(uint256 amount) internal => CVLToAssets(amount) expect (BaseHarness.Assets);
+    // This is NONDET to help avoid timeouts. It should be safe
+    // to NONDET since it is a private view function.
+    function _.resolve(Vault.AmountCap self) internal => NONDET; 
 
 }
 
@@ -255,13 +258,25 @@ invariant assetsMoreThanSupply(env e)
         }
     }
 
+invariant supplyLessThanUnderlyingAsset(env e)
+    toSharesExt(e, userAssets(e, currentContract)) >= totalSupply(e)
+    {
+        preserved {
+            address any;
+            require userAssets(e, currentContract) < max_uint112;
+            safeAssumptions(e, any, actualCaller(e));
+            safeAssumptions(e, any, actualCallerCheckController(e));
+        }
+    }
+
 invariant noAssetsIfNoSupply(env e) 
-   ( userAssets(e, currentContract) == 0 => totalSupply(e) == 0 ) &&
+   // ( userAssets(e, currentContract) == 0 => totalSupply(e) == 0 ) &&
     ( totalAssets(e) == 0 => ( totalSupply(e) == 0 ))
 
     {
         preserved {
-        address any;
+            // requireInvariant supplyLessThanUnderlyingAsset(e);
+            address any;
             safeAssumptions(e, any, actualCaller(e));
             safeAssumptions(e, any, actualCallerCheckController(e));
         }
