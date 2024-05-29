@@ -40,6 +40,9 @@ ghost CVLGetQuote(uint256, address, address) returns uint256 {
     // LTVConfig.mul)
     axiom forall uint256 x. forall address y. forall address z. 
         CVLGetQuote(x, y, z) < 1725436586697640946858688965569256363112777243042596638790631055949823;
+    // monotonicity of amount
+    axiom forall uint256 x1. forall uint256 x2. forall address y. forall address z. 
+        x1 > x2 => CVLGetQuote(x1, y, z) > CVLGetQuote(x2, y, z);
 }
 
 function CVLGetQuotes(uint256 amount, address base, address quote) returns (uint256, uint256) {
@@ -56,7 +59,8 @@ ghost address unitOfAccount {
     init_state axiom unitOfAccount != 0;
 }
 function CVLProxyMetadata() returns (address, address, address) {
-    // Require addresses not zero?
+    require oracleAddress != 0;
+    require unitOfAccount != 0;
     return (erc20, oracleAddress, unitOfAccount);
 }
 persistent ghost address viewCallerGhost {

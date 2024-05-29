@@ -29,6 +29,14 @@ abstract contract AbstractBaseHarness is Base {
         return vaultStorage.users[account].getBalanceAndBalanceForwarder();
     }
 
+    function checkAccountMagicValue() public view returns (bytes4) {
+        return IEVCVault.checkAccountStatus.selector;
+    }
+
+    function getUserInterestAccumulator(address account) public view returns (uint256) {
+        return vaultStorage.users[account].interestAccumulator;
+    }
+
 
     //--------------------------------------------------------------------------
     // Controllers
@@ -80,6 +88,44 @@ abstract contract AbstractBaseHarness is Base {
 
     function isSkimDisabled() public returns (bool) {
         return isOperationDisabledExt(OP_SKIM);
+    }
+
+    //--------------------------------------------------------------------------
+    // VaultStorage Accessors:
+    //--------------------------------------------------------------------------
+    function storage_lastInterestAccumulatorUpdate() public view returns (uint48) {
+        return vaultStorage.lastInterestAccumulatorUpdate;
+    }
+    function storage_cash() public view returns (Assets) {
+        return vaultStorage.cash;
+    }
+    function storage_supplyCap() public view returns (uint256) {
+        return vaultStorage.supplyCap.resolve();
+    }
+    function storage_borrowCap() public view returns (uint256) {
+        return vaultStorage.borrowCap.resolve();
+    }
+    // reentrancyLocked seems not direclty used in loadVault
+    function storage_hookedOps() public view returns (Flags) {
+        return vaultStorage.hookedOps;
+    }
+    function storage_snapshotInitialized() public view returns (bool) {
+        return vaultStorage.snapshotInitialized;
+    }
+    function storage_totalShares() public view returns (Shares) {
+        return vaultStorage.totalShares;
+    }
+    function storage_totalBorrows() public view returns (Owed) {
+        return vaultStorage.totalBorrows;
+    }
+    function storage_accumulatedFees() public view returns (Shares) {
+        return vaultStorage.accumulatedFees;
+    }
+    function storage_interestAccumulator() public view returns (uint256) {
+        return vaultStorage.interestAccumulator;
+    }
+    function storage_configFlags() public view returns (Flags) {
+        return vaultStorage.configFlags;
     }
 
 

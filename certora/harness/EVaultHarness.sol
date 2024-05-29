@@ -13,6 +13,8 @@ import {BalanceForwarderModule} from "../../src/EVault/modules/BalanceForwarder.
 import {GovernanceModule} from "../../src/EVault/modules/Governance.sol";
 import {RiskManagerModule} from "../../src/EVault/modules/RiskManager.sol";
 
+import "../../certora/harness/AbstractBaseHarness.sol";
+
 contract EVaultHarness is
     Base,
     InitializeModule,
@@ -22,7 +24,8 @@ contract EVaultHarness is
     LiquidationModule,
     RiskManagerModule,
     BalanceForwarderModule,
-    GovernanceModule
+    GovernanceModule,
+    AbstractBaseHarness
 {
 
     constructor(
