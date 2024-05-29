@@ -1,7 +1,7 @@
 import "./Base.spec";
 methods {
     // function Cache.loadVault() internal returns (BaseHarness.VaultCache memory) with (env e) => CVLLoadVault(e);
-    // function Cache.loadVault() internal returns (BaseHarness.VaultCache memory) with (env e) => CVLLoadVaultAssumeNoUpdate(e);
+    function Cache.loadVault() internal returns (BaseHarness.VaultCache memory) with (env e) => CVLLoadVaultAssumeNoUpdate(e);
     // function Cache.initVaultCache(BaseHarness.VaultCache memory vaultCache) internal returns (bool) with (env e) => CVLInitVaultCache(e, vaultCache);
     // function Cache.initVaultCache(BaseHarness.VaultCache memory vaultCache) internal returns (bool) with (env e) => CVLInitVaultCacheSimpleCopy(e, vaultCache);
 
@@ -84,7 +84,6 @@ function CVLLoadVault(env e) returns BaseHarness.VaultCache {
     require vaultCache.snapshotInitialized == storage_snapshotInitialized();
 
     require vaultCache.asset == erc20;
-    require vaultCache.asset == asset();
     require vaultCache.oracle == oracleAddress;
     require vaultCache.unitOfAccount == unitOfAccount;
 
@@ -114,9 +113,10 @@ function CVLLoadVaultAssumeNoUpdate(env e) returns BaseHarness.VaultCache {
     require vaultCache.snapshotInitialized == storage_snapshotInitialized();
 
     require vaultCache.asset == erc20;
-    require vaultCache.asset == asset();
     require vaultCache.oracle == oracleAddress;
     require vaultCache.unitOfAccount == unitOfAccount;
+    require oracleAddress != 0;
+    require unitOfAccount != 0;
 
     return vaultCache;
 }
