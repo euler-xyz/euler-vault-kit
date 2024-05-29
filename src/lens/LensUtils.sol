@@ -21,7 +21,9 @@ abstract contract LensUtils {
     function getStringOrBytes32(address contractAddress, bytes4 selector) internal view returns (string memory) {
         (bool success, bytes memory result) = contractAddress.staticcall(abi.encodeWithSelector(selector));
 
-        return success ? result.length == 32 ? string(abi.encodePacked(result)) : abi.decode(result, (string)) : "";
+        return (success && result.length != 0)
+            ? result.length == 32 ? string(abi.encodePacked(result)) : abi.decode(result, (string))
+            : "";
     }
 
     function getDecimals(address contractAddress) internal view returns (uint8) {
