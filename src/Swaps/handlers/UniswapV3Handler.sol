@@ -14,24 +14,24 @@ abstract contract UniswapV3Handler is BaseHandler {
         uniSwapRouterV3 = _uniSwapRouterV3;
     }
 
-    function swap(SwapParams calldata params) public virtual override {
-        if (params.mode == SWAPMODE__EXACT_IN) revert SwapHandler_UnsupportedMode();
+    function swap(SwapParams memory params) public virtual override {
+        if (params.mode == SWAPMODE_EXACT_IN) revert SwapHandler_UnsupportedMode();
         if (params.data.length < 43 || (params.data.length - 20) % 23 != 0) revert UniswapV3Handler_InvalidPath();
 
         setMaxAllowance(params.tokenIn, params.amountIn, uniSwapRouterV3);
 
-        uint256 amountOut = params.mode == SWAPMODE__TARGET_DEBT
-            ? targetDebtToAmountOut(params.account, params.amountOut)
-            : params.amountOut;
+        uint256 amountOut = resolveAmountOut(params);
 
-        ISwapRouterV3(uniSwapRouterV3).exactOutput(
-            ISwapRouterV3.ExactOutputParams({
-                path: params.data,
-                recipient: params.receiver,
-                amountOut: amountOut,
-                amountInMaximum: type(uint256).max,
-                deadline: block.timestamp
-            })
-        );
+        if (amountOut > 0) {
+            ISwapRouterV3(uniSwapRouterV3).exactOutput(
+                ISwapRouterV3.ExactOutputParams({
+                    path: params.data,
+                    recipient: params.receiver,
+                    amountOut: amountOut,
+                    amountInMaximum: type(uint256).max,
+                    deadline: block.timestamp
+                })
+            );
+        }
     }
 }

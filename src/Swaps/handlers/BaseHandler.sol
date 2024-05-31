@@ -3,27 +3,33 @@
 pragma solidity ^0.8.0;
 
 import "../ISwapper.sol";
-import {IERC20} from "../../EVault/IEVault.sol";
+import {IEVault, IERC20} from "../../EVault/IEVault.sol";
 import {SafeERC20Lib} from "../../EVault/shared/lib/SafeERC20Lib.sol";
 import {RevertBytes} from "../../EVault/shared/lib/RevertBytes.sol";
 
 abstract contract BaseHandler is ISwapper {
-    uint256 internal constant SWAPMODE__EXACT_IN = 0;
-    uint256 internal constant SWAPMODE__EXACT_OUT = 1;
-    uint256 internal constant SWAPMODE__TARGET_DEBT = 2;
+    uint256 internal constant SWAPMODE_EXACT_IN = 0;
+    uint256 internal constant SWAPMODE_EXACT_OUT = 1;
+    uint256 internal constant SWAPMODE_TARGET_DEBT = 2;
 
     error SwapHandler_UnsupportedMode();
+    error SwapHandler_TargetDebt();
+    error SwapHandler_TargetDebtBalance();
 
-    /// Calculate how much needs to be swapped
-    function targetDebtToAmountOut(address account, address vaultOut, uint256 targetDebt) internal view returns (uint256) {
-        // TODO
+    function resolveAmountOut(SwapParams memory params) internal view returns (uint256 amountOut) {
+        if (params.mode != SWAPMODE_TARGET_DEBT) return params.amountOut;
 
-        return targetDebt;
-    }
+        // params.amountOut is the target debt
+        uint256 debt = IEVault(params.receiver).debtOf(params.account);
+        if (params.amountOut > debt) revert SwapHandler_TargetDebt();
 
-    function transferBack(address token) internal {
-        uint256 balance = IERC20(token).balanceOf(address(this));
-        if (balance > 0) SafeERC20Lib.safeTransfer(IERC20(token), msg.sender, balance);
+        amountOut = debt - params.amountOut;
+
+        // TODO - return unused? leave for sweep?
+        uint256 balance = IERC20(params.tokenOut).balanceOf(address(this));
+        if (balance > amountOut) revert SwapHandler_TargetDebtBalance();
+
+        amountOut -= balance;
     }
 
     function setMaxAllowance(address token, uint256 minAllowance, address spender) internal {

@@ -14,22 +14,22 @@ abstract contract UniswapV2Handler is BaseHandler {
         uniSwapRouterV2 = _uniSwapRouterV2;
     }
 
-    function swap(SwapParams calldata params) public virtual override {
-        if (params.mode == SWAPMODE__EXACT_IN) revert SwapHandler_UnsupportedMode();
+    function swap(SwapParams memory params) public virtual override {
+        if (params.mode == SWAPMODE_EXACT_IN) revert SwapHandler_UnsupportedMode();
         if (params.data.length < 64 || params.data.length % 32 != 0) revert UniswapV2Handler_InvalidPath();
 
         setMaxAllowance(params.tokenIn, params.amountIn, uniSwapRouterV2);
 
-        uint256 amountOut = params.mode == SWAPMODE__TARGET_DEBT
-            ? targetDebtToAmountOut(params.account, params.amountOut)
-            : params.amountOut;
+        uint256 amountOut = resolveAmountOut(params);
 
-        ISwapRouterV2(uniSwapRouterV2).swapTokensForExactTokens({
-            amountOut: amountOut,
-            amountInMax: type(uint256).max,
-            path: abi.decode(params.data, (address[])),
-            to: params.receiver,
-            deadline: block.timestamp
-        });
+        if (amountOut > 0) {
+            ISwapRouterV2(uniSwapRouterV2).swapTokensForExactTokens({
+                amountOut: amountOut,
+                amountInMax: type(uint256).max,
+                path: abi.decode(params.data, (address[])),
+                to: params.receiver,
+                deadline: block.timestamp
+            });
+        }
     }
 }
