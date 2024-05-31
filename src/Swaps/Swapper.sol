@@ -54,6 +54,12 @@ contract Swapper is OneInchHandler, UniswapV2Handler, UniswapV3Handler, UniswapA
         sweep(params.tokenIn, 0, params.vaultIn);
     }
 
+    function swapMany(SwapParams[] memory params) public {
+        for (uint i; i < params.length; i++) {
+            swap(params[i]);
+        }
+    }
+
     // in case of over-swapping to repay, pass max uint amount 
     function repay(address token, address vault, uint256 amount, address account) public {
         setMaxAllowance(token, amount, vault);
@@ -68,6 +74,7 @@ contract Swapper is OneInchHandler, UniswapV2Handler, UniswapV3Handler, UniswapA
         }
     }
 
+    // TODO reentrancy protection or multiSwap
     function multicall(bytes[] memory calls) external {
         for (uint256 i; i < calls.length; i++) {
             (bool success, bytes memory result) = address(this).delegatecall(calls[i]);
