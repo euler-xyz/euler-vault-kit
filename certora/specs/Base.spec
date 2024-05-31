@@ -1,5 +1,5 @@
 using DummyERC20A as erc20;
-using EthereumVaultConnector as evc;
+using EVCHarness as evc;
 
 methods {
     // envfree
