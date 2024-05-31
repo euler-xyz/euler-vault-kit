@@ -3,6 +3,11 @@
 pragma solidity >=0.8.0;
 
 contract BaseHook {
+    
+    function isHookTarget() external pure override returns (bytes4) {
+        return this.isHookTarget.selector;
+    }
+
     function getAddressFromMsgData() public pure returns (address) {
         // Ensure that tx.data has at least 20 bytes
         require(msg.data.length >= 20, "tx.data too short");
