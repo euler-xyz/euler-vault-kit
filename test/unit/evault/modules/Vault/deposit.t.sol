@@ -368,15 +368,4 @@ contract VaultTest_Deposit is EVaultTestBase {
         assertEq(eTST.totalSupply(), 2 * amount);
         assertEq(eTST.totalAssets(), 2 * amount);
     }
-
-    function test_deposit_feeOrRebaseToken() public {
-        assetTST.configure("transfer/deflationary", abi.encode(0.5e18));
-
-        startHoax(user1);
-        eTST.deposit(1e18, user1); //0.5e18
-
-        assertEq(eTST.balanceOf(user1), 1e18);
-        assertEq(eTST.cash(), 1e18);
-        assertEq(assetTST.balanceOf(address(eTST)), 1e18);
-    }
 }

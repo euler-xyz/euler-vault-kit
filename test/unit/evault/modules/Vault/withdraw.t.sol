@@ -303,4 +303,39 @@ contract VaultTest_Withdraw is EVaultTestBase {
 
         assertEq(eTST3.maxRedeem(borrower), 0);
     }
+
+    function test_withdraw_feeOrRebaseToken() public {
+        assetTST.configure("transfer/deflationary", abi.encode(0.5e18));
+
+        assertEq(eTST.balanceOf(lender), 100e18);
+        assertEq(eTST.cash(), 100e18);
+
+        startHoax(borrower);
+        assetTST.mint(borrower, 1e18);
+        assetTST.approve(address(eTST), type(uint256).max);
+        eTST.deposit(1e18, borrower); // => 0.5e18
+
+        assertEq(eTST.cash(), 100e18 + 1e18);
+        assertEq(eTST.balanceOf(lender), 100e18);
+        assertEq(eTST.balanceOf(borrower), 1e18);
+        assertEq(assetTST.balanceOf(address(eTST)), 100e18 + 0.5e18);
+
+        eTST.withdraw(1e18, borrower, borrower);
+
+        assertEq(eTST.cash(), 100e18);
+        assertEq(eTST.balanceOf(lender), 100e18);
+        assertEq(eTST.balanceOf(borrower), 0);
+        assertEq(assetTST.balanceOf(address(eTST)), 100e18 - 0.5e18);
+
+        startHoax(lender);
+        eTST.withdraw(99.5e18, lender, lender);
+
+        assertEq(eTST.cash(), 0.5e18);
+        assertEq(eTST.balanceOf(lender), 0.5e18);
+        assertEq(eTST.balanceOf(borrower), 0);
+        assertEq(assetTST.balanceOf(address(eTST)), 0);
+
+        vm.expectRevert(bytes("ERC20: transfer amount exceeds balance"));
+        eTST.withdraw(0.5e18, lender, lender);
+    }
 }
