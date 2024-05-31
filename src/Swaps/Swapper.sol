@@ -17,7 +17,26 @@ contract Swapper is OneInchHandler, UniswapV2Handler, UniswapV3Handler, UniswapA
     uint256 internal constant HANDLER_UNISWAP_V3 = 2;
     uint256 internal constant HANDLER_UNISWAP_AUTOROUTER = 3;
 
+    uint256 internal constant REENTRANCYLOCK_UNLOCKED = 1;
+    uint256 internal constant REENTRANCYLOCK_LOCKED = 2;
+
+    uint256 private reentrancyLock;
+
     error Swapper_UnsupportedHandler();
+    error Swapper_Reentrancy();
+
+    modifier externalLock() {
+        bool isExternal = msg.sender != address(this);
+
+        if (isExternal) {
+            if (reentrancyLock == REENTRANCYLOCK_LOCKED) revert Swapper_Reentrancy();
+            reentrancyLock = REENTRANCYLOCK_LOCKED;
+        }
+
+        _;
+
+        if (isExternal) reentrancyLock = REENTRANCYLOCK_UNLOCKED;
+    }
 
     constructor(address oneInchAggregator, address uniswapRouterV2, address uniswapRouterV3, address uniSwapRouter02)
         OneInchHandler(oneInchAggregator)
@@ -29,7 +48,39 @@ contract Swapper is OneInchHandler, UniswapV2Handler, UniswapV3Handler, UniswapA
     function swap(SwapParams memory params)
         public
         override (OneInchHandler, UniswapV2Handler, UniswapV3Handler, UniswapAutoRouterHandler)
+        externalLock
     {
+        _swap(params);
+    }
+
+    function swapMany(SwapParams[] memory params) public externalLock {
+        for (uint256 i; i < params.length; i++) {
+            _swap(params[i]);
+        }
+    }
+
+    // in case of over-swapping to repay, pass max uint amount
+    function repay(address token, address vault, uint256 amount, address account) public externalLock {
+        setMaxAllowance(token, amount, vault);
+
+        IEVault(vault).repay(amount, account);
+    }
+
+    function sweep(address token, uint256 amountMin, address receiver) public externalLock {
+        uint256 balance = IERC20(token).balanceOf(address(this));
+        if (balance >= amountMin) {
+            SafeERC20Lib.safeTransfer(IERC20(token), receiver, balance);
+        }
+    }
+
+    function multicall(bytes[] memory calls) external externalLock {
+        for (uint256 i; i < calls.length; i++) {
+            (bool success, bytes memory result) = address(this).call(calls[i]);
+            if (!success) RevertBytes.revertBytes(result);
+        }
+    }
+
+    function _swap(SwapParams memory params) internal {
         if (params.handler == HANDLER_ONE_INCH) {
             OneInchHandler.swap(params);
         } else if (params.handler == HANDLER_UNISWAP_V2) {
@@ -46,39 +97,11 @@ contract Swapper is OneInchHandler, UniswapV2Handler, UniswapV3Handler, UniswapA
 
         // swapping to target debt is only useful for repaying
         if (params.mode == SWAPMODE_TARGET_DEBT) {
-            uint balance = IERC20(params.tokenOut).balanceOf(address(this));
+            uint256 balance = IERC20(params.tokenOut).balanceOf(address(this));
             repay(params.tokenOut, params.receiver, balance, params.account);
         }
 
         // return unused input token after exact out swap. Caller contract should check amountInMax and skim immediately
         sweep(params.tokenIn, 0, params.vaultIn);
-    }
-
-    function swapMany(SwapParams[] memory params) public {
-        for (uint i; i < params.length; i++) {
-            swap(params[i]);
-        }
-    }
-
-    // in case of over-swapping to repay, pass max uint amount 
-    function repay(address token, address vault, uint256 amount, address account) public {
-        setMaxAllowance(token, amount, vault);
-
-        IEVault(vault).repay(amount, account);
-    }
-
-    function sweep(address token, uint256 amountMin, address receiver) public {
-        uint256 balance = IERC20(token).balanceOf(address(this));
-        if (balance >= amountMin) {
-            SafeERC20Lib.safeTransfer(IERC20(token), receiver, balance);
-        }
-    }
-
-    // TODO reentrancy protection or multiSwap
-    function multicall(bytes[] memory calls) external {
-        for (uint256 i; i < calls.length; i++) {
-            (bool success, bytes memory result) = address(this).delegatecall(calls[i]);
-            if (!success) RevertBytes.revertBytes(result);
-        }
     }
 }
