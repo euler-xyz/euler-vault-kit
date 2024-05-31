@@ -2,14 +2,13 @@
 
 pragma solidity >=0.8.0;
 
-import { BaseHook } from "./BaseHook.sol";
+import {BaseHook} from "./BaseHook.sol";
 
 interface IKeyringCredentials {
     function checkCredential(address, uint32) external view returns (bool);
 }
 
 contract KeyRingHook is BaseHook {
-
     IKeyringCredentials public immutable keyring;
     uint32 internal immutable policyId;
 
@@ -27,7 +26,7 @@ contract KeyRingHook is BaseHook {
         policyId = _policyId;
     }
 
-    fallback() checkKeyring() external payable {
+    fallback() external payable checkKeyring {
         // no-op
     }
 }

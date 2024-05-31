@@ -3,8 +3,7 @@
 pragma solidity >=0.8.0;
 
 contract BaseHook {
-    
-    function isHookTarget() external pure override returns (bytes4) {
+    function isHookTarget() external pure returns (bytes4) {
         return this.isHookTarget.selector;
     }
 
