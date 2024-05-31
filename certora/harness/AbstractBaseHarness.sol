@@ -33,6 +33,14 @@ abstract contract AbstractBaseHarness is Base {
         return IEVCVault.checkAccountStatus.selector;
     }
 
+    function checkAccountMagicValueMemory() public view returns (bytes memory) {
+        return abi.encodeWithSelector(IEVCVault.checkAccountStatus.selector);
+    }
+
+    function checkVaultMagicValueMemory() public view returns (bytes memory) {
+        return abi.encodeWithSelector(IEVCVault.checkVaultStatus.selector);
+    }
+
     function getUserInterestAccumulator(address account) public view returns (uint256) {
         return vaultStorage.users[account].interestAccumulator;
     }
