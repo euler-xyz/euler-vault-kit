@@ -30,7 +30,7 @@ methods {
         CVLCheckVaultStatusInternal(e);
     // NONDET checkVaultStatus because I think it is not related to enforcing
     // this and it is expensive for the tool.
-    function currentContract.checkVaultStatus() external returns (bytes4) => NONDET;
+    // function currentContract.checkVaultStatus() external returns (bytes4) => NONDET;
 }
 
 // We summarize EthereumVaultConnector.checkAccountStatusInternal
@@ -98,5 +98,35 @@ rule accountsStayHealthy (method f) {
     assert healthyBefore => healthyAfter;
 }
 
+rule accountsStayHealthy_strategy (method f) {
+    env e;
+    calldataarg args;
+    address account;
+    address[] collaterals = evc.getCollaterals(e, account);
+    require collaterals.length == 2; // loop bound
+    require oracleAddress != 0; 
+    // Vault cannot be a user of itself
+    require account != currentContract;
+    // Vault should not be used as a collateral
+    require collaterals[0] != currentContract;
+    require collaterals[1] != currentContract;
+    // not sure the following 4 are really needed
+    require account != erc20;
+    require account != oracleAddress;
+    require account != evc;
+    require account != unitOfAccount;
+
+    bool healthyBefore = checkLiquidityReturning(e, account, collaterals);
+    f(e, args);
+    // The only way to call a vault funciton is through EVC's call, batch, 
+    // or permit. During all of these status checks are deferred and at the end
+    // these call restoreExecutionContext which triggers the deferred checks.
+    evc.checkStatusAllExt(e);
+    bool healthyAfter = checkLiquidityReturning(e, account, collaterals);
+    assert healthyBefore => healthyAfter; 
+}
+
 // - prove separately that every call to vault is from evc (except maybe view)
-// - prove on EVC: at the end of call/batch/permit we really do always call checkStatusAll
+// - prove on EVC: at the end of call/batch/permit we really do always call 
+// checkStatusAll --> After looking at the tickets I think we did not prove 
+// this already.
