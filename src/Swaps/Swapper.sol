@@ -50,37 +50,6 @@ contract Swapper is OneInchHandler, UniswapV2Handler, UniswapV3Handler, UniswapA
         override (OneInchHandler, UniswapV2Handler, UniswapV3Handler, UniswapAutoRouterHandler)
         externalLock
     {
-        _swap(params);
-    }
-
-    function swapMany(SwapParams[] memory params) public externalLock {
-        for (uint256 i; i < params.length; i++) {
-            _swap(params[i]);
-        }
-    }
-
-    // in case of over-swapping to repay, pass max uint amount
-    function repay(address token, address vault, uint256 amount, address account) public externalLock {
-        setMaxAllowance(token, amount, vault);
-
-        IEVault(vault).repay(amount, account);
-    }
-
-    function sweep(address token, uint256 amountMin, address receiver) public externalLock {
-        uint256 balance = IERC20(token).balanceOf(address(this));
-        if (balance >= amountMin) {
-            SafeERC20Lib.safeTransfer(IERC20(token), receiver, balance);
-        }
-    }
-
-    function multicall(bytes[] memory calls) external externalLock {
-        for (uint256 i; i < calls.length; i++) {
-            (bool success, bytes memory result) = address(this).call(calls[i]);
-            if (!success) RevertBytes.revertBytes(result);
-        }
-    }
-
-    function _swap(SwapParams memory params) internal {
         if (params.handler == HANDLER_ONE_INCH) {
             OneInchHandler.swap(params);
         } else if (params.handler == HANDLER_UNISWAP_V2) {
@@ -103,5 +72,27 @@ contract Swapper is OneInchHandler, UniswapV2Handler, UniswapV3Handler, UniswapA
 
         // return unused input token after exact out swap. Caller contract should check amountInMax and skim immediately
         sweep(params.tokenIn, 0, params.vaultIn);
+    }
+
+
+    // in case of over-swapping to repay, pass max uint amount
+    function repay(address token, address vault, uint256 amount, address account) public externalLock {
+        setMaxAllowance(token, vault);
+
+        IEVault(vault).repay(amount, account);
+    }
+
+    function sweep(address token, uint256 amountMin, address receiver) public externalLock {
+        uint256 balance = IERC20(token).balanceOf(address(this));
+        if (balance >= amountMin) {
+            SafeERC20Lib.safeTransfer(IERC20(token), receiver, balance);
+        }
+    }
+
+    function multicall(bytes[] memory calls) external externalLock {
+        for (uint256 i; i < calls.length; i++) {
+            (bool success, bytes memory result) = address(this).call(calls[i]);
+            if (!success) RevertBytes.revertBytes(result);
+        }
     }
 }

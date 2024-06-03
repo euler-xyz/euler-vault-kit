@@ -18,7 +18,7 @@ abstract contract UniswapV3Handler is BaseHandler {
         if (params.mode == SWAPMODE_EXACT_IN) revert SwapHandler_UnsupportedMode();
         if (params.data.length < 43 || (params.data.length - 20) % 23 != 0) revert UniswapV3Handler_InvalidPath();
 
-        setMaxAllowance(params.tokenIn, params.amountIn, uniSwapRouterV3);
+        setMaxAllowance(params.tokenIn, uniSwapRouterV3);
 
         uint256 amountOut = resolveAmountOut(params);
 

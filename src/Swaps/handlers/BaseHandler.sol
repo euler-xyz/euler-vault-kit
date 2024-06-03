@@ -32,9 +32,10 @@ abstract contract BaseHandler is ISwapper {
         amountOut -= balance;
     }
 
-    function setMaxAllowance(address token, uint256 minAllowance, address spender) internal {
+    function setMaxAllowance(address token, address spender) internal {
+        uint256 balance = IERC20(token).balanceOf(address(this));
         uint256 allowance = IERC20(token).allowance(address(this), spender);
-        if (allowance < minAllowance) safeApproveWithRetry(token, spender, type(uint256).max);
+        if (allowance < balance) safeApproveWithRetry(token, spender, type(uint256).max);
     }
 
     function trySafeApprove(address token, address to, uint256 value) internal returns (bool, bytes memory) {
