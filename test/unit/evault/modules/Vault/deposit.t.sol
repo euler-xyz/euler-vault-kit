@@ -8,6 +8,7 @@ import {SafeERC20Lib} from "../../../../../src/EVault/shared/lib/SafeERC20Lib.so
 import {Permit2ECDSASigner} from "../../../../mocks/Permit2ECDSASigner.sol";
 import {IAllowanceTransfer} from "permit2/src/interfaces/IAllowanceTransfer.sol";
 import {IEVC} from "ethereum-vault-connector/interfaces/IEthereumVaultConnector.sol";
+import "forge-std/Test.sol";
 
 import "../../../../../src/EVault/shared/types/Types.sol";
 
@@ -32,11 +33,11 @@ contract VaultTest_Deposit is EVaultTestBase {
         user = vm.addr(userPK);
         user1 = makeAddr("user1");
 
-        assetTST.mint(user1, type(uint256).max);
+        assetTST.mint(user1, type(uint256).max / 4);
         hoax(user1);
         assetTST.approve(address(eTST), type(uint256).max);
 
-        assetTST.mint(user, type(uint256).max);
+        assetTST.mint(user, type(uint256).max / 4);
         startHoax(user);
         assetTST.approve(address(eTST), type(uint256).max);
     }
@@ -367,5 +368,45 @@ contract VaultTest_Deposit is EVaultTestBase {
         assertEq(eTST.balanceOf(user), 2 * amount);
         assertEq(eTST.totalSupply(), 2 * amount);
         assertEq(eTST.totalAssets(), 2 * amount);
+    }
+
+    function test_deposit_stealthDonation() public {
+        startHoax(address(this));
+        oracle.setPrice(address(assetTST), unitOfAccount, 1e18);
+        oracle.setPrice(address(assetTST2), unitOfAccount, 1e18);
+        eTST.setLTV(address(eTST2), 0.9e4, 0.9e4, 0);
+
+        startHoax(user);
+        eTST.deposit(100e18, user);
+
+        startHoax(user1);
+        assetTST.mint(user1, 10e18);
+        assetTST.approve(address(eTST), type(uint256).max);
+        assetTST2.mint(user1, 100e18);
+        assetTST2.approve(address(eTST2), type(uint256).max);
+        eTST2.deposit(10e18, user1);
+        evc.enableController(user1, address(eTST));
+        evc.enableCollateral(user1, address(eTST2));
+
+        eTST.borrow(5e18, user1);
+
+        skip(100 days);
+
+        eTST.repay(type(uint256).max, user1);
+
+        uint256 rate = eTST.convertToShares(1e18);
+        uint256 assets = eTST.totalAssets();
+        uint256 shares = eTST.totalSupply();
+
+        for (uint256 i; i <= 1000; ++i) {
+            eTST.deposit(3, user1);
+            assertEq(eTST.balanceOf(user1), 2);
+            eTST.withdraw(2, user1, user1);
+            assertEq(eTST.balanceOf(user1), 0);
+        }
+
+        assertNotEq(rate, eTST.convertToShares(1e18));
+        assertEq(shares, eTST.totalSupply());
+        assertEq(assets, eTST.totalAssets() - 1001);
     }
 }
