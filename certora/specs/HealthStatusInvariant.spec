@@ -80,6 +80,17 @@ rule accountsStayHealthy (method f) {
     require collaterals.length == 2; // loop bound
     require oracleAddress != 0;
 
+    // Vault cannot be a user of itself
+    require account != currentContract;
+    // Vault should not be used as a collateral
+    require collaterals[0] != currentContract;
+    require collaterals[1] != currentContract;
+    // not sure the following 4 are really needed
+    require account != erc20;
+    require account != oracleAddress;
+    require account != evc;
+    require account != unitOfAccount;
+
     // Otherwise this can cause an unintersting divide by zero in OwedLib.getCurrentOwed (on the mulDiv)
     require getUserInterestAccumulator(e, account) > 0;
     require storage_interestAccumulator(e) == getUserInterestAccumulator(e, account);
