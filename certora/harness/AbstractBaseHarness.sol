@@ -4,6 +4,8 @@ pragma solidity ^0.8.0;
 
 import {IEVC} from "ethereum-vault-connector/interfaces/IEthereumVaultConnector.sol";
 import "../../src/EVault/shared/Base.sol";
+// Needed for checkLiquidityReturning:
+import {LiquidityUtils} from "../../src/EVault/shared/LiquidityUtils.sol";
 
 // This exists so that Base.LTVConfig and other type declarations 
 // are available in CVL and can be used across specs for different modules.
@@ -11,7 +13,7 @@ import "../../src/EVault/shared/Base.sol";
 // so that we can refer to Base.LTVConfig as a type in shared CVL functions
 // while also making function definitions sharable among harnesses via
 // AbstractBase. AbstractBaseHarness includes the shared function definitions.
-abstract contract AbstractBaseHarness is Base {
+abstract contract AbstractBaseHarness is Base, LiquidityUtils {
 
     function getLTVConfig(address collateral) external view returns (LTVConfig memory) {
         return vaultStorage.ltvLookup[collateral];
@@ -43,6 +45,25 @@ abstract contract AbstractBaseHarness is Base {
 
     function getUserInterestAccumulator(address account) public view returns (uint256) {
         return vaultStorage.users[account].interestAccumulator;
+    }
+
+    // This mirrors LiquidityUtils.checkLiquidity except that it returns
+    // a bool rather than reverting.
+    function checkLiquidityReturning(address account, address[] memory collaterals) public returns (bool) {
+        VaultCache memory vaultCache = loadVault();
+        
+        Owed owed = vaultStorage.users[account].getOwed();
+        if (owed.isZero()) return true;
+
+        uint256 liabilityValue = getLiabilityValue(vaultCache, account, owed, false);
+
+        uint256 collateralValue;
+        for (uint256 i; i < collaterals.length; ++i) {
+            collateralValue += getCollateralValue(vaultCache, account, collaterals[i], false);
+            if (collateralValue > liabilityValue) return true;
+        }
+
+        return false;
     }
 
 
