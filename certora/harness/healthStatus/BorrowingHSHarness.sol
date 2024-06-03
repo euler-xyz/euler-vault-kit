@@ -11,4 +11,25 @@ import "../../../src/EVault/modules/Borrowing.sol";
 contract BorrowingHSHarness is BorrowingModule, RiskManagerModule, 
     AbstractBaseHarness {
     constructor(Integrations memory integrations) Base(integrations) {}
+
+    // This mirrors LiquidityUtils.checkLiquidity except that it returns
+    // a bool rather than reverting.
+    // Try importing LiquidityUtils into BaseHarness or AbstractBaseHarness
+    // and moving this function there.
+    // function checkLiquidityReturning(address account, address[] memory collaterals) public returns (bool) {
+    //     VaultCache memory vaultCache = loadVault();
+    //     
+    //     Owed owed = vaultStorage.users[account].getOwed();
+    //     if (owed.isZero()) return true;
+
+    //     uint256 liabilityValue = getLiabilityValue(vaultCache, account, owed, false);
+
+    //     uint256 collateralValue;
+    //     for (uint256 i; i < collaterals.length; ++i) {
+    //         collateralValue += getCollateralValue(vaultCache, account, collaterals[i], false);
+    //         if (collateralValue > liabilityValue) return true;
+    //     }
+
+    //     return false;
+    // }
 }
