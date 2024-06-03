@@ -5,6 +5,9 @@ pragma solidity ^0.8.0;
 import {BaseHandler} from "./BaseHandler.sol";
 import {ISwapRouterV2} from "../vendor/ISwapRouterV2.sol";
 
+
+import "forge-std/Test.sol";
+
 abstract contract UniswapV2Handler is BaseHandler {
     address public immutable uniSwapRouterV2;
 
@@ -19,15 +22,14 @@ abstract contract UniswapV2Handler is BaseHandler {
         if (params.data.length < 64 || params.data.length % 32 != 0) revert UniswapV2Handler_InvalidPath();
 
         setMaxAllowance(params.tokenIn, uniSwapRouterV2);
-
-        uint256 amountOut = resolveAmountOut(params);
+        (uint256 amountOut, address receiver) = resolveParams(params);
 
         if (amountOut > 0) {
             ISwapRouterV2(uniSwapRouterV2).swapTokensForExactTokens({
                 amountOut: amountOut,
                 amountInMax: type(uint256).max,
                 path: abi.decode(params.data, (address[])),
-                to: params.receiver,
+                to: receiver,
                 deadline: block.timestamp
             });
         }

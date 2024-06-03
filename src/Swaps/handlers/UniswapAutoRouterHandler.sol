@@ -13,6 +13,7 @@ abstract contract UniswapAutoRouterHandler is BaseHandler {
     }
 
     function swap(SwapParams memory params) public virtual override {
+        // TODO why wasn't it handling repays?
         if (params.mode == SWAPMODE_TARGET_DEBT) revert SwapHandler_UnsupportedMode();
 
         setMaxAllowance(params.tokenIn, uniSwapRouter02);

@@ -10,7 +10,7 @@ interface ISwapper {
         address tokenIn;
         address tokenOut;
         address vaultIn;
-        address receiver;
+        address receiver; // in TARGET_DEBT liability vault
         uint256 amountOut; // in EXACT_OUT amount of tokenOut to buy, in TARGET_DEBT mode, amount of debt the account should have
         bytes data;
     }

@@ -7,29 +7,45 @@ import {IEVault, IERC20} from "../../EVault/IEVault.sol";
 import {SafeERC20Lib} from "../../EVault/shared/lib/SafeERC20Lib.sol";
 import {RevertBytes} from "../../EVault/shared/lib/RevertBytes.sol";
 
+import "forge-std/Test.sol";
+
 abstract contract BaseHandler is ISwapper {
     uint256 internal constant SWAPMODE_EXACT_IN = 0;
     uint256 internal constant SWAPMODE_EXACT_OUT = 1;
     uint256 internal constant SWAPMODE_TARGET_DEBT = 2;
+    uint256 internal constant SWAPMODE_MAX_VALUE = 3;
 
     error SwapHandler_UnsupportedMode();
     error SwapHandler_TargetDebt();
     error SwapHandler_TargetDebtBalance();
 
-    function resolveAmountOut(SwapParams memory params) internal view returns (uint256 amountOut) {
-        if (params.mode != SWAPMODE_TARGET_DEBT) return params.amountOut;
+    function resolveParams(SwapParams memory params) internal view returns (uint256 amountOut, address receiver) {
+        amountOut = params.amountOut;
+        receiver = params.receiver;
 
-        // params.amountOut is the target debt
-        uint256 debt = IEVault(params.receiver).debtOf(params.account);
-        if (params.amountOut > debt) revert SwapHandler_TargetDebt();
+        if (params.mode == SWAPMODE_EXACT_IN) return (amountOut, receiver);
 
-        amountOut = debt - params.amountOut;
+        uint256 balanceOut = IERC20(params.tokenOut).balanceOf(address(this));
 
-        // TODO - return unused? leave for sweep?
-        uint256 balance = IERC20(params.tokenOut).balanceOf(address(this));
-        if (balance > amountOut) revert SwapHandler_TargetDebtBalance();
+        // for combined exact output swaps, which accumulate the output in the swapper, check how much is already available
+        if (params.mode == SWAPMODE_EXACT_OUT && params.receiver == address(this)) {
+            amountOut = balanceOut >= amountOut ? 0 : amountOut - balanceOut;
+        }
 
-        amountOut -= balance;
+        if (params.mode == SWAPMODE_TARGET_DEBT) {
+            // amountOut is the target debt
+            uint256 debt = IEVault(params.receiver).debtOf(params.account);
+            if (amountOut > debt) revert SwapHandler_TargetDebt();
+
+            amountOut = debt - amountOut;
+
+            // TODO - return unused? leave for sweep?
+
+            if (balanceOut > amountOut) revert SwapHandler_TargetDebtBalance();
+
+            amountOut -= balanceOut;
+            receiver = address(this); // collect output in the swapper for repay
+        }
     }
 
     function setMaxAllowance(address token, address spender) internal {
