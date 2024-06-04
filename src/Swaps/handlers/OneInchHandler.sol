@@ -13,7 +13,7 @@ abstract contract OneInchHandler is BaseHandler {
     }
 
     function swap(SwapParams memory params) public virtual override {
-        if (params.mode != SWAPMODE_EXACT_IN) revert SwapHandler_UnsupportedMode();
+        if (params.mode != SWAPMODE_EXACT_IN) revert Swapper_UnsupportedMode();
 
         setMaxAllowance(params.tokenIn, oneInchAggregator);
 
