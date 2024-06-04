@@ -23,7 +23,9 @@ contract EulerSavingsRate is EVCUtil, ERC4626 {
     uint8 internal constant UNLOCKED = 1;
     uint8 internal constant LOCKED = 2;
 
+    /// @notice The virtual amount added to total shares and total assets.
     uint256 internal constant VIRTUAL_AMOUNT = 1e6;
+    /// @notice The duration of the interest smear period.
     uint256 public constant INTEREST_SMEAR = 2 weeks;
 
     struct ESRSlot {
@@ -33,7 +35,9 @@ contract EulerSavingsRate is EVCUtil, ERC4626 {
         uint8 locked;
     }
 
+    /// @notice Multiple state variables stored in a single storage slot.
     ESRSlot internal esrSlot;
+    /// @notice The total assets accounted for in the vault.
     uint256 internal _totalAssets;
 
     error Reentrancy();
@@ -68,6 +72,11 @@ contract EulerSavingsRate is EVCUtil, ERC4626 {
         return _totalAssets + interestAccrued();
     }
 
+    /// @notice Returns the maximum amount of shares that can be redeemed by the specified address.
+    /// @dev If the account has a controller set it's possible the withdrawal will be reverted by the controller, thus
+    /// we return 0.
+    /// @param owner The account owner.
+    /// @return The maximum amount of shares that can be redeemed.
     function maxRedeem(address owner) public view override returns (uint256) {
         // Max redeem can potentially be 0 if there is a liability
         if (evc.getControllers(owner).length > 0) {
@@ -77,6 +86,11 @@ contract EulerSavingsRate is EVCUtil, ERC4626 {
         return super.maxRedeem(owner);
     }
 
+    /// @notice Returns the maximum amount of assets that can be withdrawn by the specified address.
+    /// @dev If the account has a controller set it's possible the withdrawal will be reverted by the controller, thus
+    /// we return 0.
+    /// @param owner The account owner.
+    /// @return The maximum amount of assets that can be withdrawn.
     function maxWithdraw(address owner) public view override returns (uint256) {
         // Max withdraw can potentially be 0 if there is a liability
         if (evc.getControllers(owner).length > 0) {
