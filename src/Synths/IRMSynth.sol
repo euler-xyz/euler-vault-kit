@@ -77,10 +77,9 @@ contract IRMSynth is IIRM {
         return rate;
     }
 
-    /// @notice Computes the interest rate without updating the storage.
-    /// @return The interest rate.
-    function computeInterestRateView(address, uint256, uint256) external view override returns (uint256) {
-        (uint216 rate,) = _computeRate(irmStorage);
+    /// @return rate The new interest rate
+    function computeInterestRateView(address, uint256, uint256) external view override returns (uint256 rate) {
+        (rate,) = _computeRate(irmStorage);
         return rate;
     }
 

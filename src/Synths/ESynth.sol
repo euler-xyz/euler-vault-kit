@@ -122,8 +122,8 @@ contract ESynth is ERC20Collateral, Ownable {
     /// @dev Overriden due to the conflict with the Context definition.
     /// @dev This function returns the account on behalf of which the current operation is being performed, which is
     /// either msg.sender or the account authenticated by the EVC.
-    /// @return The address of the message sender.
-    function _msgSender() internal view virtual override (ERC20Collateral, Context) returns (address) {
+    /// @return msgSender The address of the message sender.
+    function _msgSender() internal view virtual override (ERC20Collateral, Context) returns (address msgSender) {
         return ERC20Collateral._msgSender();
     }
 
@@ -145,21 +145,22 @@ contract ESynth is ERC20Collateral, Ownable {
 
     /// @notice Checks if an account is ignored for the total supply.
     /// @param account The account to check.
-    function isIgnoredForTotalSupply(address account) public view returns (bool) {
+    /// @return isIgnored True if the account is ignored for the total supply. False otherwise.
+    function isIgnoredForTotalSupply(address account) public view returns (bool isIgnored) {
         return ignoredForTotalSupply.contains(account);
     }
 
     /// @notice Retrieves all the accounts ignored for the total supply.
-    /// @return The list of accounts ignored for the total supply.
-    function getAllIgnoredForTotalSupply() public view returns (address[] memory) {
+    /// @return accounts List of accounts ignored for the total supply.
+    function getAllIgnoredForTotalSupply() public view returns (address[] memory accounts) {
         return ignoredForTotalSupply.values();
     }
 
     /// @notice Retrieves the total supply of the token.
     /// @dev Overriden to exclude the ignored accounts from the total supply.
-    /// @return The total supply of the token.
-    function totalSupply() public view override returns (uint256) {
-        uint256 total = super.totalSupply();
+    /// @return total Total supply of the token.
+    function totalSupply() public view override returns (uint256 total) {
+        total = super.totalSupply();
 
         uint256 ignoredLength = ignoredForTotalSupply.length(); // cache for efficiency
         for (uint256 i = 0; i < ignoredLength; ++i) {
