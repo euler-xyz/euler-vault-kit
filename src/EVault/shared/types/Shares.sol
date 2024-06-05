@@ -27,11 +27,11 @@ library SharesLib {
     }
 
     // Introduced by Certora 
-    function toAssetsDownSubShares(Shares amount, VaultCache memory vaultCache) internal pure returns (Assets) {
-        (uint256 totalAssets, uint256 totalShares) = ConversionHelpers.conversionTotals(vaultCache);
-        return TypesLib.toAssets(amount.toUint() * totalAssets / 
-            (totalShares - amount.toUint()));
-    }
+    // function toAssetsDownSubShares(Shares amount, VaultCache memory vaultCache) internal pure returns (Assets) {
+    //     (uint256 totalAssets, uint256 totalShares) = ConversionHelpers.conversionTotals(vaultCache);
+    //     return TypesLib.toAssets(amount.toUint() * totalAssets / 
+    //         (totalShares - amount.toUint()));
+    // }
     
 
     function toAssetsUp(Shares amount, VaultCache memory vaultCache) internal pure returns (Assets) {
