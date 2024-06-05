@@ -109,6 +109,7 @@ abstract contract LiquidationModule is ILiquidation, BalanceUtils, LiquidityUtil
                 liqCache.repay = desiredRepay.toAssets();
             }
         }
+
     }
 
     function calculateMaxLiquidation(LiquidationCache memory liqCache, VaultCache memory vaultCache)
@@ -154,6 +155,15 @@ abstract contract LiquidationModule is ILiquidation, BalanceUtils, LiquidityUtil
             return liqCache;
         }
 
+<<<<<<< HEAD
+=======
+        uint256 liabilityValue = liqCache.owed.toUint();
+        if (address(vaultCache.asset) != vaultCache.unitOfAccount) {
+            liabilityValue =
+                vaultCache.oracle.getQuote(liabilityValue, address(vaultCache.asset), vaultCache.unitOfAccount);
+        }
+
+>>>>>>> 9763b68 (Can get past loadVault sanity with summary)
         uint256 maxRepayValue = liabilityValue;
         uint256 maxYieldValue = maxRepayValue * 1e18 / discountFactor;
 
