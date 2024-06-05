@@ -21,7 +21,7 @@ contract ESynth is ERC20Collateral, Ownable {
         uint128 minted;
     }
 
-    mapping(address => MinterData) public minters;
+    mapping(address minter => MinterData data) public minters;
     EnumerableSet.AddressSet internal ignoredForTotalSupply;
 
     event MinterCapacitySet(address indexed minter, uint256 capacity);
