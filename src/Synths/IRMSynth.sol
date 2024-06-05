@@ -35,6 +35,8 @@ contract IRMSynth is IIRM {
     error E_ZeroAddress();
     error E_InvalidQuote();
 
+    event InterestUpdated(uint256 rate);
+
     constructor(address synth_, address referenceAsset_, address oracle_, uint256 targetQuoute_) {
         if (synth_ == address(0) || referenceAsset_ == address(0) || oracle_ == address(0)) {
             revert E_ZeroAddress();
@@ -53,6 +55,8 @@ contract IRMSynth is IIRM {
         }
 
         irmStorage = IRMData({lastUpdated: uint40(block.timestamp), lastRate: BASE_RATE});
+
+        emit InterestUpdated(BASE_RATE);
     }
 
     function computeInterestRate(address, uint256, uint256) external override returns (uint256) {
@@ -61,6 +65,7 @@ contract IRMSynth is IIRM {
 
         if (updated) {
             irmStorage = IRMData({lastUpdated: uint40(block.timestamp), lastRate: rate});
+            emit InterestUpdated(rate);
         }
 
         return rate;

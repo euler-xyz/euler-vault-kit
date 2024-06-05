@@ -38,6 +38,9 @@ contract EulerSavingsRate is EVCUtil, ERC4626 {
 
     error Reentrancy();
 
+    event Gulped(uint256 gulped, uint256 interestLeft);
+    event InterestUpdated(uint256 interestAccrued, uint256 interestLeft);
+
     /// @notice Modifier to require an account status check on the EVC.
     /// @dev Calls `requireAccountStatusCheck` function from EVC for the specified account after the function body.
     /// @param account The address of the account to check.
@@ -199,6 +202,8 @@ contract EulerSavingsRate is EVCUtil, ERC4626 {
 
         // write esrSlotCache back to storage in a single SSTORE
         esrSlot = esrSlotCache;
+
+        emit Gulped(toGulp, esrSlotCache.interestLeft);
     }
 
     /// @notice Updates the interest and returns the ESR storage slot cache.
@@ -214,6 +219,8 @@ contract EulerSavingsRate is EVCUtil, ERC4626 {
         esrSlot = esrSlotCache;
         // Move interest accrued to totalAssets
         _totalAssets = _totalAssets + accruedInterest;
+
+        emit InterestUpdated(accruedInterest, esrSlotCache.interestLeft);
 
         return esrSlotCache;
     }
