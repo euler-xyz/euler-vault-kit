@@ -49,6 +49,9 @@ abstract contract AbstractBaseHarness is Base, LiquidityUtils {
 
     // This mirrors LiquidityUtils.checkLiquidity except that it returns
     // a bool rather than reverting.
+    // NOTE: for now it is also different in that it will use the LTV
+    // value for liquidation rather than non-liquidation to be
+    // more conservative about collateral values
     function checkLiquidityReturning(address account, address[] memory collaterals) public returns (bool) {
         VaultCache memory vaultCache = loadVault();
         

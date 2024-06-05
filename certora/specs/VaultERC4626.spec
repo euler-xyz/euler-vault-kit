@@ -88,8 +88,8 @@ methods {
     function _.tryBalanceTrackerHook(address account, uint256 newAccountBalance, bool forfeitRecentReward) internal => NONDET;
     function _.balanceTrackerHook(address account, uint256 newAccountBalance, bool forfeitRecentReward) external => NONDET;
     // Type Conversions
-    function _.toShares(uint256 amount) internal => CVLToShares(amount) expect (BaseHarness.Shares);
-    function _.toAssets(uint256 amount) internal => CVLToAssets(amount) expect (BaseHarness.Assets);
+    // function _.toShares(uint256 amount) internal => CVLToShares(amount) expect (BaseHarness.Shares);
+    // function _.toAssets(uint256 amount) internal => CVLToAssets(amount) expect (BaseHarness.Assets);
     // This is NONDET to help avoid timeouts. It should be safe
     // to NONDET since it is a private view function.
     function _.resolve(Vault.AmountCap self) internal => NONDET; 
@@ -249,6 +249,8 @@ invariant assetsMoreThanSupply(env e)
     totalAssets(e) >= totalSupply(e)
     {
         preserved {
+            // require totalAssets(e) >= 1e6;
+            // require totalSupply(e) >= 1e6;
             require e.msg.sender != currentContract;
             require actualCaller(e) != currentContract;
             require actualCallerCheckController(e) != currentContract;
