@@ -157,7 +157,7 @@ contract ESynth is ERC20Collateral, Ownable {
         uint256 total = super.totalSupply();
 
         uint256 ignoredLength = ignoredForTotalSupply.length(); // cache for efficiency
-        for (uint256 i = 0; i < ignoredLength; i++) {
+        for (uint256 i = 0; i < ignoredLength; ++i) {
             total -= balanceOf(ignoredForTotalSupply.at(i));
         }
         return total;
