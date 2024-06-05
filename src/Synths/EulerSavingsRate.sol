@@ -126,7 +126,7 @@ contract EulerSavingsRate is EVCUtil, ERC4626 {
     /// @notice Mints a certain amount of shares to the account.
     /// @param shares The amount of assets to mint.
     /// @param receiver The account to mint the shares to.
-    /// @return The amount of assets spend.
+    /// @return The amount of assets spent.
     function mint(uint256 shares, address receiver) public override nonReentrant returns (uint256) {
         return super.mint(shares, receiver);
     }
