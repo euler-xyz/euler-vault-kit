@@ -190,7 +190,7 @@ contract EulerSavingsRate is EVCUtil, ERC4626 {
         ESRSlot memory esrSlotCache = updateInterestAndReturnESRSlotCache();
 
         // Do not gulp if total supply is too low
-        if(totalSupply() < MIN_SHARES_FOR_GULP) return;
+        if (totalSupply() < MIN_SHARES_FOR_GULP) return;
 
         uint256 assetBalance = IERC20(asset()).balanceOf(address(this));
         uint256 toGulp = assetBalance - _totalAssets - esrSlotCache.interestLeft;
