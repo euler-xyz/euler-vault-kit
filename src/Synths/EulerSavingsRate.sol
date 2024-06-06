@@ -144,7 +144,12 @@ contract EulerSavingsRate is EVCUtil, ERC4626 {
     {
         // Move interest to totalAssets
         updateInterestAndReturnESRSlotCache();
-        return super.withdraw(assets, receiver, owner);
+
+        // Not using super to not call maxWithdraw which would return 0 if a user has a controller set
+        uint256 shares = previewWithdraw(assets);
+        _withdraw(_msgSender(), receiver, owner, assets, shares);
+
+        return shares;
     }
 
     /// @notice Redeems a certain amount of shares for assets.
@@ -160,7 +165,12 @@ contract EulerSavingsRate is EVCUtil, ERC4626 {
     {
         // Move interest to totalAssets
         updateInterestAndReturnESRSlotCache();
-        return super.redeem(shares, receiver, owner);
+
+        // Not using super to not call maxRedeem which would return 0 if a user has a controller set
+        uint256 assets = previewRedeem(shares);
+        _withdraw(_msgSender(), receiver, owner, assets, shares);
+
+        return assets;
     }
 
     function _convertToShares(uint256 assets, Math.Rounding rounding) internal view override returns (uint256) {
