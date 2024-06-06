@@ -42,7 +42,7 @@ contract ERC4626Harness is VaultModule, TokenModule, AbstractBaseHarness {
     function toSharesExt(uint256 amount) external view returns (uint256) {
         require(amount < MAX_SANE_AMOUNT, "Assets are really uint112");
         VaultCache memory vaultCache = loadVault();
-        return Assets.wrap(uint112(amount)).toSharesDownUint256(vaultCache);
+        return Assets.wrap(uint112(amount)).toSharesDownUint(vaultCache);
     }
 
     function cache_cash() public view returns (Assets) {
