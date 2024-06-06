@@ -72,9 +72,9 @@ function CVLUseViewCaller() returns address {
 }
 
 function LTVConfigAssumptions(env e, BaseHarness.LTVConfig ltvConfig) returns bool {
-    bool targetLTVLessOne = ltvConfig.targetLTV < 10000;
-    bool originalLTVLessOne = ltvConfig.originalLTV < 10000;
-    bool target_less_original = ltvConfig.targetLTV < ltvConfig.originalLTV;
+    bool targetLTVLessOne = ltvConfig.liquidationLTV < 10000;
+    bool originalLTVLessOne = ltvConfig.initialLiquidationLTV < 10000;
+    bool target_less_original = ltvConfig.initialLiquidationLTV < ltvConfig.liquidationLTV;
     mathint timeRemaining = ltvConfig.targetTimestamp - e.block.timestamp;
     return targetLTVLessOne &&
         originalLTVLessOne &&
