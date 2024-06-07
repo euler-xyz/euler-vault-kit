@@ -245,10 +245,12 @@ rule zeroDepositZeroShares(uint assets, address receiver)
 ////                    #    Valid State                                   /////
 ////////////////////////////////////////////////////////////////////////////////
 
-invariant assetsMoreThanSupply(env e, uint256 totalAssets)
-    totalAssets >= totalSupply(e)
+invariant assetsMoreThanSupply(env e)
+    totalAssets(e) >= totalSupply(e)
     {
         preserved {
+            // require totalAssets(e) >= 1e6;
+            // require totalSupply(e) >= 1e6;
             require e.msg.sender != currentContract;
             require actualCaller(e) != currentContract;
             require actualCallerCheckController(e) != currentContract;
@@ -258,23 +260,11 @@ invariant assetsMoreThanSupply(env e, uint256 totalAssets)
         }
     }
 
-invariant supplyLessThanUnderlyingAsset(env e)
-    toSharesExt(e, userAssets(e, currentContract)) >= totalSupply(e)
-    {
-        preserved {
-            address any;
-            safeAssumptions(e, any, actualCaller(e));
-            safeAssumptions(e, any, actualCallerCheckController(e));
-        }
-    }
-
-invariant noAssetsIfNoSupply(env e, uint256 totalSupply, uint256 totalAssets) 
-   ( userAssets(e, currentContract) == 0 => totalSupply == 0 ) &&
-    ( totalAssets == 0 => ( totalSupply == 0 ))
+invariant noAssetsIfNoSupply(env e) 
+    ( totalAssets(e) == 0 => ( totalSupply(e) == 0 ))
 
     {
         preserved {
-            requireInvariant supplyLessThanUnderlyingAsset(e);
             address any;
             safeAssumptions(e, any, actualCaller(e));
             safeAssumptions(e, any, actualCallerCheckController(e));
@@ -313,9 +303,9 @@ hook Sload Vault.PackedUserSlot val currentContract.vaultStorage.users[KEY addre
 // }
 
 // passing: https://prover.certora.com/output/65266/de3636d287d2473294463c07263fc11e/?anonymousKey=ac8f74e6c5c1298f0954a21fafd41cccf32b9ffb
-invariant totalSupplyIsSumOfBalances(env e, uint256 totalSupply)
-    // to_mathint(totalSupply) == sumOfBalances + accumulatedFees(e);
-    to_mathint(totalSupply) == sumOfBalances;
+invariant totalSupplyIsSumOfBalances(env e)
+    // to_mathint(totalSupply(e)) == sumOfBalances + accumulatedFees(e);
+    to_mathint(totalSupply(e)) == sumOfBalances;
 
 
 
@@ -403,10 +393,10 @@ rule dustFavorsTheHouse(uint assetsIn )
 ////////////////////////////////////////////////////////////////////////////////
 
 
-invariant vaultSolvency(env e, uint256 totalSupply, uint256 totalAssets)
-    totalAssets >= totalSupply  && userAssets(e, currentContract) >= require_uint256(cache_cash(e))  {
+invariant vaultSolvency(env e)
+    totalAssets(e) >= totalSupply(e)  && userAssets(e, currentContract) >= require_uint256(cache_cash(e))  {
       preserved {
-            requireInvariant totalSupplyIsSumOfBalances(e, totalSupply);
+            requireInvariant totalSupplyIsSumOfBalances(e);
             require e.msg.sender != currentContract;
             require actualCaller(e) != currentContract;
             require actualCallerCheckController(e) != currentContract;
@@ -522,8 +512,6 @@ filtered {
 ////////////////////////////////////////////////////////////////////////////////
 
 definition noSupplyIfNoAssetsDef(env e) returns bool = 
-    // for this ERC4626 implementation balanceOf(Vault) is not the same as total assets
-    // ( userAssets(e, currentContract) == 0 => totalSupply(e) == 0 ) &&
     ( totalAssets(e) == 0 => ( totalSupply(e) == 0 ));
 
 // definition noSupplyIfNoAssetsStrongerDef() returns bool =                // fails for ERC4626BalanceOfHarness as explained in the readme
@@ -532,14 +520,12 @@ definition noSupplyIfNoAssetsDef(env e) returns bool =
 
 
 function safeAssumptions(env e, address receiver, address owner) {
-    uint256 totalSupply = totalSupply(e);
-    uint256 totalAssets = totalAssets(e);
     require currentContract != asset(); // Although this is not disallowed, we assume the contract's underlying asset is not the contract itself
-    requireInvariant totalSupplyIsSumOfBalances(e, totalSupply);
-    requireInvariant vaultSolvency(e, totalSupply, totalAssets);
-    requireInvariant noAssetsIfNoSupply(e, totalSupply, totalAssets);
+    requireInvariant totalSupplyIsSumOfBalances(e);
+    requireInvariant vaultSolvency(e);
+    requireInvariant noAssetsIfNoSupply(e);
     requireInvariant noSupplyIfNoAssets(e);
-    requireInvariant assetsMoreThanSupply(e, totalAssets); 
+    requireInvariant assetsMoreThanSupply(e); 
 
     //// # Note : we don't want to use singleBalanceBounded and singleBalanceBounded invariants 
     /* requireInvariant sumOfBalancePairsBounded(receiver, owner );
@@ -547,9 +533,9 @@ function safeAssumptions(env e, address receiver, address owner) {
     requireInvariant singleBalanceBounded(owner);
     */
     ///// # but, it safe to assume that a single balance is less than sum of balances
-    require ( (receiver != owner => balanceOf(e, owner) + balanceOf(e, receiver) <= to_mathint(totalSupply))  && 
-                balanceOf(e, receiver) <= totalSupply &&
-                balanceOf(e, owner) <= totalSupply);
+    require ( (receiver != owner => balanceOf(e, owner) + balanceOf(e, receiver) <= to_mathint(totalSupply(e)))  && 
+                balanceOf(e, receiver) <= totalSupply(e) &&
+                balanceOf(e, owner) <= totalSupply(e));
 }
 
 
