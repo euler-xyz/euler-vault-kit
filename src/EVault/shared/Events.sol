@@ -99,7 +99,7 @@ abstract contract Events {
     /// @param from Account from which the debt is taken
     /// @param to Account taking on the debt
     /// @param assets Amount of debt transferred in assets
-    event PullDebt(address from, address to, uint256 assets);
+    event PullDebt(address indexed from, address indexed to, uint256 assets);
 
     /// @notice Socialize debt after liquidating all of the unhealthy account's collateral
     /// @param account Address holding an unhealthy borrow
