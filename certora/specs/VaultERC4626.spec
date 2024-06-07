@@ -249,14 +249,7 @@ invariant assetsMoreThanSupply(env e)
     totalAssets(e) >= totalSupply(e)
     {
         preserved {
-            // require totalAssets(e) >= 1e6;
-            // require totalSupply(e) >= 1e6;
             require e.msg.sender != currentContract;
-            require actualCaller(e) != currentContract;
-            require actualCallerCheckController(e) != currentContract;
-            address any;
-            safeAssumptions(e, any , actualCaller(e));
-            safeAssumptions(e, any , actualCallerCheckController(e));
         }
     }
 
