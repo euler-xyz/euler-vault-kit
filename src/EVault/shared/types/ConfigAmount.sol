@@ -10,7 +10,7 @@ import "../Constants.sol";
 /// @custom:security-contact security@euler.xyz
 /// @author Euler Labs (https://www.eulerlabs.com/)
 /// @notice Library for `ConfigAmount` custom type
-/// @dev ConfigAmounts are floating point values encoded in 16 bits with a 1e4 precision.
+/// @dev ConfigAmounts are fixed point values encoded in 16 bits with a 1e4 precision.
 /// @dev The type is used to store protocol configuration values.
 library ConfigAmountLib {
     function isZero(ConfigAmount self) internal pure returns (bool) {
