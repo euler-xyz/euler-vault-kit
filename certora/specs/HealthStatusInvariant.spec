@@ -1,6 +1,7 @@
 import "Base.spec";
 import "LoadVaultSummary.spec";
 using DummyERC20A as ERC20a;
+using TokenHarness as EToken; // Used to assume collaterals are ETokens
 
 methods {
     function checkAccountMagicValue() external returns (bytes4) envfree;
@@ -24,10 +25,12 @@ methods {
     function _.requireAccountAndVaultStatusCheck(address) external => DISPATCHER(true);
 
     // Summaries
-    function _.safeTransferFrom(address token, address from, address to, uint256 value, address permit2) internal with (env e)=> CVLSafeTransferFrom(e, from, to, value) expect void;
+    function _.safeTransferFrom(address token, address from, address to, uint256 value, address permit2) internal with (env e)=> CVLSafeTransferFrom(e, token, from, to, value) expect void;
     function _.enforceCollateralTransfer(address collateral, uint256 amount,
-        address from, address receiver) internal => 
-        CVLEnforceCollateralTransfer(collateral, amount, from, receiver) expect void;
+        address from, address receiver) internal with (env e) => 
+        CVLEnforceCollateralTransfer(e, collateral, amount, from, receiver) expect void;
+    // To deal with changes between LTV values:
+    // function _.getLTV(address collateral, bool liquidation) internal => CVLGetLTV(collateral, liquidation) expect (BaseHarness.ConfigAmount);
     // We can't handle the low-level call in 
     // EthereumVaultConnector.checkAccountStatusInternal 
     // and so reroute it to RiskManager's status check with this summary.
@@ -36,6 +39,13 @@ methods {
     function EthereumVaultConnector.checkVaultStatusInternal(address vault) internal returns (bool, bytes memory) with(env e) =>
         CVLCheckVaultStatusInternal(e);
 }
+
+// TODO ideally delete this if it is really not needed.
+// persistent ghost uint16 ghost_ltv;
+// function CVLGetLTV(address collateral, bool liquidation) returns uint16 {
+//     require ghost_ltv > 0;
+//     return ghost_ltv;
+// }
 
 // We summarize EthereumVaultConnector.checkAccountStatusInternal
 // because we need to direct the low-level call to RiskManager.
@@ -65,24 +75,36 @@ function CVLAreChecksInProgress() returns bool {
     return true;
 }
 
-// Summarize trySafeTransferFrom as DummyERC20 transferFrom
-function CVLTrySafeTransferFrom(env e, address from, address to, uint256 value) returns (bool, bytes) {
-    bytes ret; // Ideally bytes("") if there is a way to do this
-    return (ERC20a.transferFrom(e, from, to, value), ret);
+function CVLSafeTransferFrom(env e, address token, address from, address to, uint256 value) {
+    if (token == ERC20a) {
+        ERC20a.transferFrom(e, from, to, value);
+    } else if (token == EToken) {
+        EToken.transferFrom(e, from, to, value);
+    }
 }
 
-function CVLSafeTransferFrom(env e, address from, address to, uint256 value) {
-    ERC20a.transferFrom(e, from, to, value);
-}
-
-function CVLEnforceCollateralTransfer(address collateral, uint256 amount, address from, address receiver) {
-    // Ideally we would reroute this to a call of transfer
-    // on the specific collateral address, but I am not sure we
-    // have a way to do this. For now assume the collateral is ERC20a.
-    env e2;
-    require e2.msg.sender == from;
-    require collateral == ERC20a;
-    ERC20a.transfer(e2, receiver, amount);
+/*
+* The prover struggles to reason about the low-level call operations involved
+* in the real EVCClient.enforceControlCollateral function, so we need
+* to emulate the real behavior here. Here's how it works in the real code:
+*  - EVCClient calls evc.controlCollateral passing a call to `transfer(receiver, amount)` along with the collateral and from addresses
+*  - In controlCollateral the from address is used to set the onBehalfOfAccount
+*  and some authentication is done
+* - After this, callWithContextInternal invokes the transfer function 
+* on the collateral address
+* - Collaterals in the EVK must all be Token.sol and token's transfer
+* implementation calls initOperation which enqueues an account status
+* check on the EVC for the onBehalfOfAccount it also gets from EVC.
+* Because onBehalfOfAccount was set to the from address in callWithContextInternal this status check is for the from account
+* To emulate this, we:
+* - explicitly call EToken.transferFrom using the expected addresses
+* - enqueue a status check on the evc for the "from" address
+*/
+function CVLEnforceCollateralTransfer(env e, address collateral, uint256 amount, address from, address receiver) {
+    // (Ideally: Cast collateral address into EToken to allow for
+    // multiple addresses with the EToken contract)
+    evc.requireAccountStatusCheck(e, from);
+    EToken.transferFromInternalHarnessed(e, from, receiver, amount);
 }
 
 // Assuming the prices stay the same, a healthy account can never become 
@@ -95,10 +117,10 @@ rule accountsStayHealthy (method f) filtered { f ->
     // only some of the modules are in the verification scene
     // sig:GovernanceModule.clearLTV(address).selector
     f.selector != 0x8255d029 && 
-    // sig:GovernanceModule.setLTV(address,uint16,uint32).selector
-    f.selector != 0x8b308de9 &&  
+    // sig:GovernanceModule.setLTV(address,uint16,uint16,uint32).selector
+    f.selector != 0x4bca3d5b &&
     // sig:InitializeModule.initialize(address).selector
-    f.selector != 0xc4d66de8
+    f.selector != 0xc4d66de8 
 }{
     env e;
     calldataarg args;
@@ -112,6 +134,9 @@ rule accountsStayHealthy (method f) filtered { f ->
     // Vault should not be used as a collateral
     require collaterals[0] != currentContract;
     require collaterals[1] != currentContract;
+    // Collaterals must be ETokens
+    require collaterals[0] == EToken;
+    require collaterals[1] == EToken;
     // not sure the following 4 are really needed
     require account != erc20;
     require account != oracleAddress;
@@ -133,6 +158,8 @@ rule accountsStayHealthy (method f) filtered { f ->
     // The only way to call a vault funciton is through EVC's call, batch, 
     // or permit. During all of these status checks are deferred and at the end
     // these call restoreExecutionContext which triggers the deferred checks.
+    // This excplicit call to checkStatusAll is a way to get a setup that
+    // approximates the real situation.
     evc.checkStatusAllExt(e);
     checkAccountStatus@withrevert(e, account, collaterals);
     bool healthyAfter= !lastReverted;
@@ -143,9 +170,9 @@ rule accountsStayHealthy_strategy (method f) filtered { f ->
     // Literal selectors are used to avoid compilation errors when
     // only some of the modules are in the verification scene
     // sig:GovernanceModule.clearLTV(address).selector
-    f.selector != 0x8255d029 && 
-    // sig:GovernanceModule.setLTV(address,uint16,uint32).selector
-    f.selector != 0x8b308de9 &&  
+    f.selector != 0x8255d029 &&
+    // sig:GovernanceModule.setLTV(address,uint16,uint16,uint32).selector
+    f.selector != 0x4bca3d5b &&
     // sig:InitializeModule.initialize(address).selector
     f.selector != 0xc4d66de8
 }{
@@ -160,6 +187,9 @@ rule accountsStayHealthy_strategy (method f) filtered { f ->
     // Vault should not be used as a collateral
     require collaterals[0] != currentContract;
     require collaterals[1] != currentContract;
+    // Collaterals must be ETokens
+    require collaterals[0] == EToken;
+    require collaterals[1] == EToken;
     // not sure the following 4 are really needed
     require account != erc20;
     require account != oracleAddress;
@@ -174,6 +204,8 @@ rule accountsStayHealthy_strategy (method f) filtered { f ->
     // The only way to call a vault funciton is through EVC's call, batch, 
     // or permit. During all of these status checks are deferred and at the end
     // these call restoreExecutionContext which triggers the deferred checks.
+    // This excplicit call to checkStatusAll is a way to get a setup that
+    // approximates the real situation.
     evc.checkStatusAllExt(e);
     bool healthyAfter = checkLiquidityReturning(e, account, collaterals);
     assert healthyBefore => healthyAfter; 
