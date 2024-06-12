@@ -74,12 +74,14 @@ function CVLUseViewCaller() returns address {
 function LTVConfigAssumptions(env e, BaseHarness.LTVConfig ltvConfig) returns bool {
     bool targetLTVLessOne = ltvConfig.liquidationLTV < 10000;
     bool originalLTVLessOne = ltvConfig.initialLiquidationLTV < 10000;
-    bool target_less_original = ltvConfig.initialLiquidationLTV < ltvConfig.liquidationLTV;
+    bool liquidationLTVHigher = ltvConfig.liquidationLTV > ltvConfig.borrowLTV;
+    bool initialLTVHigherTarget = ltvConfig.initialLiquidationLTV > ltvConfig.liquidationLTV;
     mathint timeRemaining = ltvConfig.targetTimestamp - e.block.timestamp;
     return targetLTVLessOne &&
         originalLTVLessOne &&
-        target_less_original && 
-        require_uint32(timeRemaining) < ltvConfig.rampDuration;
+        liquidationLTVHigher &&
+        initialLTVHigherTarget &&
+        (require_uint32(timeRemaining) < ltvConfig.rampDuration);
 }
 
 function actualCaller(env e) returns address {
