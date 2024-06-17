@@ -26,11 +26,6 @@ methods {
     function decimals() external returns uint8 envfree;
     function asset() external returns address envfree;
 
-    // function totalSupply() external returns uint256 envfree;
-    // function balanceOf(address) external returns uint256 envfree; //NOT ENVFREE
-    // Not implemented by EVault
-    // function nonces(address) external returns uint256 envfree;
-
     function approve(address,uint256) external returns bool;
     function deposit(uint256,address) external;
     function mint(uint256,address) external;
@@ -38,30 +33,11 @@ methods {
     function redeem(uint256,address,address) external;
 
 
-    // function totalAssets() external returns uint256 envfree;
-    // function userAssets(address) external returns uint256 envfree;
-    // function convertToShares(uint256) external returns uint256 envfree;
-    // function convertToAssets(uint256) external returns uint256 envfree;
-    // function previewDeposit(uint256) external returns uint256 envfree;
-    // function previewMint(uint256) external returns uint256 envfree;
-    // function previewWithdraw(uint256) external returns uint256 envfree;
-    // function previewRedeem(uint256) external returns uint256 envfree;
-
-    // function maxDeposit(address) external returns uint256 envfree;
-    // function maxMint(address) external returns uint256 envfree;
-    // function maxWithdraw(address) external returns uint256 envfree;
-    // function maxRedeem(address) external returns uint256 envfree;
-
     function permit(address,address,uint256,uint256,uint8,bytes32,bytes32) external;
     function DOMAIN_SEPARATOR() external returns bytes32;
 
     //// #ERC20 methods
-    // These are done in Base
-    // function _.balanceOf(address) external  => DISPATCHER(true);
-    // function _.transfer(address,uint256) external  => DISPATCHER(true);
-    // function _.transferFrom(address,address,uint256) external => DISPATCHER(true);
 
-    // function ERC20a.balanceOf(address) external returns uint256 envfree; // NOT ENVFREE
     function ERC20a.transferFrom(address,address,uint256) external returns bool; // not envfree
 
 
@@ -286,15 +262,6 @@ hook Sload Vault.PackedUserSlot val currentContract.vaultStorage.users[KEY addre
     require sumOfBalances >= to_mathint(val);
 }
 
-// hook Sstore balanceOf[KEY address addy] uint256 newValue (uint256 oldValue)  {
-//     sumOfBalances = sumOfBalances + newValue - oldValue;
-// }
- 
-
-// hook Sload uint256 val balanceOf[KEY address addy]  {
-//     require sumOfBalances >= to_mathint(val);
-// }
-
 // passing: https://prover.certora.com/output/65266/de3636d287d2473294463c07263fc11e/?anonymousKey=ac8f74e6c5c1298f0954a21fafd41cccf32b9ffb
 invariant totalSupplyIsSumOfBalances(env e)
     // to_mathint(totalSupply(e)) == sumOfBalances + accumulatedFees(e);
@@ -342,24 +309,6 @@ rule underlyingCannotChange() {
 ////                    #   High Level                                    /////
 ////////////////////////////////////////////////////////////////////////////////
 
-//// #  This rules timeout - we will show how to deal with timeouts 
-/* rule totalAssetsOfUser(method f, address user ) {
-    env e;
-    calldataarg args;
-    safeAssumptions(e, e.msg.sender, user);
-    require user != currentContract;
-    mathint before = userAssets(user) + maxWithdraw(user); 
-
-    // need to ignore cases where user is msg.sender but someone else the receiver 
-    address receiver; 
-    require e.msg.sender != user;
-    uint256 assets; uint256 shares;
-    callFunctionsWithReceiverAndOwner(e, f, assets, shares, receiver, e.msg.sender);
-    mathint after = userAssets(user) + maxWithdraw(user); 
-    assert after >= before; 
-}
-*/
-
 // passing
 // run: https://prover.certora.com/output/65266/1912c053cdf8485087f2c050146c64aa/?anonymousKey=a12e3d573258a4d8136a19b612448a50f80b9a21
 rule dustFavorsTheHouse(uint assetsIn )
@@ -370,13 +319,11 @@ rule dustFavorsTheHouse(uint assetsIn )
     safeAssumptions(e,e.msg.sender,e.msg.sender);
     uint256 totalSupplyBefore = totalSupply(e);
 
-    // uint balanceBefore = ERC20a.balanceOf(e, currentContract);
     uint balanceBefore = currentContract.balanceOf(e, currentContract);
 
     uint shares = deposit(e,assetsIn, e.msg.sender);
     uint assetsOut = redeem(e,shares,e.msg.sender,e.msg.sender);
 
-    // uint balanceAfter = ERC20a.balanceOf(e, currentContract);
     uint balanceAfter = currentContract.balanceOf(e, currentContract);
     assert balanceAfter >= balanceBefore;
 }
@@ -507,10 +454,6 @@ filtered {
 definition noSupplyIfNoAssetsDef(env e) returns bool = 
     ( totalAssets(e) == 0 => ( totalSupply(e) == 0 ));
 
-// definition noSupplyIfNoAssetsStrongerDef() returns bool =                // fails for ERC4626BalanceOfHarness as explained in the readme
-//     ( userAssets(currentContract) == 0 => totalSupply() == 0 ) &&
-//     ( totalAssets() == 0 <=> ( totalSupply() == 0 ));
-
 
 function safeAssumptions(env e, address receiver, address owner) {
     require currentContract != asset(); // Although this is not disallowed, we assume the contract's underlying asset is not the contract itself
@@ -521,10 +464,6 @@ function safeAssumptions(env e, address receiver, address owner) {
     requireInvariant assetsMoreThanSupply(e); 
 
     //// # Note : we don't want to use singleBalanceBounded and singleBalanceBounded invariants 
-    /* requireInvariant sumOfBalancePairsBounded(receiver, owner );
-    requireInvariant singleBalanceBounded(receiver);
-    requireInvariant singleBalanceBounded(owner);
-    */
     ///// # but, it safe to assume that a single balance is less than sum of balances
     require ( (receiver != owner => balanceOf(e, owner) + balanceOf(e, receiver) <= to_mathint(totalSupply(e)))  && 
                 balanceOf(e, receiver) <= totalSupply(e) &&
@@ -598,18 +537,3 @@ rule sanity (method f) {
     f(e, args);
     assert false;
 }
-
-// rule vaultCacheSanity (method f) {
-//     env e;
-//     BaseHarness.VaultCache vaultCache;
-//     CVLInitVaultCache(e, vaultCache);
-//     assert false;
-// }
-
-// rule totalSupplySanity {
-//     env e;
-//     BaseHarness.VaultCache vaultCache;
-//     CVLInitVaultCache(e, vaultCache);
-//     totalSupply(e);
-//     assert false;
-// }
