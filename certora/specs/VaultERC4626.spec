@@ -57,10 +57,10 @@ methods {
     // trySafeTransferFrom cannot be summarized as NONDET (due to return type
     // that includes bytes memory). So it is summarized as 
     // DummyERC20a.transferFrom
-    function _.trySafeTransferFrom(address token, address from, address to, uint256 value) internal with (env e) => CVLTrySafeTransferFrom(e, from, to, value) expect (bool, bytes memory);
+    function _.trySafeTransferFrom(address token, address from, address to, uint256 value) internal with (env e) => CVLTrySafeTransferFrom(e, token,from, to, value) expect (bool, bytes memory);
     // safeTransferFrom is summarized as transferFrom
     // from DummyERC20a to avoid dealing with the low-level `call`
-    function _.safeTransferFrom(address token, address from, address to, uint256 value, address permit2) internal with (env e)=> CVLTrySafeTransferFrom(e, from, to, value) expect (bool, bytes memory);
+    function _.safeTransferFrom(address token, address from, address to, uint256 value, address permit2) internal with (env e)=> CVLSafeTransferFrom(e, token, from, to, value) expect void;
     function _.tryBalanceTrackerHook(address account, uint256 newAccountBalance, bool forfeitRecentReward) internal => NONDET;
     function _.balanceTrackerHook(address account, uint256 newAccountBalance, bool forfeitRecentReward) external => NONDET;
     // Type Conversions
@@ -97,11 +97,14 @@ function CVLgetCurrentOnBehalfOfAccount(address addr) returns (address, bool) {
 persistent ghost CVLGetAccountOwner(address) returns address;
 
 // Summarize trySafeTransferFrom as DummyERC20 transferFrom
-function CVLTrySafeTransferFrom(env e, address from, address to, uint256 value) returns (bool, bytes) {
-    bytes ret; // Ideally bytes("") if there is a way to do this
-    return (ERC20a.transferFrom(e, from, to, value), ret);
+function CVLSafeTransferFrom(env e, address token, address from, address to, uint256 value) {
+    ERC20a.transferFrom(e, from, to, value);
 }
 
+function CVLTrySafeTransferFrom(env e, address token, address from, address to, uint256 value) returns (bool, bytes) {
+    bytes ret;
+    return (ERC20a.transferFrom(e, from, to, value), ret);
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 ////           #  asset To shares mathematical properties                  /////
@@ -529,11 +532,4 @@ function callFunctionsWithReceiverAndOwner(env e, method f, uint256 assets, uint
         calldataarg args;
         f(e, args);
     }
-}
-
-rule sanity (method f) {
-    env e;
-    calldataarg args;
-    f(e, args);
-    assert false;
 }
