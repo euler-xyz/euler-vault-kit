@@ -136,6 +136,7 @@ These cases are handled separately:
         proved in liquidate_mustRevert
 */
 
+// passing: https://prover.certora.com/output/65266/132c942ca2a2463b84e15b77becdfa11/?anonymousKey=431faa27dd7b649306de7e37067b7a75e57271f8
 rule liquidateAccountsStayHealthy_liquidator_no_debt_socialization {
     env e;
     address account;
@@ -194,6 +195,7 @@ rule liquidateAccountsStayHealthy_liquidator_no_debt_socialization {
     assert healthyBefore => healthyAfter; 
 }
 
+// passing: https://prover.certora.com/output/65266/2d955907619c4c748e82791a3bb5843e/?anonymousKey=dfb93c10b2311ab0f99ffaf551bcd1fc4b7447b0
 rule liquidateAccountsStayHealthy_liquidator_with_debt_socialization {
     env e;
     address account;
@@ -252,7 +254,7 @@ rule liquidateAccountsStayHealthy_liquidator_with_debt_socialization {
     assert healthyBefore => healthyAfter; 
 }
 
-
+// passing: https://prover.certora.com/output/65266/83941c4b1c3448a6bd56c3edebf44ced/?anonymousKey=11866ef668f148318b2bea213560da6a5b6df937
 rule liquidateAccountsStayHealthy_not_violator {
     env e;
     address account;
