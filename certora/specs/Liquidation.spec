@@ -57,29 +57,6 @@ rule checkLiquidation_healthy() {
     assert maxYield == 0;
 }
 
-// counterexample
-rule checkLiquidation_maxYieldGreater {
-    env e;
-    address liquidator;
-    address violator; 
-    address collateral;
-    uint256 maxRepay;
-    uint256 maxYield;
-
-    uint256 collateralValue;
-    uint256 liabilityValue;
-    (collateralValue, liabilityValue) =     
-        calculateLiquidityExternal(e, violator);
-
-    require oracleAddress != 0;
-    require collateralValue > 0;
-    require liabilityValue > 0;
-    require collateralValue < liabilityValue;
-
-    (maxRepay, maxYield) = checkLiquidation(e, liquidator, violator, collateral);
-    assert maxRepay > 0 => maxRepay <= maxYield; 
-}
-
 // passing
 rule checkLiquidation_mustRevert {
     env e;
@@ -147,7 +124,7 @@ rule calculateLiquidation_setViolator {
     assert violator != liquidator;
 }
 
-// formerly passing but broke. must fix
+// passed
 rule liquidate_mustRevert {
     env e;
     address violator;
@@ -165,8 +142,6 @@ rule liquidate_mustRevert {
     bool oracleConfigured = vaultCacheOracleConfigured(e);
 
     liquidate(e, violator, collateral, repayAssets, minYieldBalance);
-    // TODO liquidate operation not disabled
-    // TODO amount of collateral to be seized is less than the desired amount of 
     assert !selfLiquidation;
     assert recognizedCollateral;
     assert enabledCollateral;

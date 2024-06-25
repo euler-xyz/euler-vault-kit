@@ -1,0 +1,316 @@
+import "Base.spec";
+import "LoadVaultSummary.spec";
+using DummyERC20A as ERC20a;
+using TokenHarness as EToken; // Used to assume collaterals are ETokens
+
+methods {
+    function checkAccountMagicValue() external returns (bytes4) envfree;
+    // healthStatusCheck reverts unless this is true. We assume it's true 
+    // approximate the real situation where these checks get triggered
+    // by the EVC before which this flag will be set.
+    function EVCHarness.areChecksInProgress() external returns bool => CVLAreChecksInProgress();
+    // unresolved calls that havoc all contracts
+    function _.isHookTarget() external => NONDET;
+    function _.invokeHookTarget(address caller) internal => NONDET;
+    function _.tryBalanceTrackerHook(address account, uint256 newAccountBalance, bool forfeitRecentReward) internal => NONDET;
+    function _.balanceTrackerHook(address account, uint256 newAccountBalance, bool forfeitRecentReward) external => NONDET;
+    function _.emitTransfer(address from, address to, uint256 value) external => NONDET;
+    function EVCHarness.disableController(address account) external => NONDET;
+    function _.computeInterestRate(address vault, uint256 cash, uint256 borrows) external => NONDET;
+    function _.onFlashLoan(bytes data) external => NONDET;
+    // function _.computeInterestRate(BaseHarness.VaultCache memory vaultCache) internal => NONDET;
+
+    // Harness
+    function LiquidationHSHarness.hasDebtSocialization() external returns (bool) envfree;
+
+    // EVC
+    function _.requireVaultStatusCheck() external => DISPATCHER(true);
+    function _.requireAccountAndVaultStatusCheck(address) external => DISPATCHER(true);
+
+    // Summaries
+    function _.safeTransferFrom(address token, address from, address to, uint256 value, address permit2) internal with (env e)=> CVLSafeTransferFrom(e, token, from, to, value) expect void;
+    function _.enforceCollateralTransfer(address collateral, uint256 amount,
+        address from, address receiver) internal with (env e) => 
+        CVLEnforceCollateralTransfer(e, collateral, amount, from, receiver) expect void;
+    // To deal with changes between LTV values:
+    // function _.getLTV(address collateral, bool liquidation) internal => CVLGetLTV(collateral, liquidation) expect (BaseHarness.ConfigAmount);
+    // We can't handle the low-level call in 
+    // EthereumVaultConnector.checkAccountStatusInternal 
+    // and so reroute it to RiskManager's status check with this summary.
+    function EthereumVaultConnector.checkAccountStatusInternal(address account) internal returns (bool, bytes memory) with (env e) => 
+        CVLCheckAccountStatusInternal(e, account);
+    function EthereumVaultConnector.checkVaultStatusInternal(address vault) internal returns (bool, bytes memory) with(env e) =>
+        CVLCheckVaultStatusInternal(e);
+
+    function _.EVCRequireStatusChecks(address account) internal =>
+        EVCRequireStatusChecksCVL(account) expect void;
+}
+
+//-----------------------------------------------------------------------------
+// Summaries and Ghost State
+//-----------------------------------------------------------------------------
+
+persistent ghost address accountToCheckGhost;
+function EVCRequireStatusChecksCVL(address account) {
+    accountToCheckGhost = account;
+}
+
+// We summarize EthereumVaultConnector.checkAccountStatusInternal
+// because we need to direct the low-level call to RiskManager.
+// checkAccountStatus and this linking doesn't happen automatically
+function CVLCheckAccountStatusInternalBool(env e, address account) returns bool {
+    address[] collaterals = evc.getCollaterals(e, account);
+    checkAccountStatus@withrevert(e, account, collaterals);
+    return !lastReverted;
+}
+
+function CVLCheckAccountStatusInternal(env e, address account) returns (bool, bytes) {
+    return (CVLCheckAccountStatusInternalBool(e, account), 
+        checkAccountMagicValueMemory(e));
+}
+
+function CVLCheckVaultStatusInternalBool(env e) returns bool {
+    checkVaultStatus@withrevert(e);
+    return !lastReverted;
+}
+
+function CVLCheckVaultStatusInternal(env e) returns (bool, bytes) {
+    return (CVLCheckVaultStatusInternalBool(e),
+        checkVaultMagicValueMemory(e));
+}
+
+function CVLAreChecksInProgress() returns bool {
+    return true;
+}
+
+function CVLSafeTransferFrom(env e, address token, address from, address to, uint256 value) {
+    if (token == ERC20a) {
+        ERC20a.transferFrom(e, from, to, value);
+    } else if (token == EToken) {
+        EToken.transferFrom(e, from, to, value);
+    }
+}
+
+/*
+* The prover struggles to reason about the low-level call operations involved
+* in the real EVCClient.enforceControlCollateral function, so we need
+* to emulate the real behavior here. Here's how it works in the real code:
+*  - EVCClient calls evc.controlCollateral passing a call to `transfer(receiver, amount)` along with the collateral and from addresses
+*  - In controlCollateral the from address is used to set the onBehalfOfAccount
+*  and some authentication is done
+* - After this, callWithContextInternal invokes the transfer function 
+* on the collateral address
+* - Collaterals in the EVK must all be Token.sol and token's transfer
+* implementation calls initOperation which enqueues an account status
+* check on the EVC for the onBehalfOfAccount it also gets from EVC.
+* Because onBehalfOfAccount was set to the from address in callWithContextInternal this status check is for the from account
+* To emulate this, we:
+* - explicitly call EToken.transferFrom using the expected addresses
+* - enqueue a status check on the evc for the "from" address
+*/
+// Because calling to requireAccountStatusCheck on EVC is expensive
+// for the prover, instead assign which account gets checked to a ghost
+persistent ghost address collateralTransferCheckedAccount;
+function CVLEnforceCollateralTransfer(env e, address collateral, uint256 amount, address from, address receiver) {
+    // evc.requireAccountStatusCheck(e, from);
+    collateralTransferCheckedAccount = from;
+    EToken.transferFromInternalHarnessed(e, from, receiver, amount);
+}
+
+//-----------------------------------------------------------------------------
+// Rules
+//-----------------------------------------------------------------------------
+/*
+For Liquidation.liquidate we need to split this rule into cases:
+    - account checked != liquidator and account checked != violator
+    - account checked == liquidator and account checked != violator and:
+        - debt socialization disabled
+        - debt socialization enabled 
+These cases are handled separately:
+    - account checked == violator:
+        if this account was healthy before the call does nothing. This is not
+        only easy to see manually but we prove this in 
+        checkLiquidation.healthy() in Liquidation.sol
+    - account checked  == violator:
+        In this case the call reverts which is easy to check but also
+        proved in liquidate_mustRevert
+*/
+
+rule liquidateAccountsStayHealthy_liquidator_no_debt_socialization {
+    env e;
+    address account;
+    address[] collaterals = evc.getCollaterals(e, account);
+    require collaterals.length == 2; // loop bound
+    require oracleAddress != 0; 
+    // Vault cannot be a user of itself
+    require account != currentContract;
+    // Vault should not be used as a collateral
+    require collaterals[0] != currentContract;
+    require collaterals[1] != currentContract;
+    // Collaterals must be ETokens
+    require collaterals[0] == EToken;
+    require collaterals[1] == EToken;
+    // not sure the following 4 are really needed
+    require account != erc20;
+    require account != oracleAddress;
+    require account != evc;
+    require account != unitOfAccount;
+
+    require LTVConfigAssumptions(e, getLTVConfig(e, collaterals[0]));
+    require LTVConfigAssumptions(e, getLTVConfig(e, collaterals[1]));
+
+    address violator;
+    address collateral;
+    uint256 repayAssets;
+    uint256 minYieldBalance;
+
+    // disable debt socialization
+    require !hasDebtSocialization();
+
+    // initialize checked accounts to 0
+    require accountToCheckGhost == 0; // account checked in initialize
+    require collateralTransferCheckedAccount == 0;
+
+    // account eq liquidator case
+    require collateral == collaterals[0] || collateral == collaterals[1];
+    address liquidator = actualCaller(e);
+    require account == liquidator;
+    require violator != liquidator;
+
+    bool healthyBefore = checkLiquidityReturning(e, account, collaterals);
+    currentContract.liquidate(e, violator, collateral, repayAssets, minYieldBalance);
+
+    // replace the real call path involving the EVC calling back into the
+    // vault with a direct call on checkAccountStatus from the vault
+
+    if(accountToCheckGhost != 0) {
+        currentContract.checkAccountStatus(e, accountToCheckGhost, collaterals);
+    }
+    if(collateralTransferCheckedAccount != 0) {
+        currentContract.checkAccountStatus(e, collateralTransferCheckedAccount, collaterals);
+    }
+
+    bool healthyAfter = checkLiquidityReturning(e, account, collaterals);
+    assert healthyBefore => healthyAfter; 
+}
+
+rule liquidateAccountsStayHealthy_liquidator_with_debt_socialization {
+    env e;
+    address account;
+    address[] collaterals = evc.getCollaterals(e, account);
+    require collaterals.length == 2; // loop bound
+    require oracleAddress != 0; 
+    // Vault cannot be a user of itself
+    require account != currentContract;
+    // Vault should not be used as a collateral
+    require collaterals[0] != currentContract;
+    require collaterals[1] != currentContract;
+    // Collaterals must be ETokens
+    require collaterals[0] == EToken;
+    require collaterals[1] == EToken;
+    // not sure the following 4 are really needed
+    require account != erc20;
+    require account != oracleAddress;
+    require account != evc;
+    require account != unitOfAccount;
+
+    require LTVConfigAssumptions(e, getLTVConfig(e, collaterals[0]));
+    require LTVConfigAssumptions(e, getLTVConfig(e, collaterals[1]));
+
+    address violator;
+    address collateral;
+    uint256 repayAssets;
+    uint256 minYieldBalance;
+
+    // enable debt socialization
+    require hasDebtSocialization();
+
+    // initialize checked accounts to 0
+    require accountToCheckGhost == 0; // account checked in initialize
+    require collateralTransferCheckedAccount == 0;
+
+    // account eq liquidator case
+    require collateral == collaterals[0] || collateral == collaterals[1];
+    address liquidator = actualCaller(e);
+    require account == liquidator;
+    require violator != liquidator;
+
+    bool healthyBefore = checkLiquidityReturning(e, account, collaterals);
+    currentContract.liquidate(e, violator, collateral, repayAssets, minYieldBalance);
+
+    // replace the real call path involving the EVC calling back into the
+    // vault with a direct call on checkAccountStatus from the vault
+
+    if(accountToCheckGhost != 0) {
+        currentContract.checkAccountStatus(e, accountToCheckGhost, collaterals);
+    }
+    if(collateralTransferCheckedAccount != 0) {
+        currentContract.checkAccountStatus(e, collateralTransferCheckedAccount, collaterals);
+    }
+
+    bool healthyAfter = checkLiquidityReturning(e, account, collaterals);
+    assert healthyBefore => healthyAfter; 
+}
+
+
+rule liquidateAccountsStayHealthy_not_violator {
+    env e;
+    address account;
+    address[] collaterals = evc.getCollaterals(e, account);
+    require collaterals.length == 2; // loop bound
+    require oracleAddress != 0; 
+    // Vault cannot be a user of itself
+    require account != currentContract;
+    // Vault should not be used as a collateral
+    require collaterals[0] != currentContract;
+    require collaterals[1] != currentContract;
+    // Collaterals must be ETokens
+    require collaterals[0] == EToken;
+    require collaterals[1] == EToken;
+    // not sure the following 4 are really needed
+    require account != erc20;
+    require account != oracleAddress;
+    require account != evc;
+    require account != unitOfAccount ;
+
+    require LTVConfigAssumptions(e, getLTVConfig(e, collaterals[0]));
+    require LTVConfigAssumptions(e, getLTVConfig(e, collaterals[1]));
+
+    address violator;
+    address collateral;
+    uint256 repayAssets;
+    uint256 minYieldBalance;
+
+    address liquidator = actualCaller(e);
+
+    // initialize checked accounts to 0
+    require accountToCheckGhost == 0; // account checked in initialize
+    require collateralTransferCheckedAccount == 0;
+
+    // account NE violator case
+    require account != violator;
+    require liquidator != violator;
+    require account != liquidator;
+
+    bool healthyBefore = checkLiquidityReturning(e, account, collaterals);
+    currentContract.liquidate(e, violator, collateral, repayAssets, minYieldBalance);
+    // The only way to call a vault funciton is through EVC's call, batch, 
+    // or permit. During all of these status checks are deferred and at the end
+    // these call restoreExecutionContext which triggers the deferred checks.
+    // Replace the real call path involving the EVC calling back into the
+    // vault with a direct call on checkAccountStatus from the vault.
+    // (For the not_violator / not liquidator case, we can also directly
+    // call evc.checkStatusAll rather than using these ghosts and
+    // the direct call on checkAccountStatus, but for the liquidator case
+    // this will drop performance enough to hit a timeout)
+
+    if(accountToCheckGhost != 0) {
+        currentContract.checkAccountStatus(e, accountToCheckGhost, collaterals);
+    }
+    if(collateralTransferCheckedAccount != 0) {
+        currentContract.checkAccountStatus(e, collateralTransferCheckedAccount, collaterals);
+    }
+
+    bool healthyAfter = checkLiquidityReturning(e, account, collaterals);
+    assert healthyBefore => healthyAfter; 
+}
