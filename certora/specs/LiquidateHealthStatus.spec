@@ -130,10 +130,10 @@ These cases are handled separately:
     - account checked == violator:
         if this account was healthy before the call does nothing. This is not
         only easy to see manually but we prove this in 
-        checkLiquidation.healthy() in Liquidation.sol
+        checkLiquidation.healthy() in Liquidation.spec
     - account checked  == violator:
         In this case the call reverts which is easy to check but also
-        proved in liquidate_mustRevert
+        proved in liquidate_mustRevert in Liquidation.spec
 */
 
 // passing: https://prover.certora.com/output/65266/132c942ca2a2463b84e15b77becdfa11/?anonymousKey=431faa27dd7b649306de7e37067b7a75e57271f8
