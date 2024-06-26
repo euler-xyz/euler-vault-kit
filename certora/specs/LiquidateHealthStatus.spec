@@ -131,7 +131,7 @@ These cases are handled separately:
         if this account was healthy before the call does nothing. This is not
         only easy to see manually but we prove this in 
         checkLiquidation.healthy() in Liquidation.spec
-    - account checked  == violator:
+    - liquidator  == violator:
         In this case the call reverts which is easy to check but also
         proved in liquidate_mustRevert in Liquidation.spec
 */
