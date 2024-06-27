@@ -18,7 +18,6 @@ methods {
     function EVCHarness.disableController(address account) external => NONDET;
     function _.computeInterestRate(address vault, uint256 cash, uint256 borrows) external => NONDET;
     function _.onFlashLoan(bytes data) external => NONDET;
-    // function _.computeInterestRate(BaseHarness.VaultCache memory vaultCache) internal => NONDET;
 
     // EVC
     function _.requireVaultStatusCheck() external => DISPATCHER(true);
@@ -29,8 +28,6 @@ methods {
     function _.enforceCollateralTransfer(address collateral, uint256 amount,
         address from, address receiver) internal with (env e) => 
         CVLEnforceCollateralTransfer(e, collateral, amount, from, receiver) expect void;
-    // To deal with changes between LTV values:
-    // function _.getLTV(address collateral, bool liquidation) internal => CVLGetLTV(collateral, liquidation) expect (BaseHarness.ConfigAmount);
     // We can't handle the low-level call in 
     // EthereumVaultConnector.checkAccountStatusInternal 
     // and so reroute it to RiskManager's status check with this summary.
@@ -39,13 +36,6 @@ methods {
     function EthereumVaultConnector.checkVaultStatusInternal(address vault) internal returns (bool, bytes memory) with(env e) =>
         CVLCheckVaultStatusInternal(e);
 }
-
-// TODO ideally delete this if it is really not needed.
-// persistent ghost uint16 ghost_ltv;
-// function CVLGetLTV(address collateral, bool liquidation) returns uint16 {
-//     require ghost_ltv > 0;
-//     return ghost_ltv;
-// }
 
 // We summarize EthereumVaultConnector.checkAccountStatusInternal
 // because we need to direct the low-level call to RiskManager.
