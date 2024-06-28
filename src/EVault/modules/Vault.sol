@@ -170,7 +170,6 @@ abstract contract VaultModule is IVault, AssetTransfers, BalanceUtils {
         Shares shares = amount == type(uint256).max ? vaultStorage.users[owner].getBalance() : amount.toShares();
         if (shares.isZero()) return 0;
 
-        // Changed by Certora
         Assets assets = shares.toAssetsDown(vaultCache);
         if (assets.isZero()) revert E_ZeroAssets();
 

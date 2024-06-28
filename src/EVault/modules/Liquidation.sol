@@ -62,7 +62,7 @@ abstract contract LiquidationModule is ILiquidation, BalanceUtils, LiquidityUtil
         address violator,
         address collateral,
         uint256 desiredRepay
-    // Munged to internal by certora
+    // Munged to internal by certora to enable harnessing
     ) internal view returns (LiquidationCache memory liqCache) {
         // Init cache
 
@@ -110,7 +110,6 @@ abstract contract LiquidationModule is ILiquidation, BalanceUtils, LiquidityUtil
                 liqCache.repay = desiredRepay.toAssets();
             }
         }
-
     }
 
     function calculateMaxLiquidation(LiquidationCache memory liqCache, VaultCache memory vaultCache)
