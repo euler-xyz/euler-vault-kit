@@ -109,7 +109,6 @@ abstract contract LiquidationModule is ILiquidation, BalanceUtils, LiquidityUtil
                 liqCache.repay = desiredRepay.toAssets();
             }
         }
-
     }
 
     function calculateMaxLiquidation(LiquidationCache memory liqCache, VaultCache memory vaultCache)
