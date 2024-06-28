@@ -1,0 +1,5 @@
+# Specify the owners of the code in the src directory
+src/ @dglowinski @kasperpawlowski @hoytech
+
+# Specify the owners of the code in the certora directory
+certora/ @dglowinski @kasperpawlowski @hoytech
