@@ -21,9 +21,14 @@ contract ESynth is ERC20Collateral, Ownable {
         uint128 minted;
     }
 
+    /// @notice contains the minting capacity and minted amount for each minter.
     mapping(address => MinterData) public minters;
+    /// @notice contains the list of addresses to ignore for the total supply.
     EnumerableSet.AddressSet internal ignoredForTotalSupply;
 
+    /// @notice Emitted when the minting capacity for a minter is set.
+    /// @param minter The address of the minter.
+    /// @param capacity The capacity set for the minter.
     event MinterCapacitySet(address indexed minter, uint256 capacity);
 
     error E_CapacityReached();
