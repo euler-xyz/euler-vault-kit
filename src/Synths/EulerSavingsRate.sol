@@ -25,7 +25,8 @@ contract EulerSavingsRate is EVCUtil, ERC4626 {
 
     /// @notice The virtual amount added to total shares and total assets.
     uint256 internal constant VIRTUAL_AMOUNT = 1e6;
-    /// @notice The duration of the interest smear period.
+    uint256 internal constant MIN_SHARES_FOR_GULP = VIRTUAL_AMOUNT * 10; // At least 10 times the virtual amount of shares should exist for gulp to be enabled
+
     uint256 public constant INTEREST_SMEAR = 2 weeks;
 
     struct ESRSlot {
@@ -215,6 +216,9 @@ contract EulerSavingsRate is EVCUtil, ERC4626 {
     /// @notice Smears any donations to this vault as interest.
     function gulp() public nonReentrant {
         ESRSlot memory esrSlotCache = updateInterestAndReturnESRSlotCache();
+
+        // Do not gulp if total supply is too low
+        if (totalSupply() < MIN_SHARES_FOR_GULP) return;
 
         uint256 assetBalance = IERC20(asset()).balanceOf(address(this));
         uint256 toGulp = assetBalance - _totalAssets - esrSlotCache.interestLeft;
