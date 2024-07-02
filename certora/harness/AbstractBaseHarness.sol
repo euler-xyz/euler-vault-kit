@@ -14,6 +14,7 @@ import {LiquidityUtils} from "../../src/EVault/shared/LiquidityUtils.sol";
 // while also making function definitions sharable among harnesses via
 // AbstractBase. AbstractBaseHarness includes the shared function definitions.
 abstract contract AbstractBaseHarness is Base, LiquidityUtils {
+    using TypesLib for uint256;
 
     function getLTVConfig(address collateral) external view returns (LTVConfig memory) {
         return vaultStorage.ltvLookup[collateral];
@@ -47,6 +48,15 @@ abstract contract AbstractBaseHarness is Base, LiquidityUtils {
         return vaultStorage.users[account].interestAccumulator;
     }
 
+    // This mirrors Vault.toAssets so that we can use this to write
+    // rules for modules without bringing the whole Vault.sol
+    // contract into the scene
+    // It is named differently to avoid collision when Vault is in the scene.
+    function convertToAssetsMock(uint256 shares) public view virtual returns (uint256) {
+        VaultCache memory vaultCache = loadVault();
+        return shares.toShares().toAssetsDown(vaultCache).toUint();
+    }
+
     // This mirrors LiquidityUtils.checkLiquidity except that it returns
     // a bool rather than reverting.
     function checkLiquidityReturning(address account, address[] memory collaterals) public returns (bool) {
@@ -66,6 +76,10 @@ abstract contract AbstractBaseHarness is Base, LiquidityUtils {
         return false;
     }
 
+    function hasDebtSocialization() external returns (bool) {
+        VaultCache memory vaultCache = loadVault();
+        return vaultCache.configFlags.isNotSet(CFG_DONT_SOCIALIZE_DEBT);
+    }
 
     //--------------------------------------------------------------------------
     // Controllers

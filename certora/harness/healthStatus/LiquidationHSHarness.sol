@@ -12,8 +12,4 @@ contract LiquidationHSHarness is LiquidationModule, RiskManagerModule,
     AbstractBaseHarness {
     constructor(Integrations memory integrations) Base(integrations) {}
 
-    function hasDebtSocialization() external returns (bool) {
-        VaultCache memory vaultCache = loadVault();
-        return vaultCache.configFlags.isNotSet(CFG_DONT_SOCIALIZE_DEBT);
-    }
 }
