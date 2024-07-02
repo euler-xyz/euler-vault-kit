@@ -67,8 +67,7 @@ contract IRMSynth is IIRM {
     /// @notice Computes the interest rate and updates the storage if necessary.
     /// @return The interest rate.
     function computeInterestRate(address, uint256, uint256) external override returns (uint256) {
-        IRMData memory irmCache = irmStorage;
-        (uint216 rate, bool updated) = _computeRate(irmCache);
+        (uint216 rate, bool updated) = _computeRate(irmStorage);
 
         if (updated) {
             irmStorage = IRMData({lastUpdated: uint40(block.timestamp), lastRate: rate});
