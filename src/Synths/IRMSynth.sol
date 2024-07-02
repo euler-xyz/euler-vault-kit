@@ -2,8 +2,8 @@
 
 pragma solidity ^0.8.0;
 
-import "../InterestRateModels/IIRM.sol";
-import "../interfaces/IPriceOracle.sol";
+import {IIRM} from "../InterestRateModels/IIRM.sol";
+import {IPriceOracle} from "../interfaces/IPriceOracle.sol";
 import {IERC20} from "../EVault/IEVault.sol";
 
 /// @title IRMSynth
