@@ -23,7 +23,10 @@ contract EulerSavingsRate is EVCUtil, ERC4626 {
     uint8 internal constant UNLOCKED = 1;
     uint8 internal constant LOCKED = 2;
 
+    /// @notice The virtual amount added to total shares and total assets.
     uint256 internal constant VIRTUAL_AMOUNT = 1e6;
+    uint256 internal constant MIN_SHARES_FOR_GULP = VIRTUAL_AMOUNT * 10; // At least 10 times the virtual amount of shares should exist for gulp to be enabled
+
     uint256 public constant INTEREST_SMEAR = 2 weeks;
 
     struct ESRSlot {
@@ -33,10 +36,15 @@ contract EulerSavingsRate is EVCUtil, ERC4626 {
         uint8 locked;
     }
 
+    /// @notice Multiple state variables stored in a single storage slot.
     ESRSlot internal esrSlot;
+    /// @notice The total assets accounted for in the vault.
     uint256 internal _totalAssets;
 
     error Reentrancy();
+
+    event Gulped(uint256 gulped, uint256 interestLeft);
+    event InterestUpdated(uint256 interestAccrued, uint256 interestLeft);
 
     /// @notice Modifier to require an account status check on the EVC.
     /// @dev Calls `requireAccountStatusCheck` function from EVC for the specified account after the function body.
@@ -68,6 +76,11 @@ contract EulerSavingsRate is EVCUtil, ERC4626 {
         return _totalAssets + interestAccrued();
     }
 
+    /// @notice Returns the maximum amount of shares that can be redeemed by the specified address.
+    /// @dev If the account has a controller set it's possible the withdrawal will be reverted by the controller, thus
+    /// we return 0.
+    /// @param owner The account owner.
+    /// @return The maximum amount of shares that can be redeemed.
     function maxRedeem(address owner) public view override returns (uint256) {
         // Max redeem can potentially be 0 if there is a liability
         if (evc.getControllers(owner).length > 0) {
@@ -77,6 +90,11 @@ contract EulerSavingsRate is EVCUtil, ERC4626 {
         return super.maxRedeem(owner);
     }
 
+    /// @notice Returns the maximum amount of assets that can be withdrawn by the specified address.
+    /// @dev If the account has a controller set it's possible the withdrawal will be reverted by the controller, thus
+    /// we return 0.
+    /// @param owner The account owner.
+    /// @return The maximum amount of assets that can be withdrawn.
     function maxWithdraw(address owner) public view override returns (uint256) {
         // Max withdraw can potentially be 0 if there is a liability
         if (evc.getControllers(owner).length > 0) {
@@ -126,12 +144,13 @@ contract EulerSavingsRate is EVCUtil, ERC4626 {
     /// @notice Mints a certain amount of shares to the account.
     /// @param shares The amount of assets to mint.
     /// @param receiver The account to mint the shares to.
-    /// @return The amount of assets spend.
+    /// @return The amount of assets spent.
     function mint(uint256 shares, address receiver) public override nonReentrant returns (uint256) {
         return super.mint(shares, receiver);
     }
 
     /// @notice Deposits a certain amount of assets to the vault.
+    /// @dev Overwritten to not call maxWithdraw which would return 0 if there is a controller set, update the accrued interest and update _totalAssets.
     /// @param assets The amount of assets to deposit.
     /// @param receiver The recipient of the shares.
     /// @return The amount of shares minted.
@@ -144,10 +163,21 @@ contract EulerSavingsRate is EVCUtil, ERC4626 {
     {
         // Move interest to totalAssets
         updateInterestAndReturnESRSlotCache();
-        return super.withdraw(assets, receiver, owner);
+
+        uint256 maxAssets = _convertToAssets(balanceOf(owner), Math.Rounding.Floor);
+        if (maxAssets < assets) {
+            revert ERC4626ExceededMaxWithdraw(owner, assets, maxAssets);
+        }
+
+        uint256 shares = previewWithdraw(assets);
+        _withdraw(_msgSender(), receiver, owner, assets, shares);
+        _totalAssets = _totalAssets - assets;
+
+        return shares;
     }
 
     /// @notice Redeems a certain amount of shares for assets.
+    /// @dev Overwritten to not call maxRedeem which would return 0 if there is a controller set, update the accrued interest and update _totalAssets.
     /// @param shares The amount of shares to redeem.
     /// @param receiver The recipient of the assets.
     /// @return The amount of assets redeemed.
@@ -160,7 +190,17 @@ contract EulerSavingsRate is EVCUtil, ERC4626 {
     {
         // Move interest to totalAssets
         updateInterestAndReturnESRSlotCache();
-        return super.redeem(shares, receiver, owner);
+
+        uint256 maxShares = balanceOf(owner);
+        if (maxShares < shares) {
+            revert ERC4626ExceededMaxRedeem(owner, shares, maxShares);
+        }
+
+        uint256 assets = previewRedeem(shares);
+        _withdraw(_msgSender(), receiver, owner, assets, shares);
+        _totalAssets = _totalAssets - assets;
+
+        return assets;
     }
 
     function _convertToShares(uint256 assets, Math.Rounding rounding) internal view override returns (uint256) {
@@ -176,17 +216,12 @@ contract EulerSavingsRate is EVCUtil, ERC4626 {
         super._deposit(caller, receiver, assets, shares);
     }
 
-    function _withdraw(address caller, address receiver, address owner, uint256 assets, uint256 shares)
-        internal
-        override
-    {
-        _totalAssets = _totalAssets - assets;
-        super._withdraw(caller, receiver, owner, assets, shares);
-    }
-
     /// @notice Smears any donations to this vault as interest.
     function gulp() public nonReentrant {
         ESRSlot memory esrSlotCache = updateInterestAndReturnESRSlotCache();
+
+        // Do not gulp if total supply is too low
+        if (totalSupply() < MIN_SHARES_FOR_GULP) return;
 
         uint256 assetBalance = IERC20(asset()).balanceOf(address(this));
         uint256 toGulp = assetBalance - _totalAssets - esrSlotCache.interestLeft;
@@ -199,6 +234,8 @@ contract EulerSavingsRate is EVCUtil, ERC4626 {
 
         // write esrSlotCache back to storage in a single SSTORE
         esrSlot = esrSlotCache;
+
+        emit Gulped(toGulp, esrSlotCache.interestLeft);
     }
 
     /// @notice Updates the interest and returns the ESR storage slot cache.
@@ -214,6 +251,8 @@ contract EulerSavingsRate is EVCUtil, ERC4626 {
         esrSlot = esrSlotCache;
         // Move interest accrued to totalAssets
         _totalAssets = _totalAssets + accruedInterest;
+
+        emit InterestUpdated(accruedInterest, esrSlotCache.interestLeft);
 
         return esrSlotCache;
     }

@@ -21,11 +21,16 @@ contract PegStabilityModule is EVCUtil {
     uint256 public constant BPS_SCALE = 100_00;
     uint256 public constant PRICE_SCALE = 1e18;
 
+    /// @notice The synthetic asset.
     ESynth public immutable synth;
+    /// @notice The underlying asset.
     IERC20 public immutable underlying;
+    /// @notice The conversion price between the synthetic and underlying asset.
     uint256 public immutable conversionPrice; // 1e18 = 1 SYNTH == 1 UNDERLYING, 0.01e18 = 1 SYNTH == 0.01 UNDERLYING
 
+    /// @notice The fee for swapping to the underlying asset in basis points.
     uint256 public immutable TO_UNDERLYING_FEE;
+    /// @notice The fee for swapping to the synthetic asset in basis points.
     uint256 public immutable TO_SYNTH_FEE;
 
     error E_ZeroAddress();
