@@ -26,7 +26,8 @@ contract EulerSavingsRate is EVCUtil, ERC4626 {
 
     /// @notice The virtual amount added to total shares and total assets.
     uint256 internal constant VIRTUAL_AMOUNT = 1e6;
-    uint256 internal constant MIN_SHARES_FOR_GULP = VIRTUAL_AMOUNT * 10; // At least 10 times the virtual amount of shares should exist for gulp to be enabled
+    uint256 internal constant MIN_SHARES_FOR_GULP = VIRTUAL_AMOUNT * 10; // At least 10 times the virtual amount of
+        // shares should exist for gulp to be enabled
 
     uint256 public constant INTEREST_SMEAR = 2 weeks;
 
@@ -161,7 +162,8 @@ contract EulerSavingsRate is EVCUtil, ERC4626 {
     }
 
     /// @notice Withdraws a certain amount of assets to the vault.
-    /// @dev Overwritten to not call maxWithdraw which would return 0 if there is a controller set, update the accrued interest and update _totalAssets.
+    /// @dev Overwritten to not call maxWithdraw which would return 0 if there is a controller set, update the accrued
+    /// interest and update _totalAssets.
     /// @param assets The amount of assets to withdraw.
     /// @param receiver The recipient of the shares.
     /// @param owner The account from which the assets are withdrawn
@@ -189,7 +191,8 @@ contract EulerSavingsRate is EVCUtil, ERC4626 {
     }
 
     /// @notice Redeems a certain amount of shares for assets.
-    /// @dev Overwritten to not call maxRedeem which would return 0 if there is a controller set, update the accrued interest and update _totalAssets.
+    /// @dev Overwritten to not call maxRedeem which would return 0 if there is a controller set, update the accrued
+    /// interest and update _totalAssets.
     /// @param shares The amount of shares to redeem.
     /// @param receiver The recipient of the assets.
     /// @param owner The account from which the shares are redeemed.
