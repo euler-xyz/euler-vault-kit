@@ -19,10 +19,15 @@ contract IRMSynth is IIRM {
     uint216 public constant ADJUST_ONE = 1.0e18;
     uint216 public constant ADJUST_INTERVAL = 1 hours;
 
+    /// @notice The address of the synthetic asset.
     address public immutable synth;
+    /// @notice The address of the reference asset.
     address public immutable referenceAsset;
+    /// @notice The address of the oracle.
     IPriceOracle public immutable oracle;
+    /// @notice The target quote which the IRM will try to maintain.
     uint256 public immutable targetQuote;
+    /// @notice The amount of the quote asset to use for the quote.
     uint256 public immutable quoteAmount;
 
     struct IRMData {
@@ -55,6 +60,8 @@ contract IRMSynth is IIRM {
         irmStorage = IRMData({lastUpdated: uint40(block.timestamp), lastRate: BASE_RATE});
     }
 
+    /// @notice Computes the interest rate and updates the storage if necessary.
+    /// @return The interest rate.
     function computeInterestRate(address, uint256, uint256) external override returns (uint256) {
         IRMData memory irmCache = irmStorage;
         (uint216 rate, bool updated) = _computeRate(irmCache);
@@ -66,6 +73,8 @@ contract IRMSynth is IIRM {
         return rate;
     }
 
+    /// @notice Computes the interest rate without updating the storage.
+    /// @return The interest rate.
     function computeInterestRateView(address, uint256, uint256) external view override returns (uint256) {
         (uint216 rate,) = _computeRate(irmStorage);
         return rate;
@@ -102,6 +111,8 @@ contract IRMSynth is IIRM {
         return (rate, updated);
     }
 
+    /// @notice Retrieves the packed IRM data as a struct.
+    /// @return The IRM data.
     function getIRMData() external view returns (IRMData memory) {
         return irmStorage;
     }

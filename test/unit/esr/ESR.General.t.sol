@@ -188,4 +188,62 @@ contract ESRGeneralTest is ESRTest {
         uint256 maxRedeem = esr.maxRedeem(user);
         assertEq(maxRedeem, 0);
     }
+
+    // test withdraw with a controller set which status check succeeds
+    function test_withdrawWithControllerSetStatusCheckSucceeds() public {
+        uint256 depositAmount = 100e18;
+        doDeposit(user, depositAmount);
+
+        uint256 balanceUnderlyingBefore = asset.balanceOf(user);
+        vm.startPrank(user);
+        evc.enableController(address(user), address(statusCheck));
+        esr.withdraw(depositAmount, user, user);
+        vm.stopPrank();
+        uint256 balanceUnderlyingAfter = asset.balanceOf(user);
+
+        assertEq(balanceUnderlyingAfter, balanceUnderlyingBefore + depositAmount);
+    }
+
+    // test withdraw with a controller set which status check fails
+    function test_withdrawWithControllerSetStatusCheckFails() public {
+        uint256 depositAmount = 100e18;
+        doDeposit(user, depositAmount);
+
+        vm.startPrank(user);
+        evc.enableController(address(user), address(statusCheck));
+        statusCheck.setShouldFail(true);
+        vm.expectRevert("MockMinimalStatusCheck: account status check failed");
+        esr.withdraw(depositAmount, user, user);
+        vm.stopPrank();
+    }
+
+    // test redeem with a controller set which status check succeeds
+    function test_redeemWithControllerSetStatusCheckSucceeds() public {
+        uint256 depositAmount = 100e18;
+        doDeposit(user, depositAmount);
+
+        uint256 shares = esr.balanceOf(user);
+        uint256 balanceUnderlyingBefore = asset.balanceOf(user);
+        vm.startPrank(user);
+        evc.enableController(address(user), address(statusCheck));
+        esr.redeem(shares, user, user);
+        vm.stopPrank();
+        uint256 balanceUnderlyingAfter = asset.balanceOf(user);
+
+        assertEq(balanceUnderlyingAfter, balanceUnderlyingBefore + depositAmount);
+    }
+
+    // test redeem with a controller set which status check fails
+    function test_redeemWithControllerSetStatusCheckFails() public {
+        uint256 depositAmount = 100e18;
+        doDeposit(user, depositAmount);
+
+        uint256 shares = esr.balanceOf(user);
+        vm.startPrank(user);
+        evc.enableController(address(user), address(statusCheck));
+        statusCheck.setShouldFail(true);
+        vm.expectRevert("MockMinimalStatusCheck: account status check failed");
+        esr.redeem(shares, user, user);
+        vm.stopPrank();
+    }
 }
