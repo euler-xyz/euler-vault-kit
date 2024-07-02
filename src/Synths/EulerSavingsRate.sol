@@ -146,6 +146,7 @@ contract EulerSavingsRate is EVCUtil, ERC4626 {
     }
 
     /// @notice Deposits a certain amount of assets to the vault.
+    /// @dev Overwritten to not call maxWithdraw which would return 0 if there is a controller set, update the accrued interest and update _totalAssets.
     /// @param assets The amount of assets to deposit.
     /// @param receiver The recipient of the shares.
     /// @return The amount of shares minted.
@@ -158,10 +159,21 @@ contract EulerSavingsRate is EVCUtil, ERC4626 {
     {
         // Move interest to totalAssets
         updateInterestAndReturnESRSlotCache();
-        return super.withdraw(assets, receiver, owner);
+
+        uint256 maxAssets = _convertToAssets(balanceOf(owner), Math.Rounding.Floor);
+        if (maxAssets < assets) {
+            revert ERC4626ExceededMaxWithdraw(owner, assets, maxAssets);
+        }
+
+        uint256 shares = previewWithdraw(assets);
+        _withdraw(_msgSender(), receiver, owner, assets, shares);
+        _totalAssets = _totalAssets - assets;
+
+        return shares;
     }
 
     /// @notice Redeems a certain amount of shares for assets.
+    /// @dev Overwritten to not call maxRedeem which would return 0 if there is a controller set, update the accrued interest and update _totalAssets.
     /// @param shares The amount of shares to redeem.
     /// @param receiver The recipient of the assets.
     /// @return The amount of assets redeemed.
@@ -174,7 +186,17 @@ contract EulerSavingsRate is EVCUtil, ERC4626 {
     {
         // Move interest to totalAssets
         updateInterestAndReturnESRSlotCache();
-        return super.redeem(shares, receiver, owner);
+
+        uint256 maxShares = balanceOf(owner);
+        if (maxShares < shares) {
+            revert ERC4626ExceededMaxRedeem(owner, shares, maxShares);
+        }
+
+        uint256 assets = previewRedeem(shares);
+        _withdraw(_msgSender(), receiver, owner, assets, shares);
+        _totalAssets = _totalAssets - assets;
+
+        return assets;
     }
 
     function _convertToShares(uint256 assets, Math.Rounding rounding) internal view override returns (uint256) {
@@ -188,14 +210,6 @@ contract EulerSavingsRate is EVCUtil, ERC4626 {
     function _deposit(address caller, address receiver, uint256 assets, uint256 shares) internal override {
         _totalAssets = _totalAssets + assets;
         super._deposit(caller, receiver, assets, shares);
-    }
-
-    function _withdraw(address caller, address receiver, address owner, uint256 assets, uint256 shares)
-        internal
-        override
-    {
-        _totalAssets = _totalAssets - assets;
-        super._withdraw(caller, receiver, owner, assets, shares);
     }
 
     /// @notice Smears any donations to this vault as interest.
