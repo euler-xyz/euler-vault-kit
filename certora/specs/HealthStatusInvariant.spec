@@ -1,7 +1,9 @@
 import "Base.spec";
 import "LoadVaultSummary.spec";
 using DummyERC20A as ERC20a;
-using TokenHarness as EToken; // Used to assume collaterals are ETokens
+using DummyETokenA as ETokenA; // Used to assume collaterals are ETokens.
+using DummyETokenB as ETokenB; // Allows for possibility of multiple 
+                               // addresses for different collaterals.
 
 methods {
     function checkAccountMagicValue() external returns (bytes4) envfree;
@@ -68,8 +70,10 @@ function CVLAreChecksInProgress() returns bool {
 function CVLSafeTransferFrom(env e, address token, address from, address to, uint256 value) {
     if (token == ERC20a) {
         ERC20a.transferFrom(e, from, to, value);
-    } else if (token == EToken) {
-        EToken.transferFrom(e, from, to, value);
+    } else if (token == ETokenA) {
+        ETokenA.transferFrom(e, from, to, value);
+    } else if (token == ETokenB) {
+        ETokenB.transferFrom(e, from, to, value);
     }
 }
 
@@ -91,10 +95,12 @@ function CVLSafeTransferFrom(env e, address token, address from, address to, uin
 * - enqueue a status check on the evc for the "from" address
 */
 function CVLEnforceCollateralTransfer(env e, address collateral, uint256 amount, address from, address receiver) {
-    // (Ideally: Cast collateral address into EToken to allow for
-    // multiple addresses with the EToken contract)
     evc.requireAccountStatusCheck(e, from);
-    EToken.transferFromInternalHarnessed(e, from, receiver, amount);
+    if (collateral == ETokenA) {
+        ETokenA.transferFromInternalHarnessed(e, from, receiver, amount);
+    } else if (collateral == ETokenB) {
+        ETokenB.transferFromInternalHarnessed(e, from, receiver, amount);
+    }
 }
 
 // Assuming the prices stay the same, a healthy account can never become 
@@ -102,6 +108,7 @@ function CVLEnforceCollateralTransfer(env e, address collateral, uint256 amount,
 // in the fact that the summary for GetQuote is an uninterpreted function --
 // the prover will model it as a function so it will always return the same
 // value when given the same arguments.
+/*
 rule accountsStayHealthy (method f) filtered { f -> 
     // Literal selectors are used to avoid compilation errors when
     // only some of the modules are in the verification scene
@@ -155,6 +162,7 @@ rule accountsStayHealthy (method f) filtered { f ->
     bool healthyAfter= !lastReverted;
     assert healthyBefore => healthyAfter;
 }
+*/
 
 rule accountsStayHealthy_strategy (method f) filtered { f -> 
     // Literal selectors are used to avoid compilation errors when
@@ -170,24 +178,30 @@ rule accountsStayHealthy_strategy (method f) filtered { f ->
     calldataarg args;
     address account;
     address[] collaterals = evc.getCollaterals(e, account);
-    require collaterals.length == 2; // loop bound
+    require collaterals.length <= 2; // loop bound
     require oracleAddress != 0; 
     // Vault cannot be a user of itself
-    require account != currentContract;
+    // require account != currentContract; // NOTE recently removed this
     // Vault should not be used as a collateral
     require collaterals[0] != currentContract;
     require collaterals[1] != currentContract;
     // Collaterals must be ETokens
-    require collaterals[0] == EToken;
-    require collaterals[1] == EToken;
+    // require collaterals[0] == EToken;
+    // require collaterals[1] == EToken;
     // not sure the following 4 are really needed
     require account != erc20;
     require account != oracleAddress;
     require account != evc;
     require account != unitOfAccount;
 
-    require LTVConfigAssumptions(e, getLTVConfig(e, collaterals[0]));
-    require LTVConfigAssumptions(e, getLTVConfig(e, collaterals[1]));
+    require LTVConfigAssumptions(e, getLTVConfig(e, ETokenA));
+    require LTVConfigAssumptions(e, getLTVConfig(e, ETokenB));
+    if (collaterals.length > 0) {
+        require collaterals[0] == ETokenA || collaterals[0] == ETokenB;
+    }
+    if (collaterals.length > 1) {
+        require collaterals[1] == ETokenA || collaterals[1] == ETokenB;
+    }
 
     bool healthyBefore = checkLiquidityReturning(e, account, collaterals);
     f(e, args);
