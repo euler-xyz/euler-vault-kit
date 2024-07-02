@@ -146,13 +146,14 @@ contract ESynth is ERC20Collateral, Ownable {
     /// @notice Checks if an account is ignored for the total supply.
     /// @param account The account to check.
     /// @return isIgnored True if the account is ignored for the total supply. False otherwise.
-    function isIgnoredForTotalSupply(address account) public view returns (bool isIgnored) {
+    function isIgnoredForTotalSupply(address account) external view returns (bool isIgnored) {
+
         return ignoredForTotalSupply.contains(account);
     }
 
     /// @notice Retrieves all the accounts ignored for the total supply.
     /// @return accounts List of accounts ignored for the total supply.
-    function getAllIgnoredForTotalSupply() public view returns (address[] memory accounts) {
+    function getAllIgnoredForTotalSupply() external view returns (address[] memory accounts) {
         return ignoredForTotalSupply.values();
     }
 
