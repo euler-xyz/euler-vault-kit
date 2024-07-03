@@ -15,9 +15,9 @@ contract ESVaultTestBase is EVaultTestBase {
     function setUp() public virtual override {
         super.setUp();
 
-        assetTSTAsSynth = ESynth(address(new ESynth(evc, "Test Synth", "TST")));
+        assetTSTAsSynth = ESynth(address(new ESynth(address(evc), "Test Synth", "TST")));
         assetTST = TestERC20(address(assetTSTAsSynth));
-        assetTST2AsSynth = ESynth(address(new ESynth(evc, "Test Synth 2", "TST2")));
+        assetTST2AsSynth = ESynth(address(new ESynth(address(evc), "Test Synth 2", "TST2")));
         assetTST2 = TestERC20(address(assetTST2AsSynth));
 
         eTST = createSynthEVault(address(assetTST));

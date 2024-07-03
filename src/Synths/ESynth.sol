@@ -4,17 +4,15 @@ pragma solidity ^0.8.0;
 
 import {Ownable} from "openzeppelin-contracts/access/Ownable.sol";
 import {EnumerableSet} from "openzeppelin-contracts/utils/structs/EnumerableSet.sol";
-import {IEVC, EVCUtil} from "ethereum-vault-connector/utils/EVCUtil.sol";
-import {ERC20Collateral, ERC20, Context} from "./ERC20Collateral.sol";
+import {ERC20EVCCompatible, Context} from "./ERC20EVCCompatible.sol";
 import {IEVault} from "../EVault/IEVault.sol";
 
 /// @title ESynth
 /// @custom:security-contact security@euler.xyz
 /// @author Euler Labs (https://www.eulerlabs.com/)
-/// @notice ESynth is an ERC20-compatible token with the EVC support which, thanks to relying on the EVC authentication
-/// and requesting the account status checks on token transfers and burns, allows it to be used as collateral in other
-/// vault. It is meant to be used as an underlying asset of the synthetic asset vault.
-contract ESynth is ERC20Collateral, Ownable {
+/// @notice ESynth is an ERC20-compatible token with the EVC support. It is meant to be used as an underlying asset of
+/// the synthetic asset vault.
+contract ESynth is ERC20EVCCompatible, Ownable {
     using EnumerableSet for EnumerableSet.AddressSet;
 
     struct MinterData {
@@ -30,8 +28,8 @@ contract ESynth is ERC20Collateral, Ownable {
     error E_CapacityReached();
     error E_NotEVCCompatible();
 
-    constructor(IEVC evc_, string memory name_, string memory symbol_)
-        ERC20Collateral(evc_, name_, symbol_)
+    constructor(address evc_, string memory name_, string memory symbol_)
+        ERC20EVCCompatible(evc_, name_, symbol_)
         Ownable(msg.sender)
     {}
 
@@ -47,7 +45,7 @@ contract ESynth is ERC20Collateral, Ownable {
     /// @notice Mints a certain amount of tokens to the account.
     /// @param account The account to mint the tokens to.
     /// @param amount The amount of tokens to mint.
-    function mint(address account, uint256 amount) external nonReentrant {
+    function mint(address account, uint256 amount) external {
         address sender = _msgSender();
         MinterData memory minterCache = minters[sender];
 
@@ -73,7 +71,7 @@ contract ESynth is ERC20Collateral, Ownable {
     /// have an allowance for the sender.
     /// @param burnFrom The account to burn the tokens from.
     /// @param amount The amount of tokens to burn.
-    function burn(address burnFrom, uint256 amount) external nonReentrant {
+    function burn(address burnFrom, uint256 amount) external {
         address sender = _msgSender();
         MinterData memory minterCache = minters[sender];
 
@@ -122,8 +120,8 @@ contract ESynth is ERC20Collateral, Ownable {
     /// @dev This function returns the account on behalf of which the current operation is being performed, which is
     /// either msg.sender or the account authenticated by the EVC.
     /// @return The address of the message sender.
-    function _msgSender() internal view virtual override (ERC20Collateral, Context) returns (address) {
-        return ERC20Collateral._msgSender();
+    function _msgSender() internal view virtual override (ERC20EVCCompatible, Context) returns (address) {
+        return ERC20EVCCompatible._msgSender();
     }
 
     // -------- TotalSupply Management --------
