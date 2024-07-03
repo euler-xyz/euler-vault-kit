@@ -228,8 +228,8 @@ contract EulerSavingsRate is EVCUtil, ERC4626 {
     }
 
     function _deposit(address caller, address receiver, uint256 assets, uint256 shares) internal override {
-        _totalAssets = _totalAssets + assets;
         super._deposit(caller, receiver, assets, shares);
+        _totalAssets = _totalAssets + assets;
     }
 
     /// @notice Smears any donations to this vault as interest.
