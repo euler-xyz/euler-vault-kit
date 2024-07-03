@@ -27,7 +27,7 @@ contract EulerSavingsRate is EVCUtil, ERC4626 {
     /// @notice The virtual amount added to total shares and total assets.
     uint256 internal constant VIRTUAL_AMOUNT = 1e6;
     /// @notice At least 10 times the virtual amount of shares should exist for gulp to be enabled
-    uint256 internal constant MIN_SHARES_FOR_GULP = VIRTUAL_AMOUNT * 10; 
+    uint256 internal constant MIN_SHARES_FOR_GULP = VIRTUAL_AMOUNT * 10;
 
     uint256 public constant INTEREST_SMEAR = 2 weeks;
 
