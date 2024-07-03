@@ -179,8 +179,8 @@ contract VaultTest_Borrow is EVaultTestBase {
         vm.expectRevert(
             abi.encodeWithSelector(
                 SafeERC20Lib.E_TransferFromFailed.selector,
-                abi.encodeWithSignature("Error(string)", "ERC20: transfer amount exceeds allowance"),
-                abi.encodeWithSelector(IAllowanceTransfer.AllowanceExpired.selector, 0)
+                abi.encodeWithSelector(IAllowanceTransfer.AllowanceExpired.selector, 0),
+                abi.encodeWithSignature("Error(string)", "ERC20: transfer amount exceeds allowance")
             )
         );
         eTST.repay(type(uint256).max, borrower);
