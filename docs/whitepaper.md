@@ -689,7 +689,7 @@ Synthetic assets use a different interest rate model than the standard vaults. T
 
 1. If adjust interval did not pass, return previous rate
 1. If the synth trades below the target quote, raise the rate by 10% (proportional to the previous rate)
-1. If the synth is trading at the target quote or below, lower the rate by 10% (proportional to the previous rate)
+1. If the synth is trading at the target quote or greater, lower the rate by 10% (proportional to the previous rate)
 1. Enforce the minimum base rate
 1. Enforce the maximum rate
 1. Save the updated rate and when it last updated
