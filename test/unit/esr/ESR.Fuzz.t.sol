@@ -38,6 +38,7 @@ contract ESRFuzzTest is ESRTest {
 
     // this tests shows that when you have a very small deposit and a very large interestAmount minted to the contract
     function testFuzz_gulp_under_uint168(uint256 interestAmount, uint256 depositAmount) public {
+        uint256 MIN_SHARES_FOR_GULP = 10 * 1e6;
         depositAmount = bound(depositAmount, 0, type(uint112).max);
         interestAmount = bound(interestAmount, 0, type(uint256).max - depositAmount); // this makes sure that the mint
             // won't cause overflow
@@ -49,10 +50,14 @@ contract ESRFuzzTest is ESRTest {
 
         EulerSavingsRate.ESRSlot memory esrSlot = esr.updateInterestAndReturnESRSlotCache();
 
-        if (interestAmount <= type(uint168).max) {
-            assertEq(esrSlot.interestLeft, interestAmount);
+        if (depositAmount >= MIN_SHARES_FOR_GULP) {
+            if (interestAmount <= type(uint168).max) {
+                assertEq(esrSlot.interestLeft, interestAmount);
+            } else {
+                assertEq(esrSlot.interestLeft, type(uint168).max);
+            }
         } else {
-            assertEq(esrSlot.interestLeft, type(uint168).max);
+            assertEq(esrSlot.interestLeft, 0);
         }
     }
 
