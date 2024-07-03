@@ -780,7 +780,7 @@ Modules are static, meaning they cannot be upgraded. Code upgrades require deplo
 
 #### Delegatecall into view functions
 
-Solidity doesn't allow for view functions to invoke `delegatecall`. To be able to remove view functions from the dispatcher codebase and `delegatecall` them instead into the modules, the dispatching mechanism uses the `useView` modifier. This modifier makes the view function `staticcall` back into the dispatcher to a `viewDelegate` function which is `non-payable`. This `viewDelegate` function can now `delegatecall` into the implementation of the view function in the module.
+Solidity doesn't allow for view functions to invoke `delegatecall`. To be able to remove view functions from the dispatcher codebase and `delegatecall` them instead into the modules, the dispatching mechanism uses the `useView` modifier. This modifier makes the view function `staticcall` back into the dispatcher to a `viewDelegate` function which is `payable` (potentially state-modifying). This `viewDelegate` function can now `delegatecall` into the implementation of the view function in the module.
 
 To address this, a proposed patch to the Solidity compiler is available in [this solc issue](https://github.com/ethereum/solidity/issues/14577).
 
