@@ -151,7 +151,7 @@ rule liquidateAccountsStayHealthy_liquidator_no_debt_socialization {
     require collaterals.length <= 2; // loop bound
     require oracleAddress != 0; 
     // Vault cannot be a user of itself
-    // require account != currentContract;
+    require account != currentContract;
     // Vault should not be used as a collateral
     require collaterals[0] != currentContract;
     require collaterals[1] != currentContract;
@@ -165,10 +165,10 @@ rule liquidateAccountsStayHealthy_liquidator_no_debt_socialization {
     require LTVConfigAssumptions(e, getLTVConfig(e, ETokenB));
     // Collaterals must be ETokens
     if (collaterals.length > 0) {
-        require collaterals[0] == ETokenA || collaterals[0] == ETokenB;
+        require collaterals[0] == ETokenA;
     }
     if (collaterals.length > 1) {
-        require collaterals[1] == ETokenA || collaterals[1] == ETokenB;
+        require collaterals[1] == ETokenB;
     }
 
     address violator;
@@ -214,7 +214,7 @@ rule liquidateAccountsStayHealthy_liquidator_with_debt_socialization {
     require collaterals.length <= 2; // loop bound
     require oracleAddress != 0; 
     // Vault cannot be a user of itself
-    // require account != currentContract;
+    require account != currentContract;
     // Vault should not be used as a collateral
     require collaterals[0] != currentContract;
     require collaterals[1] != currentContract;
@@ -228,10 +228,10 @@ rule liquidateAccountsStayHealthy_liquidator_with_debt_socialization {
     require LTVConfigAssumptions(e, getLTVConfig(e, ETokenB));
     // Collaterals must be ETokens
     if (collaterals.length > 0) {
-        require collaterals[0] == ETokenA || collaterals[0] == ETokenB;
+        require collaterals[0] == ETokenA;
     }
     if (collaterals.length > 1) {
-        require collaterals[1] == ETokenA || collaterals[1] == ETokenB;
+        require collaterals[1] == ETokenB;
     }
 
     address violator;
@@ -277,7 +277,7 @@ rule liquidateAccountsStayHealthy_not_violator {
     require collaterals.length <= 2; // loop bound
     require oracleAddress != 0; 
     // Vault cannot be a user of itself
-    // require account != currentContract;
+    require account != currentContract;
     // Vault should not be used as a collateral
     require collaterals[0] != currentContract;
     require collaterals[1] != currentContract;
@@ -291,10 +291,10 @@ rule liquidateAccountsStayHealthy_not_violator {
     require LTVConfigAssumptions(e, getLTVConfig(e, ETokenB));
     // Collaterals must be ETokens
     if (collaterals.length > 0) {
-        require collaterals[0] == ETokenA || collaterals[0] == ETokenB;
+        require collaterals[0] == ETokenA;
     }
     if (collaterals.length > 1) {
-        require collaterals[1] == ETokenA || collaterals[1] == ETokenB;
+        require collaterals[1] == ETokenB;
     }
 
     address violator;
@@ -312,6 +312,68 @@ rule liquidateAccountsStayHealthy_not_violator {
     require account != violator;
     require liquidator != violator;
     require account != liquidator;
+
+    bool healthyBefore = checkLiquidityReturning(e, account, collaterals);
+    currentContract.liquidate(e, violator, collateral, repayAssets, minYieldBalance);
+    // The only way to call a vault funciton is through EVC's call, batch, 
+    // or permit. During all of these status checks are deferred and at the end
+    // these call restoreExecutionContext which triggers the deferred checks.
+    // Replace the real call path involving the EVC calling back into the
+    // vault with a direct call on checkAccountStatus from the vault.
+    // (For the not_violator / not liquidator case, we can also directly
+    // call evc.checkStatusAll rather than using these ghosts and
+    // the direct call on checkAccountStatus, but for the liquidator case
+    // this will drop performance enough to hit a timeout)
+
+    if(accountToCheckGhost != 0) {
+        currentContract.checkAccountStatus(e, accountToCheckGhost, collaterals);
+    }
+    if(collateralTransferCheckedAccount != 0) {
+        currentContract.checkAccountStatus(e, collateralTransferCheckedAccount, collaterals);
+    }
+
+    bool healthyAfter = checkLiquidityReturning(e, account, collaterals);
+    assert healthyBefore => healthyAfter; 
+}
+
+rule liquidateAccountsStayHealthy_account_cur_contract {
+    env e;
+    address account;
+    address[] collaterals = evc.getCollaterals(e, account);
+    require collaterals.length <= 2; // loop bound
+    require oracleAddress != 0; 
+    // Vault should not be used as a collateral
+    require collaterals[0] != currentContract;
+    require collaterals[1] != currentContract;
+    // not sure the following 4 are really needed
+    require account != erc20;
+    require account != oracleAddress;
+    require account != evc;
+    require account != unitOfAccount ;
+
+    require LTVConfigAssumptions(e, getLTVConfig(e, ETokenA));
+    require LTVConfigAssumptions(e, getLTVConfig(e, ETokenB));
+    // Collaterals must be ETokens
+    if (collaterals.length > 0) {
+        require collaterals[0] == ETokenA;
+    }
+    if (collaterals.length > 1) {
+        require collaterals[1] == ETokenB;
+    }
+
+    // vault is account of itself case 
+    require account == currentContract;
+
+    address violator;
+    address collateral;
+    uint256 repayAssets;
+    uint256 minYieldBalance;
+
+    address liquidator = actualCaller(e);
+
+    // initialize checked accounts to 0
+    require accountToCheckGhost == 0; // account checked in initialize
+    require collateralTransferCheckedAccount == 0;
 
     bool healthyBefore = checkLiquidityReturning(e, account, collaterals);
     currentContract.liquidate(e, violator, collateral, repayAssets, minYieldBalance);
