@@ -368,6 +368,8 @@ Using vaults with illiquid or manipulable underlying assets could threaten the s
 
 It is also critical to evaluate the smart contract code that implements each collateral vault. A badly coded or malicious vault could refuse to release funds in a liquidation event, or simply lie about the value of its holdings. For this reason it is recommended to only use vaults created by a known-good factory. A vault can be verified to have been created by a factory by calling the factory's `isProxy()` function.
 
+Care should also be taken when using collateral vaults with [hooks](#hooks) installed. Hooks can implement condition checks that (maliciously or not) could prevent liquidations from succeeding.
+
 When evaluating whether a new or customised vault implementation is trustworthy, all the usual checks should be performed, such as verifying the code was audited, does not contain backdoors, etc. In addition, it is very important to verify that the `transfer` method does not invoke any external contracts that could run attacker code. This is because the EVK implementation [forgives](https://evc.wtf/docs/whitepaper#forgiveness) the account status check of an account after liquidation, and a malicious user could perform actions that get unexpectedly forgiven.
 
 For this reason, an important property of liquidation is that assets without an LTV can never be seized by liquidation (users can install any vaults in their EVC collateral set, trusted or not).
