@@ -386,6 +386,8 @@ So, if a vault can no longer be collateral for economic/market reasons, its LTV 
 
 Although only vaults that were explicitly configured with an LTV can be used as collateral to support debt, when an account is not healthy the account's functionality will become limited. This includes failing withdrawals of non-collateral assets. Each account is considered a single position and when the position is unhealthy, the controller vault is considered within its rights to incentivize the user to repay their debt by any means. To fully segregate assets, use different sub-accounts to store deposits even when they aren't used as collateral.
 
+However, even when a user is in violation and access to non-collateral deposits are blocked, the EVC still prevents the controller vault from actually seizing those assets for liquidation. Even though technically possible, the EVK also does not attempt to seize a violator's shares in the liability vault itself (considering there is no reason to hold both shares and debt in the same vault).
+
 ### LTV Ramping
 
 The LTV for one or more collateral assets can be modified by the governor. If the LTV is suddenly reduced, any oustanding borrowers might instantly be put into violation. Because of the [reverse dutch auction liquidation](#liquidation) system, these borrowers might unfairly lose a significant amount of value due to this action.
