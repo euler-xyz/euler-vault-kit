@@ -699,7 +699,7 @@ Synthetic assets use a different interest rate model than the standard vaults. T
 
 `EulerSavingsRate` is a ERC-4626 compatible vault which allows users to deposit the underlying asset and receive interest in the form of the same underlying asset. On withdraw, redeem and transfers the accountStatus of the user is checked by calling the EVC, allowing it to be used as collateral by other vaults.
 
-Any address can transfer the underlying asset into the vault and call `gulp()` which will distribute it to share holders in the vault over a "smeared" two week period. Accrued interest is added to the `totalAssets` of the vault, adjusting the exchange rate accordingly. On deposit and redeem accrued interest is added to the `totalDeposited` variable which tracks all deposits in the vault in a donation attack resistent manner.
+Any address can transfer the underlying asset into the vault and call `gulp()` which will distribute it to share holders in the vault over a "smeared" two week period. Accrued interest is reflected in the `totalAssets()` of the vault, adjusting the exchange rate accordingly. On deposit and redeem accrued interest is added to the internal `_totalAssets` variable which tracks all deposits in the vault in a donation attack resistent manner.
 
 On `gulp` any interest which has not been distributed is smeared for an additional two weeks, in theory this means that interest could be smeared indefinitely by continiously calling `gulp`, in practice it is expected that the interest will keep accruing, negating any negative side effects which may come from the smearing mechanism.
 
