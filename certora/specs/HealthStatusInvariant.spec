@@ -108,62 +108,6 @@ function CVLEnforceCollateralTransfer(env e, address collateral, uint256 amount,
 // in the fact that the summary for GetQuote is an uninterpreted function --
 // the prover will model it as a function so it will always return the same
 // value when given the same arguments.
-/*
-rule accountsStayHealthy (method f) filtered { f -> 
-    // Literal selectors are used to avoid compilation errors when
-    // only some of the modules are in the verification scene
-    // sig:GovernanceModule.clearLTV(address).selector
-    f.selector != 0x8255d029 && 
-    // sig:GovernanceModule.setLTV(address,uint16,uint16,uint32).selector
-    f.selector != 0x4bca3d5b &&
-    // sig:InitializeModule.initialize(address).selector
-    f.selector != 0xc4d66de8 
-}{
-    env e;
-    calldataarg args;
-    address account;
-    address[] collaterals = evc.getCollaterals(e, account);
-    require collaterals.length == 2; // loop bound
-    require oracleAddress != 0;
-
-    // Vault cannot be a user of itself
-    require account != currentContract;
-    // Vault should not be used as a collateral
-    require collaterals[0] != currentContract;
-    require collaterals[1] != currentContract;
-    // Collaterals must be ETokens
-    require collaterals[0] == EToken;
-    require collaterals[1] == EToken;
-    // not sure the following 4 are really needed
-    require account != erc20;
-    require account != oracleAddress;
-    require account != evc;
-    require account != unitOfAccount;
-    
-    require LTVConfigAssumptions(e, getLTVConfig(e, collaterals[0]));
-    require LTVConfigAssumptions(e, getLTVConfig(e, collaterals[1]));
-
-    // Otherwise this can cause an unintersting divide by zero in OwedLib.getCurrentOwed (on the mulDiv)
-    require getUserInterestAccumulator(e, account) > 0;
-    require storage_interestAccumulator(e) == getUserInterestAccumulator(e, account);
-    // otherwise this can cause an uninteresting overflow in mulDiv
-    require storage_interestAccumulator(e) < max_uint112;
-
-    checkAccountStatus@withrevert(e, account, collaterals);
-    bool healthyBefore = !lastReverted;
-    f(e, args);
-    // The only way to call a vault funciton is through EVC's call, batch, 
-    // or permit. During all of these status checks are deferred and at the end
-    // these call restoreExecutionContext which triggers the deferred checks.
-    // This excplicit call to checkStatusAll is a way to get a setup that
-    // approximates the real situation.
-    evc.checkStatusAllExt(e);
-    checkAccountStatus@withrevert(e, account, collaterals);
-    bool healthyAfter= !lastReverted;
-    assert healthyBefore => healthyAfter;
-}
-*/
-
 rule accountsStayHealthy_strategy (method f) filtered { f -> 
     // Literal selectors are used to avoid compilation errors when
     // only some of the modules are in the verification scene
