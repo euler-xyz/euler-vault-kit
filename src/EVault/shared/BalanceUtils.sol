@@ -80,6 +80,10 @@ abstract contract BalanceUtils is Base {
             Shares newFromBalance = origFromBalance.subUnchecked(amount);
             user.setBalance(newFromBalance);
 
+            if (fromBalanceForwarderEnabled) {
+                balanceTracker.balanceTrackerHook(from, newFromBalance.toUint(), isControlCollateralInProgress());
+            }
+
             // update to
 
             user = vaultStorage.users[to];
@@ -89,11 +93,7 @@ abstract contract BalanceUtils is Base {
             Shares newToBalance = origToBalance + amount;
             user.setBalance(newToBalance);
 
-            if (fromBalanceForwarderEnabled) {
-                balanceTracker.balanceTrackerHook(from, newFromBalance.toUint(), isControlCollateralInProgress());
-            }
-
-            if (toBalanceForwarderEnabled && from != to) {
+            if (toBalanceForwarderEnabled) {
                 balanceTracker.balanceTrackerHook(to, newToBalance.toUint(), false);
             }
         }
