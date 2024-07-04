@@ -12,9 +12,13 @@ methods {
     // by the EVC before which this flag will be set.
     function EVCHarness.areChecksInProgress() external returns bool => CVLAreChecksInProgress();
     // unresolved calls that havoc all contracts
-    function _.isHookTarget() external => NONDET; // pure
+    // pure, so NONDET is safe
+    function _.isHookTarget() external => NONDET; 
     // calls external contract. Here we assume invokeHookTarget does
-    // not affect the vault's internal state especially user balances
+    // not affect the vault's internal state especially user balances.
+    // This is a pretty safe assumption because it is not the EVC and
+    // access controls in the vault will not allow non-EVC calls to succeed.
+    // there is also the nonreentrant modifier in most places.
     function _.invokeHookTarget(address caller) internal => NONDET; 
     // The following two are both related to balanceTrackerHook in the
     // RewardStreams repository. The implementation of BalanceTrackerHook
@@ -33,7 +37,10 @@ methods {
     // affects this return value)
     function _.computeInterestRate(address vault, uint256 cash, uint256 borrows) external => NONDET;
     // onFlashLoan is from an external contract. Here we assume this function 
-    // does not affect the vault's internal state especially user balances
+    // does not affect the vault's internal state especially user balances.
+    // This is a pretty safe assumption because it is not the EVC and
+    // access controls in the vault will not allow non-EVC calls to succeed.
+    // there is also the nonreentrant modifier in most places.
     function _.onFlashLoan(bytes data) external => NONDET;
 
     // EVC
