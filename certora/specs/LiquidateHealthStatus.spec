@@ -1,7 +1,9 @@
 import "Base.spec";
 import "LoadVaultSummary.spec";
 using DummyERC20A as ERC20a;
-using TokenHarness as EToken; // Used to assume collaterals are ETokens
+using DummyETokenA as ETokenA; // Used to assume collaterals are ETokens.
+using DummyETokenB as ETokenB; // Allows for possibility of multiple 
+                               // addresses for different collaterals.
 
 methods {
     function checkAccountMagicValue() external returns (bytes4) envfree;
@@ -18,7 +20,6 @@ methods {
     function EVCHarness.disableController(address account) external => NONDET;
     function _.computeInterestRate(address vault, uint256 cash, uint256 borrows) external => NONDET;
     function _.onFlashLoan(bytes data) external => NONDET;
-    // function _.computeInterestRate(BaseHarness.VaultCache memory vaultCache) internal => NONDET;
 
     // Harness
     function LiquidationHSHarness.hasDebtSocialization() external returns (bool) envfree;
@@ -86,8 +87,10 @@ function CVLAreChecksInProgress() returns bool {
 function CVLSafeTransferFrom(env e, address token, address from, address to, uint256 value) {
     if (token == ERC20a) {
         ERC20a.transferFrom(e, from, to, value);
-    } else if (token == EToken) {
-        EToken.transferFrom(e, from, to, value);
+    } else if (token == ETokenA) {
+        ETokenA.transferFrom(e, from, to, value);
+    } else if (token == ETokenB) {
+        ETokenB.transferFrom(e, from, to, value);
     }
 }
 
@@ -114,7 +117,11 @@ persistent ghost address collateralTransferCheckedAccount;
 function CVLEnforceCollateralTransfer(env e, address collateral, uint256 amount, address from, address receiver) {
     // evc.requireAccountStatusCheck(e, from);
     collateralTransferCheckedAccount = from;
-    EToken.transferFromInternalHarnessed(e, from, receiver, amount);
+    if (collateral == ETokenA) {
+        ETokenA.transferFromInternalHarnessed(e, from, receiver, amount);
+    } else if (collateral == ETokenB) {
+        ETokenB.transferFromInternalHarnessed(e, from, receiver, amount);
+    }
 }
 
 //-----------------------------------------------------------------------------
@@ -141,24 +148,28 @@ rule liquidateAccountsStayHealthy_liquidator_no_debt_socialization {
     env e;
     address account;
     address[] collaterals = evc.getCollaterals(e, account);
-    require collaterals.length == 2; // loop bound
+    require collaterals.length <= 2; // loop bound
     require oracleAddress != 0; 
     // Vault cannot be a user of itself
-    require account != currentContract;
+    // require account != currentContract;
     // Vault should not be used as a collateral
     require collaterals[0] != currentContract;
     require collaterals[1] != currentContract;
-    // Collaterals must be ETokens
-    require collaterals[0] == EToken;
-    require collaterals[1] == EToken;
     // not sure the following 4 are really needed
     require account != erc20;
     require account != oracleAddress;
     require account != evc;
     require account != unitOfAccount;
 
-    require LTVConfigAssumptions(e, getLTVConfig(e, collaterals[0]));
-    require LTVConfigAssumptions(e, getLTVConfig(e, collaterals[1]));
+    require LTVConfigAssumptions(e, getLTVConfig(e, ETokenA));
+    require LTVConfigAssumptions(e, getLTVConfig(e, ETokenB));
+    // Collaterals must be ETokens
+    if (collaterals.length > 0) {
+        require collaterals[0] == ETokenA || collaterals[0] == ETokenB;
+    }
+    if (collaterals.length > 1) {
+        require collaterals[1] == ETokenA || collaterals[1] == ETokenB;
+    }
 
     address violator;
     address collateral;
@@ -173,7 +184,7 @@ rule liquidateAccountsStayHealthy_liquidator_no_debt_socialization {
     require collateralTransferCheckedAccount == 0;
 
     // account eq liquidator case
-    require collateral == collaterals[0] || collateral == collaterals[1];
+    require collateral == ETokenA || collateral == ETokenB;
     address liquidator = actualCaller(e);
     require account == liquidator;
     require violator != liquidator;
@@ -200,24 +211,28 @@ rule liquidateAccountsStayHealthy_liquidator_with_debt_socialization {
     env e;
     address account;
     address[] collaterals = evc.getCollaterals(e, account);
-    require collaterals.length == 2; // loop bound
+    require collaterals.length <= 2; // loop bound
     require oracleAddress != 0; 
     // Vault cannot be a user of itself
-    require account != currentContract;
+    // require account != currentContract;
     // Vault should not be used as a collateral
     require collaterals[0] != currentContract;
     require collaterals[1] != currentContract;
-    // Collaterals must be ETokens
-    require collaterals[0] == EToken;
-    require collaterals[1] == EToken;
     // not sure the following 4 are really needed
     require account != erc20;
     require account != oracleAddress;
     require account != evc;
     require account != unitOfAccount;
 
-    require LTVConfigAssumptions(e, getLTVConfig(e, collaterals[0]));
-    require LTVConfigAssumptions(e, getLTVConfig(e, collaterals[1]));
+    require LTVConfigAssumptions(e, getLTVConfig(e, ETokenA));
+    require LTVConfigAssumptions(e, getLTVConfig(e, ETokenB));
+    // Collaterals must be ETokens
+    if (collaterals.length > 0) {
+        require collaterals[0] == ETokenA || collaterals[0] == ETokenB;
+    }
+    if (collaterals.length > 1) {
+        require collaterals[1] == ETokenA || collaterals[1] == ETokenB;
+    }
 
     address violator;
     address collateral;
@@ -259,24 +274,28 @@ rule liquidateAccountsStayHealthy_not_violator {
     env e;
     address account;
     address[] collaterals = evc.getCollaterals(e, account);
-    require collaterals.length == 2; // loop bound
+    require collaterals.length <= 2; // loop bound
     require oracleAddress != 0; 
     // Vault cannot be a user of itself
-    require account != currentContract;
+    // require account != currentContract;
     // Vault should not be used as a collateral
     require collaterals[0] != currentContract;
     require collaterals[1] != currentContract;
-    // Collaterals must be ETokens
-    require collaterals[0] == EToken;
-    require collaterals[1] == EToken;
     // not sure the following 4 are really needed
     require account != erc20;
     require account != oracleAddress;
     require account != evc;
     require account != unitOfAccount ;
 
-    require LTVConfigAssumptions(e, getLTVConfig(e, collaterals[0]));
-    require LTVConfigAssumptions(e, getLTVConfig(e, collaterals[1]));
+    require LTVConfigAssumptions(e, getLTVConfig(e, ETokenA));
+    require LTVConfigAssumptions(e, getLTVConfig(e, ETokenB));
+    // Collaterals must be ETokens
+    if (collaterals.length > 0) {
+        require collaterals[0] == ETokenA || collaterals[0] == ETokenB;
+    }
+    if (collaterals.length > 1) {
+        require collaterals[1] == ETokenA || collaterals[1] == ETokenB;
+    }
 
     address violator;
     address collateral;
