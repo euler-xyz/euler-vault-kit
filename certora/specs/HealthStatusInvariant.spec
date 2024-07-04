@@ -12,13 +12,28 @@ methods {
     // by the EVC before which this flag will be set.
     function EVCHarness.areChecksInProgress() external returns bool => CVLAreChecksInProgress();
     // unresolved calls that havoc all contracts
-    function _.isHookTarget() external => NONDET;
-    function _.invokeHookTarget(address caller) internal => NONDET;
+    function _.isHookTarget() external => NONDET; // pure
+    // calls external contract. Here we assume invokeHookTarget does
+    // not affect the vault's internal state especially user balances
+    function _.invokeHookTarget(address caller) internal => NONDET; 
+    // The following two are both related to balanceTrackerHook in the
+    // RewardStreams repository. The implementation of BalanceTrackerHook
+    // there does not affect the state of the vault contracts
+    // https://github.com/euler-xyz/reward-streams/blob/master/src/TrackingRewardStreams.sol#L31-L62
     function _.tryBalanceTrackerHook(address account, uint256 newAccountBalance, bool forfeitRecentReward) internal => NONDET;
     function _.balanceTrackerHook(address account, uint256 newAccountBalance, bool forfeitRecentReward) external => NONDET;
-    function _.emitTransfer(address from, address to, uint256 value) external => NONDET;
-    function EVCHarness.disableController(address account) external => NONDET;
+    // just emits en event so NONDET is safe
+    function _.emitTransfer(address from, address to, uint256 value) external => NONDET; 
+    // has an actual affect -- disables a controller, but this is only called by RiskManager.disableController which reverts unless the controller abalance is 0. So I think this nondet is safe.
+    function EVCHarness.disableController(address account) external => NONDET; 
+    // computeInterestRate is not strictly pure -- the implementations of 
+    // this function seem to keep state to calculate the future interest rate
+    // but modeling this as returning an arbitrary should be OK. (There is
+    // technically a side effect of storing state but that state only
+    // affects this return value)
     function _.computeInterestRate(address vault, uint256 cash, uint256 borrows) external => NONDET;
+    // onFlashLoan is from an external contract. Here we assume this function 
+    // does not affect the vault's internal state especially user balances
     function _.onFlashLoan(bytes data) external => NONDET;
 
     // EVC
