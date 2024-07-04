@@ -674,7 +674,11 @@ The owner can deallocate synthetic assets from the vault by calling `deallocate(
 
 #### Total Supply adjustments
 
-Since protocol deposits into synthetic vaults are not backed by any collateral and are not in circulation, they are excluded from the totalSupply calculation. After calling `allocate()`, target vaults are automatically excluded. Additional addresses whose balances should be ignored can be managed by the owner by calling `addIgnoredForTotalSupply(address account)` and `removeIgnoredForTotalSupply(address account)`.
+Since protocol deposits into synthetic vaults are not in circulation, they are excluded from the totalSupply calculation. After calling `allocate()`, target vaults are automatically excluded. Additional addresses whose balances should be ignored can be managed by the owner by calling `addIgnoredForTotalSupply(address account)` and `removeIgnoredForTotalSupply(address account)`. 
+
+Since accrued interest is held by the vault, and therefore not directly in circulation, it is also excluded from the totalSupply calculation. If users accidentally transfer their synth tokens to an ignored contract they will also be considered out of circulation. For example, accidentally transferring synths to a synth vault would effectively burn them (as with transferring to any unprepared address), and remove them from totalSupply.
+
+Note that while performing a flash loan from a synth vault (or indeed a regular borrow), the totalSupply will reflect that the borrowed amount has in fact entered circulation for the duration of the loan. This can be considered a "flash mint" of the synth.
 
 ### `IRMSynth`
 
