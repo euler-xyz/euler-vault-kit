@@ -116,7 +116,13 @@ rule accountsStayHealthy_strategy (method f) filtered { f ->
     // sig:GovernanceModule.setLTV(address,uint16,uint16,uint32).selector
     f.selector != 0x4bca3d5b &&
     // sig:InitializeModule.initialize(address).selector
-    f.selector != 0xc4d66de8
+    f.selector != 0xc4d66de8 &&
+    // // Added temporarily to improve performance of Vault runs for methods other
+    // // than these
+    // // redeem
+    // f.selector != 0xba087652 &&
+    // // withdraw
+    // f.selector != 0xb460af94
 }{
     env e;
     calldataarg args;
