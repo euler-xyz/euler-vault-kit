@@ -14,19 +14,18 @@ contract ESRFuzzTest is ESRTest {
 
     //totalAssets should be equal to the balance after SMEAR has passed
     function invariant_totalAssetsShouldBeEqualToBalanceAfterSMEAR() public {
+        if (asset.totalSupply() > type(uint248).max) return;
+        if (asset.balanceOf(address(esr)) == 0 || asset.balanceOf(address(esr)) > type(uint168).max - 1e7) return;
+
+        // min deposit requirement before gulp
+        doDeposit(user, 1e7);
+
         uint256 balance = asset.balanceOf(address(esr));
-        uint256 totalAssets = esr.totalAssets();
-        uint256 toGulp = balance - totalAssets;
-        if (balance > 0 && balance <= type(uint168).max) return;
 
         esr.gulp();
         skip(esr.INTEREST_SMEAR()); // make sure smear has passed
 
-        if (toGulp >= esr.INTEREST_SMEAR()) {
-            assertEq(totalAssets, balance);
-        } else {
-            assertEq(totalAssets + toGulp, balance);
-        }
+        assertEq(esr.totalAssets(), balance);
     }
 
     function testFuzz_interestAccrued_under_uint168(uint256 interestAmount, uint256 depositAmount, uint256 timePassed)
@@ -67,6 +66,25 @@ contract ESRFuzzTest is ESRTest {
         } else {
             assertEq(esrSlot.interestLeft, 0);
         }
+    }
+
+    function testFuzz_conditionalAccruedInterestUpdate(uint256 interestAmount) public {
+        interestAmount = bound(interestAmount, 0, esr.INTEREST_SMEAR() - 1);
+
+        // min deposit requirement before gulp
+        doDeposit(user, 1e7);
+
+        // mint some interest to be distributed
+        asset.mint(address(esr), interestAmount);
+
+        uint256 balance = asset.balanceOf(address(esr));
+        uint256 totalAssets = esr.totalAssets();
+
+        esr.gulp();
+        skip(1);
+
+        assertEq(esr.totalAssets(), totalAssets);
+        assertEq(esr.totalAssets() + interestAmount, balance);
     }
 
     // fuzz test that any deposits added are added to the totalAssetsDeposited
