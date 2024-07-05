@@ -14,11 +14,18 @@ contract ESRFuzzTest is ESRTest {
 
     //totalAssets should be equal to the balance after SMEAR has passed
     function invariant_totalAssetsShouldBeEqualToBalanceAfterSMEAR() public {
-        vm.assume(asset.balanceOf(address(esr)) <= type(uint168).max);
-        if (asset.balanceOf(address(esr)) == 0) return;
+        if (asset.totalSupply() > type(uint248).max) return;
+        if (asset.balanceOf(address(esr)) == 0 || asset.balanceOf(address(esr)) > type(uint168).max - 1e7) return;
+
+        // min deposit requirement before gulp
+        doDeposit(user, 1e7);
+
+        uint256 balance = asset.balanceOf(address(esr));
+
         esr.gulp();
         skip(esr.INTEREST_SMEAR()); // make sure smear has passed
-        assertEq(esr.totalAssets(), asset.balanceOf(address(esr)));
+
+        assertEq(esr.totalAssets(), balance);
     }
 
     function testFuzz_interestAccrued_under_uint168(uint256 interestAmount, uint256 depositAmount, uint256 timePassed)

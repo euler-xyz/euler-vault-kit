@@ -12,10 +12,8 @@ import {EVCUtil} from "ethereum-vault-connector/utils/EVCUtil.sol";
 /// @title EulerSavingsRate
 /// @custom:security-contact security@euler.xyz
 /// @author Euler Labs (https://www.eulerlabs.com/)
-/// @notice EulerSavingsRate is a ERC4626-compatible vault which allows users to deposit the underlying asset and
-/// receive interest in the form of the same underlying asset. On withdraw, redeem and transfers, the account status
-/// checks must be requested for the account which health might be negatively affected. Thanks to that, the shares of
-/// the EulerSavingsRate vault might be used as collateral by other EVC-compatible vaults.
+/// @notice EulerSavingsRate is a ERC4626-compatible vault with the EVC support which allows users to deposit the
+/// underlying asset and receive interest in the form of the same underlying asset.
 /// @dev Do NOT use with fee on transfer tokens
 /// @dev Do NOT use with rebasing tokens
 contract EulerSavingsRate is EVCUtil, ERC4626 {
@@ -48,14 +46,6 @@ contract EulerSavingsRate is EVCUtil, ERC4626 {
     event Gulped(uint256 gulped, uint256 interestLeft);
     event InterestUpdated(uint256 interestAccrued, uint256 interestLeft);
 
-    /// @notice Modifier to require an account status check on the EVC.
-    /// @dev Calls `requireAccountStatusCheck` function from EVC for the specified account after the function body.
-    /// @param account The address of the account to check.
-    modifier requireAccountStatusCheck(address account) {
-        _;
-        evc.requireAccountStatusCheck(account);
-    }
-
     modifier nonReentrant() {
         if (esrSlot.locked == LOCKED) revert Reentrancy();
 
@@ -78,73 +68,6 @@ contract EulerSavingsRate is EVCUtil, ERC4626 {
         return _totalAssets + interestAccrued();
     }
 
-    /// @notice Returns the maximum amount of shares that can be redeemed by the specified address.
-    /// @dev If the account has a controller set it's possible the withdrawal will be reverted by the controller, thus
-    /// we return 0.
-    /// @param owner The account owner.
-    /// @return The maximum amount of shares that can be redeemed.
-    function maxRedeem(address owner) public view override returns (uint256) {
-        // If account has borrows, withdrawal might be reverted by the controller during account status checks.
-        // The vault has no way to verify or enforce the behaviour of the controller, which the account owner
-        // has enabled. It will therefore assume that all of the assets would be witheld by the controller and
-        // under-estimate the return amount to zero.
-        // Integrators who handle borrowing should implement custom logic to work with the particular controllers
-        // they want to support.
-        if (evc.getControllers(owner).length > 0) {
-            return 0;
-        }
-
-        return super.maxRedeem(owner);
-    }
-
-    /// @notice Returns the maximum amount of assets that can be withdrawn by the specified address.
-    /// @dev If the account has a controller set it's possible the withdrawal will be reverted by the controller, thus
-    /// we return 0.
-    /// @param owner The account owner.
-    /// @return The maximum amount of assets that can be withdrawn.
-    function maxWithdraw(address owner) public view override returns (uint256) {
-        // If account has borrows, withdrawal might be reverted by the controller during account status checks.
-        // The vault has no way to verify or enforce the behaviour of the controller, which the account owner
-        // has enabled. It will therefore assume that all of the assets would be witheld by the controller and
-        // under-estimate the return amount to zero.
-        // Integrators who handle borrowing should implement custom logic to work with the particular controllers
-        // they want to support.
-        if (evc.getControllers(owner).length > 0) {
-            return 0;
-        }
-
-        return super.maxWithdraw(owner);
-    }
-
-    /// @notice Transfers a certain amount of tokens to a recipient.
-    /// @param to The recipient of the transfer.
-    /// @param amount The amount shares to transfer.
-    /// @return A boolean indicating whether the transfer was successful.
-    function transfer(address to, uint256 amount)
-        public
-        override (ERC20, IERC20)
-        nonReentrant
-        requireAccountStatusCheck(_msgSender())
-        returns (bool)
-    {
-        return super.transfer(to, amount);
-    }
-
-    /// @notice Transfers a certain amount of tokens from a sender to a recipient.
-    /// @param from The sender of the transfer.
-    /// @param to The recipient of the transfer.
-    /// @param amount The amount of shares to transfer.
-    /// @return A boolean indicating whether the transfer was successful.
-    function transferFrom(address from, address to, uint256 amount)
-        public
-        override (ERC20, IERC20)
-        nonReentrant
-        requireAccountStatusCheck(from)
-        returns (bool)
-    {
-        return super.transferFrom(from, to, amount);
-    }
-
     /// @notice Deposits a certain amount of assets to the vault.
     /// @param assets The amount of assets to deposit.
     /// @param receiver The recipient of the shares.
@@ -162,61 +85,27 @@ contract EulerSavingsRate is EVCUtil, ERC4626 {
     }
 
     /// @notice Withdraws a certain amount of assets to the vault.
-    /// @dev Overwritten to not call maxWithdraw which would return 0 if there is a controller set, update the accrued
-    /// interest and update _totalAssets.
+    /// @dev Overwritten to update the accrued interest and update _totalAssets.
     /// @param assets The amount of assets to withdraw.
     /// @param receiver The recipient of the shares.
     /// @param owner The account from which the assets are withdrawn
     /// @return The amount of shares minted.
-    function withdraw(uint256 assets, address receiver, address owner)
-        public
-        override
-        nonReentrant
-        requireAccountStatusCheck(owner)
-        returns (uint256)
-    {
+    function withdraw(uint256 assets, address receiver, address owner) public override nonReentrant returns (uint256) {
         // Move interest to totalAssets
         updateInterestAndReturnESRSlotCache();
-
-        uint256 maxAssets = _convertToAssets(balanceOf(owner), Math.Rounding.Floor);
-        if (maxAssets < assets) {
-            revert ERC4626ExceededMaxWithdraw(owner, assets, maxAssets);
-        }
-
-        uint256 shares = previewWithdraw(assets);
-        _withdraw(_msgSender(), receiver, owner, assets, shares);
-        _totalAssets = _totalAssets - assets;
-
-        return shares;
+        return super.withdraw(assets, receiver, owner);
     }
 
     /// @notice Redeems a certain amount of shares for assets.
-    /// @dev Overwritten to not call maxRedeem which would return 0 if there is a controller set, update the accrued
-    /// interest and update _totalAssets.
+    /// @dev Overwritten to update the accrued interest and update _totalAssets.
     /// @param shares The amount of shares to redeem.
     /// @param receiver The recipient of the assets.
     /// @param owner The account from which the shares are redeemed.
     /// @return The amount of assets redeemed.
-    function redeem(uint256 shares, address receiver, address owner)
-        public
-        override
-        nonReentrant
-        requireAccountStatusCheck(owner)
-        returns (uint256)
-    {
+    function redeem(uint256 shares, address receiver, address owner) public override nonReentrant returns (uint256) {
         // Move interest to totalAssets
         updateInterestAndReturnESRSlotCache();
-
-        uint256 maxShares = balanceOf(owner);
-        if (maxShares < shares) {
-            revert ERC4626ExceededMaxRedeem(owner, shares, maxShares);
-        }
-
-        uint256 assets = previewRedeem(shares);
-        _withdraw(_msgSender(), receiver, owner, assets, shares);
-        _totalAssets = _totalAssets - assets;
-
-        return assets;
+        return super.redeem(shares, receiver, owner);
     }
 
     function _convertToShares(uint256 assets, Math.Rounding rounding) internal view override returns (uint256) {
@@ -230,6 +119,14 @@ contract EulerSavingsRate is EVCUtil, ERC4626 {
     function _deposit(address caller, address receiver, uint256 assets, uint256 shares) internal override {
         super._deposit(caller, receiver, assets, shares);
         _totalAssets = _totalAssets + assets;
+    }
+
+    function _withdraw(address caller, address receiver, address owner, uint256 assets, uint256 shares)
+        internal
+        override
+    {
+        super._withdraw(caller, receiver, owner, assets, shares);
+        _totalAssets = _totalAssets - assets;
     }
 
     /// @notice Smears any donations to this vault as interest.
