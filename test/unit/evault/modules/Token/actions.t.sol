@@ -305,9 +305,10 @@ contract ERC20Test_Actions is EVaultTestBase {
     }
 
     function test_Approve_RevertsWhen_SelfApproval(uint256 allowance) public {
-        vm.expectRevert(Errors.E_SelfApproval.selector);
         vm.prank(alice);
         eTST.approve(alice, allowance);
+        // no-op
+        assertEq(eTST.allowance(alice, alice), 0);
     }
 
     function test_Approve_RevertsWhen_EVCOnBehalfOfAccountNotAuthenticated(uint256 allowance) public {
@@ -323,8 +324,7 @@ contract ERC20Test_Actions is EVaultTestBase {
         assertEq(eTST.allowance(alice, alice), 0);
 
         startHoax(alice);
-        // revert on self-approve of eVault
-        vm.expectRevert(Errors.E_SelfApproval.selector);
+        // no-op
         eTST.approve(alice, 10);
 
         assertEq(eTST.allowance(alice, alice), 0);
@@ -337,8 +337,7 @@ contract ERC20Test_Actions is EVaultTestBase {
         assertEq(eTST.allowance(alice, alice), 0);
 
         startHoax(alice);
-        // revert on self-approve of eVault
-        vm.expectRevert(Errors.E_SelfApproval.selector);
+        // no-op
         eTST.approve(alice, 0);
 
         assertEq(eTST.allowance(alice, alice), 0);
@@ -351,8 +350,7 @@ contract ERC20Test_Actions is EVaultTestBase {
         assertEq(eTST.allowance(alice, alice), 0);
 
         startHoax(alice);
-        // revert on self-approve of eVault
-        vm.expectRevert(Errors.E_SelfApproval.selector);
+        // no-op
         eTST.approve(alice, type(uint256).max);
 
         assertEq(eTST.allowance(alice, alice), 0);

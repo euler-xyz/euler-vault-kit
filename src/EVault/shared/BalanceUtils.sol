@@ -104,7 +104,7 @@ abstract contract BalanceUtils is Base {
     // Allowance
 
     function setAllowance(address owner, address spender, uint256 amount) internal {
-        if (spender == owner) revert E_SelfApproval();
+        if (spender == owner) return;
 
         vaultStorage.users[owner].eTokenAllowance[spender] = amount;
         emit Approval(owner, spender, amount);
