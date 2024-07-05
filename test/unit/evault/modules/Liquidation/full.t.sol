@@ -820,6 +820,57 @@ contract VaultLiquidation_Test is EVaultTestBase {
         assertEq(eTST.totalBorrows(), 0);
     }
 
+    function test_zeroLiabilityWorth() public {
+        // set up liquidator to support the debt
+        startHoax(lender);
+        evc.enableController(lender, address(eTST));
+        evc.enableCollateral(lender, address(eTST3));
+        evc.enableCollateral(lender, address(eTST2));
+
+        startHoax(borrower);
+        evc.enableCollateral(borrower, address(eTST3));
+        evc.enableController(borrower, address(eTST));
+        eTST.borrow(5e18, borrower);
+
+        startHoax(address(this));
+        eTST.setLTV(address(eTST3), 0.95e4, 0.95e4, 0);
+
+        // liability is worthless now (could be a result of rounding down in real scenario)
+        oracle.setPrice(address(assetTST), unitOfAccount, 0);
+
+        (uint256 collateralValue, uint256 liabilityValue) = eTST.accountLiquidity(borrower, false);
+        assertEq(liabilityValue, 0);
+        assertGt(collateralValue, 0);
+
+        (uint256 maxRepay, uint256 maxYield) = eTST.checkLiquidation(lender, borrower, address(eTST2));
+        assertEq(maxRepay, 0);
+        assertEq(maxYield, 0);
+
+        // now collateral is worthless
+        oracle.setPrice(address(assetTST2), unitOfAccount, 0);
+
+        (collateralValue, liabilityValue) = eTST.accountLiquidity(borrower, false);
+        // both values zero now
+        assertEq(liabilityValue, 0);
+        assertEq(collateralValue, 0);
+
+        (maxRepay, maxYield) = eTST.checkLiquidation(lender, borrower, address(eTST2));
+        assertEq(maxRepay, 0);
+        assertEq(maxYield, 0);
+
+        uint256 debtBefore = eTST.debtOf(borrower);
+        uint256 balanceBefore = eTST2.balanceOf(borrower);
+
+        // liquidation is a no-op
+        startHoax(lender);
+        vm.expectEmit();
+        emit Events.Liquidate(lender, borrower, address(eTST2), 0, 0);
+        eTST.liquidate(borrower, address(eTST2), type(uint256).max, 0);
+
+        assertEq(eTST.debtOf(borrower), debtBefore);
+        assertEq(eTST2.balanceOf(borrower), balanceBefore);
+    }
+
     function test_zeroLTVCollateral() public {
         // set up liquidator to support the debt
         startHoax(lender);

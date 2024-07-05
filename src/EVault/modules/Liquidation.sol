@@ -122,7 +122,9 @@ abstract contract LiquidationModule is ILiquidation, BalanceUtils, LiquidityUtil
             calculateLiquidity(vaultCache, liqCache.violator, liqCache.collaterals, true);
 
         // no violation
-        if (collateralAdjustedValue > liabilityValue) return liqCache;
+        if (collateralAdjustedValue > liabilityValue || liabilityValue == 0) {
+            return liqCache;
+        }
 
         // Compute discount
 
