@@ -68,9 +68,7 @@ contract ESRFuzzTest is ESRTest {
         }
     }
 
-    function testFuzz_conditionalAccruedInterestUpdate(uint256 interestAmount) public {
-        interestAmount = bound(interestAmount, 0, esr.INTEREST_SMEAR() - 1);
-
+    function testFuzz_conditionalAccruedInterestUpdate(uint32 interestAmount) public {
         // min deposit requirement before gulp
         doDeposit(user, 1e7);
 
@@ -83,8 +81,27 @@ contract ESRFuzzTest is ESRTest {
         esr.gulp();
         skip(1);
 
-        assertEq(esr.totalAssets(), totalAssets);
-        assertEq(esr.totalAssets() + interestAmount, balance);
+        if (interestAmount < esr.INTEREST_SMEAR()) {
+            assertEq(esr.totalAssets(), totalAssets);
+            assertEq(esr.totalAssets() + interestAmount, balance);
+        } else {
+            uint256 accruedInterest = interestAmount / esr.INTEREST_SMEAR();
+            assertEq(esr.totalAssets() + interestAmount - accruedInterest, balance);
+            vm.expectEmit();
+            emit EulerSavingsRate.InterestUpdated(accruedInterest, interestAmount - accruedInterest);
+        }
+
+        vm.recordLogs();
+        esr.gulp();
+
+        Vm.Log[] memory logs = vm.getRecordedLogs();
+        if (interestAmount < esr.INTEREST_SMEAR()) {
+            assertEq(logs.length, 1);
+            assertNotEq(logs[0].topics[0], EulerSavingsRate.InterestUpdated.selector);
+        } else {
+            assertEq(logs.length, 2);
+            assertEq(logs[0].topics[0], EulerSavingsRate.InterestUpdated.selector);
+        }
     }
 
     // fuzz test that any deposits added are added to the totalAssetsDeposited
