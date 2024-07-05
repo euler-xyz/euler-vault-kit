@@ -271,11 +271,13 @@ contract PSMTest is Test {
         assertEq(psm.quoteToUnderlyingGivenOut(1), 2);
     }
 
-    function testRoundingPriceConversionsDiffDecimals() public {
-        fuzzSetUp(8, 0, 0, 1e8);
-        assertEq(psm.quoteToSynthGivenIn(1), 1e10);
+    function testRoundingPriceConversionsDiffDecimals(uint8 underlyingDecimals) public {
+        underlyingDecimals = uint8(bound(underlyingDecimals, 6, 17));
+        fuzzSetUp(underlyingDecimals, 0, 0, 10 ** underlyingDecimals);
+
+        assertEq(psm.quoteToSynthGivenIn(1), 10 ** (18 - underlyingDecimals));
         assertEq(psm.quoteToSynthGivenOut(1), 1);
         assertEq(psm.quoteToUnderlyingGivenIn(1), 0);
-        assertEq(psm.quoteToUnderlyingGivenOut(1), 1e10);
+        assertEq(psm.quoteToUnderlyingGivenOut(1), 10 ** (18 - underlyingDecimals));
     }
 }
