@@ -250,8 +250,9 @@ interface IBorrowing {
     /// @notice Take over debt from another account
     /// @param amount Amount of debt in asset units (use max uint256 for all the account's debt)
     /// @param from Account to pull the debt from
-    /// @return Amount of debt pulled in asset units.
-    function pullDebt(uint256 amount, address from) external returns (uint256);
+    /// @dev Due to internal debt precision accounting, the liability reported on either or both accounts after
+    /// calling `pullDebt` may not match the `amount` requested precisely
+    function pullDebt(uint256 amount, address from) external;
 
     /// @notice Request a flash-loan. A onFlashLoan() callback in msg.sender will be invoked, which must repay the loan
     /// to the main Euler address prior to returning.
