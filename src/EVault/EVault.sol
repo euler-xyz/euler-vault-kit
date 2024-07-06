@@ -227,8 +227,6 @@ contract EVault is Dispatch {
 
     function setLTV(address collateral, uint16 borrowLTV, uint16 liquidationLTV, uint32 rampDuration) public virtual override use(MODULE_GOVERNANCE) {}
 
-    function clearLTV(address collateral) public virtual override use(MODULE_GOVERNANCE) {}
-
     function setMaxLiquidationDiscount(uint16 newDiscount) public virtual override use(MODULE_GOVERNANCE) {}
 
     function setLiquidationCoolOffTime(uint16 newCoolOffTime) public virtual override use(MODULE_GOVERNANCE) {}

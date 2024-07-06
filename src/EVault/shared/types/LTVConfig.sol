@@ -70,15 +70,6 @@ library LTVConfigLib {
         newLTV.rampDuration = rampDuration;
         newLTV.initialized = true;
     }
-
-    // When LTV is cleared, the collateral can't be liquidated, as it's deemed unsafe
-    function clear(LTVConfig storage self) internal {
-        self.borrowLTV = ConfigAmount.wrap(0);
-        self.liquidationLTV = ConfigAmount.wrap(0);
-        self.initialLiquidationLTV = ConfigAmount.wrap(0);
-        self.targetTimestamp = 0;
-        self.rampDuration = 0;
-    }
 }
 
 using LTVConfigLib for LTVConfig global;
