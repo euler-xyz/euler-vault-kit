@@ -18,8 +18,6 @@ struct LTVConfig {
     uint48 targetTimestamp;
     // The time it takes for the liquidation LTV to converge from the initial value to the fully converged value
     uint32 rampDuration;
-    // A flag indicating the LTV configuration was initialized for the collateral
-    bool initialized;
 }
 
 /// @title LTVConfigLib
@@ -68,7 +66,6 @@ library LTVConfigLib {
         newLTV.initialLiquidationLTV = self.getLTV(true);
         newLTV.targetTimestamp = uint48(block.timestamp + rampDuration);
         newLTV.rampDuration = rampDuration;
-        newLTV.initialized = true;
     }
 }
 

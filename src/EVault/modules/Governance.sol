@@ -56,9 +56,9 @@ abstract contract GovernanceModule is IGovernance, BalanceUtils, BorrowUtils, LT
         uint16 liquidationLTV,
         uint16 initialLiquidationLTV,
         uint48 targetTimestamp,
-        uint32 rampDuration,
-        bool initialized
+        uint32 rampDuration
     );
+
     /// @notice Set an interest rate model contract address
     /// @param newInterestRateModel Address of the new IRM
     event GovSetInterestRateModel(address newInterestRateModel);
@@ -298,7 +298,7 @@ abstract contract GovernanceModule is IGovernance, BalanceUtils, BorrowUtils, LT
 
         vaultStorage.ltvLookup[collateral] = newLTV;
 
-        if (!currentLTV.initialized) vaultStorage.ltvList.push(collateral);
+        if (!currentLTV.isRecognizedCollateral()) vaultStorage.ltvList.push(collateral);
 
         emit GovSetLTV(
             collateral,
@@ -306,8 +306,7 @@ abstract contract GovernanceModule is IGovernance, BalanceUtils, BorrowUtils, LT
             newLTV.liquidationLTV.toUint16(),
             newLTV.initialLiquidationLTV.toUint16(),
             newLTV.targetTimestamp,
-            newLTV.rampDuration,
-            !currentLTV.initialized
+            newLTV.rampDuration
         );
     }
 
