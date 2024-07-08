@@ -84,12 +84,12 @@ contract EulerSavingsRate is EVCUtil, ERC4626 {
         return super.mint(shares, receiver);
     }
 
-    /// @notice Withdraws a certain amount of assets to the vault.
+    /// @notice Withdraws a certain amount of assets from the vault.
     /// @dev Overwritten to update the accrued interest and update _totalAssets.
     /// @param assets The amount of assets to withdraw.
-    /// @param receiver The recipient of the shares.
-    /// @param owner The account from which the assets are withdrawn
-    /// @return The amount of shares minted.
+    /// @param receiver The recipient of the assets.
+    /// @param owner The holder of shares to burn.
+    /// @return The amount of shares burned.
     function withdraw(uint256 assets, address receiver, address owner) public override nonReentrant returns (uint256) {
         // Move interest to totalAssets
         updateInterestAndReturnESRSlotCache();
