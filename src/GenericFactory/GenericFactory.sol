@@ -149,7 +149,7 @@ contract GenericFactory is MetaProxyDeployer {
     /// @param newImplementation Address of the new implementation contract
     /// @dev Upgrades all existing BeaconProxies to the new logic immediately
     function setImplementation(address newImplementation) external nonReentrant adminOnly {
-        if (newImplementation == address(0)) revert E_BadAddress();
+        if (newImplementation.code.length == 0) revert E_BadAddress();
         implementation = newImplementation;
         emit SetImplementation(newImplementation);
     }

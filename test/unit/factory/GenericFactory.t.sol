@@ -42,12 +42,26 @@ contract FactoryTest is Test {
 
     function test_setImplementationSimple() public {
         vm.prank(upgradeAdmin);
-        factory.setImplementation(address(1));
-        assertEq(factory.implementation(), address(1));
+        vm.expectRevert(GenericFactory.E_BadAddress.selector);
+        factory.setImplementation(address(0));
 
         vm.prank(upgradeAdmin);
-        factory.setImplementation(address(2));
-        assertEq(factory.implementation(), address(2));
+        vm.expectRevert(GenericFactory.E_BadAddress.selector);
+        factory.setImplementation(address(1e6));
+
+        vm.etch(address(1e6), address(this).code);
+        vm.prank(upgradeAdmin);
+        factory.setImplementation(address(1e6));
+        assertEq(factory.implementation(), address(1e6));
+
+        vm.prank(upgradeAdmin);
+        vm.expectRevert(GenericFactory.E_BadAddress.selector);
+        factory.setImplementation(address(2e6));
+
+        vm.etch(address(2e6), address(this).code);
+        vm.prank(upgradeAdmin);
+        factory.setImplementation(address(2e6));
+        assertEq(factory.implementation(), address(2e6));
     }
 
     function test_activateVaultDefaultImplementation() public {
@@ -231,10 +245,10 @@ contract FactoryTest is Test {
 
     function test_Event_SetEVaultImplementation() public {
         vm.expectEmit(true, false, false, false);
-        emit GenericFactory.SetImplementation(address(1));
+        emit GenericFactory.SetImplementation(address(this));
 
         vm.prank(upgradeAdmin);
-        factory.setImplementation(address(1));
+        factory.setImplementation(address(this));
     }
 
     function test_Event_SetUpgradeAdmin() public {
@@ -318,6 +332,7 @@ contract FactoryTest is Test {
 
         // Create and install mock eVault impl
         MockEVault mockEvaultImpl = new MockEVault(address(factory), address(1));
+        MockEVault mockEvaultImplOther = new MockEVault(address(factory), address(2));
         vm.prank(upgradeAdmin);
         factory.setImplementation(address(mockEvaultImpl));
 
@@ -335,7 +350,7 @@ contract FactoryTest is Test {
 
         // Change eVault impl
         vm.prank(upgradeAdmin);
-        factory.setImplementation(address(1));
+        factory.setImplementation(address(mockEvaultImplOther));
 
         config = factory.getProxyConfig(address(eVaultNonUpg));
         assertNotEq(config.implementation, factory.implementation());
