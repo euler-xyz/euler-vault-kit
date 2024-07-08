@@ -1655,6 +1655,11 @@ contract VaultLiquidation_Test is EVaultTestBase {
         vm.expectRevert(Errors.E_ConfigAmountTooLargeToEncode.selector);
         eTST.setMaxLiquidationDiscount(1e4 + 1);
 
+        // bad
+        startHoax(address(this));
+        vm.expectRevert(Errors.E_BadMaxLiquidationDiscount.selector);
+        eTST.setMaxLiquidationDiscount(1e4);
+
         // set ok
         eTST.setMaxLiquidationDiscount(0.111e4);
         assertEq(0.111e4, eTST.maxLiquidationDiscount());
