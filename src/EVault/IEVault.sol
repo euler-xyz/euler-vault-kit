@@ -502,6 +502,8 @@ interface IGovernance {
 
     /// @notice Set a new interest rate model contract
     /// @param newModel The new IRM address
+    /// @dev If the new model reverts, perhaps due to governor error, the vault will silently use a zero interest
+    /// rate. Governor should make sure the new interest rates are computed as expected.
     function setInterestRateModel(address newModel) external;
 
     /// @notice Set a new hook target and a new bitmap indicating which operations should call the hook target.
