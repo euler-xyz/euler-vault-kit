@@ -245,6 +245,8 @@ interface IBorrowing {
     /// @return shares Amount of shares burned
     /// @return debt Amount of debt removed in assets
     /// @dev Equivalent to withdrawing and repaying, but no assets are needed to be present in the vault
+    /// @dev Contrary to a regular `repay`, if account is unhealthy, the repay amount must bring the account back to
+    /// health, or the operation will revert during account status check
     function repayWithShares(uint256 amount, address receiver) external returns (uint256 shares, uint256 debt);
 
     /// @notice Take over debt from another account
