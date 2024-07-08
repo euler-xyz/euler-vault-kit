@@ -101,7 +101,7 @@ contract IRMSynth is IIRM {
             // If the quote is less than the target, increase the rate
             rate = rate * ADJUST_FACTOR / ADJUST_ONE;
         } else {
-            // If the quote is greater than the target, decrease the rate
+            // If the quote is greater than or equal to the target, decrease the rate
             rate = rate * ADJUST_ONE / ADJUST_FACTOR;
         }
 
