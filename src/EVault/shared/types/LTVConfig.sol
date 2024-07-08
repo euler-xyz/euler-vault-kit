@@ -7,7 +7,7 @@ import {ConfigAmount} from "./Types.sol";
 /// @title LTVConfig
 /// @notice This packed struct is used to store LTV configuration of a collateral
 struct LTVConfig {
-    // Packed slot: 2 + 2 + 2 + 6 + 4 + 1 = 17
+    // Packed slot: 2 + 2 + 2 + 6 + 4 = 16
     // The value of borrow LTV for originating positions
     ConfigAmount borrowLTV;
     // The value of fully converged liquidation LTV
