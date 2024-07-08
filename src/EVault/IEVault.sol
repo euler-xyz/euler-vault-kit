@@ -287,9 +287,11 @@ interface ILiquidation {
     /// @param violator Address that may be in collateral violation
     /// @param collateral Collateral which is to be seized
     /// @param repayAssets The amount of underlying debt to be transferred from violator to sender, in asset units (use
-    /// max uint256 to repay the maximum possible amount).
+    /// max uint256 to repay the maximum possible amount). Meant as slippage check together with `minYieldBalance`
     /// @param minYieldBalance The minimum acceptable amount of collateral to be transferred from violator to sender, in
-    /// collateral balance units (shares for vaults)
+    /// collateral balance units (shares for vaults).  Meant as slippage check together with `repayAssets`
+    /// @dev If `repayAssets` is set to max uint256 it is assumed the caller will perform their own slippage checks to 
+    /// make sure they are not taking on too much debt. This option is mainly meant for smart contract liquidators
     function liquidate(address violator, address collateral, uint256 repayAssets, uint256 minYieldBalance) external;
 }
 
