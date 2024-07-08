@@ -432,6 +432,9 @@ interface IGovernance {
 
     /// @notice Retrieves the maximum liquidation discount
     /// @return The maximum liquidation discount in 1e4 scale
+    /// @dev The default value, which is zero, is deliberately bad, as it means there would be no incentive to liquidate
+    /// unhealthy users. The vault creator must take care to properly select the limit, given the underlying and
+    /// collaterals used.
     function maxLiquidationDiscount() external view returns (uint16);
 
     /// @notice Retrieves liquidation cool-off time, which must elapse after successful account status check before
