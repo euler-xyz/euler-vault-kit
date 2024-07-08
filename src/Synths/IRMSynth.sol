@@ -43,7 +43,7 @@ contract IRMSynth is IIRM {
 
     event InterestUpdated(uint256 rate);
 
-    constructor(address synth_, address referenceAsset_, address oracle_, uint256 targetQuoute_) {
+    constructor(address synth_, address referenceAsset_, address oracle_, uint256 targetQuote_) {
         if (synth_ == address(0) || referenceAsset_ == address(0) || oracle_ == address(0)) {
             revert E_ZeroAddress();
         }
@@ -51,7 +51,7 @@ contract IRMSynth is IIRM {
         synth = synth_;
         referenceAsset = referenceAsset_;
         oracle = IPriceOracle(oracle_);
-        targetQuote = targetQuoute_;
+        targetQuote = targetQuote_;
         quoteAmount = 10 ** IERC20(synth_).decimals();
 
         // Refusing to proceed with worthless asset
