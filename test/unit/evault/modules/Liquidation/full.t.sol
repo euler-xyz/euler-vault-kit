@@ -50,16 +50,19 @@ contract VaultLiquidation_Test is EVaultTestBase {
         eWETH = IEVault(
             factory.createProxy(address(0), true, abi.encodePacked(address(assetWETH), address(oracle), unitOfAccount))
         );
+        eWETH.setHookConfig(address(0), 0);
         eWETH.setInterestRateModel(address(new IRMTestZero()));
 
         eTST3 = IEVault(
             factory.createProxy(address(0), true, abi.encodePacked(address(assetTST3), address(oracle), unitOfAccount))
         );
+        eTST3.setHookConfig(address(0), 0);
         eTST3.setInterestRateModel(address(new IRMTestZero()));
 
         eTST4 = IEVault(
             factory.createProxy(address(0), true, abi.encodePacked(address(assetTST4), address(oracle), unitOfAccount))
         );
+        eTST4.setHookConfig(address(0), 0);
         eTST4.setInterestRateModel(address(new IRMTestZero()));
 
         eTST.setLTV(address(eWETH), 0.3e4, 0.3e4, 0);
@@ -1395,6 +1398,7 @@ contract VaultLiquidation_Test is EVaultTestBase {
                 address(0), true, abi.encodePacked(address(assetTST), address(oracle), address(assetTST))
             )
         );
+        eTSTx.setHookConfig(address(0), 0);
         eTSTx.setLTV(address(eTST2), 0.95e4, 0.95e4, 0);
         eTSTx.setMaxLiquidationDiscount(0.2e4);
 

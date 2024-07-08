@@ -212,6 +212,7 @@ contract ReentrancyTest is EVaultTestBase {
         eTST = IEVault(
             factory.createProxy(address(0), true, abi.encodePacked(address(assetTST), address(oracle), unitOfAccount))
         );
+        eTST.setHookConfig(address(0), 0);
 
         vm.assume(sender != address(0) && sender != address(eTST));
 

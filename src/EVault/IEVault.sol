@@ -506,9 +506,11 @@ interface IGovernance {
     function setInterestRateModel(address newModel) external;
 
     /// @notice Set a new hook target and a new bitmap indicating which operations should call the hook target.
-    /// Operations are defined in Constants.sol
-    /// @param newHookTarget The new hook target address
+    /// Operations are defined in Constants.sol.
+    /// @param newHookTarget The new hook target address. Use address(0) to simply disable hooked operations
     /// @param newHookedOps Bitmask with the new hooked operations
+    /// @dev All operations are initially disabled in a newly created vault. The vault creator must set their
+    /// own configuration to make the vault usable
     function setHookConfig(address newHookTarget, uint32 newHookedOps) external;
 
     /// @notice Set new bitmap indicating which config flags should be enabled. Flags are defined in Constants.sol

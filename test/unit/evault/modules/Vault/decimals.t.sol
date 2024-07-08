@@ -33,11 +33,13 @@ contract VaultTest_Decimals is EVaultTestBase {
         eTST3 = IEVault(
             factory.createProxy(address(0), true, abi.encodePacked(address(assetTST3), address(oracle), unitOfAccount))
         );
+        eTST3.setHookConfig(address(0), 0);
 
         assetTST4 = new TestERC20("Test TST 4", "TST4", 0, false);
         eTST4 = IEVault(
             factory.createProxy(address(0), true, abi.encodePacked(address(assetTST4), address(oracle), unitOfAccount))
         );
+        eTST4.setHookConfig(address(0), 0);
 
         startHoax(address(this));
         eTST.setInterestRateModel(address(new IRMTestZero()));

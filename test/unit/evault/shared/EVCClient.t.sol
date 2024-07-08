@@ -56,6 +56,7 @@ contract EVCClientUnitTest is EVaultTestBase {
         eTST3 = IEVault(
             factory.createProxy(address(0), true, abi.encodePacked(address(assetTST3), address(oracle), unitOfAccount))
         );
+        eTST3.setHookConfig(address(0), 0);
         eTST3.setInterestRateModel(address(new IRMTestDefault()));
     }
 
@@ -171,6 +172,7 @@ contract EVCClientUnitTest is EVaultTestBase {
         IEVault v = IEVault(
             factory.createProxy(address(0), true, abi.encodePacked(address(assetTST2), address(oracle), unitOfAccount))
         );
+        v.setHookConfig(address(0), 0);
         v.setInterestRateModel(address(new IRMTestDefault()));
 
         return address(v);
