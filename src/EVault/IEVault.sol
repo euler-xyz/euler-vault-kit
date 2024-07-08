@@ -384,7 +384,7 @@ interface IGovernance {
     function protocolConfigAddress() external view returns (address);
 
     /// @notice Retrieves the protocol fee share
-    /// @return A percentage share of fees accrued belonging to the protocol. In wad scale (1e18)
+    /// @return A percentage share of fees accrued belonging to the protocol, in 1e4 scale
     function protocolFeeShare() external view returns (uint256);
 
     /// @notice Retrieves the address which will receive protocol's fees
