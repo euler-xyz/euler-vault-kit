@@ -1,7 +1,7 @@
 import "Base.spec";
 import "LoadVaultSummary.spec";
 // using DummyERC20A as ERC20a;
-// using TokenHarness as EToken; // Used to assume collaterals are EToken^s
+using TokenHarness as EToken; // Used to assume collaterals are EToken^s
 
 methods {
     function checkAccountMagicValue() external returns (bytes4) envfree;
@@ -29,17 +29,22 @@ methods {
 
     // TODO This is copied from HealthStatusInvariant. Refactor into Base.spec
     // if possible.
-    /*
     function _.safeTransferFrom(address token, address from, address to, uint256 value, address permit2) internal with (env e)=> CVLSafeTransferFrom(e, token, from, to, value) expect void;
     function _.enforceCollateralTransfer(address collateral, uint256 amount,
         address from, address receiver) internal with (env e) => 
         CVLEnforceCollateralTransfer(e, collateral, amount, from, receiver) expect void;
-    */
+    // We can't handle the low-level call in 
+    // EthereumVaultConnector.checkAccountStatusInternal 
+    // and so reroute it to RiskManager's status check with this summary.
+    function EthereumVaultConnector.checkAccountStatusInternal(address account) internal returns (bool, bytes memory) with (env e) => 
+        CVLCheckAccountStatusInternal(e, account);
+    function EthereumVaultConnector.checkVaultStatusInternal(address vault) internal returns (bool, bytes memory) with(env e) =>
+        CVLCheckVaultStatusInternal(e);
 }
 
 // TODO This is copied from HealthStatusInvariant. Refactor into Base.spec
 // if possible.
-/*
+
 function CVLSafeTransferFrom(env e, address token, address from, address to, uint256 value) {
     if (token == ERC20a) {
         ERC20a.transferFrom(e, from, to, value);
@@ -48,12 +53,30 @@ function CVLSafeTransferFrom(env e, address token, address from, address to, uin
     }
 }
 function CVLEnforceCollateralTransfer(env e, address collateral, uint256 amount, address from, address receiver) {
-    // (Ideally: Cast collateral address into EToken to allow for
-    // multiple addresses with the EToken contract)
     evc.requireAccountStatusCheck(e, from);
     EToken.transferFromInternalHarnessed(e, from, receiver, amount);
 }
-*/
+
+function CVLCheckAccountStatusInternalBool(env e, address account) returns bool {
+    address[] collaterals = evc.getCollaterals(e, account);
+    checkAccountStatus@withrevert(e, account, collaterals);
+    return !lastReverted;
+}
+
+function CVLCheckAccountStatusInternal(env e, address account) returns (bool, bytes) {
+    return (CVLCheckAccountStatusInternalBool(e, account), 
+        checkAccountMagicValueMemory(e));
+}
+
+function CVLCheckVaultStatusInternalBool(env e) returns bool {
+    checkVaultStatus@withrevert(e);
+    return !lastReverted;
+}
+
+function CVLCheckVaultStatusInternal(env e) returns (bool, bytes) {
+    return (CVLCheckVaultStatusInternalBool(e),
+        checkVaultMagicValueMemory(e));
+}
 
 // This shows that the exchange rate 
 rule exchange_rate_monotonic (method f) {
