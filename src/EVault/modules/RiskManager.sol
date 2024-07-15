@@ -109,7 +109,7 @@ abstract contract RiskManagerModule is IRiskManager, LiquidityUtils {
             // Borrows are rounded down, because total assets could increase during repays.
             // This could happen when repaid user debt is rounded up to assets and used to increase cash,
             // while totalBorrows would be adjusted by only the exact debt, less than the increase in cash.
-            // If multiple accounts need to repay while the supply cap is exceeded they should do so in 
+            // If multiple accounts need to repay while the supply cap is exceeded they should do so in
             // separate batches.
             uint256 supply = vaultCache.cash.toUint() + vaultCache.totalBorrows.toAssetsDown().toUint();
 
