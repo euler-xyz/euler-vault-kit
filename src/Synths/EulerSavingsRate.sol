@@ -125,8 +125,8 @@ contract EulerSavingsRate is EVCUtil, ERC4626 {
         internal
         override
     {
-        super._withdraw(caller, receiver, owner, assets, shares);
         _totalAssets = _totalAssets - assets;
+        super._withdraw(caller, receiver, owner, assets, shares);
     }
 
     /// @notice Smears any donations to this vault as interest.
