@@ -30,9 +30,9 @@ abstract contract LiquidityUtils is BorrowUtils, LTVUtils {
         liabilityValue = getLiabilityValue(vaultCache, account, vaultStorage.users[account].getOwed(), liquidation);
     }
 
-    // Check that the value of the collateral, adjusted for borrowing LTV, is greater than the liability value.
-    // Since this function uses bid/ask prices, it should only be used within the account status check, and not
-    // for determining whether an account can be liquidated (which uses mid-point prices).
+    // Check that there is no liability, or the value of the collateral, adjusted for borrowing LTV, is greater than the
+    // liability value. Since this function uses bid/ask prices, it should only be used within the account status check,
+    // and not for determining whether an account can be liquidated (which uses mid-point prices).
     function checkLiquidity(VaultCache memory vaultCache, address account, address[] memory collaterals)
         internal
         view
