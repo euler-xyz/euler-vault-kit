@@ -62,7 +62,7 @@ contract PSMTest is Test {
         );
 
         // Give PSM and wallets some underlying
-        uint128 amount = uint128(100 * 10 ** underlyingDecimals);
+        uint128 amount = uint128(1e6 * 10 ** underlyingDecimals);
         underlying.mint(address(psm), amount);
         underlying.mint(wallet1, amount);
         underlying.mint(wallet2, amount);
@@ -74,7 +74,7 @@ contract PSMTest is Test {
         underlying.approve(address(psm), type(uint256).max);
 
         // Set PSM as minter
-        amount = 100 * 10 ** 18;
+        amount = 1e6 * 10 ** 18;
         vm.prank(owner);
         synth.setCapacity(address(psm), amount);
 
@@ -171,11 +171,12 @@ contract PSMTest is Test {
     function testSwapToUnderlyingGivenOut(uint8 underlyingDecimals, uint256 fee, uint256 amountOutNoDecimals) public {
         underlyingDecimals = uint8(bound(underlyingDecimals, 6, 18));
         fee = bound(fee, 0, BPS_SCALE - 1);
-        amountOutNoDecimals = bound(amountOutNoDecimals, 1, 50);
+        amountOutNoDecimals = bound(amountOutNoDecimals, 1, 100);
         fuzzSetUp(underlyingDecimals, fee, 0, 10 ** underlyingDecimals);
 
         uint256 amountOut = amountOutNoDecimals * 10 ** underlyingDecimals;
-        uint256 expectedAmountIn = amountOutNoDecimals * 10 ** 18 * (BPS_SCALE + fee) / BPS_SCALE;
+        uint256 expectedAmountIn =
+            (amountOutNoDecimals * 10 ** 18 * BPS_SCALE + BPS_SCALE - fee - 1) / (BPS_SCALE - fee);
 
         assertEq(psm.quoteToUnderlyingGivenOut(amountOut), expectedAmountIn);
 
@@ -225,11 +226,12 @@ contract PSMTest is Test {
     function testSwapToSynthGivenOut(uint8 underlyingDecimals, uint256 fee, uint256 amountOutNoDecimals) public {
         underlyingDecimals = uint8(bound(underlyingDecimals, 6, 18));
         fee = bound(fee, 0, BPS_SCALE - 1);
-        amountOutNoDecimals = bound(amountOutNoDecimals, 1, 50);
+        amountOutNoDecimals = bound(amountOutNoDecimals, 1, 100);
         fuzzSetUp(underlyingDecimals, 0, fee, 10 ** underlyingDecimals);
 
         uint256 amountOut = amountOutNoDecimals * 10 ** 18;
-        uint256 expectedAmountIn = amountOutNoDecimals * 10 ** underlyingDecimals * (BPS_SCALE + fee) / BPS_SCALE;
+        uint256 expectedAmountIn =
+            (amountOutNoDecimals * 10 ** underlyingDecimals * BPS_SCALE + BPS_SCALE - fee - 1) / (BPS_SCALE - fee);
 
         assertEq(psm.quoteToSynthGivenOut(amountOut), expectedAmountIn);
 

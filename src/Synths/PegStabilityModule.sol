@@ -154,7 +154,7 @@ contract PegStabilityModule is EVCUtil {
     /// @return The amount of synth swapped.
     function quoteToUnderlyingGivenOut(uint256 amountOut) public view returns (uint256) {
         return amountOut.mulDiv(
-            (BPS_SCALE + TO_UNDERLYING_FEE) * PRICE_SCALE, BPS_SCALE * CONVERSION_PRICE, Math.Rounding.Ceil
+            BPS_SCALE * PRICE_SCALE, (BPS_SCALE - TO_UNDERLYING_FEE) * CONVERSION_PRICE, Math.Rounding.Ceil
         );
     }
 
@@ -171,6 +171,6 @@ contract PegStabilityModule is EVCUtil {
     /// @return The amount of underlying swapped.
     function quoteToSynthGivenOut(uint256 amountOut) public view returns (uint256) {
         return
-            amountOut.mulDiv((BPS_SCALE + TO_SYNTH_FEE) * CONVERSION_PRICE, BPS_SCALE * PRICE_SCALE, Math.Rounding.Ceil);
+            amountOut.mulDiv(BPS_SCALE * CONVERSION_PRICE, (BPS_SCALE - TO_SYNTH_FEE) * PRICE_SCALE, Math.Rounding.Ceil);
     }
 }
