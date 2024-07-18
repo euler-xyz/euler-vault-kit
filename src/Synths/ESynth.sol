@@ -44,7 +44,7 @@ contract ESynth is ERC20Collateral, Ownable {
     /// @dev Can only be called by the owner of the contract.
     /// @param minter The address of the minter to set the capacity for.
     /// @param capacity The capacity to set for the minter.
-    function setCapacity(address minter, uint128 capacity) external onlyOwner {
+    function setCapacity(address minter, uint128 capacity) external onlyEVCAccountOwner onlyOwner {
         minters[minter].capacity = capacity;
         emit MinterCapacitySet(minter, capacity);
     }
@@ -106,7 +106,7 @@ contract ESynth is ERC20Collateral, Ownable {
     /// @dev Adds the vault to the list of accounts to ignore for the total supply.
     /// @param vault The vault to deposit the cash in.
     /// @param amount The amount of cash to deposit.
-    function allocate(address vault, uint256 amount) external onlyOwner {
+    function allocate(address vault, uint256 amount) external onlyEVCAccountOwner onlyOwner {
         if (IEVault(vault).EVC() != address(evc)) {
             revert E_NotEVCCompatible();
         }
@@ -118,7 +118,7 @@ contract ESynth is ERC20Collateral, Ownable {
     /// @notice Withdraw cash from the attached vault to this contract.
     /// @param vault The vault to withdraw the cash from.
     /// @param amount The amount of cash to withdraw.
-    function deallocate(address vault, uint256 amount) external onlyOwner {
+    function deallocate(address vault, uint256 amount) external onlyEVCAccountOwner onlyOwner {
         IEVault(vault).withdraw(amount, address(this), address(this));
     }
 
@@ -136,14 +136,19 @@ contract ESynth is ERC20Collateral, Ownable {
     /// @notice Adds an account to the list of accounts to ignore for the total supply.
     /// @param account The account to add to the list.
     /// @return success True when the account was not on the list and was added. False otherwise.
-    function addIgnoredForTotalSupply(address account) external onlyOwner returns (bool success) {
+    function addIgnoredForTotalSupply(address account) external onlyEVCAccountOwner onlyOwner returns (bool success) {
         return ignoredForTotalSupply.add(account);
     }
 
     /// @notice Removes an account from the list of accounts to ignore for the total supply.
     /// @param account The account to remove from the list.
     /// @return success True when the account was on the list and was removed. False otherwise.
-    function removeIgnoredForTotalSupply(address account) external onlyOwner returns (bool success) {
+    function removeIgnoredForTotalSupply(address account)
+        external
+        onlyEVCAccountOwner
+        onlyOwner
+        returns (bool success)
+    {
         return ignoredForTotalSupply.remove(account);
     }
 
