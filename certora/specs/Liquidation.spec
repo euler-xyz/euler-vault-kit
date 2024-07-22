@@ -3,6 +3,51 @@
 import "Base.spec";
 methods {
     function isRecognizedCollateralExt(address collateral) external returns (bool) envfree;
+    // unresolved calls that havoc all contracts
+    function _.isHookTarget() external => NONDET;
+    function _.invokeHookTarget(address caller) internal => NONDET;
+    function _.tryBalanceTrackerHook(address account, uint256 newAccountBalance, bool forfeitRecentReward) internal => NONDET;
+    function _.balanceTrackerHook(address account, uint256 newAccountBalance, bool forfeitRecentReward) external => NONDET;
+    function _.emitTransfer(address from, address to, uint256 value) external => NONDET;
+    function EVCHarness.disableController(address account) external => NONDET;
+    function _.computeInterestRate(address vault, uint256 cash, uint256 borrows) external => NONDET;
+    function _.onFlashLoan(bytes data) external => NONDET;
+    function _.safeTransferFrom(address token, address from, address to, uint256 value, address permit2) internal => NONDET;
+    function _.enforceCollateralTransfer(address collateral, uint256 amount,
+        address from, address receiver) internal =>  NONDET;
+
+
+    function EthereumVaultConnector.checkAccountStatusInternal(address account) internal returns (bool, bytes memory) with (env e) => 
+        CVLCheckAccountStatusInternal(e, account);
+    function EthereumVaultConnector.checkVaultStatusInternal(address vault) internal returns (bool, bytes memory) with(env e) =>
+        CVLCheckVaultStatusInternal(e);
+
+    function _.EVCRequireStatusChecks(address account) internal => NONDET;
+}
+
+
+// This returns an arbitrary account status of the prover's choosing. It is 
+// similar to NONDETing checkAccountStatus internal and is a worakround
+// for the tool not supporting NONDET for byte return values.
+persistent ghost bool accountStatusGhost;
+function CVLCheckAccountStatusInternalBool(env e, address account) returns bool {
+    return accountStatusGhost;
+}
+
+function CVLCheckAccountStatusInternal(env e, address account) returns (bool, bytes) {
+    return (CVLCheckAccountStatusInternalBool(e, account), 
+        checkAccountMagicValueMemory(e));
+}
+
+// This is using a similar pattern as CVLCheckAcountStatusInternal
+persistent ghost bool vaultStatusBool;
+function CVLCheckVaultStatusInternalBool(env e) returns bool {
+    return vaultStatusBool;
+}
+
+function CVLCheckVaultStatusInternal(env e) returns (bool, bytes) {
+    return (CVLCheckVaultStatusInternalBool(e),
+        checkVaultMagicValueMemory(e));
 }
 
 // passing
@@ -66,7 +111,7 @@ rule checkLiquidation_mustRevert {
 
 }
 
-// Passing. Assumptions can be reduced with Euler's fix.
+// Passing.
 // The borrowing collateral value is lower than the liquidation collateral value
 rule getCollateralValue_borrowing_lower {
     env e;
