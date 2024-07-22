@@ -17,25 +17,11 @@ rule updateVault_no_unexpected_reverts {
     // assignment to newTotalBorrows, overflows
     // Note: MAX_SANE_AMOUNT does not work as a bound for these:
     // https://prover.certora.com/output/65266/e1aab12acdb5435d80e70e661299c504?anonymousKey=c6c63c10fa9ddb5c16b86cd2073643768d3d96e4
-    // require getTotalBorrows(e) < 1152921504606846975; //2**60-1
     require getTotalBorrows(e) < 1267650600228229401496703205375; //2**100-1
-    // require getTotalBorrows(e) < 1208925819614629174706175; //2**80-1
-    // require getTotalBorrows(e) < max_uint112; //2**80-1
 
-    // require getInterestAcc(e) < 1152921504606846975;
     require getInterestAcc(e) < 1267650600228229401496703205375;
-    // require getInterestAcc(e) < max_uint112;
     // newTotalBorrows assigment, prevent divide by zero
     require getInterestAcc(e) > 0;
-
-    // typecast of newAccumulatedFees
-    // Also MAX_SANE_AMOUNT is not a sufficient bound for this 
-    // (because the bounded var is from storage not the new accumulated fees)
-    // https://prover.certora.com/output/65266/8c53d45891374c4692ea7597de239ba1?anonymousKey=551bfa1d1460c56f30002f5de8aeab4bd49a0fcb
-    // require getAccumulatedFees(e) < 1267650600228229401496703205375;
-    // require getAccumulatedFees(e) < max_uint112;
-    
-    // require getAccumulatedFees(e) < getTotalShares(e);
 
     updateVaultExt@withrevert(e);
     assert !lastReverted;
