@@ -1,9 +1,3 @@
-
-methods {
-    // It's not envfree. block time
-    // function updateVaultExt() external returns (Cache.VaultCache) envfree;
-}
-
 // passing
 // run: https://prover.certora.com/output/65266/e5dc6fb3648f45fdbe48597c69561bd1/?anonymousKey=12ed8515517a0998ef7af0ed86ecc7008537cec1
 rule updateVault_no_unexpected_reverts {
