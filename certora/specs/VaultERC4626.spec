@@ -63,9 +63,6 @@ methods {
     function _.safeTransferFrom(address token, address from, address to, uint256 value, address permit2) internal with (env e)=> CVLSafeTransferFrom(e, token, from, to, value) expect void;
     function _.tryBalanceTrackerHook(address account, uint256 newAccountBalance, bool forfeitRecentReward) internal => NONDET;
     function _.balanceTrackerHook(address account, uint256 newAccountBalance, bool forfeitRecentReward) external => NONDET;
-    // Type Conversions
-    // function _.toShares(uint256 amount) internal => CVLToShares(amount) expect (BaseHarness.Shares);
-    // function _.toAssets(uint256 amount) internal => CVLToAssets(amount) expect (BaseHarness.Assets);
     // This is NONDET to help avoid timeouts. It should be safe
     // to NONDET since it is a private view function.
     function _.resolve(Vault.AmountCap self) internal => NONDET; 
@@ -168,14 +165,6 @@ rule conversionWeakIntegrity() {
     assert convertToAssets(e, convertToShares(e, sharesOrAssets)) <= sharesOrAssets,
         "converting assets to shares then back to assets must return assets less than or equal to the original amount";
 }
-
-rule convertToCorrectness(uint256 amount, uint256 shares)
-{
-    env e;
-    assert amount >= convertToAssets(e, convertToShares(e, amount));
-    assert shares >= convertToShares(e, convertToAssets(e, shares));
-}
-
 
 ////////////////////////////////////////////////////////////////////////////////
 ////                   #    Unit Test                                      /////
@@ -331,6 +320,23 @@ rule dustFavorsTheHouse(uint assetsIn )
     assert balanceAfter >= balanceBefore;
 }
 
+// passing:
+// run: https://prover.certora.com/output/65266/16c756cc79054db2822d8d77cd7d157b?anonymousKey=ab0d69f0506e327db1fd9180bf8b0259a7bf1f7b
+rule dustFavorsTheHouseAssets(uint assetsIn )
+{
+    env e;
+        
+    require e.msg.sender != currentContract;
+    safeAssumptions(e,e.msg.sender,e.msg.sender);
+    uint256 totalAssetsBefore = totalAssets(e);
+
+    uint shares = deposit(e,assetsIn, e.msg.sender);
+    uint assetsOut = redeem(e,shares,e.msg.sender,e.msg.sender);
+    uint256 totalAssetsAfter = totalAssets(e);
+
+    assert totalAssetsAfter >= totalAssetsBefore;
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 ////                       #   Risk Analysis                           /////////
 ////////////////////////////////////////////////////////////////////////////////
@@ -346,8 +352,6 @@ invariant vaultSolvency(env e)
             require currentContract != asset(); 
         }
     }
-
-
 
 rule redeemingAllValidity() { 
     env e;
