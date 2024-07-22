@@ -23,6 +23,13 @@ rule updateVault_no_unexpected_reverts {
     // newTotalBorrows assigment, prevent divide by zero
     require getInterestAcc(e) > 0;
 
+    // typecast of newAccumulatedFees
+    // Also MAX_SANE_AMOUNT is not a sufficient bound for this 
+    // (because the bounded var is from storage not the new accumulated fees)
+    // https://prover.certora.com/output/65266/8c53d45891374c4692ea7597de239ba1?anonymousKey=551bfa1d1460c56f30002f5de8aeab4bd49a0fcb
+    require getAccumulatedFees(e) < 1267650600228229401496703205375;
+
+
     updateVaultExt@withrevert(e);
     assert !lastReverted;
 }
