@@ -1,6 +1,8 @@
 /// @doc Ghost power function that incorporates mathematical pure x^y axioms.
 /// @warning Some of these axioms might be false, depending on the Solidity implementation
 /// The user must bear in mind that equality-like axioms can be violated because of rounding errors.
+// _ghostPow summarizes RPow.rpow, or:
+// _ghostPow(x, y, scalar) = scalar * x^y
 ghost _ghostPow(uint256, uint256, uint256) returns mathint {
     /// x^0 = 1
     axiom forall uint256 x. forall uint256 base. _ghostPow(x, 0, base) == to_mathint(base);

@@ -9,7 +9,7 @@ rule updateVault_no_unexpected_reverts {
     uint256 lastInterestAccUpd = getlastInterestAccumulatorUpdate(e);
 
     // assignment to deltaT 
-    require assert_uint256(lastInterestAccUpd) < e.block.timestamp;
+    require lastInterestAccUpd < e.block.timestamp;
 
 
     // https://prover.certora.com/output/65266/e834a7e7775443ffbe26577bfbc97f87?anonymousKey=98085ba3f887e9b0fd2b22683e73af45bc1a106b
