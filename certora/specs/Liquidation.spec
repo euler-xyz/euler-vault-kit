@@ -1,4 +1,5 @@
-// run: https://prover.certora.com/output/65266/d21dd88f07684b01930ff44d737378d7/?anonymousKey=660fbbe1c86127afc78c999a9ddd58c156ac7dad
+// Passing
+// run: https://prover.certora.com/output/65266/5f1f37520d824e1aa7ab738a0147745e?anonymousKey=9521c3759d1f018559d571cd2a1502b04504399d
 
 import "Base.spec";
 methods {
