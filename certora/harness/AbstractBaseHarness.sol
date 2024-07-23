@@ -171,5 +171,10 @@ abstract contract AbstractBaseHarness is Base, LiquidityUtils {
         return vaultStorage.configFlags;
     }
 
+    function totalAssetsShares() public view virtual returns (uint256 totalAssets, uint256 totalShares) {
+        VaultCache memory vaultCache = loadVault();
+        (totalAssets, totalShares) = ConversionHelpers.conversionTotals(vaultCache);
+
+    }
 
 }

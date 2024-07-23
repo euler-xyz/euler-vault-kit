@@ -22,6 +22,7 @@ rule_names = [
     "totalsMonotonicity",
     "underlyingCannotChange",
     "dustFavorsTheHouse",
+    "dustFavorsTheHouseAssets",
     "vaultSolvency",
     "redeemingAllValidity",
     "contributingProducesShares",

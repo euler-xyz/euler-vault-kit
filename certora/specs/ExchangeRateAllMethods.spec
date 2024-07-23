@@ -1,6 +1,6 @@
 import "Base.spec";
 import "LoadVaultSummary.spec";
-// using DummyERC20A as ERC20a;
+using DummyERC20A as ERC20a;
 using TokenHarness as EToken; // Used to assume collaterals are EToken^s
 
 methods {
@@ -94,3 +94,27 @@ rule exchange_rate_monotonic (method f) {
 
     assert assetsAfter >= assetsBefore;
 }
+
+rule exchangeRateMaxChange(method f){
+    env e;
+    calldataarg args;
+    uint256 shares;
+    // assume no debt socialization
+    require !hasDebtSocialization(e); // note not envfree
+    uint256 _totalAssets;
+    uint256 _totalShares;
+    uint256 totalShares_;
+    mathint deltaShares;
+    _totalAssets, _totalShares = totalAssetsShares(e);
+    uint256 assetsBefore = convertToAssetsMock(e, shares);
+    f(e, args);
+    
+    _, totalShares_ = totalAssetsShares(e);
+    deltaShares = totalShares_ - _totalShares;
+    
+    uint256 assetsAfter = convertToAssetsMock(e, shares);
+    assert to_mathint(assetsAfter) <= assetsBefore + (((_totalAssets % _totalShares) * _totalShares) /
+        (to_mathint(_totalShares) + deltaShares)) * shares;
+}
+
+
