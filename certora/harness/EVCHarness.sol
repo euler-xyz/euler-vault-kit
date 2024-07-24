@@ -11,7 +11,5 @@ contract EVCHarness is EthereumVaultConnector {
     // explicitly. 
     function checkStatusAllExt() external {
         checkStatusAll(SetType.Account);
-        // it's not needed
-        // checkStatusAll(SetType.Vault);
     }
 }
