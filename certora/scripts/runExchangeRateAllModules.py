@@ -17,7 +17,7 @@ hs_confs = [
     "Vault"
 ]
 
-def runAllConfsMax(rule):
+def runAllConfs(rule):
   for conf in hs_confs:
       script = f"certora/conf/exchangeRate/{conf}ER.conf"
       command = f"certoraRun {script} --rule {rule} --msg \"{conf} : {args.batchMsg}\""
@@ -32,12 +32,12 @@ vaultSplitMethods = [
   "withdraw(uint256,address,address)"
 ]
 
-def runVaultSplitMax(rule):
+def runVaultSplit(rule):
   for method in vaultSplitMethods:
       script = f"certora/conf/exchangeRate/VaultER.conf"
       command = f"certoraRun {script} --rule {rule} --method \"{method}\" --msg \"{method} : {args.batchMsg}\""
       print(f"runing {command}")
       subprocess.run(command, shell=True)
 
-runAllConfs("exchangeRateMaxChange")
-runVaultSplit("exchangeRateMaxChange")
+# runAllConfs("exchange_rate_virtual_deposit")
+runVaultSplit("exchange_rate_virtual_deposit")

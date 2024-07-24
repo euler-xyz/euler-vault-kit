@@ -78,7 +78,7 @@ function CVLCheckVaultStatusInternal(env e) returns (bool, bytes) {
         checkVaultMagicValueMemory(e));
 }
 
-// This shows that the exchange rate 
+// This shows that the exchange rate only increases
 rule exchange_rate_monotonic (method f) {
     env e;
     calldataarg args;
@@ -93,6 +93,30 @@ rule exchange_rate_monotonic (method f) {
     uint256 assetsAfter = convertToAssetsMock(e, shares);
 
     assert assetsAfter >= assetsBefore;
+}
+
+rule exchange_rate_virtual_deposit (method f) {
+    env e;
+    calldataarg args;
+    uint256 shares;
+    // assume no debt socialization
+    require !hasDebtSocialization(e); // note not envfree
+
+    // assume initially there are no shares/assets
+    uint256 totalAssetsBefore = totalAssetsHarnessed(e);
+    uint256 totalSharesBefore = totalSharesHarnessed(e);
+    require totalAssetsBefore == 0;
+    require totalSharesBefore == 0;
+
+    // want to show assetsAfter / shares >= assetsBefore / shares
+    // but we can skip the division
+    uint256 assetsBefore = convertToAssetsMock(e, shares);
+    f(e, args);
+    uint256 assetsAfter = convertToAssetsMock(e, shares);
+    uint256 delta = require_uint256(assetsAfter - assetsBefore);
+
+    assert delta < 10000000000;
+
 }
 
 rule exchangeRateMaxChange(method f){

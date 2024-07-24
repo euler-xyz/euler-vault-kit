@@ -171,10 +171,24 @@ abstract contract AbstractBaseHarness is Base, LiquidityUtils {
         return vaultStorage.configFlags;
     }
 
+    // This is conversionTotals version of assets/shares which includes
+    // the virtual deposit.
     function totalAssetsShares() public view virtual returns (uint256 totalAssets, uint256 totalShares) {
         VaultCache memory vaultCache = loadVault();
         (totalAssets, totalShares) = ConversionHelpers.conversionTotals(vaultCache);
+    }
 
+    // totalAssets is public and in the vault but this gives
+    // us a way to avoid including the Vault in every scene
+    function totalAssetsHarnessed() public view virtual returns (uint256) {
+        VaultCache memory vaultCache = loadVault();
+        return totalAssetsInternal(vaultCache);
+    }
+
+    // This is the same as totalSupply in Token but this gives a way
+    // to avoid including the Token contract in every scene
+    function totalSharesHarnessed() public view virtual nonReentrantView returns (uint256) {
+        return loadVault().totalShares.toUint();
     }
 
 }
