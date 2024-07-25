@@ -118,7 +118,7 @@ contract ESynth is ERC20Collateral, Ownable {
     }
 
     /// @notice Retrieves the message sender in the context of the EVC.
-    /// @dev Overriden due to the conflict with the Context definition.
+    /// @dev Overridden due to the conflict with the Context definition.
     /// @dev This function returns the account on behalf of which the current operation is being performed, which is
     /// either msg.sender or the account authenticated by the EVC.
     /// @return The address of the message sender.
@@ -155,7 +155,7 @@ contract ESynth is ERC20Collateral, Ownable {
     }
 
     /// @notice Retrieves the total supply of the token.
-    /// @dev Overriden to exclude the ignored accounts from the total supply.
+    /// @dev Overridden to exclude the ignored accounts from the total supply.
     /// @return The total supply of the token.
     function totalSupply() public view override returns (uint256) {
         uint256 total = super.totalSupply();

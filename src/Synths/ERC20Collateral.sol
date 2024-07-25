@@ -20,7 +20,7 @@ abstract contract ERC20Collateral is EVCUtil, ERC20Permit, ReentrancyGuard {
     {}
 
     /// @notice Transfers a certain amount of tokens to a recipient.
-    /// @dev Overriden to add reentrancy protection.
+    /// @dev Overridden to add reentrancy protection.
     /// @param to The recipient of the transfer.
     /// @param amount The amount shares to transfer.
     /// @return A boolean indicating whether the transfer was successful.
@@ -29,7 +29,7 @@ abstract contract ERC20Collateral is EVCUtil, ERC20Permit, ReentrancyGuard {
     }
 
     /// @notice Transfers a certain amount of tokens from a sender to a recipient.
-    /// @dev Overriden to add reentrancy protection.
+    /// @dev Overridden to add reentrancy protection.
     /// @param from The sender of the transfer.
     /// @param to The recipient of the transfer.
     /// @param amount The amount of shares to transfer.
@@ -47,7 +47,7 @@ abstract contract ERC20Collateral is EVCUtil, ERC20Permit, ReentrancyGuard {
     /// @notice Transfers a `value` amount of tokens from `from` to `to`, or alternatively mints (or burns) if `from`
     /// (or `to`) is the zero address. All customizations to transfers, mints, and burns should be done by overriding
     /// this function.
-    /// @dev Overriden to require account status checks on transfers from non-zero addresses. The account status check
+    /// @dev Overridden to require account status checks on transfers from non-zero addresses. The account status check
     /// must be required on any operation that reduces user's balance. Note that the user balance cannot be modified
     // outside of this function as the account status check must always be requested after the balance is modified which
     // is ensured by this function. If any user balance modifications are done outside of this function, the contract
@@ -64,7 +64,7 @@ abstract contract ERC20Collateral is EVCUtil, ERC20Permit, ReentrancyGuard {
     }
 
     /// @notice Retrieves the message sender in the context of the EVC.
-    /// @dev Overriden due to the conflict with the Context definition.
+    /// @dev Overridden due to the conflict with the Context definition.
     /// @dev This function returns the account on behalf of which the current operation is being performed, which is
     /// either msg.sender or the account authenticated by the EVC.
     /// @return The address of the message sender.
