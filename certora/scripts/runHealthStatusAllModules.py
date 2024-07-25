@@ -14,7 +14,9 @@ hs_confs = [
     "Initialize",
     "Liquidation",
     "Token",
-    "Vault"
+    "Vault",
+    "ETokenCollateral",
+    "UnderlyingToken"
 ]
 
 for conf in hs_confs:
