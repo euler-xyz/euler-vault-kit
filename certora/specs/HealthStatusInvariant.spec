@@ -26,9 +26,9 @@ methods {
     // https://github.com/euler-xyz/reward-streams/blob/master/src/TrackingRewardStreams.sol#L31-L62
     function _.tryBalanceTrackerHook(address account, uint256 newAccountBalance, bool forfeitRecentReward) internal => NONDET;
     function _.balanceTrackerHook(address account, uint256 newAccountBalance, bool forfeitRecentReward) external => NONDET;
-    // just emits en event so NONDET is safe
+    // just emits an event so NONDET is safe
     function _.emitTransfer(address from, address to, uint256 value) external => NONDET; 
-    // has an actual affect -- disables a controller, but this is only called by RiskManager.disableController which reverts unless the controller abalance is 0. So I think this nondet is safe.
+    // has an actual affect -- disables a controller, but this is only called by RiskManager.disableController which reverts unless the controller balance is 0. So I think this nondet is safe.
     function EVCHarness.disableController(address account) external => NONDET; 
     // computeInterestRate is not strictly pure -- the implementations of 
     // this function seem to keep state to calculate the future interest rate
@@ -138,7 +138,7 @@ rule accountsStayHealthy_strategy (method f) filtered { f ->
     // sig:GovernanceModule.setLTV(address,uint16,uint16,uint32).selector
     f.selector != 0x4bca3d5b &&
     // sig:InitializeModule.initialize(address).selector
-    f.selector != 0xc4d66de8 &&
+    f.selector != 0xc4d66de8
 }{
     env e;
     calldataarg args;
@@ -146,14 +146,6 @@ rule accountsStayHealthy_strategy (method f) filtered { f ->
     address[] collaterals = evc.getCollaterals(e, account);
     require collaterals.length <= 2; // loop bound
     require oracleAddress != 0; 
-    // Vault cannot be a user of itself
-    // require account != currentContract; // NOTE recently removed this
-    // Vault should not be used as a collateral
-    require collaterals[0] != currentContract;
-    require collaterals[1] != currentContract;
-    // Collaterals must be ETokens
-    // require collaterals[0] == EToken;
-    // require collaterals[1] == EToken;
     // not sure the following 4 are really needed
     require account != erc20;
     require account != oracleAddress;
@@ -176,12 +168,10 @@ rule accountsStayHealthy_strategy (method f) filtered { f ->
     // these call restoreExecutionContext which triggers the deferred checks.
     // This excplicit call to checkStatusAll is a way to get a setup that
     // approximates the real situation.
+    // We proved separately that EVC really does always call checkStatus all
+    // at the end of a call/batch.
+    // run: https://prover.certora.com/output/65266/2523dd890b324c9cb6c1fcec767e030e/?anonymousKey=5c7f3132f51538a96a5d8d4fb0de61f4ed892ccc
     evc.checkStatusAllExt(e);
     bool healthyAfter = checkLiquidityReturning(e, account, collaterals);
     assert healthyBefore => healthyAfter; 
 }
-
-// - prove separately that every call to vault is from evc (except maybe view)
-// - prove on EVC: at the end of call/batch/permit we really do always call 
-// checkStatusAll --> After looking at the tickets I think we did not prove 
-// this already.
