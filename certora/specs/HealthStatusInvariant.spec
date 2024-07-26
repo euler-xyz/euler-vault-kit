@@ -138,7 +138,9 @@ rule accountsStayHealthy_strategy (method f) filtered { f ->
     // sig:GovernanceModule.setLTV(address,uint16,uint16,uint32).selector
     f.selector != 0x4bca3d5b &&
     // sig:InitializeModule.initialize(address).selector
-    f.selector != 0xc4d66de8
+    f.selector != 0xc4d66de8 &&
+    // sig:TokenHarnes.transferFromInternalHarnessed (this is a harness method only)
+    f.selector != 0xd3110e86
 }{
     env e;
     calldataarg args;
