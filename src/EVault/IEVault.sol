@@ -245,6 +245,8 @@ interface IBorrowing {
     /// @return shares Amount of shares burned
     /// @return debt Amount of debt removed in assets
     /// @dev Equivalent to withdrawing and repaying, but no assets are needed to be present in the vault
+    /// @dev Contrary to a regular `repay`, if account is unhealthy, the repay amount must bring the account back to
+    /// health, or the operation will revert during account status check
     function repayWithShares(uint256 amount, address receiver) external returns (uint256 shares, uint256 debt);
 
     /// @notice Take over debt from another account
@@ -285,9 +287,11 @@ interface ILiquidation {
     /// @param violator Address that may be in collateral violation
     /// @param collateral Collateral which is to be seized
     /// @param repayAssets The amount of underlying debt to be transferred from violator to sender, in asset units (use
-    /// max uint256 to repay the maximum possible amount).
+    /// max uint256 to repay the maximum possible amount). Meant as slippage check together with `minYieldBalance`
     /// @param minYieldBalance The minimum acceptable amount of collateral to be transferred from violator to sender, in
-    /// collateral balance units (shares for vaults)
+    /// collateral balance units (shares for vaults).  Meant as slippage check together with `repayAssets`
+    /// @dev If `repayAssets` is set to max uint256 it is assumed the caller will perform their own slippage checks to
+    /// make sure they are not taking on too much debt. This option is mainly meant for smart contract liquidators
     function liquidate(address violator, address collateral, uint256 repayAssets, uint256 minYieldBalance) external;
 }
 
@@ -382,7 +386,7 @@ interface IGovernance {
     function protocolConfigAddress() external view returns (address);
 
     /// @notice Retrieves the protocol fee share
-    /// @return A percentage share of fees accrued belonging to the protocol. In wad scale (1e18)
+    /// @return A percentage share of fees accrued belonging to the protocol, in 1e4 scale
     function protocolFeeShare() external view returns (uint256);
 
     /// @notice Retrieves the address which will receive protocol's fees
@@ -432,6 +436,9 @@ interface IGovernance {
 
     /// @notice Retrieves the maximum liquidation discount
     /// @return The maximum liquidation discount in 1e4 scale
+    /// @dev The default value, which is zero, is deliberately bad, as it means there would be no incentive to liquidate
+    /// unhealthy users. The vault creator must take care to properly select the limit, given the underlying and
+    /// collaterals used.
     function maxLiquidationDiscount() external view returns (uint16);
 
     /// @notice Retrieves liquidation cool-off time, which must elapse after successful account status check before
@@ -499,6 +506,8 @@ interface IGovernance {
 
     /// @notice Set a new interest rate model contract
     /// @param newModel The new IRM address
+    /// @dev If the new model reverts, perhaps due to governor error, the vault will silently use a zero interest
+    /// rate. Governor should make sure the new interest rates are computed as expected.
     function setInterestRateModel(address newModel) external;
 
     /// @notice Set a new hook target and a new bitmap indicating which operations should call the hook target.
