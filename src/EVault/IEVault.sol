@@ -483,11 +483,6 @@ interface IGovernance {
     /// @param rampDuration Ramp duration in seconds
     function setLTV(address collateral, uint16 borrowLTV, uint16 liquidationLTV, uint32 rampDuration) external;
 
-    /// @notice Completely clears LTV configuratrion, signalling the collateral is not considered safe to liquidate
-    /// anymore
-    /// @param collateral Address of the collateral
-    function clearLTV(address collateral) external;
-
     /// @notice Set a new maximum liquidation discount
     /// @param newDiscount New maximum liquidation discount in 1e4 scale
     /// @dev If the discount is zero (the default), the liquidators will not be incentivized to liquidate unhealthy
