@@ -327,6 +327,9 @@ abstract contract GovernanceModule is IGovernance, BalanceUtils, BorrowUtils, LT
 
     /// @inheritdoc IGovernance
     function setMaxLiquidationDiscount(uint16 newDiscount) public virtual nonReentrant governorOnly {
+        // Discount equal 1e4 would cause division by zero error during liquidation
+        if (newDiscount == CONFIG_SCALE) revert E_BadMaxLiquidationDiscount();
+
         vaultStorage.maxLiquidationDiscount = newDiscount.toConfigAmount();
         emit GovSetMaxLiquidationDiscount(newDiscount);
     }

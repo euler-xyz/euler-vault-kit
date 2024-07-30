@@ -53,6 +53,7 @@ contract Errors {
     error E_BadAssetReceiver();
     error E_BadSharesOwner();
     error E_BadSharesReceiver();
+    error E_BadMaxLiquidationDiscount();
     error E_LTVBorrow();
     error E_LTVLiquidation();
     error E_NotHookTarget();
