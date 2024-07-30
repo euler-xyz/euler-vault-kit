@@ -83,7 +83,7 @@ contract EVault is Dispatch {
     function creator() public view virtual override useView(MODULE_VAULT) returns (address) {}
 
 
-    function deposit(uint256 amount, address receiver) public virtual override callThroughEVC returns (uint256) { return super.deposit(amount, receiver); }
+    function deposit(uint256 amount, address receiver) public virtual override callThroughEVC use(MODULE_VAULT) returns (uint256) {}
 
     function mint(uint256 amount, address receiver) public virtual override callThroughEVC use(MODULE_VAULT) returns (uint256) {}
 
