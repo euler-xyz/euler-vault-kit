@@ -38,7 +38,9 @@ contract ESynth is ERC20Collateral, Ownable {
     constructor(IEVC evc_, string memory name_, string memory symbol_)
         ERC20Collateral(evc_, name_, symbol_)
         Ownable(msg.sender)
-    {}
+    {
+        ignoredForTotalSupply.add(address(this));
+    }
 
     /// @notice Sets the minting capacity for a minter.
     /// @dev Can only be called by the owner of the contract.
