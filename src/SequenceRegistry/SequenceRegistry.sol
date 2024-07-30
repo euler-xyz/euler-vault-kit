@@ -19,7 +19,7 @@ contract SequenceRegistry is ISequenceRegistry {
     /// @param designator The opaque designator string
     /// @param id The reserved ID, which is unique per designator
     /// @param caller The msg.sender who reserved the ID
-    event SequenceIdReserved(string indexed designator, uint256 indexed id, address indexed caller);
+    event SequenceIdReserved(string designator, uint256 indexed id, address indexed caller);
 
     /// @inheritdoc ISequenceRegistry
     function reserveSeqId(string calldata designator) external returns (uint256) {
