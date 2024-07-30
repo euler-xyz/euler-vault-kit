@@ -68,6 +68,42 @@ contract ESRFuzzTest is ESRTest {
         }
     }
 
+    function testFuzz_conditionalAccruedInterestUpdate(uint32 interestAmount) public {
+        // min deposit requirement before gulp
+        doDeposit(user, 1e7);
+
+        // mint some interest to be distributed
+        asset.mint(address(esr), interestAmount);
+
+        uint256 balance = asset.balanceOf(address(esr));
+        uint256 totalAssets = esr.totalAssets();
+
+        esr.gulp();
+        skip(1);
+
+        if (interestAmount < esr.INTEREST_SMEAR()) {
+            assertEq(esr.totalAssets(), totalAssets);
+            assertEq(esr.totalAssets() + interestAmount, balance);
+        } else {
+            uint256 accruedInterest = interestAmount / esr.INTEREST_SMEAR();
+            assertEq(esr.totalAssets() + interestAmount - accruedInterest, balance);
+            vm.expectEmit();
+            emit EulerSavingsRate.InterestUpdated(accruedInterest, interestAmount - accruedInterest);
+        }
+
+        vm.recordLogs();
+        esr.gulp();
+
+        Vm.Log[] memory logs = vm.getRecordedLogs();
+        if (interestAmount < esr.INTEREST_SMEAR()) {
+            assertEq(logs.length, 1);
+            assertNotEq(logs[0].topics[0], EulerSavingsRate.InterestUpdated.selector);
+        } else {
+            assertEq(logs.length, 2);
+            assertEq(logs[0].topics[0], EulerSavingsRate.InterestUpdated.selector);
+        }
+    }
+
     // fuzz test that any deposits added are added to the totalAssetsDeposited
     function testFuzz_deposit(uint256 depositAmount, uint256 depositAmount2) public {
         depositAmount = bound(depositAmount, 0, type(uint112).max);
