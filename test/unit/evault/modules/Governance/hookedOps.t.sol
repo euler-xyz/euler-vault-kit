@@ -69,7 +69,7 @@ contract Governance_HookedOps is EVaultTestBase {
     }
 
     function getHookCalldata(bytes memory data, address sender) internal view returns (bytes memory) {
-        data = abi.encodePacked(data, eTST.asset(), eTST.oracle(), eTST.unitOfAccount());
+        data = abi.encodePacked(data, bytes4(0), eTST.asset(), eTST.oracle(), eTST.unitOfAccount());
 
         if (sender != address(0)) data = abi.encodePacked(data, sender);
 

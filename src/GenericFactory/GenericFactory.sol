@@ -123,12 +123,15 @@ contract GenericFactory is MetaProxyDeployer {
 
         if (desiredImplementation == address(0) || desiredImplementation != _implementation) revert E_Implementation();
 
+        // The provided trailing data is prefixed with 4 zero bytes to avoid potential selector clashing in case the
+        // proxy is called with empty calldata.
+        bytes memory prefixTrailingData = abi.encodePacked(bytes4(0), trailingData);
         address proxy;
 
         if (upgradeable) {
-            proxy = address(new BeaconProxy(trailingData));
+            proxy = address(new BeaconProxy(prefixTrailingData));
         } else {
-            proxy = deployMetaProxy(desiredImplementation, trailingData);
+            proxy = deployMetaProxy(desiredImplementation, prefixTrailingData);
         }
 
         proxyLookup[proxy] =
