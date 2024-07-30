@@ -130,4 +130,48 @@ contract ESynthGeneralTest is ESynthTest {
         vm.expectRevert(ESynth.E_NotEVCCompatible.selector);
         esynth.allocate(address(wrongEVC), amount);
     }
+
+    function test_GovernanceModifiers(address owner, uint8 id, address nonOwner, uint128 amount) public {
+        vm.assume(owner != address(0) && owner != address(evc));
+        vm.assume(!evc.haveCommonOwner(owner, nonOwner) && nonOwner != address(evc));
+        vm.assume(id != 0);
+
+        vm.prank(owner);
+        esynth = ESynth(address(new ESynth(evc, "Test Synth", "TST")));
+
+        // succeeds if called directly by an owner
+        vm.prank(owner);
+        esynth.setCapacity(address(this), amount);
+
+        // fails if called by a non-owner
+        vm.prank(nonOwner);
+        vm.expectRevert();
+        esynth.setCapacity(address(this), amount);
+
+        // succeeds if called by an owner through the EVC
+        vm.prank(owner);
+        evc.call(address(esynth), owner, 0, abi.encodeCall(ESynth.setCapacity, (address(this), amount)));
+
+        // fails if called by non-owner through the EVC
+        vm.prank(nonOwner);
+        vm.expectRevert();
+        evc.call(address(esynth), nonOwner, 0, abi.encodeCall(ESynth.setCapacity, (address(this), amount)));
+
+        // fails if called by a sub-account of an owner through the EVC
+        vm.prank(owner);
+        vm.expectRevert();
+        evc.call(
+            address(esynth),
+            address(uint160(owner) ^ id),
+            0,
+            abi.encodeCall(ESynth.setCapacity, (address(this), amount))
+        );
+
+        // fails if called by the owner operator through the EVC
+        vm.prank(owner);
+        evc.setAccountOperator(owner, nonOwner, true);
+        vm.prank(nonOwner);
+        vm.expectRevert();
+        evc.call(address(esynth), owner, 0, abi.encodeCall(ESynth.setCapacity, (address(this), amount)));
+    }
 }
