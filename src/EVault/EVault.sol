@@ -151,7 +151,7 @@ contract EVault is Dispatch {
 
     function disableController() public virtual override use(MODULE_RISKMANAGER) {}
 
-    function checkAccountStatus(address account, address[] calldata collaterals) public virtual override returns (bytes4) { return super.checkAccountStatus(account, collaterals); }
+    function checkAccountStatus(address account, address[] calldata collaterals) public view virtual override returns (bytes4) { return super.checkAccountStatus(account, collaterals); }
 
     function checkVaultStatus() public virtual override returns (bytes4) { return super.checkVaultStatus(); }
 

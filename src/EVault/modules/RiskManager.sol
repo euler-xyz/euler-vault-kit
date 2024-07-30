@@ -68,6 +68,7 @@ abstract contract RiskManagerModule is IRiskManager, LiquidityUtils {
     /// `disableController`), but they don't change the vault's storage.
     function checkAccountStatus(address account, address[] calldata collaterals)
         public
+        view
         virtual
         reentrantOK
         onlyEVCChecks

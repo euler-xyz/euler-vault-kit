@@ -325,7 +325,7 @@ interface IRiskManager is IEVCVault {
     /// @return magicValue Must return the bytes4 magic value 0xb168c58f (which is a selector of this function) when
     /// account status is valid, or revert otherwise.
     /// @dev Only callable by EVC during status checks
-    function checkAccountStatus(address account, address[] calldata collaterals) external returns (bytes4);
+    function checkAccountStatus(address account, address[] calldata collaterals) external view returns (bytes4);
 
     /// @notice Checks the status of the vault and reverts if caps are exceeded
     /// @return magicValue Must return the bytes4 magic value 0x4b3d1223 (which is a selector of this function) when
