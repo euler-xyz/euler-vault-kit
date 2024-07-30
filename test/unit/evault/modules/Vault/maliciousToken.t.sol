@@ -91,8 +91,8 @@ contract VaultTest_MaliciousToken is EVaultTestBase {
         vm.expectRevert(
             abi.encodeWithSelector(
                 SafeERC20Lib.E_TransferFromFailed.selector,
-                abi.encodeWithSignature("Error(string)", "revert behaviour"),
-                abi.encodeWithSelector(IAllowanceTransfer.AllowanceExpired.selector, 0)
+                abi.encodeWithSelector(IAllowanceTransfer.AllowanceExpired.selector, 0),
+                abi.encodeWithSignature("Error(string)", "revert behaviour")
             )
         );
         eTST2.repay(1e18, user3);
@@ -103,8 +103,8 @@ contract VaultTest_MaliciousToken is EVaultTestBase {
         vm.expectRevert(
             abi.encodeWithSelector(
                 SafeERC20Lib.E_TransferFromFailed.selector,
-                abi.encodeWithSignature("Error(string)", "revert behaviour"),
-                abi.encodeWithSelector(IAllowanceTransfer.AllowanceExpired.selector, 0)
+                abi.encodeWithSelector(IAllowanceTransfer.AllowanceExpired.selector, 0),
+                abi.encodeWithSignature("Error(string)", "revert behaviour")
             )
         );
         startHoax(user1);
@@ -120,8 +120,8 @@ contract VaultTest_MaliciousToken is EVaultTestBase {
         vm.expectRevert(
             abi.encodeWithSelector(
                 SafeERC20Lib.E_TransferFromFailed.selector,
-                abi.encodeWithSignature("E_Reentrancy()"),
-                abi.encodeWithSelector(IAllowanceTransfer.AllowanceExpired.selector, 0)
+                abi.encodeWithSelector(IAllowanceTransfer.AllowanceExpired.selector, 0),
+                abi.encodeWithSignature("E_Reentrancy()")
             )
         );
         eTST.deposit(1e18, user1);
@@ -135,8 +135,8 @@ contract VaultTest_MaliciousToken is EVaultTestBase {
         vm.expectRevert(
             abi.encodeWithSelector(
                 SafeERC20Lib.E_TransferFromFailed.selector,
-                abi.encodeWithSignature("E_Reentrancy()"),
-                abi.encodeWithSelector(IAllowanceTransfer.AllowanceExpired.selector, 0)
+                abi.encodeWithSelector(IAllowanceTransfer.AllowanceExpired.selector, 0),
+                abi.encodeWithSignature("E_Reentrancy()")
             )
         );
         eTST.deposit(1e18, user1);

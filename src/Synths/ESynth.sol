@@ -20,9 +20,14 @@ contract ESynth is ERC20EVCCompatible, Ownable {
         uint128 minted;
     }
 
+    /// @notice contains the minting capacity and minted amount for each minter.
     mapping(address => MinterData) public minters;
+    /// @notice contains the list of addresses to ignore for the total supply.
     EnumerableSet.AddressSet internal ignoredForTotalSupply;
 
+    /// @notice Emitted when the minting capacity for a minter is set.
+    /// @param minter The address of the minter.
+    /// @param capacity The capacity set for the minter.
     event MinterCapacitySet(address indexed minter, uint256 capacity);
 
     error E_CapacityReached();
@@ -31,13 +36,15 @@ contract ESynth is ERC20EVCCompatible, Ownable {
     constructor(address evc_, string memory name_, string memory symbol_)
         ERC20EVCCompatible(evc_, name_, symbol_)
         Ownable(msg.sender)
-    {}
+    {
+        ignoredForTotalSupply.add(address(this));
+    }
 
     /// @notice Sets the minting capacity for a minter.
     /// @dev Can only be called by the owner of the contract.
     /// @param minter The address of the minter to set the capacity for.
     /// @param capacity The capacity to set for the minter.
-    function setCapacity(address minter, uint128 capacity) external onlyOwner {
+    function setCapacity(address minter, uint128 capacity) external onlyEVCAccountOwner onlyOwner {
         minters[minter].capacity = capacity;
         emit MinterCapacitySet(minter, capacity);
     }
@@ -99,7 +106,7 @@ contract ESynth is ERC20EVCCompatible, Ownable {
     /// @dev Adds the vault to the list of accounts to ignore for the total supply.
     /// @param vault The vault to deposit the cash in.
     /// @param amount The amount of cash to deposit.
-    function allocate(address vault, uint256 amount) external onlyOwner {
+    function allocate(address vault, uint256 amount) external onlyEVCAccountOwner onlyOwner {
         if (IEVault(vault).EVC() != address(evc)) {
             revert E_NotEVCCompatible();
         }
@@ -111,7 +118,7 @@ contract ESynth is ERC20EVCCompatible, Ownable {
     /// @notice Withdraw cash from the attached vault to this contract.
     /// @param vault The vault to withdraw the cash from.
     /// @param amount The amount of cash to withdraw.
-    function deallocate(address vault, uint256 amount) external onlyOwner {
+    function deallocate(address vault, uint256 amount) external onlyEVCAccountOwner onlyOwner {
         IEVault(vault).withdraw(amount, address(this), address(this));
     }
 
@@ -119,8 +126,8 @@ contract ESynth is ERC20EVCCompatible, Ownable {
     /// @dev Overriden due to the conflict with the Context definition.
     /// @dev This function returns the account on behalf of which the current operation is being performed, which is
     /// either msg.sender or the account authenticated by the EVC.
-    /// @return The address of the message sender.
-    function _msgSender() internal view virtual override (ERC20EVCCompatible, Context) returns (address) {
+    /// @return msgSender The address of the message sender.
+    function _msgSender() internal view virtual override (ERC20EVCCompatible, Context) returns (address msgSender) {
         return ERC20EVCCompatible._msgSender();
     }
 
@@ -129,37 +136,43 @@ contract ESynth is ERC20EVCCompatible, Ownable {
     /// @notice Adds an account to the list of accounts to ignore for the total supply.
     /// @param account The account to add to the list.
     /// @return success True when the account was not on the list and was added. False otherwise.
-    function addIgnoredForTotalSupply(address account) external onlyOwner returns (bool success) {
+    function addIgnoredForTotalSupply(address account) external onlyEVCAccountOwner onlyOwner returns (bool success) {
         return ignoredForTotalSupply.add(account);
     }
 
     /// @notice Removes an account from the list of accounts to ignore for the total supply.
     /// @param account The account to remove from the list.
     /// @return success True when the account was on the list and was removed. False otherwise.
-    function removeIgnoredForTotalSupply(address account) external onlyOwner returns (bool success) {
+    function removeIgnoredForTotalSupply(address account)
+        external
+        onlyEVCAccountOwner
+        onlyOwner
+        returns (bool success)
+    {
         return ignoredForTotalSupply.remove(account);
     }
 
     /// @notice Checks if an account is ignored for the total supply.
     /// @param account The account to check.
-    function isIgnoredForTotalSupply(address account) public view returns (bool) {
+    /// @return isIgnored True if the account is ignored for the total supply. False otherwise.
+    function isIgnoredForTotalSupply(address account) external view returns (bool isIgnored) {
         return ignoredForTotalSupply.contains(account);
     }
 
     /// @notice Retrieves all the accounts ignored for the total supply.
-    /// @return The list of accounts ignored for the total supply.
-    function getAllIgnoredForTotalSupply() public view returns (address[] memory) {
+    /// @return accounts List of accounts ignored for the total supply.
+    function getAllIgnoredForTotalSupply() external view returns (address[] memory accounts) {
         return ignoredForTotalSupply.values();
     }
 
     /// @notice Retrieves the total supply of the token.
     /// @dev Overriden to exclude the ignored accounts from the total supply.
-    /// @return The total supply of the token.
-    function totalSupply() public view override returns (uint256) {
-        uint256 total = super.totalSupply();
+    /// @return total Total supply of the token.
+    function totalSupply() public view override returns (uint256 total) {
+        total = super.totalSupply();
 
         uint256 ignoredLength = ignoredForTotalSupply.length(); // cache for efficiency
-        for (uint256 i = 0; i < ignoredLength; i++) {
+        for (uint256 i = 0; i < ignoredLength; ++i) {
             total -= balanceOf(ignoredForTotalSupply.at(i));
         }
         return total;

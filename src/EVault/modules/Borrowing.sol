@@ -128,19 +128,17 @@ abstract contract BorrowingModule is IBorrowing, AssetTransfers, BalanceUtils, L
     }
 
     /// @inheritdoc IBorrowing
-    function pullDebt(uint256 amount, address from) public virtual nonReentrant returns (uint256) {
+    function pullDebt(uint256 amount, address from) public virtual nonReentrant {
         (VaultCache memory vaultCache, address account) = initOperation(OP_PULL_DEBT, CHECKACCOUNT_CALLER);
 
         if (from == account) revert E_SelfTransfer();
 
         Assets assets = amount == type(uint256).max ? getCurrentOwed(vaultCache, from).toAssetsUp() : amount.toAssets();
 
-        if (assets.isZero()) return 0;
+        if (assets.isZero()) return;
         transferBorrow(vaultCache, from, account, assets);
 
         emit PullDebt(from, account, assets.toUint());
-
-        return assets.toUint();
     }
 
     /// @inheritdoc IBorrowing

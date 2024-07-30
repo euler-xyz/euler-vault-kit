@@ -53,8 +53,18 @@ contract MockPriceOracle {
     }
 
     function calculateQuote(address base, uint256 amount, uint256 p) internal view returns (uint256) {
-        (bool success,) = base.staticcall(abi.encodeCall(IERC4626.asset, ()));
-        if (base.code.length > 0 && success) amount = IEVault(base).convertToAssets(amount);
+        // While base is a vault (for the purpose of the mock, if it implements asset()), then call
+        // convertToAssets() to price its shares. This is similar to how EulerRouter implements
+        // "resolved" vaults.
+
+        while (base.code.length > 0) {
+            (bool success, bytes memory data) = base.staticcall(abi.encodeCall(IERC4626.asset, ()));
+            if (!success) break;
+
+            (address asset) = abi.decode(data, (address));
+            amount = IEVault(base).convertToAssets(amount);
+            base = asset;
+        }
 
         return amount * p / 1e18;
     }
