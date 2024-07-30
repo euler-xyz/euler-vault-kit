@@ -122,7 +122,7 @@ contract EVault is Dispatch {
 
     function repayWithShares(uint256 amount, address receiver) public virtual override callThroughEVC use(MODULE_BORROWING) returns (uint256 shares, uint256 debt) {}
 
-    function pullDebt(uint256 amount, address from) public virtual override callThroughEVC use(MODULE_BORROWING) returns (uint256) {}
+    function pullDebt(uint256 amount, address from) public virtual override callThroughEVC use(MODULE_BORROWING) {}
 
     function flashLoan(uint256 amount, bytes calldata data) public virtual override use(MODULE_BORROWING) {}
 

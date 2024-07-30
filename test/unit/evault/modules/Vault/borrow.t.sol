@@ -679,6 +679,50 @@ contract VaultTest_Borrow is EVaultTestBase {
         assertEq(eTST.debtOf(borrower), 0);
     }
 
+    function test_repayLogsTransferDebt() external {
+        eTST.setInterestRateModel(address(new IRMTestFixed()));
+
+        startHoax(borrower);
+
+        evc.enableController(borrower, address(eTST));
+        evc.enableCollateral(borrower, address(eTST2));
+        assetTST.approve(address(eTST), type(uint256).max);
+        assetTST.mint(borrower, 1000e18);
+
+        eTST.borrow(1, borrower);
+
+        assetTST2.transfer(borrower2, type(uint256).max / 2);
+
+        startHoax(borrower2);
+
+        assetTST2.approve(address(eTST2), type(uint256).max);
+        eTST2.deposit(10e18, borrower2);
+
+        evc.enableController(borrower2, address(eTST));
+        evc.enableCollateral(borrower2, address(eTST2));
+        assetTST.approve(address(eTST), type(uint256).max);
+        assetTST.mint(borrower2, 1000e18);
+
+        skip(10 days);
+
+        // a little interest accrued (0.3%)
+        assertEq(owedTo1e5(eTST.debtOfExact(borrower)), 1.00274e5);
+
+        // record interest in storage
+        startHoax(borrower);
+        eTST.borrow(1, borrower);
+
+        // now borrower in LogRepay would receive amount = 2, prevOwed = 3, owed = 0.
+        // Amount is adjusted to 3 and interest accrued is 0, so no event is emitted
+        startHoax(borrower2);
+        vm.recordLogs();
+        vm.expectEmit();
+        emit Events.Repay(borrower, 3);
+        eTST.pullDebt(2, borrower);
+
+        assertEq(vm.getRecordedLogs().length, 11); // InterestAccrued would be the 12th event
+    }
+
     function test_borrowLogsTransferDebt() external {
         eTST.setInterestRateModel(address(new IRMTestFixed()));
 
