@@ -297,6 +297,12 @@ abstract contract GovernanceModule is IGovernance, BalanceUtils, BorrowUtils, LT
 
         if (!currentLTV.initialized) vaultStorage.ltvList.push(collateral);
 
+        if (!newLiquidationLTV.isZero()) {
+            // Ensure that this collateral can be priced by the configured oracle
+            (, IPriceOracle _oracle, address _unitOfAccount) = ProxyUtils.metadata();
+            _oracle.getQuote(1e18, collateral, _unitOfAccount);
+        }
+
         emit GovSetLTV(
             collateral,
             newLTV.borrowLTV.toUint16(),
