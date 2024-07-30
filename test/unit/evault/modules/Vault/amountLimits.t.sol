@@ -25,6 +25,7 @@ contract VaultTest_AmountLimits is EVaultTestBase {
         eTST3 = IEVault(
             factory.createProxy(address(0), true, abi.encodePacked(address(assetTST3), address(oracle), unitOfAccount))
         );
+        eTST3.setHookConfig(address(0), 0);
 
         assetTST.mint(user1, type(uint256).max / 2);
         startHoax(user1);
