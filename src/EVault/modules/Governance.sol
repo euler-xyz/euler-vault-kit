@@ -122,7 +122,11 @@ abstract contract GovernanceModule is IGovernance, BalanceUtils, BorrowUtils, LT
 
     /// @inheritdoc IGovernance
     function protocolFeeShare() public view virtual reentrantOK returns (uint256) {
+        if (vaultStorage.feeReceiver == address(0)) return CONFIG_SCALE;
+
         (, uint256 protocolShare) = protocolConfig.protocolFeeConfig(address(this));
+        if (protocolShare > MAX_PROTOCOL_FEE_SHARE) return MAX_PROTOCOL_FEE_SHARE;
+
         return protocolShare;
     }
 
