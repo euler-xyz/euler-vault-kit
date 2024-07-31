@@ -137,7 +137,7 @@ contract ESynthGeneralTest is ESynthTest {
         vm.assume(id != 0);
 
         vm.prank(owner);
-        esynth = ESynth(address(new ESynth(evc, "Test Synth", "TST")));
+        esynth = ESynth(address(new ESynth(address(evc), "Test Synth", "TST")));
 
         // succeeds if called directly by an owner
         vm.prank(owner);

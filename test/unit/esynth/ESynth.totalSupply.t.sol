@@ -2,7 +2,7 @@
 pragma solidity ^0.8.13;
 
 import {Test} from "forge-std/Test.sol";
-import {ESynth, IEVC, Ownable} from "../../../src/Synths/ESynth.sol";
+import {ESynth, Ownable} from "../../../src/Synths/ESynth.sol";
 
 contract ESynthTotalSupplyTest is Test {
     ESynth synth;
@@ -13,7 +13,7 @@ contract ESynthTotalSupplyTest is Test {
 
     function setUp() public {
         vm.startPrank(owner);
-        synth = new ESynth(IEVC(makeAddr("evc")), "TestSynth", "TS");
+        synth = new ESynth(makeAddr("evc"), "TestSynth", "TS");
         synth.setCapacity(owner, 1000000e18);
         vm.stopPrank();
     }

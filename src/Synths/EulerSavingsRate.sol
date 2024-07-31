@@ -6,7 +6,6 @@ import {Math} from "openzeppelin-contracts/utils/math/Math.sol";
 import {IERC20} from "openzeppelin-contracts/token/ERC20/IERC20.sol";
 import {ERC20} from "openzeppelin-contracts/token/ERC20/ERC20.sol";
 import {ERC4626} from "openzeppelin-contracts/token/ERC20/extensions/ERC4626.sol";
-import {IEVC} from "ethereum-vault-connector/interfaces/IEthereumVaultConnector.sol";
 import {EVCUtil} from "ethereum-vault-connector/utils/EVCUtil.sol";
 
 /// @title EulerSavingsRate
@@ -54,8 +53,8 @@ contract EulerSavingsRate is EVCUtil, ERC4626 {
         esrSlot.locked = UNLOCKED;
     }
 
-    constructor(IEVC _evc, address _asset, string memory _name, string memory _symbol)
-        EVCUtil(address(_evc))
+    constructor(address _evc, address _asset, string memory _name, string memory _symbol)
+        EVCUtil(_evc)
         ERC4626(IERC20(_asset))
         ERC20(_name, _symbol)
     {

@@ -5,7 +5,7 @@ pragma solidity ^0.8.0;
 import "forge-std/Test.sol";
 
 import {PegStabilityModule, EVCUtil} from "../../../src/Synths/PegStabilityModule.sol";
-import {ESynth, IEVC} from "../../../src/Synths/ESynth.sol";
+import {ESynth} from "../../../src/Synths/ESynth.sol";
 import {TestERC20} from "../../mocks/TestERC20.sol";
 import {EthereumVaultConnector} from "ethereum-vault-connector/EthereumVaultConnector.sol";
 import {EVCUtil} from "ethereum-vault-connector/utils/EVCUtil.sol";
@@ -22,7 +22,7 @@ contract PSMTest is Test {
 
     PegStabilityModule public psm;
 
-    IEVC public evc;
+    EthereumVaultConnector public evc;
 
     address public owner = makeAddr("owner");
     address public wallet1 = makeAddr("wallet1");
@@ -34,7 +34,7 @@ contract PSMTest is Test {
 
         // Deploy synth
         vm.prank(owner);
-        synth = new ESynth(evc, "TestSynth", "TSYNTH");
+        synth = new ESynth(address(evc), "TestSynth", "TSYNTH");
 
         // Deploy underlying
         underlying = new TestERC20("TestUnderlying", "TUNDERLYING", 18, false);
@@ -266,7 +266,7 @@ contract PSMTest is Test {
         assertEq(psm.quoteToUnderlyingGivenOut(underlyingAmount), synthAmount);
     }
 
-    function testRoundingPriceConversionsEqualDecimals() public {
+    function testRoundingPriceConversionsEqualDecimals() public view {
         assertEq(psm.quoteToSynthGivenIn(1), 0);
         assertEq(psm.quoteToSynthGivenOut(1), 2);
         assertEq(psm.quoteToUnderlyingGivenIn(1), 0);
