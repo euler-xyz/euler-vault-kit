@@ -69,13 +69,6 @@ methods {
 
 }
 
-// function CVLToShares(uint256 amount) returns BaseHarness.Shares {
-//     return require_uint112(amount);
-// }
-// function CVLToAssets(uint256 amount) returns BaseHarness.Assets {
-//     return require_uint112(amount);
-// }
-
 // This is not in the scene for this config, so we just want it to be
 // an uninterpreted function rather than NONDET so that
 // we get the same value when this is called for different parts
