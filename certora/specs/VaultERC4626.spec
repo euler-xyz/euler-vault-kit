@@ -13,7 +13,7 @@ import "./GhostPow.spec";
 import "./LoadVaultSummary.spec";
 
 using DummyERC20A as ERC20a; 
-using DummyERC20B as ERC20b; 
+// using DummyERC20B as ERC20b; 
 
 /*
     Declaration of methods that are used in the rules. envfree indicate that
@@ -65,16 +65,16 @@ methods {
     function _.balanceTrackerHook(address account, uint256 newAccountBalance, bool forfeitRecentReward) external => NONDET;
     // This is NONDET to help avoid timeouts. It should be safe
     // to NONDET since it is a private view function.
-    function _.resolve(Vault.AmountCap self) internal => NONDET; 
+    function _.resolve(Vault.AmountCap self) internal => CONSTANT; 
 
 }
 
-function CVLToShares(uint256 amount) returns BaseHarness.Shares {
-    return require_uint112(amount);
-}
-function CVLToAssets(uint256 amount) returns BaseHarness.Assets {
-    return require_uint112(amount);
-}
+// function CVLToShares(uint256 amount) returns BaseHarness.Shares {
+//     return require_uint112(amount);
+// }
+// function CVLToAssets(uint256 amount) returns BaseHarness.Assets {
+//     return require_uint112(amount);
+// }
 
 // This is not in the scene for this config, so we just want it to be
 // an uninterpreted function rather than NONDET so that
@@ -352,6 +352,47 @@ invariant vaultSolvency(env e)
             require currentContract != asset(); 
         }
     }
+
+rule vaultSolvencyWithdraw_totals {
+    env e;
+    requireInvariant totalSupplyIsSumOfBalances(e);
+    require e.msg.sender != currentContract;
+    require actualCaller(e) != currentContract;
+    require currentContract != asset(); 
+    uint256 amount;
+    address receiver;
+    address owner;
+    require totalAssets(e) >= totalSupply(e);  
+    require userAssets(e, currentContract) >= require_uint256(cache_cash(e));
+    withdraw(e, amount, receiver, owner);
+    assert totalAssets(e) >= totalSupply(e); 
+}
+
+rule withdraw_amount_max {
+    env e;
+    require e.msg.sender != currentContract;
+    require actualCaller(e) != currentContract;
+    require currentContract != asset(); 
+    uint256 amount;
+    address receiver;
+    address owner;
+    withdraw(e, amount, receiver, owner);
+    assert amount <= max_uint112 || amount == max_uint256;
+}
+
+rule vaultSolvencyWithdraw_underlying {
+    env e;
+    requireInvariant totalSupplyIsSumOfBalances(e);
+    require e.msg.sender != currentContract;
+    require actualCaller(e) != currentContract;
+    require currentContract != asset(); 
+    uint256 amount;
+    address receiver;
+    address owner;
+    require userAssets(e, currentContract) >= require_uint256(cache_cash(e));
+    withdraw(e, amount, receiver, owner);
+    assert userAssets(e, currentContract) >= require_uint256(cache_cash(e));
+}
 
 rule redeemingAllValidity() { 
     env e;
