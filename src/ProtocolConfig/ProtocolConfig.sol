@@ -87,7 +87,7 @@ contract ProtocolConfig is IProtocolConfig {
 
         minInterestFee = 0.1e4;
         maxInterestFee = 1e4;
-        protocolFeeShare = 0.1e4;
+        protocolFeeShare = 0.5e4;
     }
 
     /// @inheritdoc IProtocolConfig

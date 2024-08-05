@@ -140,10 +140,10 @@ contract Governance_Reserves is EVaultTestBase {
     }
 
     function protocolShare(uint256 fees) internal pure returns (uint256) {
-        return fees * 0.1e18 / 1e18;
+        return fees * 0.5e18 / 1e18;
     }
 
     function riskManagerShare(uint256 fees) internal pure returns (uint256) {
-        return fees * (1e18 - 0.1e18) / 1e18;
+        return fees * (1e18 - 0.5e18) / 1e18;
     }
 }
