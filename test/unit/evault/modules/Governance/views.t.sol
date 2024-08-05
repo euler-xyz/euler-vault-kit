@@ -7,7 +7,7 @@ import {EVaultTestBase} from "../../EVaultTestBase.t.sol";
 contract Governance_views is EVaultTestBase {
     function test_protocolFeeShare() public {
         assertEq(eTST.feeReceiver(), feeReceiver);
-        assertEq(eTST.protocolFeeShare(), 0.1e4);
+        assertEq(eTST.protocolFeeShare(), 0.5e4);
 
         vm.prank(admin);
         protocolConfig.setProtocolFeeShare(0.4e4);
