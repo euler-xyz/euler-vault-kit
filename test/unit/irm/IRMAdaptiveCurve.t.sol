@@ -4,9 +4,8 @@ pragma solidity ^0.8.13;
 import {Test} from "forge-std/Test.sol";
 import {IIRM} from "../../../src/InterestRateModels/IIRM.sol";
 import {IRMAdaptiveCurve} from "../../../src/InterestRateModels/IRMAdaptiveCurve.sol";
-import {MathTesting} from "../../helpers/MathTesting.sol";
 
-contract IRMAdaptiveCurveTest is Test, MathTesting {
+contract IRMAdaptiveCurveTest is Test {
     address constant VAULT = address(0x1234);
 
     /// @dev 90%
