@@ -40,6 +40,12 @@ contract IRMAdaptiveCurve is IIRM {
     mapping(address => IRState) public irState;
 
     /// @notice Deploy IRMAdaptiveCurve
+    /// @param _kink The utilization rate targeted by the interest rate model.
+    /// @param _initialKinkRate The initial interest rate at the kink level.
+    /// @param _minKinkRate The minimum interest rate at the kink level that the model can adjust to.
+    /// @param _maxKinkRate The maximum interest rate at the kink level that the model can adjust to.
+    /// @param _slope The steepness of interest rate function below and above the kink.
+    /// @param _adjustmentSpeed The speed at which the kink rate is adjusted up or down.
     constructor(
         int256 _kink,
         int256 _initialKinkRate,
@@ -114,7 +120,7 @@ contract IRMAdaptiveCurve is IIRM {
                 avgKinkRate = startKinkRate;
                 endKinkRate = startKinkRate;
             } else {
-                // Formula of the average rate that should be returned to Morpho Blue:
+                // Formula of the average rate that should be returned:
                 // avg = 1/T * ∫_0^T curve(startKinkRate*exp(speed*x), err) dx
                 // The integral is approximated with the trapezoidal rule:
                 // avg ~= 1/T * Σ_i=1^N [curve(f((i-1) * T/N), err) + curve(f(i * T/N), err)] / 2 * T/N
