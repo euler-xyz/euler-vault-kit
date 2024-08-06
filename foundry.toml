@@ -5,9 +5,9 @@ libs = ["lib"]
 
 optimizer = true
 optimizer_runs = 20_000
-solc = "0.8.23"
+# solc = "0.8.23"
 
-fs_permissions = [{ access = "read-write", path = "./"}]
+fs_permissions = [{ access = "read-write", path = "./" }]
 
 gas_reports = ["*"]
 
@@ -25,7 +25,7 @@ ignore = [
     "src/EVault/EVault.sol",
     "src/EVault/shared/types/VaultStorage.sol",
     "src/EVault/shared/types/VaultCache.sol",
-    "test/mocks/TestERC20.sol"
+    "test/mocks/TestERC20.sol",
 ]
 
 
