@@ -48,11 +48,10 @@ function CVLCheckVaultStatusInternal(env e) returns (bool, bytes) {
         checkVaultMagicValueMemory(e));
 }
 
-// Both rules pass. Run with both:
-// https://prover.certora.com/output/65266/9207ef71046343e993e83f9dfa761eb1?anonymousKey=401a193cacbcbc774185473b0242384e3e8c5b4d
 
 // Collecting fees should increase the protocol’s and the governor’s asset (unless the governor is address(0))
 // STATUS: PASSING
+// https://prover.certora.com/output/65266/9207ef71046343e993e83f9dfa761eb1?anonymousKey=401a193cacbcbc774185473b0242384e3e8c5b4d
 rule feeCollectionIncreasesProtocolGovernerAssets(env e){
 
 	address protocolReceiver; 
@@ -84,6 +83,7 @@ rule feeCollectionIncreasesProtocolGovernerAssets(env e){
 
 // Collecting fees should not change total shares
 // STATUS: PASSING
+// https://prover.certora.com/output/65266/9207ef71046343e993e83f9dfa761eb1?anonymousKey=401a193cacbcbc774185473b0242384e3e8c5b4d
 rule collectingFeeDoesntChangeTotalShares(env e){
 	
 	uint112 totalShares_before = getTotalShares();
@@ -96,4 +96,25 @@ rule collectingFeeDoesntChangeTotalShares(env e){
 
 	assert totalShares_after ==  totalShares_before,"fee collection should not change total shares";
 
+}
+
+// These are assumed elsewhere in the specs
+// Pasing. Run link: https://prover.certora.com/output/65266/c078d73b9aaf41b69de58a059ec9c0ea?anonymousKey=3c865aa300106c0b53d38a8dc479dc0668774e48
+rule LTVConfigProperties {
+	env e;
+	address collateral;
+	uint16 borrowLTV;
+	uint16 liquidationLTV;
+	uint32 rampDuration;
+	uint16 old_borrowLTVOut = getLTVHarness(e, collateral, false);
+	uint16 old_liquidationLTVOut = getLTVHarness(e, collateral, true);
+	require old_borrowLTVOut <= 10000 && 
+		old_liquidationLTVOut <= 10000 && 
+		old_liquidationLTVOut >= old_borrowLTVOut;
+	setLTV(e, collateral, borrowLTV, liquidationLTV, rampDuration);
+	uint16 borrowLTVOut = getLTVHarness(e, collateral, false);
+	uint16 liquidationLTVOut = getLTVHarness(e, collateral, true);
+	assert borrowLTVOut <= 10000 && 
+		liquidationLTVOut <= 10000 && 
+		liquidationLTVOut >= borrowLTVOut;
 }
