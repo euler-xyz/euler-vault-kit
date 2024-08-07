@@ -76,6 +76,7 @@ abstract contract AbstractBaseHarness is Base, LiquidityUtils {
         return false;
     }
 
+
     function hasDebtSocialization() external returns (bool) {
         VaultCache memory vaultCache = loadVault();
         return vaultCache.configFlags.isNotSet(CFG_DONT_SOCIALIZE_DEBT);

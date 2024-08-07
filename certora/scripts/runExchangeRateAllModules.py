@@ -8,13 +8,13 @@ parser.add_argument('-M', '--batchMsg', metavar='M', type=str, nargs='?',
 args = parser.parse_args()
 
 hs_confs = [
-    "BalanceForwarder",
+    # "BalanceForwarder",
     "Borrowing",
-    "Governance",
-    "Liquidation",
-    "RiskManager",
-    "Token",
-    "Vault"
+    # "Governance",
+    # "Liquidation",
+    # "RiskManager",
+    # "Token",
+    # "Vault"
 ]
 
 def runAllConfs(rule):
@@ -26,8 +26,8 @@ def runAllConfs(rule):
 
 
 vaultSplitMethods = [
-  "deposit(uint256,address)",
-  "mint(uint256,address)",
+  #"deposit(uint256,address)",
+  # "mint(uint256,address)",
   "redeem(uint256,address,address)",
   "withdraw(uint256,address,address)"
 ]
@@ -39,5 +39,5 @@ def runVaultSplit(rule):
       print(f"runing {command}")
       subprocess.run(command, shell=True)
 
-# runAllConfs("exchange_rate_virtual_deposit")
-runVaultSplit("exchange_rate_virtual_deposit")
+runAllConfs("exchange_rate_monotonic")
+runVaultSplit("exchange_rate_monotonic")

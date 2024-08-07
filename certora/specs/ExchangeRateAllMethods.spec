@@ -8,11 +8,9 @@ methods {
     // healthStatusCheck reverts unless this is true. We assume it's true 
     // approximate the real situation where these checks get triggered
     // by the EVC before which this flag will be set.
-    // TODO is this needed ??
     // function EVCHarness.areChecksInProgress() external returns bool => CVLAreChecksInProgress();
     
     // unresolved calls that havoc all contracts
-    // TODO consider moving these to base.spec if they do not interfere with
     // ERC4626 or Contest rules. These are from HealthStatusInvariant.spec
     function _.isHookTarget() external => NONDET;
     function _.invokeHookTarget(address caller) internal => NONDET;
@@ -27,7 +25,6 @@ methods {
     function _.requireVaultStatusCheck() external => DISPATCHER(true);
     function _.requireAccountAndVaultStatusCheck(address) external => DISPATCHER(true);
 
-    // TODO This is copied from HealthStatusInvariant. Refactor into Base.spec
     // if possible.
     function _.safeTransferFrom(address token, address from, address to, uint256 value, address permit2) internal with (env e)=> CVLSafeTransferFrom(e, token, from, to, value) expect void;
     function _.enforceCollateralTransfer(address collateral, uint256 amount,
@@ -40,10 +37,18 @@ methods {
         CVLCheckAccountStatusInternal(e, account);
     function EthereumVaultConnector.checkVaultStatusInternal(address vault) internal returns (bool, bytes memory) with(env e) =>
         CVLCheckVaultStatusInternal(e);
-}
 
-// TODO This is copied from HealthStatusInvariant. Refactor into Base.spec
-// if possible.
+    function ExecutionContext.getOnBehalfOfAccount(ExecutionContext.EC) internal returns (address) => CONSTANT;
+    function ExecutionContext.areChecksDeferred(ExecutionContext.EC) internal returns (bool) => ALWAYS(true);
+    function FlagsLib.isNotSet(FlagsLib.Flags,uint32) internal returns (bool) => CONSTANT;
+    function FlagsLib.isSet(FlagsLib.Flags,uint32) internal returns (bool) => CONSTANT;
+    function LiquidityUtils.checkLiquidity(BaseHarness.VaultCache memory,address,address[] memory) internal => NONDET;
+
+
+    // Making this apply to wildcard here rather than LoadVaultSummary
+    // so that we do not cause regressions elsewhere in the project.
+    function _.loadVault() internal with (env e) => CVLLoadVaultAssumeNoUpdate(e) expect (BaseHarness.VaultCache memory);
+}
 
 function CVLSafeTransferFrom(env e, address token, address from, address to, uint256 value) {
     if (token == ERC20a) {
