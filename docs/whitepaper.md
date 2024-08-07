@@ -560,7 +560,7 @@ In essence, a liquidation is equivalent to a stop-loss order. As long as you set
 
 **This section is still a work-in-progress and is subject to change**
 
-Since the EVK is a *kit*, it attempts to be maximally flexible and doesn't enforce policy decisions on vault creators. This means that it is possible to create vaults with insecure or malicious configurations. Furthermore, an otherwise secure vault may be insecure because it accapts an [insecure collateral as collateral](#untrusted-collaterals) (or a collateral vault itself accepts insecure collateral, etc, recursively).
+Since the EVK is a *kit*, it attempts to be maximally flexible and doesn't enforce policy decisions on vault creators. This means that it is possible to create vaults with insecure or malicious configurations. Furthermore, an otherwise secure vault may be insecure because it accepts an [insecure collateral as collateral](#untrusted-collaterals) (or a collateral vault itself accepts insecure collateral, etc, recursively).
 
 Perspectives provide a mechanism for validating properties of a vault using on-chain verifiable logic. A perspective is any contract that implements the following interface:
 
