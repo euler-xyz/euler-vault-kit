@@ -123,12 +123,15 @@ contract GenericFactory is MetaProxyDeployer {
 
         if (desiredImplementation == address(0) || desiredImplementation != _implementation) revert E_Implementation();
 
+        // The provided trailing data is prefixed with 4 zero bytes to avoid potential selector clashing in case the
+        // proxy is called with empty calldata.
+        bytes memory prefixTrailingData = abi.encodePacked(bytes4(0), trailingData);
         address proxy;
 
         if (upgradeable) {
-            proxy = address(new BeaconProxy(trailingData));
+            proxy = address(new BeaconProxy(prefixTrailingData));
         } else {
-            proxy = deployMetaProxy(desiredImplementation, trailingData);
+            proxy = deployMetaProxy(desiredImplementation, prefixTrailingData);
         }
 
         proxyLookup[proxy] =
@@ -149,7 +152,7 @@ contract GenericFactory is MetaProxyDeployer {
     /// @param newImplementation Address of the new implementation contract
     /// @dev Upgrades all existing BeaconProxies to the new logic immediately
     function setImplementation(address newImplementation) external nonReentrant adminOnly {
-        if (newImplementation == address(0)) revert E_BadAddress();
+        if (newImplementation.code.length == 0) revert E_BadAddress();
         implementation = newImplementation;
         emit SetImplementation(newImplementation);
     }

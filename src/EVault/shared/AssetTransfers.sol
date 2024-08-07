@@ -20,15 +20,16 @@ abstract contract AssetTransfers is Base {
         vaultStorage.cash = vaultCache.cash = vaultCache.cash + amount;
     }
 
-    /// @dev If the `CFG_EVC_COMPATIBLE_ASSET` flag is set, the function will protect users from mistakenly sending
-    /// funds to the EVC sub-accounts. Functions that push tokens out (`withdraw`, `redeem`, `borrow`) accept a
-    /// `receiver` argument. If the user sets one of their sub-accounts (not the owner) as the receiver, funds would be
-    /// lost because a regular asset doesn't support the EVC's sub-accounts. The private key to a sub-account (not the
-    /// owner) is not known, so the user would not be able to move the funds out. The function will make a best effort
-    /// to prevent this by checking if the receiver of the token is recognized by EVC as a non-owner sub-account. In
-    /// other words, if there is an account registered in EVC as the owner for the intended receiver, the transfer will
-    /// be prevented. However, there is no guarantee that EVC will have the owner registered. If the asset itself is
-    /// compatible with EVC, it is safe to not set the flag and send the asset to a non-owner sub-account.
+    /// @dev If the `CFG_EVC_COMPATIBLE_ASSET` flag is not set (default), the function will protect users from
+    /// mistakenly sending funds to the EVC sub-accounts. Functions that push tokens out (`withdraw`, `redeem`,
+    /// `borrow`) accept a `receiver` argument. If the user sets one of their sub-accounts (not the owner) as the
+    /// receiver, funds would be lost because a regular asset doesn't support the EVC's sub-accounts. The private key to
+    /// a sub-account (not the owner) is not known, so the user would not be able to move the funds out. The function
+    /// will make a best effort to prevent this by checking if the receiver of the token is recognized by EVC as a
+    /// non-owner sub-account. In other words, if there is an account registered in EVC as the owner for the intended
+    /// receiver, the transfer will be prevented. However, there is no guarantee that EVC will have the owner
+    /// registered. If the asset itself is compatible with EVC, it is safe to set the flag and send the asset to a
+    /// non-owner sub-account.
     function pushAssets(VaultCache memory vaultCache, address to, Assets amount) internal virtual {
         if (
             to == address(0)

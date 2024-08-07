@@ -30,7 +30,6 @@ contract GovernanceTest_GovernorOnly is EVaultTestBase {
     function test_GovernorAdmin() public {
         eTST.setFeeReceiver(address(0));
         eTST.setLTV(address(0), 0, 0, 0);
-        eTST.clearLTV(address(0));
         eTST.setMaxLiquidationDiscount(0);
         eTST.setLiquidationCoolOffTime(0);
         eTST.setInterestRateModel(address(0));
@@ -46,7 +45,6 @@ contract GovernanceTest_GovernorOnly is EVaultTestBase {
 
         evc.call(address(eTST), address(this), 0, abi.encodeCall(eTST.setFeeReceiver, address(0)));
         evc.call(address(eTST), address(this), 0, abi.encodeCall(eTST.setLTV, (address(0), 0, 0, 0)));
-        evc.call(address(eTST), address(this), 0, abi.encodeCall(eTST.clearLTV, address(0)));
         evc.call(address(eTST), address(this), 0, abi.encodeCall(eTST.setMaxLiquidationDiscount, 0));
         evc.call(address(eTST), address(this), 0, abi.encodeCall(eTST.setLiquidationCoolOffTime, 0));
         evc.call(address(eTST), address(this), 0, abi.encodeCall(eTST.setInterestRateModel, address(0)));
@@ -67,8 +65,6 @@ contract GovernanceTest_GovernorOnly is EVaultTestBase {
         eTST.setFeeReceiver(address(0));
         vm.expectRevert(Errors.E_Unauthorized.selector);
         eTST.setLTV(address(0), 0, 0, 0);
-        vm.expectRevert(Errors.E_Unauthorized.selector);
-        eTST.clearLTV(address(0));
         vm.expectRevert(Errors.E_Unauthorized.selector);
         eTST.setMaxLiquidationDiscount(0);
         vm.expectRevert(Errors.E_Unauthorized.selector);
@@ -95,8 +91,6 @@ contract GovernanceTest_GovernorOnly is EVaultTestBase {
         evc.call(address(eTST), subAccount, 0, abi.encodeCall(eTST.setFeeReceiver, address(0)));
         vm.expectRevert(Errors.E_Unauthorized.selector);
         evc.call(address(eTST), subAccount, 0, abi.encodeCall(eTST.setLTV, (address(0), 0, 0, 0)));
-        vm.expectRevert(Errors.E_Unauthorized.selector);
-        evc.call(address(eTST), subAccount, 0, abi.encodeCall(eTST.clearLTV, address(0)));
         vm.expectRevert(Errors.E_Unauthorized.selector);
         evc.call(address(eTST), subAccount, 0, abi.encodeCall(eTST.setMaxLiquidationDiscount, 0));
         vm.expectRevert(Errors.E_Unauthorized.selector);

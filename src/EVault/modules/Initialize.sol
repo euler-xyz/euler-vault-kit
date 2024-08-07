@@ -37,7 +37,6 @@ abstract contract InitializeModule is IInitialize, BorrowUtils {
         (IERC20 asset,,) = ProxyUtils.metadata();
         // Make sure the asset is a contract. Token transfers using a library will not revert if address has no code.
         AddressUtils.checkContract(address(asset));
-        // Other constraints on values should be enforced by product line
 
         // Create sidecar DToken
 
@@ -49,6 +48,8 @@ abstract contract InitializeModule is IInitialize, BorrowUtils {
         vaultStorage.interestAccumulator = INITIAL_INTEREST_ACCUMULATOR;
         vaultStorage.interestFee = DEFAULT_INTEREST_FEE.toConfigAmount();
         vaultStorage.creator = vaultStorage.governorAdmin = proxyCreator;
+        // all operations are initially disabled
+        vaultStorage.hookedOps = Flags.wrap(OP_MAX_VALUE - 1);
 
         {
             string memory underlyingSymbol = getTokenSymbol(address(asset));

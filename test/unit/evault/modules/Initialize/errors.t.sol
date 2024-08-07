@@ -29,7 +29,7 @@ contract InitializeTests is EVaultTestBase, MetaProxyDeployer {
     }
 
     function test_asset_is_a_contract() public {
-        bytes memory trailingData = abi.encodePacked(address(0), address(1), address(2));
+        bytes memory trailingData = abi.encodePacked(bytes4(0), address(0), address(1), address(2));
 
         address proxy = deployMetaProxy(address(new Initialize(integrations)), trailingData);
         vm.expectRevert(Errors.E_BadAddress.selector);

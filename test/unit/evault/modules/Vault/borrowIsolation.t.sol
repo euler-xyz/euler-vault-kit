@@ -29,6 +29,7 @@ contract VaultTest_BorrowIsolation is EVaultTestBase {
         eTST3 = IEVault(
             factory.createProxy(address(0), true, abi.encodePacked(address(assetTST3), address(oracle), unitOfAccount))
         );
+        eTST3.setHookConfig(address(0), 0);
 
         startHoax(address(this));
         eTST.setInterestRateModel(address(new IRMTestZero()));

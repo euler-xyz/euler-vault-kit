@@ -44,14 +44,6 @@ contract GovernanceModuleHandler is BaseHandler {
         assert(true);
     }
 
-    function clearLTV(uint256 i) external {
-        address collateral = _getRandomBaseAsset(i);
-
-        eTST.clearLTV(collateral);
-
-        assert(true);
-    }
-
     function setInterestFee(uint16 interestFee) external {
         eTST.setInterestFee(interestFee);
 

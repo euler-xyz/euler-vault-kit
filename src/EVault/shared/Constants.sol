@@ -11,8 +11,8 @@ uint256 constant MAX_SANE_AMOUNT = type(uint112).max;
 // Last 31 bits are zeros to ensure max debt rounded up equals max sane amount.
 uint256 constant MAX_SANE_DEBT_AMOUNT = uint256(MAX_SANE_AMOUNT) << INTERNAL_DEBT_PRECISION_SHIFT;
 // proxy trailing calldata length in bytes.
-// Three addresses, 20 bytes each: vault underlying asset, oracle and unit of account.
-uint256 constant PROXY_METADATA_LENGTH = 60;
+// Three addresses, 20 bytes each: vault underlying asset, oracle and unit of account + 4 empty bytes.
+uint256 constant PROXY_METADATA_LENGTH = 64;
 // gregorian calendar
 uint256 constant SECONDS_PER_YEAR = 365.2425 * 86400;
 // max interest rate accepted from IRM. 1,000,000% APY: floor(((1000000 / 100 + 1)**(1/(86400*365.2425)) - 1) * 1e27)

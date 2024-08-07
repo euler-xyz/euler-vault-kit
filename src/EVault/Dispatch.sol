@@ -60,6 +60,9 @@ abstract contract Dispatch is
         address governance;
     }
 
+    /// @notice EVault's constructor
+    /// @dev It is highly recommended to deploy fresh modules for every new EVault deployment. Particular care must
+    /// also be taken to ensure the modules are deployed with the exact same values of the `Integrations` struct.
     constructor(Integrations memory integrations, DeployedModules memory modules) Base(integrations) {
         MODULE_INITIALIZE = AddressUtils.checkContract(modules.initialize);
         MODULE_TOKEN = AddressUtils.checkContract(modules.token);

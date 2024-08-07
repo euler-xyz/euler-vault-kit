@@ -171,9 +171,6 @@ contract MockHookTarget is Test, IHookTarget {
         );
 
         vm.expectRevert(Errors.E_Reentrancy.selector);
-        eTST.clearLTV(account1);
-
-        vm.expectRevert(Errors.E_Reentrancy.selector);
         eTST.setInterestRateModel(account1);
 
         vm.expectRevert(Errors.E_Reentrancy.selector);
@@ -212,6 +209,7 @@ contract ReentrancyTest is EVaultTestBase {
         eTST = IEVault(
             factory.createProxy(address(0), true, abi.encodePacked(address(assetTST), address(oracle), unitOfAccount))
         );
+        eTST.setHookConfig(address(0), 0);
 
         vm.assume(sender != address(0) && sender != address(eTST));
 
@@ -405,9 +403,6 @@ contract ReentrancyTest is EVaultTestBase {
             uint16(bound(amount1, 0, type(uint16).max)),
             uint32(bound(amount2, 0, type(uint32).max))
         );
-
-        vm.expectRevert(Errors.E_Reentrancy.selector);
-        eTST.clearLTV(account1);
 
         vm.expectRevert(Errors.E_Reentrancy.selector);
         eTST.setInterestRateModel(account1);

@@ -9,7 +9,6 @@ pragma solidity ^0.8.0;
 contract Errors {
     error E_Initialized();
     error E_ProxyMetadata();
-    error E_SelfApproval();
     error E_SelfTransfer();
     error E_InsufficientAllowance();
     error E_InsufficientCash();
@@ -53,6 +52,7 @@ contract Errors {
     error E_BadAssetReceiver();
     error E_BadSharesOwner();
     error E_BadSharesReceiver();
+    error E_BadMaxLiquidationDiscount();
     error E_LTVBorrow();
     error E_LTVLiquidation();
     error E_NotHookTarget();

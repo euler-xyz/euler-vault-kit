@@ -133,6 +133,7 @@ contract EVaultTestBase is AssertionsCustomTypes, Test, DeployPermit2 {
         eTST = IEVault(
             factory.createProxy(address(0), true, abi.encodePacked(address(assetTST), address(oracle), unitOfAccount))
         );
+        eTST.setHookConfig(address(0), 0);
         eTST.setInterestRateModel(address(new IRMTestDefault()));
         eTST.setMaxLiquidationDiscount(0.2e4);
         eTST.setFeeReceiver(feeReceiver);
@@ -140,6 +141,7 @@ contract EVaultTestBase is AssertionsCustomTypes, Test, DeployPermit2 {
         eTST2 = IEVault(
             factory.createProxy(address(0), true, abi.encodePacked(address(assetTST2), address(oracle), unitOfAccount))
         );
+        eTST2.setHookConfig(address(0), 0);
         eTST2.setInterestRateModel(address(new IRMTestDefault()));
         eTST2.setMaxLiquidationDiscount(0.2e4);
         eTST2.setFeeReceiver(feeReceiver);
@@ -152,6 +154,7 @@ contract EVaultTestBase is AssertionsCustomTypes, Test, DeployPermit2 {
         IEVault v = IEVault(
             factory.createProxy(address(0), true, abi.encodePacked(address(asset), address(oracle), unitOfAccount))
         );
+        v.setHookConfig(address(0), 0);
         v.setInterestRateModel(address(new IRMTestDefault()));
 
         v.setInterestFee(1e4);

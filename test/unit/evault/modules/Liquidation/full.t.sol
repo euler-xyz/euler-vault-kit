@@ -11,6 +11,7 @@ import {IEVC} from "ethereum-vault-connector/interfaces/IEthereumVaultConnector.
 import {TestERC20} from "../../../../mocks/TestERC20.sol";
 import {IRMTestFixed} from "../../../../mocks/IRMTestFixed.sol";
 import {IRMTestZero} from "../../../../mocks/IRMTestZero.sol";
+import {IRMMax} from "../../../../mocks/IRMMax.sol";
 
 import "forge-std/Test.sol";
 
@@ -50,16 +51,19 @@ contract VaultLiquidation_Test is EVaultTestBase {
         eWETH = IEVault(
             factory.createProxy(address(0), true, abi.encodePacked(address(assetWETH), address(oracle), unitOfAccount))
         );
+        eWETH.setHookConfig(address(0), 0);
         eWETH.setInterestRateModel(address(new IRMTestZero()));
 
         eTST3 = IEVault(
             factory.createProxy(address(0), true, abi.encodePacked(address(assetTST3), address(oracle), unitOfAccount))
         );
+        eTST3.setHookConfig(address(0), 0);
         eTST3.setInterestRateModel(address(new IRMTestZero()));
 
         eTST4 = IEVault(
             factory.createProxy(address(0), true, abi.encodePacked(address(assetTST4), address(oracle), unitOfAccount))
         );
+        eTST4.setHookConfig(address(0), 0);
         eTST4.setInterestRateModel(address(new IRMTestZero()));
 
         eTST.setLTV(address(eWETH), 0.3e4, 0.3e4, 0);
@@ -625,7 +629,7 @@ contract VaultLiquidation_Test is EVaultTestBase {
         assertEq(eTST2.balanceOf(borrower), 0);
     }
 
-    function test_debtSocialization() public {
+    function test_debtSocialization_basic() public {
         // set up liquidator to support the debt
         startHoax(lender);
         evc.enableController(lender, address(eTST));
@@ -699,6 +703,130 @@ contract VaultLiquidation_Test is EVaultTestBase {
         // liquidator:
         assertEq(eTST.debtOf(lender), maxRepay);
         assertEq(eTST.balanceOf(lender), maxYield);
+    }
+
+    function test_debtSocialization_minLiabilityValue() public {
+        // set up liquidator to support the debt
+        startHoax(lender);
+        evc.enableController(lender, address(eTST));
+        evc.enableCollateral(lender, address(eTST3));
+        evc.enableCollateral(lender, address(eTST2));
+
+        startHoax(address(this));
+        eTST.setLTV(address(eTST3), 0.95e4, 0.95e4, 0);
+        eTST.setLTV(address(eTST2), 0.99e4, 0.99e4, 0);
+
+        startHoax(borrower);
+        eTST2.redeem(type(uint256).max, borrower, borrower);
+        eTST2.deposit(2.7e6, borrower);
+
+        evc.enableController(borrower, address(eTST));
+        eTST.borrow(0.45e6, borrower);
+
+        startHoax(bystander);
+        evc.enableController(bystander, address(eTST));
+        eTST.borrow(1e6, bystander);
+
+        uint256 collateralValue;
+        uint256 liabilityValue;
+
+        vm.stopPrank();
+        eTST.setInterestRateModel(address(new IRMMax()));
+
+        // withdraw remaining deposit to bump utilization
+        startHoax(lender);
+        eTST.redeem(eTST.maxRedeem(lender), lender, lender);
+
+        uint256 snapshot = vm.snapshot();
+
+        (collateralValue, liabilityValue) = eTST.accountLiquidity(borrower, true);
+
+        // just below min socialization liability value
+        assertEq(liabilityValue, 0.99e6);
+
+        uint256 prevTotalBorrows = eTST.totalBorrows();
+        assertEq(prevTotalBorrows, 1.45e6);
+
+        // collateral price falls
+        oracle.setPrice(address(assetTST2), unitOfAccount, 0.3e18);
+
+        (uint256 maxRepay, uint256 maxYield) = eTST.checkLiquidation(lender, borrower, address(eTST2));
+
+        // full collateral is liquidatable, bad debt will remain
+        assertEq(maxYield, 2.7e6);
+
+        address[] memory collaterals = evc.getCollaterals(borrower);
+        assertEq(collaterals.length, 1);
+
+        eTST.liquidate(borrower, address(eTST2), maxRepay, 0);
+
+        (collateralValue, liabilityValue) = eTST.accountLiquidity(borrower, true);
+        assertEq(collateralValue, 0);
+        // non socialized bad debt remains
+        assertEq(liabilityValue, 0.3339e6);
+
+        // total borrows unchanged
+        assertEq(eTST.totalBorrows(), prevTotalBorrows);
+
+        // wait for remaining bad debt to increase above the socialization limit
+
+        skip(50 days);
+
+        (collateralValue, liabilityValue) = eTST.accountLiquidity(borrower, true);
+
+        // value above max
+        assertGt(liabilityValue, 1e6);
+
+        uint256 borrowerPrevDebt = eTST.debtOf(borrower);
+        uint256 lenderPrevDebt = eTST.debtOf(lender);
+        prevTotalBorrows = eTST.totalBorrows();
+
+        (maxRepay, maxYield) = eTST.checkLiquidation(lender, borrower, address(eTST2));
+        // both repay and yield are zero, but socialization can happen
+        assertEq(maxRepay, 0);
+        assertEq(maxYield, 0);
+
+        eTST.liquidate(borrower, address(eTST2), type(uint256).max, 0);
+
+        // no new debt for liquidator
+        assertEq(eTST.debtOf(lender), lenderPrevDebt);
+        // bad debt is removed and socialized
+        assertEq(eTST.debtOf(borrower), 0);
+        assertEq(eTST.totalBorrows(), prevTotalBorrows - borrowerPrevDebt);
+
+        // if debt value was originally above the cap, socialization would happen in the first liquidation
+
+        vm.revertTo(snapshot);
+
+        skip(3 days);
+
+        (collateralValue, liabilityValue) = eTST.accountLiquidity(borrower, true);
+
+        // just above min socialization liability value
+        assertEq(liabilityValue, 1.067803e6);
+
+        prevTotalBorrows = eTST.totalBorrows();
+        borrowerPrevDebt = eTST.debtOf(borrower);
+
+        // collateral price falls
+        oracle.setPrice(address(assetTST2), unitOfAccount, 0.3e18);
+
+        (maxRepay, maxYield) = eTST.checkLiquidation(lender, borrower, address(eTST2));
+
+        // full collateral is liquidatable, bad debt will remain
+        assertEq(maxYield, 2.7e6);
+
+        eTST.liquidate(borrower, address(eTST2), maxRepay, 0);
+
+        (collateralValue, liabilityValue) = eTST.accountLiquidity(borrower, true);
+        assertEq(collateralValue, 0);
+        // debt is socialized
+        assertEq(liabilityValue, 0);
+        assertEq(eTST.debtOf(borrower), 0);
+
+        // total borrows lowered
+        assertLt(eTST.totalBorrows(), prevTotalBorrows);
+        assertApproxEqAbs(eTST.totalBorrows(), prevTotalBorrows - (borrowerPrevDebt - maxRepay), 1);
     }
 
     function test_zeroCollateralWorth() public {
@@ -820,6 +948,57 @@ contract VaultLiquidation_Test is EVaultTestBase {
         assertEq(eTST.totalBorrows(), 0);
     }
 
+    function test_zeroLiabilityWorth() public {
+        // set up liquidator to support the debt
+        startHoax(lender);
+        evc.enableController(lender, address(eTST));
+        evc.enableCollateral(lender, address(eTST3));
+        evc.enableCollateral(lender, address(eTST2));
+
+        startHoax(borrower);
+        evc.enableCollateral(borrower, address(eTST3));
+        evc.enableController(borrower, address(eTST));
+        eTST.borrow(5e18, borrower);
+
+        startHoax(address(this));
+        eTST.setLTV(address(eTST3), 0.95e4, 0.95e4, 0);
+
+        // liability is worthless now (could be a result of rounding down in real scenario)
+        oracle.setPrice(address(assetTST), unitOfAccount, 0);
+
+        (uint256 collateralValue, uint256 liabilityValue) = eTST.accountLiquidity(borrower, false);
+        assertEq(liabilityValue, 0);
+        assertGt(collateralValue, 0);
+
+        (uint256 maxRepay, uint256 maxYield) = eTST.checkLiquidation(lender, borrower, address(eTST2));
+        assertEq(maxRepay, 0);
+        assertEq(maxYield, 0);
+
+        // now collateral is worthless
+        oracle.setPrice(address(assetTST2), unitOfAccount, 0);
+
+        (collateralValue, liabilityValue) = eTST.accountLiquidity(borrower, false);
+        // both values zero now
+        assertEq(liabilityValue, 0);
+        assertEq(collateralValue, 0);
+
+        (maxRepay, maxYield) = eTST.checkLiquidation(lender, borrower, address(eTST2));
+        assertEq(maxRepay, 0);
+        assertEq(maxYield, 0);
+
+        uint256 debtBefore = eTST.debtOf(borrower);
+        uint256 balanceBefore = eTST2.balanceOf(borrower);
+
+        // liquidation is a no-op
+        startHoax(lender);
+        vm.expectEmit();
+        emit Events.Liquidate(lender, borrower, address(eTST2), 0, 0);
+        eTST.liquidate(borrower, address(eTST2), type(uint256).max, 0);
+
+        assertEq(eTST.debtOf(borrower), debtBefore);
+        assertEq(eTST2.balanceOf(borrower), balanceBefore);
+    }
+
     function test_zeroLTVCollateral() public {
         // set up liquidator to support the debt
         startHoax(lender);
@@ -917,16 +1096,15 @@ contract VaultLiquidation_Test is EVaultTestBase {
 
         eTST.liquidate(borrower, address(eTST2), 0, 0);
 
-        //violator
-        assertEq(eTST.debtOf(borrower), 0);
+        // violator
         assertEq(eTST2.balanceOf(borrower), 0);
+        // debt is not socialized because it's under MIN_SOCIALIZATION_LIABILITY_VALUE
+        assertEq(eTST.debtOf(borrower), 2);
+        assertEq(eTST.totalBorrows(), 2);
 
         // liquidator:
         assertEq(eTST.debtOf(lender), 0);
         assertEq(eTST2.balanceOf(lender), 45);
-
-        // total borrows
-        assertEq(eTST.totalBorrows(), 0);
     }
 
     // yield value converted to balance rounds down to 0. equivalent to pullDebt
@@ -1395,6 +1573,7 @@ contract VaultLiquidation_Test is EVaultTestBase {
                 address(0), true, abi.encodePacked(address(assetTST), address(oracle), address(assetTST))
             )
         );
+        eTSTx.setHookConfig(address(0), 0);
         eTSTx.setLTV(address(eTST2), 0.95e4, 0.95e4, 0);
         eTSTx.setMaxLiquidationDiscount(0.2e4);
 
@@ -1654,6 +1833,11 @@ contract VaultLiquidation_Test is EVaultTestBase {
         startHoax(address(this));
         vm.expectRevert(Errors.E_ConfigAmountTooLargeToEncode.selector);
         eTST.setMaxLiquidationDiscount(1e4 + 1);
+
+        // bad
+        startHoax(address(this));
+        vm.expectRevert(Errors.E_BadMaxLiquidationDiscount.selector);
+        eTST.setMaxLiquidationDiscount(1e4);
 
         // set ok
         eTST.setMaxLiquidationDiscount(0.111e4);

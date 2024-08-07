@@ -82,4 +82,19 @@ contract ESRGulpTest is ESRTest {
         assertEq(esrSlot.lastInterestUpdate, block.timestamp);
         assertEq(esrSlot.interestSmearEnd, block.timestamp + esr.INTEREST_SMEAR());
     }
+
+    function testGulpBelowMinSharesForGulp() public {
+        uint256 depositAmount = 1337;
+        doDeposit(user, depositAmount);
+
+        uint256 interestAmount = 10e18;
+        // Mint interest directly into the contract
+        asset.mint(address(esr), interestAmount);
+        esr.gulp();
+        skip(esr.INTEREST_SMEAR());
+
+        EulerSavingsRate.ESRSlot memory esrSlot = esr.getESRSlot();
+        assertEq(esr.totalAssets(), depositAmount);
+        assertEq(esrSlot.interestLeft, 0);
+    }
 }
