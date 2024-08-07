@@ -62,7 +62,7 @@ abstract contract LiquidationModule is ILiquidation, BalanceUtils, LiquidityUtil
         address violator,
         address collateral,
         uint256 desiredRepay
-    ) private view returns (LiquidationCache memory liqCache) {
+    ) internal view returns (LiquidationCache memory liqCache) {
         // Init cache
 
         liqCache.liquidator = liquidator;
