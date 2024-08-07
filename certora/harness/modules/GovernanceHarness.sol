@@ -34,4 +34,9 @@ contract GovernanceHarness is Governance, AbstractBaseHarness, RiskManagerModule
     function getLastAccumulated() external view returns (uint256){
         return uint256(vaultStorage.lastInterestAccumulatorUpdate);
     }
+
+    function getLTVHarness(address collateral, bool liquidation) public view virtual returns (ConfigAmount) {
+        return getLTV(collateral, liquidation);
+    }
+
 }
