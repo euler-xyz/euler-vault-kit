@@ -56,7 +56,6 @@ abstract contract LiquidationModule is ILiquidation, BalanceUtils, LiquidityUtil
         executeLiquidation(vaultCache, liqCache, minYieldBalance);
     }
 
-    // Munged to internal by certora to enable harnessing
     function calculateLiquidation(
         VaultCache memory vaultCache,
         address liquidator,
