@@ -63,8 +63,8 @@ contract VaultTest_BalancesNoInterest is EVaultTestBase {
         vm.expectRevert(
             abi.encodeWithSelector(
                 SafeERC20Lib.E_TransferFromFailed.selector,
-                abi.encodeWithSignature("Error(string)", "ERC20: transfer amount exceeds balance"),
-                abi.encodeWithSelector(IAllowanceTransfer.AllowanceExpired.selector, 0)
+                abi.encodeWithSelector(IAllowanceTransfer.AllowanceExpired.selector, 0),
+                abi.encodeWithSignature("Error(string)", "ERC20: transfer amount exceeds balance")
             )
         );
         eTST.deposit(1, user1);

@@ -243,8 +243,8 @@ contract VaultTest_Deposit is EVaultTestBase {
         vm.expectRevert(
             abi.encodeWithSelector(
                 SafeERC20Lib.E_TransferFromFailed.selector,
-                abi.encodeWithSignature("Error(string)", "ERC20: transfer amount exceeds allowance"),
-                abi.encodeWithSelector(IAllowanceTransfer.AllowanceExpired.selector, 0)
+                abi.encodeWithSelector(IAllowanceTransfer.AllowanceExpired.selector, 0),
+                abi.encodeWithSignature("Error(string)", "ERC20: transfer amount exceeds allowance")
             )
         );
         eTST.deposit(amount, user);
@@ -275,8 +275,8 @@ contract VaultTest_Deposit is EVaultTestBase {
         vm.expectRevert(
             abi.encodeWithSelector(
                 SafeERC20Lib.E_TransferFromFailed.selector,
-                abi.encodeWithSignature("Error(string)", "ERC20: transfer amount exceeds allowance"),
-                abi.encodeWithSelector(IAllowanceTransfer.AllowanceExpired.selector, 0)
+                abi.encodeWithSelector(IAllowanceTransfer.AllowanceExpired.selector, 0),
+                abi.encodeWithSignature("Error(string)", "ERC20: transfer amount exceeds allowance")
             )
         );
         eTST.deposit(amount, user);
@@ -339,8 +339,8 @@ contract VaultTest_Deposit is EVaultTestBase {
         vm.expectRevert(
             abi.encodeWithSelector(
                 SafeERC20Lib.E_TransferFromFailed.selector,
-                abi.encodeWithSignature("Error(string)", "ERC20: transfer amount exceeds allowance"),
-                abi.encodeWithSelector(InsufficientAllowance.selector, amount - 1)
+                abi.encodeWithSelector(InsufficientAllowance.selector, amount - 1),
+                abi.encodeWithSignature("Error(string)", "ERC20: transfer amount exceeds allowance")
             )
         );
         evc.batch(items);
@@ -352,8 +352,8 @@ contract VaultTest_Deposit is EVaultTestBase {
         vm.expectRevert(
             abi.encodeWithSelector(
                 SafeERC20Lib.E_TransferFromFailed.selector,
-                abi.encodeWithSignature("Error(string)", "ERC20: transfer amount exceeds allowance"),
-                abi.encodeWithSelector(IAllowanceTransfer.AllowanceExpired.selector, 1)
+                abi.encodeWithSelector(IAllowanceTransfer.AllowanceExpired.selector, 1),
+                abi.encodeWithSignature("Error(string)", "ERC20: transfer amount exceeds allowance")
             )
         );
         eTST.deposit(amount, user);

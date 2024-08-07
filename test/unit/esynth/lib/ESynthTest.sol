@@ -19,7 +19,7 @@ contract ESynthTest is EVaultTestBase {
         user1 = vm.addr(1001);
         user2 = vm.addr(1002);
 
-        esynth = ESynth(address(new ESynth(evc, "Test Synth", "TST")));
+        esynth = ESynth(address(new ESynth(address(evc), "Test Synth", "TST")));
         assetTST = TestERC20(address(esynth));
 
         eTST = createSynthEVault(address(assetTST));

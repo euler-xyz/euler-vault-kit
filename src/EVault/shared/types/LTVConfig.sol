@@ -7,7 +7,7 @@ import {ConfigAmount} from "./Types.sol";
 /// @title LTVConfig
 /// @notice This packed struct is used to store LTV configuration of a collateral
 struct LTVConfig {
-    // Packed slot: 2 + 2 + 2 + 6 + 4 + 1 = 17
+    // Packed slot: 2 + 2 + 2 + 6 + 4 = 16
     // The value of borrow LTV for originating positions
     ConfigAmount borrowLTV;
     // The value of fully converged liquidation LTV
@@ -18,8 +18,6 @@ struct LTVConfig {
     uint48 targetTimestamp;
     // The time it takes for the liquidation LTV to converge from the initial value to the fully converged value
     uint32 rampDuration;
-    // A flag indicating the LTV configuration was initialized for the collateral
-    bool initialized;
 }
 
 /// @title LTVConfigLib
@@ -68,16 +66,6 @@ library LTVConfigLib {
         newLTV.initialLiquidationLTV = self.getLTV(true);
         newLTV.targetTimestamp = uint48(block.timestamp + rampDuration);
         newLTV.rampDuration = rampDuration;
-        newLTV.initialized = true;
-    }
-
-    // When LTV is cleared, the collateral can't be liquidated, as it's deemed unsafe
-    function clear(LTVConfig storage self) internal {
-        self.borrowLTV = ConfigAmount.wrap(0);
-        self.liquidationLTV = ConfigAmount.wrap(0);
-        self.initialLiquidationLTV = ConfigAmount.wrap(0);
-        self.targetTimestamp = 0;
-        self.rampDuration = 0;
     }
 }
 

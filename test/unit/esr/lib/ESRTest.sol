@@ -20,7 +20,7 @@ contract ESRTest is Test {
     function setUp() public virtual {
         asset = new MockToken();
         evc = new EVC();
-        esr = new EulerSavingsRate(evc, address(asset), NAME, SYMBOL);
+        esr = new EulerSavingsRate(address(evc), address(asset), NAME, SYMBOL);
 
         // Set a non zero timestamp
         vm.warp(420);

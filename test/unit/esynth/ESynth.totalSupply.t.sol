@@ -2,7 +2,7 @@
 pragma solidity ^0.8.13;
 
 import {Test} from "forge-std/Test.sol";
-import {ESynth, IEVC, Ownable} from "../../../src/Synths/ESynth.sol";
+import {ESynth, Ownable} from "../../../src/Synths/ESynth.sol";
 
 contract ESynthTotalSupplyTest is Test {
     ESynth synth;
@@ -13,7 +13,7 @@ contract ESynthTotalSupplyTest is Test {
 
     function setUp() public {
         vm.startPrank(owner);
-        synth = new ESynth(IEVC(makeAddr("evc")), "TestSynth", "TS");
+        synth = new ESynth(makeAddr("evc"), "TestSynth", "TS");
         synth.setCapacity(owner, 1000000e18);
         vm.stopPrank();
     }
@@ -28,8 +28,9 @@ contract ESynthTotalSupplyTest is Test {
         bool success = synth.addIgnoredForTotalSupply(ignored1);
 
         address[] memory ignored = synth.getAllIgnoredForTotalSupply();
-        assertEq(ignored.length, 1);
-        assertEq(ignored[0], ignored1);
+        assertEq(ignored.length, 2);
+        assertEq(ignored[0], address(synth));
+        assertEq(ignored[1], ignored1);
         assertTrue(success);
     }
 
@@ -40,8 +41,9 @@ contract ESynthTotalSupplyTest is Test {
         vm.stopPrank();
 
         address[] memory ignored = synth.getAllIgnoredForTotalSupply();
-        assertEq(ignored.length, 1);
-        assertEq(ignored[0], ignored1);
+        assertEq(ignored.length, 2);
+        assertEq(ignored[0], address(synth));
+        assertEq(ignored[1], ignored1);
         assertFalse(success);
     }
 
@@ -57,7 +59,8 @@ contract ESynthTotalSupplyTest is Test {
         vm.stopPrank();
 
         address[] memory ignored = synth.getAllIgnoredForTotalSupply();
-        assertEq(ignored.length, 0);
+        assertEq(ignored[0], address(synth));
+        assertEq(ignored.length, 1);
         assertTrue(success);
     }
 
@@ -67,29 +70,32 @@ contract ESynthTotalSupplyTest is Test {
         vm.stopPrank();
 
         address[] memory ignored = synth.getAllIgnoredForTotalSupply();
-        assertEq(ignored.length, 0);
+        assertEq(ignored[0], address(synth));
+        assertEq(ignored.length, 1);
         assertFalse(success);
     }
 
-    function test_totalSupply_nothingIgnored() public {
+    function test_totalSupply_nothingIgnoredExceptSynth() public {
         vm.startPrank(owner);
-        synth.mint(ignored1, 100);
-        synth.mint(ignored2, 200);
-        synth.mint(ignored3, 300);
+        synth.mint(address(synth), 100);
+        synth.mint(ignored1, 200);
+        synth.mint(ignored2, 300);
+        synth.mint(ignored3, 400);
         vm.stopPrank();
 
-        assertEq(synth.totalSupply(), 600);
+        assertEq(synth.totalSupply(), 900);
     }
 
     function test_TotalSupplyAddresses_ignored() public {
         vm.startPrank(owner);
-        synth.mint(ignored1, 100);
-        synth.mint(ignored2, 200);
-        synth.mint(ignored3, 300);
+        synth.mint(address(synth), 100);
+        synth.mint(ignored1, 200);
+        synth.mint(ignored2, 300);
+        synth.mint(ignored3, 400);
         synth.addIgnoredForTotalSupply(ignored1);
         synth.addIgnoredForTotalSupply(ignored2);
         vm.stopPrank();
 
-        assertEq(synth.totalSupply(), 300);
+        assertEq(synth.totalSupply(), 400);
     }
 }

@@ -2,8 +2,8 @@
 
 pragma solidity ^0.8.0;
 
-import "../InterestRateModels/IIRM.sol";
-import "../interfaces/IPriceOracle.sol";
+import {IIRM} from "../InterestRateModels/IIRM.sol";
+import {IPriceOracle} from "../interfaces/IPriceOracle.sol";
 import {IERC20} from "../EVault/IEVault.sol";
 
 /// @title IRMSynth
@@ -20,10 +20,15 @@ contract IRMSynth is IIRM {
     uint216 public constant ADJUST_ONE = 1.0e18;
     uint216 public constant ADJUST_INTERVAL = 1 hours;
 
+    /// @notice The address of the synthetic asset.
     address public immutable synth;
+    /// @notice The address of the reference asset.
     address public immutable referenceAsset;
+    /// @notice The address of the oracle.
     IPriceOracle public immutable oracle;
+    /// @notice The target quote which the IRM will try to maintain.
     uint256 public immutable targetQuote;
+    /// @notice The amount of the quote asset to use for the quote.
     uint256 public immutable quoteAmount;
 
     struct IRMData {
@@ -36,7 +41,9 @@ contract IRMSynth is IIRM {
     error E_ZeroAddress();
     error E_InvalidQuote();
 
-    constructor(address synth_, address referenceAsset_, address oracle_, uint256 targetQuoute_) {
+    event InterestUpdated(uint256 rate);
+
+    constructor(address synth_, address referenceAsset_, address oracle_, uint256 targetQuote_) {
         if (synth_ == address(0) || referenceAsset_ == address(0) || oracle_ == address(0)) {
             revert E_ZeroAddress();
         }
@@ -44,7 +51,7 @@ contract IRMSynth is IIRM {
         synth = synth_;
         referenceAsset = referenceAsset_;
         oracle = IPriceOracle(oracle_);
-        targetQuote = targetQuoute_;
+        targetQuote = targetQuote_;
         quoteAmount = 10 ** IERC20(synth_).decimals();
 
         // Refusing to proceed with worthless asset
@@ -54,21 +61,26 @@ contract IRMSynth is IIRM {
         }
 
         irmStorage = IRMData({lastUpdated: uint40(block.timestamp), lastRate: BASE_RATE});
+
+        emit InterestUpdated(BASE_RATE);
     }
 
+    /// @notice Computes the interest rate and updates the storage if necessary.
+    /// @return The interest rate.
     function computeInterestRate(address, uint256, uint256) external override returns (uint256) {
-        IRMData memory irmCache = irmStorage;
-        (uint216 rate, bool updated) = _computeRate(irmCache);
+        (uint216 rate, bool updated) = _computeRate(irmStorage);
 
         if (updated) {
             irmStorage = IRMData({lastUpdated: uint40(block.timestamp), lastRate: rate});
+            emit InterestUpdated(rate);
         }
 
         return rate;
     }
 
-    function computeInterestRateView(address, uint256, uint256) external view override returns (uint256) {
-        (uint216 rate,) = _computeRate(irmStorage);
+    /// @return rate The new interest rate
+    function computeInterestRateView(address, uint256, uint256) external view override returns (uint256 rate) {
+        (rate,) = _computeRate(irmStorage);
         return rate;
     }
 
@@ -89,7 +101,7 @@ contract IRMSynth is IIRM {
             // If the quote is less than the target, increase the rate
             rate = rate * ADJUST_FACTOR / ADJUST_ONE;
         } else {
-            // If the quote is greater than the target, decrease the rate
+            // If the quote is greater than or equal to the target, decrease the rate
             rate = rate * ADJUST_ONE / ADJUST_FACTOR;
         }
 
@@ -103,6 +115,8 @@ contract IRMSynth is IIRM {
         return (rate, updated);
     }
 
+    /// @notice Retrieves the packed IRM data as a struct.
+    /// @return The IRM data.
     function getIRMData() external view returns (IRMData memory) {
         return irmStorage;
     }

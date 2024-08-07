@@ -33,9 +33,11 @@ contract VaultTest_PullDebt is EVaultTestBase {
         eTST3 = IEVault(
             factory.createProxy(address(0), true, abi.encodePacked(address(assetTST3), address(oracle), unitOfAccount))
         );
+        eTST3.setHookConfig(address(0), 0);
         eTST4 = IEVault(
             factory.createProxy(address(0), true, abi.encodePacked(address(assetTST4), address(oracle), unitOfAccount))
         );
+        eTST4.setHookConfig(address(0), 0);
 
         eTST.setInterestRateModel(address(new IRMTestZero()));
         eTST4.setInterestRateModel(address(new IRMTestZero()));

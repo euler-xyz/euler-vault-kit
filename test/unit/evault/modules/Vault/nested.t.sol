@@ -29,6 +29,7 @@ contract VaultTest_Nested is EVaultTestBase {
         eTSTNested = IEVault(
             factory.createProxy(address(0), true, abi.encodePacked(address(eTST), address(oracle), unitOfAccount))
         );
+        eTSTNested.setHookConfig(address(0), 0);
         eTSTNested.setInterestRateModel(address(new IRMTestDefault()));
 
         depositor = makeAddr("depositor");
@@ -143,6 +144,7 @@ contract VaultTest_Nested is EVaultTestBase {
         eTSTDoubleNested = IEVault(
             factory.createProxy(address(0), true, abi.encodePacked(address(eTSTNested), address(oracle), unitOfAccount))
         );
+        eTSTDoubleNested.setHookConfig(address(0), 0);
         eTSTDoubleNested.setInterestRateModel(address(new IRMTestDefault()));
 
         eTSTDoubleNested.setLTV(address(eTST2), 0.9e4, 0.9e4, 0);
