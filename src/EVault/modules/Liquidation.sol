@@ -56,7 +56,6 @@ abstract contract LiquidationModule is ILiquidation, BalanceUtils, LiquidityUtil
         executeLiquidation(vaultCache, liqCache, minYieldBalance);
     }
 
-    // Munged to internal by certora to enable harnessing
     function calculateLiquidation(
         VaultCache memory vaultCache,
         address liquidator,
@@ -158,8 +157,10 @@ abstract contract LiquidationModule is ILiquidation, BalanceUtils, LiquidityUtil
         uint256 maxRepayValue = liabilityValue;
         uint256 maxYieldValue = maxRepayValue * 1e18 / discountFactor;
 
-        // Limit yield to borrower's available collateral, and reduce repay if necessary. This can happen when borrower
-        // has multiple collaterals and seizing all of this one won't bring the violator back to solvency
+        // Limit yield to borrower's available collateral, and reduce repay if necessary. This can happen when
+        // seizing all of the collateral won't bring the violator back to solvency. It can happen simply because
+        // the account health is very low, or because borrower has multiple collaterals and liquidating this one
+        // is not sufficient.
 
         if (collateralValue < maxYieldValue) {
             maxRepayValue = collateralValue * discountFactor / 1e18;
