@@ -9,7 +9,7 @@ rule updateVault_no_unexpected_reverts {
     uint256 lastInterestAccUpd = getlastInterestAccumulatorUpdate(e);
 
     // assignment to deltaT 
-    require lastInterestAccUpd < e.block.timestamp;
+    require lastInterestAccUpd <= e.block.timestamp;
 
     // newTotalBorrows assigment, prevent divide by zero
     require getInterestAcc(e) > 0;
