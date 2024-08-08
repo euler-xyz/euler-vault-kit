@@ -1,0 +1,1 @@
+To run all of these conf files easily, use the certora/scripts/runERC4626RulesSplitConfs.py
