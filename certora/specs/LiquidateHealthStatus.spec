@@ -115,7 +115,6 @@ function CVLSafeTransferFrom(env e, address token, address from, address to, uin
 // for the prover, instead assign which account gets checked to a ghost
 persistent ghost address collateralTransferCheckedAccount;
 function CVLEnforceCollateralTransfer(env e, address collateral, uint256 amount, address from, address receiver) {
-    // evc.requireAccountStatusCheck(e, from);
     collateralTransferCheckedAccount = from;
     if (collateral == ETokenA) {
         ETokenA.transferFromInternalHarnessed(e, from, receiver, amount);

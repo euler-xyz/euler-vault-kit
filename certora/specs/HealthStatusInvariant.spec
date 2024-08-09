@@ -117,7 +117,6 @@ function CVLSafeTransferFrom(env e, address token, address from, address to, uin
 * - enqueue a status check on the evc for the "from" address
 */
 function CVLEnforceCollateralTransfer(env e, address collateral, uint256 amount, address from, address receiver) {
-    evc.requireAccountStatusCheck(e, from);
     if (collateral == ETokenA) {
         ETokenA.transferFromInternalHarnessed(e, from, receiver, amount);
     } else if (collateral == ETokenB) {

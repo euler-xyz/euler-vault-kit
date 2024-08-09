@@ -1,5 +1,5 @@
 // passing
-// run: https://prover.certora.com/output/65266/11417156b83b43c0b03fc0e7cd7f84e9?anonymousKey=68ebc9dadced7038e1193557a50c2c9183abbd72
+// run: https://prover.certora.com/output/65266/7c027fe6b03f4ead8d1fc08b876c8e75?anonymousKey=475104b4504c765772a29b9124ee15355a4cf2c9
 rule updateVault_no_unexpected_reverts {
     env e;
 
