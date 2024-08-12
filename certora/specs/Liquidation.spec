@@ -76,6 +76,34 @@ rule checkLiquidation_healthy() {
     assert maxYield == 0;
 }
 
+rule checkLiquidation_healthy_reverts() {
+    env e;
+    address account;
+    require oracleAddress != 0;
+
+    uint256 liquidityCollateralValue;
+    uint256 liquidityLiabilityValue;
+    address[] collaterals = getCollateralsExt(account);
+    require collaterals.length == 2; // loop unrolling bound
+    (liquidityCollateralValue, liquidityLiabilityValue) = 
+        calculateLiquidityLiquidation(e, account);
+
+    // returns true if there is no liability
+    require liquidityLiabilityValue > 0;
+
+    // calculateLiquidity and checkLiquidity are only
+    // the same if the unitOfAccount is the same
+    // as the underlying asset -- otherwise the
+    // value of the unitOfAccount could change the value
+    // of the liability value returned by getLiabilityValue
+    require unitOfAccount == erc20;
+
+    // checkLiquidityReturning must return FALSE if collateral is not
+    // greater than liability.
+    assert checkLiquidityReturning(e, account, collaterals) <=>
+        (liquidityCollateralValue > liquidityLiabilityValue);
+}
+
 // passing
 // checkLiquidation must revert if:
 //  - violator is the same account as liquidator

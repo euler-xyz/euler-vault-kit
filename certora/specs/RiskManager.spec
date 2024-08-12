@@ -65,6 +65,23 @@ rule ltv_liabilities_equal{
     assert liabilityValue_liquidation == liabilityValue_borrowing;
 }
 
+rule checkLiquidityReturningSameAsOriginal {
+    env e;
+    address account;
+    address[] collaterals = getCollateralsExt(account);
+    // rule out irrelevant reverts in calculateLiquidityExternal
+    // which are also ruled out by the EVC call/batch interface
+    // and the setup for the holy grail rule
+    require e.msg.sender == evc;
+    require evc.areChecksInProgress(e);
+
+    require collaterals.length <= 2; // loop bound
+    bool ret = checkLiquidityReturning(e, account, collaterals);
+    checkAccountStatus@withrevert(e, account, collaterals);
+    bool originalReverted = lastReverted;
+    assert ret <=> !originalReverted;
+}
+
 // Passing
 
 rule accountLiquidityMustRevert {

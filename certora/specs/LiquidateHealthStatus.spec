@@ -129,10 +129,8 @@ function CVLSafeTransferFrom(address token, address from, address to, uint256 va
 */
 // Because calling to requireAccountStatusCheck on EVC is expensive
 // for the prover, instead assign which account gets checked to a ghost
-persistent ghost address collateralTransferCheckedAccount;
 function CVLEnforceCollateralTransfer(address collateral, uint256 amount, address from, address receiver) {
     env e;
-    collateralTransferCheckedAccount = from;
     if (collateral == ETokenA) {
         ETokenA.transferFromInternalHarnessed(e, from, receiver, amount);
     } else if (collateral == ETokenB) {
@@ -198,7 +196,6 @@ rule liquidateAccountsStayHealthy_liquidator_no_debt_socialization {
 
     // initialize checked accounts to 0
     require accountToCheckGhost == 0; // account checked in initialize
-    require collateralTransferCheckedAccount == 0;
 
     // account eq liquidator case
     require collateral == ETokenA || collateral == ETokenB;
@@ -214,9 +211,6 @@ rule liquidateAccountsStayHealthy_liquidator_no_debt_socialization {
 
     if(accountToCheckGhost != 0) {
         currentContract.checkAccountStatus(e, accountToCheckGhost, collaterals);
-    }
-    if(collateralTransferCheckedAccount != 0) {
-        currentContract.checkAccountStatus(e, collateralTransferCheckedAccount, collaterals);
     }
 
     bool healthyAfter = checkLiquidityReturning(e, account, collaterals);
@@ -262,7 +256,6 @@ rule liquidateAccountsStayHealthy_liquidator_with_debt_socialization {
 
     // initialize checked accounts to 0
     require accountToCheckGhost == 0; // account checked in initialize
-    require collateralTransferCheckedAccount == 0;
 
     // account eq liquidator case
     require collateral == collaterals[0] || collateral == collaterals[1];
@@ -278,9 +271,6 @@ rule liquidateAccountsStayHealthy_liquidator_with_debt_socialization {
 
     if(accountToCheckGhost != 0) {
         currentContract.checkAccountStatus(e, accountToCheckGhost, collaterals);
-    }
-    if(collateralTransferCheckedAccount != 0) {
-        currentContract.checkAccountStatus(e, collateralTransferCheckedAccount, collaterals);
     }
 
     bool healthyAfter = checkLiquidityReturning(e, account, collaterals);
@@ -325,7 +315,6 @@ rule liquidateAccountsStayHealthy_not_violator {
 
     // initialize checked accounts to 0
     require accountToCheckGhost == 0; // account checked in initialize
-    require collateralTransferCheckedAccount == 0;
 
     // account NE violator case
     require account != violator;
@@ -346,9 +335,6 @@ rule liquidateAccountsStayHealthy_not_violator {
 
     if(accountToCheckGhost != 0) {
         currentContract.checkAccountStatus(e, accountToCheckGhost, collaterals);
-    }
-    if(collateralTransferCheckedAccount != 0) {
-        currentContract.checkAccountStatus(e, collateralTransferCheckedAccount, collaterals);
     }
 
     bool healthyAfter = checkLiquidityReturning(e, account, collaterals);
@@ -393,7 +379,6 @@ rule liquidateAccountsStayHealthy_account_cur_contract {
 
     // initialize checked accounts to 0
     require accountToCheckGhost == 0; // account checked in initialize
-    require collateralTransferCheckedAccount == 0;
 
     bool healthyBefore = checkLiquidityReturning(e, account, collaterals);
     currentContract.liquidate(e, violator, collateral, repayAssets, minYieldBalance);
@@ -409,9 +394,6 @@ rule liquidateAccountsStayHealthy_account_cur_contract {
 
     if(accountToCheckGhost != 0) {
         currentContract.checkAccountStatus(e, accountToCheckGhost, collaterals);
-    }
-    if(collateralTransferCheckedAccount != 0) {
-        currentContract.checkAccountStatus(e, collateralTransferCheckedAccount, collaterals);
     }
 
     bool healthyAfter = checkLiquidityReturning(e, account, collaterals);

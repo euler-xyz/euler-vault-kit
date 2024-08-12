@@ -16,6 +16,13 @@ contract LiquidationHarness is AbstractBaseHarness, Liquidation {
         return calculateLiquidity(loadVault(), account, getCollaterals(account), true);
     }
 
+    function calculateLiquidityLiquidation(
+        address account
+    ) public view returns (uint256 collateralValue, uint256 liabilityValue) {
+        return calculateLiquidity(loadVault(), account, getCollaterals(account), false);
+    }
+
+
     function calculateLiquidationExt(
         VaultCache memory vaultCache,
         address liquidator,
