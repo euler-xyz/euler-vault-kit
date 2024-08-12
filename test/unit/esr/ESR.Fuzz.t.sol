@@ -14,11 +14,18 @@ contract ESRFuzzTest is ESRTest {
 
     //totalAssets should be equal to the balance after SMEAR has passed
     function invariant_totalAssetsShouldBeEqualToBalanceAfterSMEAR() public {
-        vm.assume(asset.balanceOf(address(esr)) <= type(uint168).max);
-        if (asset.balanceOf(address(esr)) == 0) return;
+        if (asset.totalSupply() > type(uint248).max) return;
+        if (asset.balanceOf(address(esr)) == 0 || asset.balanceOf(address(esr)) > type(uint168).max - 1e7) return;
+
+        // min deposit requirement before gulp
+        doDeposit(user, 1e7);
+
+        uint256 balance = asset.balanceOf(address(esr));
+
         esr.gulp();
         skip(esr.INTEREST_SMEAR()); // make sure smear has passed
-        assertEq(esr.totalAssets(), asset.balanceOf(address(esr)));
+
+        assertEq(esr.totalAssets(), balance);
     }
 
     function testFuzz_interestAccrued_under_uint168(uint256 interestAmount, uint256 depositAmount, uint256 timePassed)
@@ -38,6 +45,7 @@ contract ESRFuzzTest is ESRTest {
 
     // this tests shows that when you have a very small deposit and a very large interestAmount minted to the contract
     function testFuzz_gulp_under_uint168(uint256 interestAmount, uint256 depositAmount) public {
+        uint256 MIN_SHARES_FOR_GULP = 10 * 1e6;
         depositAmount = bound(depositAmount, 0, type(uint112).max);
         interestAmount = bound(interestAmount, 0, type(uint256).max - depositAmount); // this makes sure that the mint
             // won't cause overflow
@@ -49,10 +57,50 @@ contract ESRFuzzTest is ESRTest {
 
         EulerSavingsRate.ESRSlot memory esrSlot = esr.updateInterestAndReturnESRSlotCache();
 
-        if (interestAmount <= type(uint168).max) {
-            assertEq(esrSlot.interestLeft, interestAmount);
+        if (depositAmount >= MIN_SHARES_FOR_GULP) {
+            if (interestAmount <= type(uint168).max) {
+                assertEq(esrSlot.interestLeft, interestAmount);
+            } else {
+                assertEq(esrSlot.interestLeft, type(uint168).max);
+            }
         } else {
-            assertEq(esrSlot.interestLeft, type(uint168).max);
+            assertEq(esrSlot.interestLeft, 0);
+        }
+    }
+
+    function testFuzz_conditionalAccruedInterestUpdate(uint32 interestAmount) public {
+        // min deposit requirement before gulp
+        doDeposit(user, 1e7);
+
+        // mint some interest to be distributed
+        asset.mint(address(esr), interestAmount);
+
+        uint256 balance = asset.balanceOf(address(esr));
+        uint256 totalAssets = esr.totalAssets();
+
+        esr.gulp();
+        skip(1);
+
+        if (interestAmount < esr.INTEREST_SMEAR()) {
+            assertEq(esr.totalAssets(), totalAssets);
+            assertEq(esr.totalAssets() + interestAmount, balance);
+        } else {
+            uint256 accruedInterest = interestAmount / esr.INTEREST_SMEAR();
+            assertEq(esr.totalAssets() + interestAmount - accruedInterest, balance);
+            vm.expectEmit();
+            emit EulerSavingsRate.InterestUpdated(accruedInterest, interestAmount - accruedInterest);
+        }
+
+        vm.recordLogs();
+        esr.gulp();
+
+        Vm.Log[] memory logs = vm.getRecordedLogs();
+        if (interestAmount < esr.INTEREST_SMEAR()) {
+            assertEq(logs.length, 1);
+            assertNotEq(logs[0].topics[0], EulerSavingsRate.InterestUpdated.selector);
+        } else {
+            assertEq(logs.length, 2);
+            assertEq(logs[0].topics[0], EulerSavingsRate.InterestUpdated.selector);
         }
     }
 

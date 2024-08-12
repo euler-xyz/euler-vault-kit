@@ -109,36 +109,6 @@ contract VaultTest_LTV is EVaultTestBase {
         eTST.setLTV(address(eTST2), 1e4 + 1, 1e4 + 1, 0);
     }
 
-    function test_clearLtv() public {
-        eTST.setLTV(address(eTST2), 0.5e4, 0.5e4, 0);
-
-        startHoax(borrower);
-        evc.enableCollateral(borrower, address(eTST2));
-        evc.enableController(borrower, address(eTST));
-        vm.stopPrank();
-
-        // No borrow, liquidation is a no-op
-        (uint256 maxRepay, uint256 maxYield) = eTST.checkLiquidation(depositor, borrower, address(eTST2));
-        assertEq(maxRepay, 0);
-        assertEq(maxYield, 0);
-
-        // setting LTV to 0 doesn't change anything yet
-        eTST.setLTV(address(eTST2), 0, 0, 0);
-
-        (maxRepay, maxYield) = eTST.checkLiquidation(depositor, borrower, address(eTST2));
-        assertEq(maxRepay, 0);
-        assertEq(maxYield, 0);
-
-        // collateral without LTV
-        vm.expectRevert(Errors.E_BadCollateral.selector);
-        eTST.checkLiquidation(depositor, borrower, address(eTST));
-
-        // same error after clearing LTV
-        eTST.clearLTV(address(eTST2));
-        vm.expectRevert(Errors.E_BadCollateral.selector);
-        eTST.checkLiquidation(depositor, borrower, address(eTST2));
-    }
-
     function test_ltvList() public {
         assertEq(eTST.LTVList().length, 0);
 

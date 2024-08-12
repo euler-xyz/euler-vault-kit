@@ -32,6 +32,7 @@ contract VaultTest_Caps is EVaultTestBase {
         eTST3 = IEVault(
             factory.createProxy(address(0), true, abi.encodePacked(address(assetTST3), address(oracle), unitOfAccount))
         );
+        eTST3.setHookConfig(address(0), 0);
 
         eTST.setLTV(address(eTST2), 0.3e4, 0.3e4, 0);
         eTST.setLTV(address(eTST3), 1e4, 1e4, 0);

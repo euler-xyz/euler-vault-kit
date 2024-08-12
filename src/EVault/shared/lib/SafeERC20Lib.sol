@@ -11,8 +11,7 @@ import {IPermit2} from "../../../interfaces/IPermit2.sol";
 /// @author Euler Labs (https://www.eulerlabs.com/)
 /// @notice The library provides helpers for ERC20 transfers, including Permit2 support
 library SafeERC20Lib {
-    error E_TransferFromFailed(bytes errorTransferFrom, bytes errorPermit2);
-    error E_Permit2AmountOverflow();
+    error E_TransferFromFailed(bytes errorPermit2, bytes errorTransferFrom);
 
     // If no code exists under the token address, the function will succeed. EVault ensures this is not the case in
     // `initialize`.
@@ -26,18 +25,21 @@ library SafeERC20Lib {
     }
 
     function safeTransferFrom(IERC20 token, address from, address to, uint256 value, address permit2) internal {
-        (bool success, bytes memory tryData) = trySafeTransferFrom(token, from, to, value);
-        bytes memory fallbackData;
-        if (!success && permit2 != address(0)) {
-            if (value > type(uint160).max) {
-                revert E_TransferFromFailed(tryData, abi.encodePacked(E_Permit2AmountOverflow.selector));
-            }
-            // it's now safe to down-cast value to uint160
-            (success, fallbackData) =
+        bool success;
+        bytes memory permit2Data;
+        bytes memory transferData;
+
+        if (permit2 != address(0) && value <= type(uint160).max) {
+            // it's safe to down-cast value to uint160
+            (success, permit2Data) =
                 permit2.call(abi.encodeCall(IPermit2.transferFrom, (from, to, uint160(value), address(token))));
         }
 
-        if (!success) revert E_TransferFromFailed(tryData, fallbackData);
+        if (!success) {
+            (success, transferData) = trySafeTransferFrom(token, from, to, value);
+        }
+
+        if (!success) revert E_TransferFromFailed(permit2Data, transferData);
     }
 
     // If no code exists under the token address, the function will succeed. EVault ensures this is not the case in
