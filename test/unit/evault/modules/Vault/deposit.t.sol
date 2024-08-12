@@ -390,7 +390,7 @@ contract VaultTest_Deposit is EVaultTestBase {
         startHoax(user);
         eTST.deposit(1, user);
 
-        // borrows it from a second for 1 second 
+        // borrows it from a second for 1 second
         startHoax(user1);
         eTST.borrow(1, user1);
         skip(1);
@@ -401,19 +401,20 @@ contract VaultTest_Deposit is EVaultTestBase {
         eTST.disableController();
 
         // and exchange rate is pushed above 1
-        assertEq(1.000000999999000000e18, eTST.convertToAssets(1e18)); // ~= 1.000001
+        assertEq(1.000000999999e18, eTST.convertToAssets(1e18)); // ~= 1.000001
 
         assertEq(eTST.totalAssets(), 2); // 1 deposited + 1 interest repaid
         assertEq(eTST.cash(), 2);
         assertEq(eTST.totalSupply(), 1); // 1 deposited initially
 
-        // in a loop deposit max assets to create 1 share but not enough for 2. The rounding remainder is a stealth donation
+        // in a loop deposit max assets to create 1 share but not enough for 2. The rounding remainder is a stealth
+        // donation
         for (uint256 i; i < 1000; i++) {
             eTST.deposit(2, user1);
             // 2 were deposited, but they round down to 1 share
             assertEq(eTST.balanceOf(user1), 1);
             // which is redeemable for 1 asset, the rest is donated
-            assertEq(eTST.maxWithdraw(user1) , 1);
+            assertEq(eTST.maxWithdraw(user1), 1);
 
             // reset account
             eTST.withdraw(1, user1, user1);
@@ -426,6 +427,6 @@ contract VaultTest_Deposit is EVaultTestBase {
         assertEq(eTST.totalSupply(), 1);
 
         // it will take 1e6 loops to reach exchange rate of 2
-        assertEq(1.001000998999001000e18, eTST.convertToAssets(1e18)); // ~= 1.001
+        assertEq(1.001000998999001e18, eTST.convertToAssets(1e18)); // ~= 1.001
     }
 }
