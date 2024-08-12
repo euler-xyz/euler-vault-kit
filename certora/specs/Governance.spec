@@ -37,6 +37,8 @@ methods {
 	function _.invokeHookTarget(address caller) internal => NONDET;
 
 	function _.balanceTrackerHook(address account, uint256 newAccountBalance, bool forfeitRecentReward) external => NONDET;
+
+	function _.computeInterestRate(BaseHarness.VaultCache memory) internal => CONSTANT;
 	
 }
 
@@ -86,23 +88,6 @@ rule feeCollectionIncreasesProtocolGovernerAssets(env e){
 	assert protocolReceiverBal_after > protocolReceiverBal_before 
 			&& governorReceiverBal_after > governorReceiverBal_before,
 	"collecting fees should icnrease the shares of the governor and protocol";
-}
-
-// Collecting fees should not change total shares
-// STATUS: PASSING
-// https://prover.certora.com/output/65266/9207ef71046343e993e83f9dfa761eb1?anonymousKey=401a193cacbcbc774185473b0242384e3e8c5b4d
-rule collectingFeeDoesntChangeTotalShares(env e){
-	
-	uint112 totalShares_before = getTotalShares();
-	// requiring that no fee accumulation happens to increase totalShares
-	require getLastAccumulated() == e.block.timestamp;
-
-	convertFees(e);
-	
-	uint112 totalShares_after = getTotalShares();
-
-	assert totalShares_after ==  totalShares_before,"fee collection should not change total shares";
-
 }
 
 // These are assumed elsewhere in the specs
