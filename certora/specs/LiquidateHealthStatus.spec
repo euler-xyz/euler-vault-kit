@@ -7,6 +7,9 @@ using DummyETokenB as ETokenB; // Allows for possibility of multiple
 
 methods {
     function checkAccountMagicValue() external returns (bytes4) envfree;
+    function checkAccountMagicValueMemory() external returns (bytes memory) envfree;
+    function checkVaultMagicValueMemory() external returns (bytes memory) envfree;
+    function EVCHarness.areChecksDeferred() external returns (bool) envfree;
     // healthStatusCheck reverts unless this is true. We assume it's true 
     // approximate the real situation where these checks get triggered
     // by the EVC before which this flag will be set.
@@ -29,19 +32,19 @@ methods {
     function _.requireAccountAndVaultStatusCheck(address) external => DISPATCHER(true);
 
     // Summaries
-    function _.safeTransferFrom(address token, address from, address to, uint256 value, address permit2) internal with (env e)=> CVLSafeTransferFrom(e, token, from, to, value) expect void;
+    function _.safeTransferFrom(address token, address from, address to, uint256 value, address permit2) internal => CVLSafeTransferFrom(token, from, to, value) expect void;
     function _.enforceCollateralTransfer(address collateral, uint256 amount,
-        address from, address receiver) internal with (env e) => 
-        CVLEnforceCollateralTransfer(e, collateral, amount, from, receiver) expect void;
+        address from, address receiver) internal => 
+        CVLEnforceCollateralTransfer(collateral, amount, from, receiver) expect void;
     // To deal with changes between LTV values:
     // function _.getLTV(address collateral, bool liquidation) internal => CVLGetLTV(collateral, liquidation) expect (BaseHarness.ConfigAmount);
     // We can't handle the low-level call in 
     // EthereumVaultConnector.checkAccountStatusInternal 
     // and so reroute it to RiskManager's status check with this summary.
-    function EthereumVaultConnector.checkAccountStatusInternal(address account) internal returns (bool, bytes memory) with (env e) => 
-        CVLCheckAccountStatusInternal(e, account);
-    function EthereumVaultConnector.checkVaultStatusInternal(address vault) internal returns (bool, bytes memory) with(env e) =>
-        CVLCheckVaultStatusInternal(e);
+    function EthereumVaultConnector.checkAccountStatusInternal(address account) internal returns (bool, bytes memory) => 
+        CVLCheckAccountStatusInternal(account);
+    function EthereumVaultConnector.checkVaultStatusInternal(address vault) internal returns (bool, bytes memory) =>
+        CVLCheckVaultStatusInternal();
 
     function _.EVCRequireStatusChecks(address account) internal =>
         EVCRequireStatusChecksCVL(account) expect void;
@@ -65,9 +68,13 @@ function CVLCheckAccountStatusInternalBool(env e, address account) returns bool 
     return !lastReverted;
 }
 
-function CVLCheckAccountStatusInternal(env e, address account) returns (bool, bytes) {
-    return (CVLCheckAccountStatusInternalBool(e, account), 
-        checkAccountMagicValueMemory(e));
+function CVLCheckAccountStatusInternal(address account) returns (bool, bytes) {
+    // We need a new env for the first function.
+    // Since the vault calls the EVC, otherwise msg.sender
+    // would become the vault unless we declare a fresh environment.
+    env eEVC;
+    return (CVLCheckAccountStatusInternalBool(eEVC, account), 
+        checkAccountMagicValueMemory());
 }
 
 function CVLCheckVaultStatusInternalBool(env e) returns bool {
@@ -75,16 +82,25 @@ function CVLCheckVaultStatusInternalBool(env e) returns bool {
     return !lastReverted;
 }
 
-function CVLCheckVaultStatusInternal(env e) returns (bool, bytes) {
-    return (CVLCheckVaultStatusInternalBool(e),
-        checkVaultMagicValueMemory(e));
+function CVLCheckVaultStatusInternal() returns (bool, bytes) {
+    // We need a new env for the first function.
+    // Since the vault calls the EVC, otherwise msg.sender
+    // would become the vault unless we declare a fresh environment.
+    env eEVC;
+    return (CVLCheckVaultStatusInternalBool(eEVC),
+        checkVaultMagicValueMemory());
 }
 
 function CVLAreChecksInProgress() returns bool {
     return true;
 }
 
-function CVLSafeTransferFrom(env e, address token, address from, address to, uint256 value) {
+function CVLSafeTransferFrom(address token, address from, address to, uint256 value) {
+    // We need a new env since this will
+    // be a call from the vault to the ERC20 rather than a call
+    // from the original message sender to the ERC20.
+    // would become the vault unless we declare a fresh environment.
+    env e;
     if (token == ERC20a) {
         ERC20a.transferFrom(e, from, to, value);
     } else if (token == ETokenA) {
@@ -114,7 +130,8 @@ function CVLSafeTransferFrom(env e, address token, address from, address to, uin
 // Because calling to requireAccountStatusCheck on EVC is expensive
 // for the prover, instead assign which account gets checked to a ghost
 persistent ghost address collateralTransferCheckedAccount;
-function CVLEnforceCollateralTransfer(env e, address collateral, uint256 amount, address from, address receiver) {
+function CVLEnforceCollateralTransfer(address collateral, uint256 amount, address from, address receiver) {
+    env e;
     collateralTransferCheckedAccount = from;
     if (collateral == ETokenA) {
         ETokenA.transferFromInternalHarnessed(e, from, receiver, amount);
@@ -159,6 +176,7 @@ rule liquidateAccountsStayHealthy_liquidator_no_debt_socialization {
     require account != oracleAddress;
     require account != evc;
     require account != unitOfAccount;
+    require evc.areChecksDeferred();
 
     require LTVConfigAssumptions(e, getLTVConfig(e, ETokenA));
     require LTVConfigAssumptions(e, getLTVConfig(e, ETokenB));
@@ -222,6 +240,7 @@ rule liquidateAccountsStayHealthy_liquidator_with_debt_socialization {
     require account != oracleAddress;
     require account != evc;
     require account != unitOfAccount;
+    require evc.areChecksDeferred();
 
     require LTVConfigAssumptions(e, getLTVConfig(e, ETokenA));
     require LTVConfigAssumptions(e, getLTVConfig(e, ETokenB));
@@ -284,7 +303,8 @@ rule liquidateAccountsStayHealthy_not_violator {
     require account != erc20;
     require account != oracleAddress;
     require account != evc;
-    require account != unitOfAccount ;
+    require account != unitOfAccount;
+    require evc.areChecksDeferred();
 
     require LTVConfigAssumptions(e, getLTVConfig(e, ETokenA));
     require LTVConfigAssumptions(e, getLTVConfig(e, ETokenB));
@@ -348,7 +368,8 @@ rule liquidateAccountsStayHealthy_account_cur_contract {
     require account != erc20;
     require account != oracleAddress;
     require account != evc;
-    require account != unitOfAccount ;
+    require account != unitOfAccount;
+    require evc.areChecksDeferred();
 
     require LTVConfigAssumptions(e, getLTVConfig(e, ETokenA));
     require LTVConfigAssumptions(e, getLTVConfig(e, ETokenB));
