@@ -14,8 +14,6 @@ contract ERC4626Harness is VaultModule, TokenModule, AbstractBaseHarness {
     function userAssets(address user) public view returns (uint256) { // harnessed
         // The assets in the underlying asset contract (not in the vault)
         return IERC20(asset()).balanceOf(user); 
-        // The assets stored in the vault for a user.
-        // return vaultStorage.users[user].getBalance().toAssetsDown(loadVault()).toUint();
     }
 
     function updateVault() internal override returns (VaultCache memory vaultCache) {

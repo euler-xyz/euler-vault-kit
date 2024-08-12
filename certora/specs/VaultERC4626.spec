@@ -72,9 +72,6 @@ methods {
 // This is not in the scene for this config, so we just want it to be
 // an uninterpreted function rather than NONDET so that
 // we get the same value when this is called for different parts
-// ghost CVLgetCurrentOnBehalfOfAccountAddr(address) returns address {
-//     axiom forall address x. CVLgetCurrentOnBehalfOfAccountAddr(x) != currentContract;
-// }
 ghost address GhostOnBehalfOfAccount {
     axiom GhostOnBehalfOfAccount != currentContract;
     axiom GhostOnBehalfOfAccount != 0;
@@ -295,7 +292,7 @@ rule underlyingCannotChange() {
 ////////////////////////////////////////////////////////////////////////////////
 
 // passing
-// run: https://prover.certora.com/output/65266/1912c053cdf8485087f2c050146c64aa/?anonymousKey=a12e3d573258a4d8136a19b612448a50f80b9a21
+// run: https://prover.certora.com/output/65266/a19010e64bb8424aa513be8b75d15cdf/?anonymousKey=87c73cdf676930336269396f2dbb3cac3d78b997
 rule dustFavorsTheHouse(uint assetsIn )
 {
     env e;
@@ -304,12 +301,12 @@ rule dustFavorsTheHouse(uint assetsIn )
     safeAssumptions(e,e.msg.sender,e.msg.sender);
     uint256 totalSupplyBefore = totalSupply(e);
 
-    uint balanceBefore = currentContract.balanceOf(e, currentContract);
+    uint balanceBefore = userAssets(e, currentContract);
 
     uint shares = deposit(e,assetsIn, e.msg.sender);
     uint assetsOut = redeem(e,shares,e.msg.sender,e.msg.sender);
 
-    uint balanceAfter = currentContract.balanceOf(e, currentContract);
+    uint balanceAfter = userAssets(e, currentContract);
     assert balanceAfter >= balanceBefore;
 }
 

@@ -84,7 +84,6 @@ rule checkLiquidation_healthy() {
 //  - liability vault is not enabled as the only controller of the violator
 //  - violator account status check is deferred
 //  - price oracle is not configured
-//  - price oracle is not configured
 rule checkLiquidation_mustRevert {
     env e;
     address liquidator;

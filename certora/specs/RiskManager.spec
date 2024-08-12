@@ -37,6 +37,34 @@ rule ltv_borrowing_lower {
     
 }
 
+// passing run: https://prover.certora.com/output/65266/e768bd4519db456aac70651279b9f124/?anonymousKey=d78f56247abf57df2dec09115b4700e32946a1a9
+rule ltv_liabilities_equal{
+    env e;
+    calldataarg args;
+
+    address account;
+
+
+    // based on loop bound        
+    address[] collaterals = getCollateralsExt(account);
+    require collaterals.length == 2;
+    require LTVConfigAssumptions(e, getLTVConfig(collaterals[0]));
+    require LTVConfigAssumptions(e, getLTVConfig(collaterals[1]));
+
+    uint256 collateralValue_liquidation;
+    uint256 liabilityValue_liquidation;
+    (collateralValue_liquidation, liabilityValue_liquidation) = accountLiquidity(e, account, true);
+
+    uint256 collateralValue_borrowing;
+    uint256 liabilityValue_borrowing;
+    (collateralValue_borrowing, liabilityValue_borrowing) = accountLiquidity(e, account, false);
+
+    require collateralValue_liquidation > 0;
+    require collateralValue_borrowing > 0;
+
+    assert liabilityValue_liquidation == liabilityValue_borrowing;
+}
+
 // Passing
 
 rule accountLiquidityMustRevert {

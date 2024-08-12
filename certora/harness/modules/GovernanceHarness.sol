@@ -13,7 +13,7 @@ contract GovernanceHarness is Governance, AbstractBaseHarness, RiskManagerModule
         (balance, ) = user.getBalanceAndBalanceForwarder();
     }
 
-    function getGovernorReciver() external view returns (address governorReceiver){
+    function getGovernorReceiver() external view returns (address governorReceiver){
         governorReceiver = vaultStorage.feeReceiver;
     }
 

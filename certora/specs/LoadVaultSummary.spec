@@ -24,12 +24,6 @@ methods {
 // in all the rules, only one env is ever created per rule.
 // The parts of the cache about interest are not relevant to the specs
 
-// parameter is meant to be block.timestamp
-persistent ghost newInterestBorrows(uint256) returns uint256;
-// this should be increasing over time, but I think we do
-// not even need to model this. It can just be an uninterp function
-// because in the ERC4626 spec there are no rules with multiple env.
-
 function CVLLoadVaultAssumeNoUpdate(env e) returns BaseHarness.VaultCache {
     BaseHarness.VaultCache vaultCache;
     uint48 lastUpdate = storage_lastInterestAccumulatorUpdate();

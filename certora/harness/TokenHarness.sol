@@ -11,9 +11,9 @@ contract TokenHarness is TokenModule {
     constructor(Integrations memory integrations) Base(integrations) {}
 
     function transferFromInternalHarnessed(address from, address to, uint256 amount) public returns (bool) {
-        // This is similar to the body of Token.transferFrom
+        // This is similar to the body of Token.transferFromInternal
         // when it gets its arguments from Token.transfer.
-        // It is not harnessed directly since Token.transferFrom is private
+        // It is not harnessed directly since Token.transferFromInternal is private
         // and we want to avoid munging.
         // This is used for the enforceCollateralTransfer function
         Shares shares = amount.toShares();

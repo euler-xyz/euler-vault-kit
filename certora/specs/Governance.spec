@@ -14,7 +14,7 @@ methods {
 
 	// Harness
 	function getAccountBalance(address) external returns (GovernanceHarness.Shares) envfree;
-	function getGovernorReciver() external returns (address) envfree;
+	function getGovernorReceiver() external returns (address) envfree;
 	function getProtocolFeeConfig(address) external returns (address, uint16) envfree;
 	function getTotalShares() external returns (GovernanceHarness.Shares) envfree;
 	function getAccumulatedFees() external returns (GovernanceHarness.Shares);
@@ -59,7 +59,7 @@ rule feeCollectionIncreasesProtocolGovernerAssets(env e){
 	protocolReceiver, protocolFee = getProtocolFeeConfig(currentContract);
 	require protocolFee > 0;
 	// require protocolReceiver != 0;
-	address governorReceiver = getGovernorReciver();
+	address governorReceiver = getGovernorReceiver();
 	require governorReceiver != 0;
 
 	// accumulated fee is not zero 
