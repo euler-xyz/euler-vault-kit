@@ -2173,6 +2173,43 @@ contract VaultLiquidation_Test is EVaultTestBase {
         eTST.liquidate(borrower, address(eTST2), maxRepay, 0);
     }
 
+    function test_liquidate_zeroCollateral() public {
+        startHoax(lender);
+        evc.enableController(lender, address(eTST));
+        evc.enableCollateral(lender, address(eTST3));
+        evc.enableCollateral(lender, address(eTST2));
+
+        startHoax(borrower);
+        evc.enableCollateral(borrower, address(eTST3));
+        evc.enableController(borrower, address(eTST));
+        eTST.borrow(5e18, borrower);
+
+        assertEq(eTST3.cash(), 100e18);
+        assertEq(eTST3.balanceOf(borrower), 0);
+
+        assertEq(eTST.debtOf(borrower), 5e18);
+        assertEq(eTST.debtOf(lender), 0);
+
+        startHoax(address(this));
+        eTST.setLTV(address(eTST3), 0.95e4, 0.95e4, 0);
+        oracle.setPrice(address(assetTST), unitOfAccount, 2.5e18);
+
+        (uint256 collateralValue, uint256 liabilityValue) = eTST.accountLiquidity(borrower, false);
+        uint256 healthScore = collateralValue * 1e18 / liabilityValue;
+        assertApproxEqAbs(healthScore, 0.96e18, 0.001e18);
+
+        startHoax(lender);
+        eTST.liquidate(borrower, address(eTST3), 0, 0);
+
+        eTST.liquidate(borrower, address(eTST3), type(uint256).max, 0);
+
+        vm.expectRevert(Errors.E_ExcessiveRepayAmount.selector);
+        eTST.liquidate(borrower, address(eTST3), 1, 0);
+
+        assertEq(eTST.debtOf(borrower), 5e18);
+        assertEq(eTST.debtOf(lender), 0);
+    }
+
     function getRiskAdjustedValue(uint256 amount, uint256 price, uint256 factor) public pure returns (uint256) {
         return amount * price / 1e18 * factor / 1e18;
     }
