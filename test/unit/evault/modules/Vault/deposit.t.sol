@@ -11,6 +11,8 @@ import {IEVC} from "ethereum-vault-connector/interfaces/IEthereumVaultConnector.
 
 import "../../../../../src/EVault/shared/types/Types.sol";
 
+import "forge-std/Test.sol";
+
 contract VaultTest_Deposit is EVaultTestBase {
     using TypesLib for uint256;
 
@@ -375,9 +377,6 @@ contract VaultTest_Deposit is EVaultTestBase {
         oracle.setPrice(address(assetTST2), unitOfAccount, 1e18);
         eTST.setLTV(address(eTST2), 0.9e4, 0.9e4, 0);
 
-        startHoax(user);
-        eTST.deposit(100e18, user);
-
         startHoax(user1);
         assetTST.mint(user1, 10e18);
         assetTST.approve(address(eTST), type(uint256).max);
@@ -387,25 +386,46 @@ contract VaultTest_Deposit is EVaultTestBase {
         evc.enableController(user1, address(eTST));
         evc.enableCollateral(user1, address(eTST2));
 
-        eTST.borrow(5e18, user1);
+        // attacker deposits 1 wei from one account
+        startHoax(user);
+        eTST.deposit(1, user);
 
-        skip(100 days);
+        // borrows it from a second for 1 second 
+        startHoax(user1);
+        eTST.borrow(1, user1);
+        skip(1);
 
+        // 1 wei of debt accrued
+        assertEq(eTST.debtOf(user1), 2);
         eTST.repay(type(uint256).max, user1);
+        eTST.disableController();
 
-        uint256 rate = eTST.convertToShares(1e18);
-        uint256 assets = eTST.totalAssets();
-        uint256 shares = eTST.totalSupply();
+        // and exchange rate is pushed above 1
+        assertEq(1.000000999999000000e18, eTST.convertToAssets(1e18)); // ~= 1.000001
 
-        for (uint256 i; i <= 1000; ++i) {
-            eTST.deposit(3, user1);
-            assertEq(eTST.balanceOf(user1), 2);
-            eTST.withdraw(2, user1, user1);
+        assertEq(eTST.totalAssets(), 2); // 1 deposited + 1 interest repaid
+        assertEq(eTST.cash(), 2);
+        assertEq(eTST.totalSupply(), 1); // 1 deposited initially
+
+        // in a loop deposit max assets to create 1 share but not enough for 2. The rounding remainder is a stealth donation
+        for (uint256 i; i < 1000; i++) {
+            eTST.deposit(2, user1);
+            // 2 were deposited, but they round down to 1 share
+            assertEq(eTST.balanceOf(user1), 1);
+            // which is redeemable for 1 asset, the rest is donated
+            assertEq(eTST.maxWithdraw(user1) , 1);
+
+            // reset account
+            eTST.withdraw(1, user1, user1);
             assertEq(eTST.balanceOf(user1), 0);
         }
 
-        assertNotEq(rate, eTST.convertToShares(1e18));
-        assertEq(shares, eTST.totalSupply());
-        assertEq(assets, eTST.totalAssets() - 1001);
+        // after 1000 iterations, 1000 assets were stealth donated
+        assertEq(eTST.totalAssets(), 1002);
+        assertEq(eTST.cash(), 1002);
+        assertEq(eTST.totalSupply(), 1);
+
+        // it will take 1e6 loops to reach exchange rate of 2
+        assertEq(1.001000998999001000e18, eTST.convertToAssets(1e18)); // ~= 1.001
     }
 }
