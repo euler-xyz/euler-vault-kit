@@ -76,6 +76,7 @@ rule checkLiquidation_healthy() {
     assert maxYield == 0;
 }
 
+// passing run: https://prover.certora.com/output/65266/ed9699a14a114c0dbad76526a55ad493/?anonymousKey=f1f0a74c2c72ede7ce77f50fbf66541e8c4f03d7
 rule checkLiquidation_healthy_reverts() {
     env e;
     address account;

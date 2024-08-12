@@ -12,6 +12,9 @@ methods {
     function _.transfer(address,uint256)             external => DISPATCHER(true);
     function _.transferFrom(address,address,uint256) external => DISPATCHER(true);
 
+	function checkAccountMagicValueMemory() external returns (bytes memory) envfree;
+    function checkVaultMagicValueMemory() external returns (bytes memory) envfree;
+
 	// Harness
 	function getAccountBalance(address) external returns (GovernanceHarness.Shares) envfree;
 	function getGovernorReceiver() external returns (address) envfree;
@@ -28,8 +31,8 @@ methods {
 	// We can't handle the low-level call in 
     // EthereumVaultConnector.checkAccountStatusInternal 
     // and so reroute it to RiskManager's status check with this summary.
-	function EthereumVaultConnector.checkVaultStatusInternal(address vault) internal returns (bool, bytes memory) with(env e) =>
-        CVLCheckVaultStatusInternal(e);
+	function EthereumVaultConnector.checkVaultStatusInternal(address vault) internal returns (bool, bytes memory) =>
+        CVLCheckVaultStatusInternal();
 
 	function _.invokeHookTarget(address caller) internal => NONDET;
 
@@ -43,9 +46,13 @@ function CVLCheckVaultStatusInternalBool(env e) returns bool {
     return !lastReverted;
 }
 
-function CVLCheckVaultStatusInternal(env e) returns (bool, bytes) {
+function CVLCheckVaultStatusInternal() returns (bool, bytes) {
+	// We need a new env for the first function.
+    // Since the vault calls the EVC, otherwise msg.sender
+    // would become the vault unless we declare a fresh environment.
+	env e;
     return (CVLCheckVaultStatusInternalBool(e),
-        checkVaultMagicValueMemory(e));
+        checkVaultMagicValueMemory());
 }
 
 
