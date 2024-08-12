@@ -666,11 +666,11 @@ The owner can allocate synthetic assets held by the synthetic asset itself to a 
 
 #### Deallocating from a vault
 
-The owner can deallocatice synthetic assets from the vault by calling `deallocate(address vault, uint256 amount)` which serves as a protocol withdraw from the synthetic asset vault. Assets deallocated from the vault will be transfered into the synthetic asset contract itself and be burned by the owner seperately.
+The owner can deallocate synthetic assets from the vault by calling `deallocate(address vault, uint256 amount)` which serves as a protocol withdraw from the synthetic asset vault. Assets deallocated from the vault will be transfered into the synthetic asset contract itself and be burned by the owner seperately.
 
 #### Total Supply adjustments
 
-Since protocol deposits into synthetic vaults are not backed by any collateral and are not in circulation they are excluded from the totalSupply calculation. After calling `allocate()`, target vaults are automatically excluded. Additional addresses whose balances should be ignored can be managed by the owner by calling `addIgnoredForTotalSupply(address account)` and `removeIgnoredForTotalSupply(address account)`.
+Since protocol deposits into synthetic vaults are not backed by any collateral and are not in circulation, they are excluded from the totalSupply calculation. After calling `allocate()`, target vaults are automatically excluded. Additional addresses whose balances should be ignored can be managed by the owner by calling `addIgnoredForTotalSupply(address account)` and `removeIgnoredForTotalSupply(address account)`.
 
 ### `IRMSynth`
 
@@ -707,7 +707,7 @@ On `gulp` any interest which has not been distributed is smeared for an addition
 
 ### `PegStabilityModule`
 
-The `PegStabilityModule` will be granted minting rights on a `ESynth` and will allow slippage-free conversion from and to the underlying asset. On deployment a fee for swaps to synth and to underlying are set. These fees accrue to the `PegStabilityModule` contract and can not be withdrawn, serving as a permanent reserve to support the peg.
+The `PegStabilityModule` will be granted minting rights on a `ESynth` and will allow slippage-free conversion from and to the underlying asset. On deployment, a fee for swaps to synth and to underlying are set. These fees accrue to the `PegStabilityModule` contract and can not be withdrawn, serving as a permanent reserve to support the peg.
 
 Swapping to the synthetic asset is possible up to the minting cap granted for the `PegStabilityModule` in the `ESynth`. Swapping to the underlying asset is possible up to the amount of the underlying asset held by the `PegStabilityModule`.
 
@@ -729,7 +729,7 @@ Perhaps most surprising is that neither the EVC nor the vault need to know anyth
 
 EVC Operators are a way to delegate control over your account to another address. Typically this will be a smart contract with limited, specialised capabilities.
 
-The most obvious immediate application of operators is delegating permission to open, modify, or close a position depending on an on-chain indicator. For example, stop losses can be placed onto an order giving "keepers" the ability to close your position if a particular price oracle indicates a price level has been reached, in exchange for a execution fee.
+The most obvious immediate application of operators is delegating permissions to open, modify, or close a position depending on an on-chain indicator. For example, stop losses can be placed onto an order giving "keepers" the ability to close your position if a particular price oracle indicates a price level has been reached, in exchange for a execution fee.
 
 ### Gasless Transactions
 
