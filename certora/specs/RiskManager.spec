@@ -1,4 +1,5 @@
 import "Base.spec";
+import "./LoadVaultSummary.spec";
 
 // run: https://prover.certora.com/output/65266/4d1ba56cfd3c4aefbe2661e07fd5c95c/?anonymousKey=800abae52d40b2758c3f1f8c8a42ff82025533cd
 
@@ -65,6 +66,8 @@ rule ltv_liabilities_equal{
     assert liabilityValue_liquidation == liabilityValue_borrowing;
 }
 
+// passing
+// run: https://prover.certora.com/output/40726/f67c06400ebc412c88740b7efe675bc4/?anonymousKey=7101510a9ac7abec41dab0ee4f659219da5b98b9
 rule checkLiquidityReturningSameAsOriginal {
     env e;
     address account;
