@@ -60,7 +60,7 @@ methods {
     function _.trySafeTransferFrom(address token, address from, address to, uint256 value) internal with (env e) => CVLTrySafeTransferFrom(e, token,from, to, value) expect (bool, bytes memory);
     // safeTransferFrom is summarized as transferFrom
     // from DummyERC20a to avoid dealing with the low-level `call`
-    function _.safeTransferFrom(address token, address from, address to, uint256 value, address permit2) internal with (env e)=> CVLSafeTransferFrom(e, token, from, to, value) expect void;
+    function _.safeTransferFrom(address token, address from, address to, uint256 value, address permit2) internal => CVLSafeTransferFrom(token, from, to, value) expect void;
     function _.tryBalanceTrackerHook(address account, uint256 newAccountBalance, bool forfeitRecentReward) internal => NONDET;
     function _.balanceTrackerHook(address account, uint256 newAccountBalance, bool forfeitRecentReward) external => NONDET;
     // This is NONDET to help avoid timeouts. It should be safe
@@ -84,7 +84,8 @@ function CVLgetCurrentOnBehalfOfAccount(address addr) returns (address, bool) {
 persistent ghost CVLGetAccountOwner(address) returns address;
 
 // Summarize trySafeTransferFrom as DummyERC20 transferFrom
-function CVLSafeTransferFrom(env e, address token, address from, address to, uint256 value) {
+function CVLSafeTransferFrom(address token, address from, address to, uint256 value) {
+    env e;
     ERC20a.transferFrom(e, from, to, value);
 }
 
@@ -192,7 +193,7 @@ rule zeroDepositZeroShares(uint assets, address receiver)
     uint shares = deposit(e,assets, receiver);
     // In this Vault, max_uint256 as an argument will transfer all assets
     // to the vault. This precondition rules out the case where
-    // the depositor calls deposit with a blance of 0 in the underlying
+    // the depositor calls deposit with a balance of 0 in the underlying
     // asset and gives max_uint256 as the shares.
     require assets < max_uint256;
 
@@ -223,7 +224,7 @@ invariant noAssetsIfNoSupply(env e)
     }
 
 invariant noSupplyIfNoAssets(env e)
-    noSupplyIfNoAssetsDef(e)     // see defition in "helpers and miscellaneous" section
+    noSupplyIfNoAssetsDef(e)     // see definition in "helpers and miscellaneous" section
     {
         preserved {
             safeAssumptions(e, _, e.msg.sender);
