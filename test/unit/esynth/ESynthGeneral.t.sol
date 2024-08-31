@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 pragma solidity ^0.8.20;
 
+import {Ownable} from "openzeppelin-contracts/access/Ownable.sol";
 import {ESynthTest} from "./lib/ESynthTest.sol";
 import {stdError} from "forge-std/Test.sol";
 import {Errors} from "../../../src/EVault/shared/Errors.sol";
@@ -173,5 +174,39 @@ contract ESynthGeneralTest is ESynthTest {
         vm.prank(nonOwner);
         vm.expectRevert();
         evc.call(address(esynth), owner, 0, abi.encodeCall(ESynth.setCapacity, (address(this), amount)));
+    }
+
+    function test_RenounceTransferOwnership() public {
+        address OWNER = makeAddr("OWNER");
+        address OWNER2 = makeAddr("OWNER2");
+        address OWNER3 = makeAddr("OWNER3");
+
+        vm.prank(OWNER);
+        esynth = ESynth(address(new ESynth(address(evc), "Test Synth", "TST")));
+        assertEq(esynth.owner(), OWNER);
+
+        vm.prank(OWNER2);
+        vm.expectRevert(abi.encodeWithSelector(Ownable.OwnableUnauthorizedAccount.selector, OWNER2));
+        esynth.renounceOwnership();
+
+        vm.prank(OWNER2);
+        vm.expectRevert(abi.encodeWithSelector(Ownable.OwnableUnauthorizedAccount.selector, OWNER2));
+        esynth.transferOwnership(OWNER2);
+
+        vm.prank(OWNER);
+        esynth.transferOwnership(OWNER2);
+        assertEq(esynth.owner(), OWNER2);
+
+        vm.prank(OWNER2);
+        esynth.transferOwnership(OWNER3);
+        assertEq(esynth.owner(), OWNER3);
+
+        vm.prank(OWNER2);
+        vm.expectRevert(abi.encodeWithSelector(Ownable.OwnableUnauthorizedAccount.selector, OWNER2));
+        esynth.renounceOwnership();
+
+        vm.prank(OWNER3);
+        esynth.renounceOwnership();
+        assertEq(esynth.owner(), address(0));
     }
 }
