@@ -376,7 +376,7 @@ Care should also be taken when using collateral vaults with [hooks](#hooks) inst
 
 When evaluating whether a new or customised vault implementation is trustworthy, all the usual checks should be performed, such as verifying the code was audited, does not contain backdoors, etc. In addition, it is very important to verify that the `transfer` method does not invoke any external contracts that could run attacker code. This is because the EVK implementation [forgives](https://evc.wtf/docs/whitepaper#forgiveness) the account status check of an account after liquidation, and a malicious user could perform actions that get unexpectedly forgiven.
 
-For this reason, an important property of liquidation is that assets without an LTV can never be seized by liquidation (users can install any vaults in their EVC collateral set, trusted or not). Collateral assets can have their LTVs reduced back to `0`, but this does not remove the ability to liquidate them, so this cannot be used to recover a vault that was installed as a collateral but then was subsequently found to be unsafe (because of a bug in its `transfer` method).
+For this reason, an important property of liquidation is that assets without an LTV can never be seized by the liquidator (users can install any vaults in their EVC collateral set, trusted or not). Collateral assets can have their LTVs reduced back to `0`, but this does not remove the ability to liquidate them, so this cannot be used to recover a vault that was installed as a collateral but then was subsequently found to be unsafe (because of a bug in its `transfer` method).
 
 #### Non-collateral Deposits
 
@@ -408,7 +408,7 @@ Even though it can't be the direct result of a user action, in some cases caps c
 
 Note that this behaviour can in principle be exploited by opportunistically wrapping [gasless transactions](#gasless-transactions) that withdraw/repay into a surrounding batch that deposits/borrows an equivalent amount. The executor is effectively able to transfer the user's supply/borrow quota into their own account instead of reducing the capped value.
 
-In some very unusual circumstances, it has been discovered by auditors that due to rounding, a `repay()` operation could fail while a vault's supply cap is exceeded. In this event, a user should ensure they are not repaying multiple sub-accounts in the same batch, and/or pull all of their debt except for some dust to another sub-account and repay from there. Since these circumstances are so rare (we don't expect them to ever arise in the real world), it was not considered worth preventing this in the contracts.
+In some very unusual circumstances, it has been discovered by auditors that due to rounding, a `repay()` operation could fail while a vault's supply cap is exceeded. In this event, a user should ensure they are not repaying multiple sub-accounts in the same batch, and/or pull all of their debt except for some dust to another sub-account and repay from there. Since these circumstances are so rare (we don't expect them to ever arise in the real world), it was not considered necessary to prevent this in the contracts.
 
 ### Hooks
 
@@ -594,11 +594,11 @@ This is a type of whitelist perspective that has an active governor who can add 
 
 These perspectives are intended to be operated by trusted parties that have been given a responsibility to curate vaults, such as UIs that must show a default list of vaults.
 
-### Escrow Perspective
+### Escrowed Collateral Perspective
 
-Another simple perspective is called "escrow". These verify that vaults are configured to not allow borrowing, and are immutable and finalised. Since such vaults do not earn yield, they are only useful to store tokens for use as collateral in other vaults.
+Another simple perspective is called "escrowed collateral". These verify that vaults are configured to not allow borrowing, and are immutable and finalised. Since such vaults do not earn yield, they are only useful to store tokens for use as collateral in other vaults.
 
-Escrow vaults cannot have any collaterals configured, so an escrow perspective never needs to recurse into other vaults.
+Escrow vaults cannot have any collaterals configured, so an escrowed collateral perspective never needs to recurse into other vaults.
 
 ### Ungoverned Perspective
 
@@ -631,7 +631,7 @@ In some circumstances the 0x perspective may be too constraining, and there may 
 
 ### Collateral Interest
 
-With [escrow](#escrow-perspective) vaults as collateral, borrowers will not earn any interest on their collateral even though they are paying interest on their borrow. Especially when employing leverage, where interest payments are magnified, having collateral interest offset the borrow interest often makes the difference between a profitable and unprofitable activity. Without interest on collateral, arbitraging interest rates by borrowing low-yielding assets collateralised by high-yielding assets (a "[carry trade](https://www.investopedia.com/terms/c/currencycarrytrade.asp)") would not be possible, leading to inefficient interest rate markets.
+With [escrow](#escrowed-collateral-perspective) vaults as collateral, borrowers will not earn any interest on their collateral even though they are paying interest on their borrow. Especially when employing leverage, where interest payments are magnified, having collateral interest offset the borrow interest often makes the difference between a profitable and unprofitable activity. Without interest on collateral, arbitraging interest rates by borrowing low-yielding assets collateralised by high-yielding assets (a "[carry trade](https://www.investopedia.com/terms/c/currencycarrytrade.asp)") would not be possible, leading to inefficient interest rate markets.
 
 For borrowers to earn interest on their collateral, vaults must accept an interest-bearing vault as collateral. This is sometimes called rehypothecation. By creating vaults that do, mutually-collateralised ecosystems such as (original) Compound or selectively-collateralised ecosystems such as AAVE/Euler V1 can be constructed.
 
@@ -663,7 +663,7 @@ Nested vaults can have `CFG_EVC_COMPATIBLE_ASSET` set, which disables a protecti
 
 Since [bad debt socialisation](#bad-debt-socialisation) represents a sudden but predictable (on MEV time-scales) price change, opportunistic market participants may take advantage of this by borrowing and shorting the shares of bad-debt vault using a nested vault configuration. In some situations this could have adverse effects on vault depositors.
 
-Similar to the case of [Non-collateral Deposits](#non-collateral-deposits), an accounts may have certain operations restricted on nested vaults when they are unhealthy. For example, a `repay()` operation on a nested vault that is insufficient to restore the account to health may fail, because an account status check is scheduled by the parent vault when its shares are moved.
+Similar to the case of [Non-collateral Deposits](#non-collateral-deposits), accounts may have certain operations restricted on nested vaults when they are unhealthy. For example, a `repay()` operation on a nested vault that is insufficient to restore the account to health may fail, because an account status check is scheduled by the parent vault when its shares are moved.
 
 ### Bootstrapping
 
@@ -698,11 +698,11 @@ The owner can deallocate synthetic assets from the vault by calling `deallocate(
 
 #### Total Supply adjustments
 
-Since protocol deposits into synthetic vaults are not in circulation, they are excluded from the totalSupply calculation. After calling `allocate()`, target vaults are automatically excluded, as is the synth contract itself. Additional addresses whose balances should be ignored can be managed by the owner by calling `addIgnoredForTotalSupply(address account)` and `removeIgnoredForTotalSupply(address account)`. 
+Since protocol deposits into synthetic vaults are not in circulation, they are excluded from the `totalSupply` calculation. After calling `allocate()`, target vaults are automatically excluded, as is the synth contract itself. Additional addresses whose balances should be ignored can be managed by the owner by calling `addIgnoredForTotalSupply(address account)` and `removeIgnoredForTotalSupply(address account)`.
 
-Since accrued interest is held by the vault, and therefore not directly in circulation, it is also excluded from the totalSupply calculation. If users accidentally transfer their synth tokens to an ignored contract they will also be considered out of circulation. For example, accidentally transferring synths to a synth vault would effectively burn them (as with transferring to any unprepared address), and remove them from totalSupply.
+Since accrued interest is held by the vault, and therefore not directly in circulation, it is also excluded from the `totalSupply` calculation. If users accidentally transfer their synth tokens to an ignored contract they will also be considered out of circulation. For example, accidentally transferring synths to a synth vault would effectively burn them (as with transferring to any unprepared address), and remove them from `totalSupply`.
 
-Note that while performing a flash loan from a synth vault (or indeed a regular borrow), the totalSupply will reflect that the borrowed amount has in fact entered circulation for the duration of the loan. This can be considered a "flash mint" of the synth.
+Note that while performing a flash loan from a synth vault (or indeed a regular borrow), the `totalSupply` will reflect that the borrowed amount has in fact entered circulation for the duration of the loan. This can be considered a "flash mint" of the synth.
 
 ### `IRMSynth`
 
@@ -733,7 +733,7 @@ Synthetic assets use a different interest rate model than the standard vaults. T
 
 Any address can transfer the underlying asset into the vault and call `gulp()` which will distribute it to share holders in the vault over a "smeared" two week period. Accrued interest is reflected in the `totalAssets()` of the vault, adjusting the exchange rate accordingly. On deposit and redeem accrued interest is added to the internal `_totalAssets` variable which tracks all deposits in the vault in a donation attack resistent manner.
 
-On `gulp` any interest which has not been distributed is smeared for an additional two weeks, in theory this means that interest could be smeared indefinitely by continiously calling `gulp`, in practice it is expected that the interest will keep accruing, negating any negative side effects which may come from the smearing mechanism. Furthermore, the amount of interest that is delayed decreases exponentially over time.
+On `gulp()` any interest which has not been distributed is smeared for an additional two weeks, in theory this means that interest could be smeared indefinitely by continiously calling `gulp()`, in practice it is expected that the interest will keep accruing, negating any negative side effects which may come from the smearing mechanism. Furthermore, the amount of interest that is delayed decreases exponentially over time.
 
 
 ### `PegStabilityModule`
