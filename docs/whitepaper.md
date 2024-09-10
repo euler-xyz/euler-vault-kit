@@ -578,11 +578,19 @@ The primary use-case of perspectives is to provide a permissionless, on-chain ap
 
 Just like with Token Lists, user interfaces will allow users to import which perspectives they would like to use to filter vaults that don't meet their trust criteria. Advanced UIs may support special filtering features, such as "all vaults that meet 2 or more of the configured perspectives", or "all vaults on this perspective but *not* on this perspective".
 
-Although any contract that conforms to `IPerspective` can be used as a perspective, we will be publishing a flexible reference implementation that users or projects can adapt to fit their requirements.
+Although any contract that conforms to `IPerspective` can be used as a perspective, we have created a [flexible reference implementation](https://github.com/euler-xyz/evk-periphery/tree/master?tab=readme-ov-file#perspectives) that users or projects can adapt to fit their requirements.
 
-### Whitelist Perspective
+### Custom Whitelist Perspective
 
-The simplest form of perspective is a whitelist. This could be curated by a trusted operator, or could simply have a hard-coded list of a few vaults. Projects that have built custom vaults that don't pass the default perspectives could require users to import their own perspective address in order to use their vaults. As with Token List and other permissionless approaches, users must take caution to not import malicious phishing perspectives.
+The simplest form of perspective is a whitelist. This implementation is an ungoverned, immutable perspective that has a static list of vaults provided at creation.
+
+Immutable projects that have a set of custom vaults which don't pass the default perspectives could require users to import a custom perspective in order to use their vaults. As with Token List and other permissionless approaches, users must take caution to not import malicious phishing perspectives.
+
+### Governed Perspective
+
+This is a type of whitelist perspective that has an active governor who can add or remove vaults according to whatever criteria they desire.
+
+These perspectives are intended to be operated by trusted parties that have been given a responsibility to curate vaults, such as UIs that must show a default list of vaults.
 
 ### Escrow Perspective
 
@@ -590,15 +598,31 @@ Another simple perspective is called "escrow". These verify that vaults are conf
 
 Escrow vaults cannot have any collaterals configured, so an escrow perspective never needs to recurse into other vaults.
 
-### Cluster Perspective
+### Ungoverned Perspective
 
-The most general-purpose perspective implementation class is called a "cluster". These types of perspectives first verify various desired properties about the queried vault. Typically they will require vaults to be finalised.
+The most sophisticated perspective implementation class is called an ungoverned perspective. This type of perspectives comprehensively verify various desired properties about the candiate vault. Typically they will require vaults to be finalised, and not have any unusual or unexpected configurations.
 
-Next, cluster perspectives attempt to verify each of the vault's configured collaterals. To do so, a cluster perspective uses a list of acceptable perspectives, which may or may not include itself. For each collateral, it recurses into each perspective, stopping as soon as one perspective accepts the collateral. If none do, the perspective itself will fail.
+Next, cluster perspectives attempt to verify each of the vault's configured collaterals. To do so, a cluster perspective uses a list of acceptable perspectives, which may or may not include itself. For each collateral, it recurses into each perspective, stopping as soon as one perspective accepts the collateral. If none do, the perspective itself will fail. This method allows perspectives to delegate some decisions to other perspectives. This reduces the amount of work needed to create a perspective, and takes advantage of the fact that verification of vaults may already be cached in these other perspectives.
 
-This method allows perspectives to delegate some decisions to other perspectives. This reduces the amount of work needed to create a perspective, and takes advantage of the fact that verification of vaults may already be cached in these other perspectives.
+There are two sub-classes of ungoverned perspectives: "0x" and "nzx".
 
-For instance, a perspective that wants to fully contain [rehypothecation risk](#collateral-interest) may only accept vaults that match [escrow perspectives](#escrow-perspective) as collateral.
+#### 0x Perspective
+
+In this context, "0x" refers to *zero exposure*, where exposure refers to governance exposure. Vaults that match this perspective can only use as collateral vaults that match one of the following perspectives:
+
+* Escrow
+* The 0x perspective itself
+
+This means that not only is there no governance risk in a 0x vault itself, but neither in its collateral, or its transient collateral, etc.
+
+#### Nzx Perspective
+
+In some circumstances the 0x perspective may be too constraining, and there may be a set of vaults that are acceptable as collateral, even if they are governed. For this purpose a *non-zero exposure* perspective may be used. These vaults allow the following as collateral:
+
+* A Governed Perspective
+* Escrow
+* The Nzx perspective itself
+
 
 
 ## Composing Vaults
