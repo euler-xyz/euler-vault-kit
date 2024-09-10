@@ -330,6 +330,8 @@ In order for it to detect impermissible user actions, the EVC requires that vaul
 
 These methods are invoked by the EVC at [appropriate times](https://evc.wtf/docs/whitepaper#account-status-checks). Often this will be after all operations in a batch have been performed, because the EVC allows users to defer these checks as a type of flash liquidity. If a vault would like to indicate that a status check has failed, it reverts, aborting the transaction and all performed operations.
 
+`checkAccountStatus` is a `view` method (invoked with `STATICCALL`) in order to prevent malicious users from executing code on a regular `transfer` operation of vault shares, potentially protecting 3rd party contracts that don't properly implement reentrancy locks. On the other hand, `checkVaultStatus` is never invoked in this context so it can be invoked with regular `CALL`. The EVK takes advantage of this in order to record an initial snapshot of the vault's state.
+
 ### LTV
 
 In order for borrowing to occur, the governor of the liability vault must decide on a set of collateral assets and their maximum allowed Loan To Value ratios (from here on just called LTVs). LTVs should be chosen carefully. In addition to the risk inherent in the underlying asset, the vault that contains the asset should also be considered. If the collateral itself can be loaned out against risky collateral or uses unsafe pricing oracles, lower LTVs may be appropriate.
@@ -372,15 +374,7 @@ Care should also be taken when using collateral vaults with [hooks](#hooks) inst
 
 When evaluating whether a new or customised vault implementation is trustworthy, all the usual checks should be performed, such as verifying the code was audited, does not contain backdoors, etc. In addition, it is very important to verify that the `transfer` method does not invoke any external contracts that could run attacker code. This is because the EVK implementation [forgives](https://evc.wtf/docs/whitepaper#forgiveness) the account status check of an account after liquidation, and a malicious user could perform actions that get unexpectedly forgiven.
 
-For this reason, an important property of liquidation is that assets without an LTV can never be seized by liquidation (users can install any vaults in their EVC collateral set, trusted or not).
-
-#### Cleared versus 0 LTVs
-
-By default, all prospective collaterals are considered to have unset, or _cleared_ LTVs. Only by calling `setLTV()` do they become available as collateral. If a governor decides that a vault is no longer suitable as collateral, it can either have its liquidation LTV (and necessarily its borrowing LTV) set to 0, or it can be cleared with the `clearLTV()` function.
-
-There is a subtle but important difference between the two: Former collaterals with a 0 LTV are still eligible to be seized in a liquidation, but cleared ones are not, for the reason described in [Untrusted Collaterals](#untrusted-collaterals).
-
-So, if a vault can no longer be collateral for economic/market reasons, its LTV should be set to 0 (either with a ramp or in drastic cases without). On the other hand, if the vault's code is discovered to be buggy or malicious, its LTV should be cleared immediately.
+For this reason, an important property of liquidation is that assets without an LTV can never be seized by liquidation (users can install any vaults in their EVC collateral set, trusted or not). Collateral assets can have their LTVs reduced back to `0`, but this does not remove the ability to liquidate them, so this cannot be used to recover a vault that was installed as a collateral but then was subsequently found to be unsafe (because of a bug in its `transfer` method).
 
 #### Non-collateral Deposits
 
@@ -411,6 +405,8 @@ Caps can be transiently violated since they are only enforced at the end of a ba
 Even though it can't be the direct result of a user action, in some cases caps can become persistently violated. For example if the governor reduces a cap or if accrued interest causes total borrows to exceed the borrow cap. If for one of these reasons a cap was in violation at the start of a batch, then the transaction will only succeed if the cap violation has lessened (or at least not gotten worse).
 
 Note that this behaviour can in principle be exploited by opportunistically wrapping [gasless transactions](#gasless-transactions) that withdraw/repay into a surrounding batch that deposits/borrows an equivalent amount. The executor is effectively able to transfer the user's supply/borrow quota into their own account instead of reducing the capped value.
+
+In some very unusual circumstances, it has been discovered by auditors that due to rounding, a `repay()` operation could fail while a vault's supply cap is exceeded. In this event, a user should ensure they are not repaying multiple sub-accounts in the same batch, and/or pull all of their debt except for some dust to another sub-account and repay from there. Since these circumstances are so rare (we don't expect them to ever arise in the real world), it was not considered worth preventing this in the contracts.
 
 ### Hooks
 
@@ -449,11 +445,9 @@ The main purpose of the hook system is to disable vault functionality, either pe
 
 Inside a vault, each collateral is configured as the address of another vault, not the underlying asset (unless the asset is specially constructed to also function as a collateral vault). This means that the value of a user's collateral is in fact the value of the vault's shares. A vault share is not necessarily equal to a unit of the underlying asset because of the [exchange rate](#exchange-rate).
 
-Because converting quantities of shares to underlying asset amounts is itself a pricing operation, this responsibility is delegated to the price oracle.
+Because converting quantities of shares to underlying asset amounts is itself a pricing operation, this responsibility is delegated to the price oracle. In some cross-chain designs, the price oracle may also be responsible for determining the exchange rate of a corresponding vault on a separate chain.
 
-For vaults created with the Euler Vault Kit, the ERC-4626 `convertToAssets` function can be used to price shares in units of the underlying asset. This function is designed to be a reliable oracle. [Internal balance tracking](#internal-balance-tracking) prevents manipulation with direct transfer donations, and the [virtual deposit](#exchange-rate) minimises the impact of rounding-based "stealth deposits". See our [article](https://www.euler.finance/blog/exchange-rate-manipulation-in-erc4626-vaults) for more details on these protections.
-
-In some cross-chain designs, the price oracle is also responsible for determining the exchange rate of a corresponding vault on a separate chain.
+For vaults created with the Euler Vault Kit, the ERC-4626 `convertToAssets` function can be used to price shares in units of the underlying asset. This function is designed to be a reliable oracle. [Internal balance tracking](#internal-balance-tracking) prevents manipulation with direct transfer donations, and the [virtual deposit](#exchange-rate) minimises the impact of rounding-based "stealth deposits". See our [article](https://www.euler.finance/blog/exchange-rate-manipulation-in-erc4626-vaults) for more details on these protections. As an additional layer of defense, it is recommended that vaults have some small amount deposited into them at all times, since most hypothetical rounding-based attack vectors rely on empty or near-empty vaults.
 
 ### `IPriceOracle`
 
@@ -641,6 +635,10 @@ Nested vaults follow the same principle, however they are more convenient to use
 
 Nested vaults can have `CFG_EVC_COMPATIBLE_ASSET` set, which disables a protection used by vaults to ensure that non-EVC-compatible tokens are not transferred to known sub-account addresses, where they would be lost.
 
+Since [bad debt socialisation](#bad-debt-socialisation) represents a sudden but predictable (on MEV time-scales) price change, opportunistic market participants may take advantage of this by borrowing and shorting the shares of bad-debt vault using a nested vault configuration. In some situations this could have adverse effects on vault depositors.
+
+Similar to the case of [Non-collateral Deposits](#non-collateral-deposits), an accounts may have certain operations restricted on nested vaults when they are unhealthy. For example, a `repay()` operation on a nested vault that is insufficient to restore the account to health may fail, because an account status check is scheduled by the parent vault when its shares are moved.
+
 ### Bootstrapping
 
 Nested vaults can help solve the liquidity bootstrapping problem of specialised vaults. Depositing into new vaults that are not currently paying interest has an opportunity cost at least equal to the interest that could be earned on an established vault. By using nested vaults, depositors can continue to earn the "base yield" of the established vault while simultaneously offering to provide liquidity to the new vault.
@@ -674,7 +672,7 @@ The owner can deallocate synthetic assets from the vault by calling `deallocate(
 
 #### Total Supply adjustments
 
-Since protocol deposits into synthetic vaults are not in circulation, they are excluded from the totalSupply calculation. After calling `allocate()`, target vaults are automatically excluded. Additional addresses whose balances should be ignored can be managed by the owner by calling `addIgnoredForTotalSupply(address account)` and `removeIgnoredForTotalSupply(address account)`. 
+Since protocol deposits into synthetic vaults are not in circulation, they are excluded from the totalSupply calculation. After calling `allocate()`, target vaults are automatically excluded, as is the synth contract itself. Additional addresses whose balances should be ignored can be managed by the owner by calling `addIgnoredForTotalSupply(address account)` and `removeIgnoredForTotalSupply(address account)`. 
 
 Since accrued interest is held by the vault, and therefore not directly in circulation, it is also excluded from the totalSupply calculation. If users accidentally transfer their synth tokens to an ignored contract they will also be considered out of circulation. For example, accidentally transferring synths to a synth vault would effectively burn them (as with transferring to any unprepared address), and remove them from totalSupply.
 
@@ -709,7 +707,7 @@ Synthetic assets use a different interest rate model than the standard vaults. T
 
 Any address can transfer the underlying asset into the vault and call `gulp()` which will distribute it to share holders in the vault over a "smeared" two week period. Accrued interest is reflected in the `totalAssets()` of the vault, adjusting the exchange rate accordingly. On deposit and redeem accrued interest is added to the internal `_totalAssets` variable which tracks all deposits in the vault in a donation attack resistent manner.
 
-On `gulp` any interest which has not been distributed is smeared for an additional two weeks, in theory this means that interest could be smeared indefinitely by continiously calling `gulp`, in practice it is expected that the interest will keep accruing, negating any negative side effects which may come from the smearing mechanism.
+On `gulp` any interest which has not been distributed is smeared for an additional two weeks, in theory this means that interest could be smeared indefinitely by continiously calling `gulp`, in practice it is expected that the interest will keep accruing, negating any negative side effects which may come from the smearing mechanism. Furthermore, the amount of interest that is delayed decreases exponentially over time.
 
 
 ### `PegStabilityModule`
