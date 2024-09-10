@@ -56,7 +56,7 @@ Dariusz Glowinski, Mick de Graaf, Kasper Pawlowski, Anton Totomanov, Tanya Roze,
     * [Token Lists](#token-lists)
     * [Custom Whitelist Perspective](#custom-whitelist-perspective)
     * [Governed Perspective](#governed-perspective)
-    * [Escrow Perspective](#escrow-perspective)
+    * [Escrowed Collateral Perspective](#escrowed-collateral-perspective)
     * [Ungoverned Perspective](#ungoverned-perspective)
         * [0x Perspective](#0x-perspective)
         * [Nzx Perspective](#nzx-perspective)
