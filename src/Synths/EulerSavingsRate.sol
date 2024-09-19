@@ -129,7 +129,7 @@ contract EulerSavingsRate is EVCUtil, ERC4626 {
     }
 
     /// @notice Smears any donations to this vault as interest.
-    function gulp() public nonReentrant {
+    function gulp() public {
         ESRSlot memory esrSlotCache = updateInterestAndReturnESRSlotCache();
 
         // Do not gulp if total supply is too low
