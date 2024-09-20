@@ -45,7 +45,7 @@ contract EulerSavingsRate is EVCUtil, ERC4626 {
     event Gulped(uint256 gulped, uint256 interestLeft);
     event InterestUpdated(uint256 interestAccrued, uint256 interestLeft);
 
-    modifier nonReentrant() {
+    modifier nonReentrant() virtual {
         if (esrSlot.locked == LOCKED) revert Reentrancy(address(this), msg.sender);
 
         esrSlot.locked = LOCKED;
