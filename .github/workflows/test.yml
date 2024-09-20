@@ -54,7 +54,7 @@ jobs:
             - name: Run foundry tests
               # --ast tests enables inline configs to work https://github.com/foundry-rs/foundry/issues/7310#issuecomment-1978088200
               run: |
-                  forge test -vvv --gas-report --ast 
+                  forge test -vvvvv --gas-report --ast
               id: test
 
     overrides:
