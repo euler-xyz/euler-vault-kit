@@ -7,7 +7,6 @@ import {IERC20} from "openzeppelin-contracts/token/ERC20/IERC20.sol";
 import {ERC20} from "openzeppelin-contracts/token/ERC20/ERC20.sol";
 import {ERC4626} from "openzeppelin-contracts/token/ERC20/extensions/ERC4626.sol";
 import {EVCUtil} from "ethereum-vault-connector/utils/EVCUtil.sol";
-import {console2} from "forge-std/Test.sol";
 
 /// @title EulerSavingsRate
 /// @custom:security-contact security@euler.xyz
@@ -47,15 +46,7 @@ contract EulerSavingsRate is EVCUtil, ERC4626 {
     event InterestUpdated(uint256 interestAccrued, uint256 interestLeft);
 
     modifier nonReentrant() {
-        if (esrSlot.locked == LOCKED) {
-            console2.log("DEBUG DEBUG");
-            console2.log(esrSlot.lastInterestUpdate);
-            console2.log(esrSlot.interestSmearEnd);
-            console2.log(esrSlot.interestLeft);
-            console2.log(esrSlot.locked);
-            console2.logBytes(msg.data);
-            revert Reentrancy(address(this), msg.sender);
-        }
+        if (esrSlot.locked == LOCKED) revert Reentrancy(address(this), msg.sender);
 
         esrSlot.locked = LOCKED;
         _;
