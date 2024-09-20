@@ -7,12 +7,12 @@ import {EulerSavingsRate} from "../../../../src/Synths/EulerSavingsRate.sol";
 import {MockToken} from "./MockToken.sol";
 
 contract ESROverride is EulerSavingsRate {
-    constructor (address _evc, address _asset, string memory _name, string memory _symbol) EulerSavingsRate(_evc, _asset, _name, _symbol) {}
+    constructor(address _evc, address _asset, string memory _name, string memory _symbol)
+        EulerSavingsRate(_evc, _asset, _name, _symbol)
+    {}
 
     modifier nonReentrant() override {
         if (esrSlot.locked == LOCKED) revert Reentrancy(address(this), msg.sender);
-        console2.logBytes(msg.data);
-        console2.log(this.name());
         esrSlot.locked = LOCKED;
         _;
         esrSlot.locked = UNLOCKED;
