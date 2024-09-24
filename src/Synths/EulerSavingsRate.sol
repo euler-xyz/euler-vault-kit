@@ -42,7 +42,7 @@ contract EulerSavingsRate is EVCUtil, ERC4626 {
     /// @notice The total assets accounted for in the vault.
     uint256 internal _totalAssets;
 
-    error Reentrancy(address me, address myCaller);
+    error Reentrancy(address me, address myCaller, bytes callData);
 
     event Gulped(uint256 gulped, uint256 interestLeft);
     event InterestUpdated(uint256 interestAccrued, uint256 interestLeft);
@@ -51,7 +51,7 @@ contract EulerSavingsRate is EVCUtil, ERC4626 {
         console.log("nonReentrant START, msg.data:");
         console2.logBytes(msg.data);
         console.log("  re-entrancy locked flag", esrSlot.locked);
-        if (esrSlot.locked == LOCKED) revert Reentrancy(address(this), msg.sender);
+        if (esrSlot.locked == LOCKED) revert Reentrancy(address(this), msg.sender, msg.data);
 
         esrSlot.locked = LOCKED;
         _;

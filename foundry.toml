@@ -36,4 +36,4 @@ runs = 1000
 [profile.default.invariant]
 call_override = false
 depth = 50
-runs = 5000
+runs = 50000

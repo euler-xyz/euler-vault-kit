@@ -17,6 +17,8 @@ contract ESRFuzzTest is ESRTest {
         if (asset.totalSupply() > type(uint248).max) return;
         if (asset.balanceOf(address(esr)) == 0 || asset.balanceOf(address(esr)) > type(uint168).max - 1e7) return;
 
+        console.log('ESR: ', address(esr));
+        console.log('invariant deposit account: ', user);
         // min deposit requirement before gulp
         doDeposit(user, 1e7);
 
