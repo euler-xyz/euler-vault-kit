@@ -8,6 +8,8 @@ import {ERC20} from "openzeppelin-contracts/token/ERC20/ERC20.sol";
 import {ERC4626} from "openzeppelin-contracts/token/ERC20/extensions/ERC4626.sol";
 import {EVCUtil} from "ethereum-vault-connector/utils/EVCUtil.sol";
 
+import "forge-std/Test.sol";
+
 /// @title EulerSavingsRate
 /// @custom:security-contact security@euler.xyz
 /// @author Euler Labs (https://www.eulerlabs.com/)
@@ -46,6 +48,9 @@ contract EulerSavingsRate is EVCUtil, ERC4626 {
     event InterestUpdated(uint256 interestAccrued, uint256 interestLeft);
 
     modifier nonReentrant() virtual {
+        console.log("nonReentrant START, msg.data:");
+        console2.logBytes(msg.data);
+        console.log("  re-entrancy locked flag", esrSlot.locked);
         if (esrSlot.locked == LOCKED) revert Reentrancy(address(this), msg.sender);
 
         esrSlot.locked = LOCKED;

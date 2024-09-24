@@ -6,19 +6,6 @@ import {EthereumVaultConnector as EVC} from "ethereum-vault-connector/EthereumVa
 import {EulerSavingsRate} from "../../../../src/Synths/EulerSavingsRate.sol";
 import {MockToken} from "./MockToken.sol";
 
-contract ESROverride is EulerSavingsRate {
-    constructor(address _evc, address _asset, string memory _name, string memory _symbol)
-        EulerSavingsRate(_evc, _asset, _name, _symbol)
-    {}
-
-    modifier nonReentrant() override {
-        if (esrSlot.locked == LOCKED) revert Reentrancy(address(this), msg.sender);
-        esrSlot.locked = LOCKED;
-        _;
-        esrSlot.locked = UNLOCKED;
-    }
-}
-
 contract ESRTest is Test {
     EVC public evc;
     EulerSavingsRate public esr;
@@ -33,7 +20,7 @@ contract ESRTest is Test {
     function setUp() public virtual {
         asset = new MockToken();
         evc = new EVC();
-        esr = new ESROverride(address(evc), address(asset), NAME, SYMBOL);
+        esr = new EulerSavingsRate(address(evc), address(asset), NAME, SYMBOL);
 
         // Set a non zero timestamp
         vm.warp(420);
