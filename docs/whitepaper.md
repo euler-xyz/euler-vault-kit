@@ -564,11 +564,13 @@ Since the EVK is a *kit*, it attempts to be maximally flexible and doesn't enfor
 
 Perspectives provide a mechanism for validating properties of a vault using on-chain verifiable logic. A perspective is any contract that implements the following interface:
 
-    interface IPerspective {
-        function perspectiveVerify(address vault, bool failEarly) external;
+```solidity
+interface IPerspective {
+    function perspectiveVerify(address vault, bool failEarly) external;
 
-        function isVerified(address vault) external view returns (bool);
-    }
+    function isVerified(address vault) external view returns (bool);
+}
+```
 
 `perspectiveVerify()` will inspect the configuration of the provided vault and determine whether it meets the desired properties of this particular perspective and, if so, will record this fact in its storage. This recorded fact can be thought of as a cached or memoised value, so the gas-expensive verification only needs to happen once. Afterwards, `isVerified()` can be used to cheaply read this cached result.
 
