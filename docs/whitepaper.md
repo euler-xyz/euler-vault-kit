@@ -421,6 +421,8 @@ Most user-invokable external functions are allocated constants. For example, the
 
 When a function is invoked, the vault checks if the corresponding operation is set in hooked ops. If so, the hook target is `call`ed using the same `msg.data` that was provided to the vault, along with the EVC-authenticated caller appended as trailing calldata. If the call to the hook target fails, then the vault operation will fail too. If the hook target is `address(0)` (or any non-contract address), then the operation fails unconditionally.
 
+When a vault is first created, all hooks are enabled, and the hook target is `address(0)`. Attempting to interact with the vault in this state will throw the `E_OperationDisabled` error. In order to make the vault functional, the desired hooks should be disabled, for example by calling `setHookConfig(address(0), 0)` to enable all operations. Vaults start in this disabled state to avoid a race condition where users could begin interacting with a partially configured vault, for instance by depositing before a supply cap has been configured.
+
 In addition to user-invokable functions, hooks can also hook `checkVaultStatus`. This will be invoked when the EVC calls `checkVaultStatus` on the vault, which is typically at the end of any batch that has interacted with the vault. This hook can be used to reject operations that violate "post-condition" properties of the vault.
 
 The installed hook target contract address can bypass the vault's read-only reentrancy protection. This means that hook functions can call view methods on the vault. However, hooks cannot perform state changing operations because of the normal reentrancy lock.
