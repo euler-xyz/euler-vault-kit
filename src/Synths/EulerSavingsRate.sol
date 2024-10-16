@@ -40,13 +40,13 @@ contract EulerSavingsRate is EVCUtil, ERC4626 {
     /// @notice The total assets accounted for in the vault.
     uint256 internal _totalAssets;
 
-    error Reentrancy();
+    error Reentrancy(address me, address myCaller);
 
     event Gulped(uint256 gulped, uint256 interestLeft);
     event InterestUpdated(uint256 interestAccrued, uint256 interestLeft);
 
-    modifier nonReentrant() {
-        if (esrSlot.locked == LOCKED) revert Reentrancy();
+    modifier nonReentrant() virtual {
+        if (esrSlot.locked == LOCKED) revert Reentrancy(address(this), msg.sender);
 
         esrSlot.locked = LOCKED;
         _;
