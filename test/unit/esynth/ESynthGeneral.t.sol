@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 pragma solidity ^0.8.20;
 
+import {Ownable} from "openzeppelin-contracts/access/Ownable.sol";
 import {ESynthTest} from "./lib/ESynthTest.sol";
 import {stdError} from "forge-std/Test.sol";
 import {Errors} from "../../../src/EVault/shared/Errors.sol";
@@ -129,5 +130,83 @@ contract ESynthGeneralTest is ESynthTest {
         esynth.mint(address(esynth), amount);
         vm.expectRevert(ESynth.E_NotEVCCompatible.selector);
         esynth.allocate(address(wrongEVC), amount);
+    }
+
+    function test_GovernanceModifiers(address owner, uint8 id, address nonOwner, uint128 amount) public {
+        vm.assume(owner != address(0) && owner != address(evc));
+        vm.assume(!evc.haveCommonOwner(owner, nonOwner) && nonOwner != address(evc));
+        vm.assume(id != 0);
+
+        vm.prank(owner);
+        esynth = ESynth(address(new ESynth(address(evc), "Test Synth", "TST")));
+
+        // succeeds if called directly by an owner
+        vm.prank(owner);
+        esynth.setCapacity(address(this), amount);
+
+        // fails if called by a non-owner
+        vm.prank(nonOwner);
+        vm.expectRevert();
+        esynth.setCapacity(address(this), amount);
+
+        // succeeds if called by an owner through the EVC
+        vm.prank(owner);
+        evc.call(address(esynth), owner, 0, abi.encodeCall(ESynth.setCapacity, (address(this), amount)));
+
+        // fails if called by non-owner through the EVC
+        vm.prank(nonOwner);
+        vm.expectRevert();
+        evc.call(address(esynth), nonOwner, 0, abi.encodeCall(ESynth.setCapacity, (address(this), amount)));
+
+        // fails if called by a sub-account of an owner through the EVC
+        vm.prank(owner);
+        vm.expectRevert();
+        evc.call(
+            address(esynth),
+            address(uint160(owner) ^ id),
+            0,
+            abi.encodeCall(ESynth.setCapacity, (address(this), amount))
+        );
+
+        // fails if called by the owner operator through the EVC
+        vm.prank(owner);
+        evc.setAccountOperator(owner, nonOwner, true);
+        vm.prank(nonOwner);
+        vm.expectRevert();
+        evc.call(address(esynth), owner, 0, abi.encodeCall(ESynth.setCapacity, (address(this), amount)));
+    }
+
+    function test_RenounceTransferOwnership() public {
+        address OWNER = makeAddr("OWNER");
+        address OWNER2 = makeAddr("OWNER2");
+        address OWNER3 = makeAddr("OWNER3");
+
+        vm.prank(OWNER);
+        esynth = ESynth(address(new ESynth(address(evc), "Test Synth", "TST")));
+        assertEq(esynth.owner(), OWNER);
+
+        vm.prank(OWNER2);
+        vm.expectRevert(abi.encodeWithSelector(Ownable.OwnableUnauthorizedAccount.selector, OWNER2));
+        esynth.renounceOwnership();
+
+        vm.prank(OWNER2);
+        vm.expectRevert(abi.encodeWithSelector(Ownable.OwnableUnauthorizedAccount.selector, OWNER2));
+        esynth.transferOwnership(OWNER2);
+
+        vm.prank(OWNER);
+        esynth.transferOwnership(OWNER2);
+        assertEq(esynth.owner(), OWNER2);
+
+        vm.prank(OWNER2);
+        esynth.transferOwnership(OWNER3);
+        assertEq(esynth.owner(), OWNER3);
+
+        vm.prank(OWNER2);
+        vm.expectRevert(abi.encodeWithSelector(Ownable.OwnableUnauthorizedAccount.selector, OWNER2));
+        esynth.renounceOwnership();
+
+        vm.prank(OWNER3);
+        esynth.renounceOwnership();
+        assertEq(esynth.owner(), address(0));
     }
 }

@@ -151,41 +151,4 @@ contract ESRGeneralTest is ESRTest {
         uint256 balanceOfAddress1 = esr.balanceOf(address(1));
         assertEq(balanceOfAddress1, balanceOfUser);
     }
-
-    // test the result of maxWithdraw when no controller is set
-    function test_MaxWithdrawNoControllerSet() public {
-        uint256 depositAmount = 100e18;
-        doDeposit(user, depositAmount);
-        uint256 maxWithdraw = esr.maxWithdraw(user);
-        assertEq(maxWithdraw, depositAmount);
-    }
-
-    // test the result of maxWithdraw when controller is set
-    function test_maxWithdrawControllerSet() public {
-        uint256 depositAmount = 100e18;
-        doDeposit(user, depositAmount);
-        vm.prank(user);
-        evc.enableController(address(user), address(statusCheck));
-        uint256 maxWithdraw = esr.maxWithdraw(user);
-        assertEq(maxWithdraw, 0);
-    }
-
-    // test the result of maxRedeem when no controller is set
-    function test_maxRedeemNoControllerSet() public {
-        uint256 depositAmount = 100e18;
-        doDeposit(user, depositAmount);
-        uint256 shares = esr.balanceOf(user);
-        uint256 maxRedeem = esr.maxRedeem(user);
-        assertEq(maxRedeem, shares);
-    }
-
-    // test the result of maxRedeem when controller is set
-    function test_maxRedeemControllerSet() public {
-        uint256 depositAmount = 100e18;
-        doDeposit(user, depositAmount);
-        vm.prank(user);
-        evc.enableController(address(user), address(statusCheck));
-        uint256 maxRedeem = esr.maxRedeem(user);
-        assertEq(maxRedeem, 0);
-    }
 }

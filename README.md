@@ -61,8 +61,6 @@ This software is **experimental** and is provided "as is" and "as available".
 
 Always include thorough tests when using the Euler Vault Kit to ensure it interacts correctly with your code.
 
-The Euler Vault Kit is currently undergoing security audits and should not be used in production.
-
 ## Known limitations
 
 Refer to the [whitepaper](https://docs.euler.finance/euler-vault-kit-white-paper/) for a list of known limitations and security considerations.

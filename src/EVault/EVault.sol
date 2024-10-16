@@ -83,7 +83,7 @@ contract EVault is Dispatch {
     function creator() public view virtual override useView(MODULE_VAULT) returns (address) {}
 
 
-    function deposit(uint256 amount, address receiver) public virtual override callThroughEVC returns (uint256) { return super.deposit(amount, receiver); }
+    function deposit(uint256 amount, address receiver) public virtual override callThroughEVC use(MODULE_VAULT) returns (uint256) {}
 
     function mint(uint256 amount, address receiver) public virtual override callThroughEVC use(MODULE_VAULT) returns (uint256) {}
 
@@ -122,7 +122,7 @@ contract EVault is Dispatch {
 
     function repayWithShares(uint256 amount, address receiver) public virtual override callThroughEVC use(MODULE_BORROWING) returns (uint256 shares, uint256 debt) {}
 
-    function pullDebt(uint256 amount, address from) public virtual override callThroughEVC use(MODULE_BORROWING) returns (uint256) {}
+    function pullDebt(uint256 amount, address from) public virtual override callThroughEVC use(MODULE_BORROWING) {}
 
     function flashLoan(uint256 amount, bytes calldata data) public virtual override use(MODULE_BORROWING) {}
 
@@ -151,7 +151,7 @@ contract EVault is Dispatch {
 
     function disableController() public virtual override use(MODULE_RISKMANAGER) {}
 
-    function checkAccountStatus(address account, address[] calldata collaterals) public virtual override returns (bytes4) { return super.checkAccountStatus(account, collaterals); }
+    function checkAccountStatus(address account, address[] calldata collaterals) public view virtual override returns (bytes4) { return super.checkAccountStatus(account, collaterals); }
 
     function checkVaultStatus() public virtual override returns (bytes4) { return super.checkVaultStatus(); }
 
@@ -226,8 +226,6 @@ contract EVault is Dispatch {
     function setHookConfig(address newHookTarget, uint32 newHookedOps) public virtual override use(MODULE_GOVERNANCE) {}
 
     function setLTV(address collateral, uint16 borrowLTV, uint16 liquidationLTV, uint32 rampDuration) public virtual override use(MODULE_GOVERNANCE) {}
-
-    function clearLTV(address collateral) public virtual override use(MODULE_GOVERNANCE) {}
 
     function setMaxLiquidationDiscount(uint16 newDiscount) public virtual override use(MODULE_GOVERNANCE) {}
 

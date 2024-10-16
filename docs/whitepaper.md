@@ -35,7 +35,6 @@ Dariusz Glowinski, Mick de Graaf, Kasper Pawlowski, Anton Totomanov, Tanya Roze,
     * [Risk Adjustment](#risk-adjustment)
     * [Borrowing vs Liquidation LTV](#borrowing-vs-liquidation-ltv)
     * [Untrusted Collaterals](#untrusted-collaterals)
-        * [Cleared versus 0 LTVs](#cleared-versus-0-ltvs)
         * [Non-collateral Deposits](#non-collateral-deposits)
     * [LTV Ramping](#ltv-ramping)
     * [Supply and Borrow Caps](#supply-and-borrow-caps)
@@ -55,9 +54,12 @@ Dariusz Glowinski, Mick de Graaf, Kasper Pawlowski, Anton Totomanov, Tanya Roze,
     * [Alternative Liquidations](#alternative-liquidations)
 * [Perspectives](#perspectives)
     * [Token Lists](#token-lists)
-    * [Whitelist Perspective](#whitelist-perspective)
-    * [Escrow Perspective](#escrow-perspective)
-    * [Cluster Perspective](#cluster-perspective)
+    * [Custom Whitelist Perspective](#custom-whitelist-perspective)
+    * [Governed Perspective](#governed-perspective)
+    * [Escrowed Collateral Perspective](#escrowed-collateral-perspective)
+    * [Ungoverned Perspective](#ungoverned-perspective)
+        * [0x Perspective](#0x-perspective)
+        * [Nzx Perspective](#nzx-perspective)
 * [Composing Vaults](#composing-vaults)
     * [Collateral Interest](#collateral-interest)
     * [Custom Collaterals](#custom-collaterals)
@@ -225,7 +227,7 @@ Since the virtual deposit shares are incorporated into the exchange rate, they w
 
 In order to move tokens in or out of the vault, the vault code has internal abstractions `pullAssets` and `pushAssets`.
 
-`pullAssets` will first attempt to call `transferFrom` on the underlying asset using the vault's address as the recipient. If the user has given sufficient approval for the vault, this will succeed. Otherwise, `pullAssets` will attempt to use [Permit2](https://github.com/Uniswap/permit2) to transfer the assets into the vault. Permit2 can enable better user experiences because approvals can be created as signed messages that are bundled into the same EVC batch as a `deposit` (for example). Although the user does need to first add an approval for the Permit2 contract, this is a one-time operation and many users will already have done this when interacting with Uniswap or other apps.
+`pullAssets` will first attempt to use [Permit2](https://github.com/Uniswap/permit2) to transfer the assets into the vault. If this is unsuccessful, it will then attempt to call `transferFrom` on the underlying asset using the vault's address as the recipient. Permit2 can enable better user experiences because approvals can be created as signed messages that are bundled into the same EVC batch as a `deposit` (for example). Although the user does need to first add an approval for the Permit2 contract, this is a one-time operation and many users will already have done this when interacting with Uniswap or other apps.
 
 `pushAssets` always simply uses `transfer` on the underlying asset. However, in order to prevent loss of funds, `pushAssets` will first check with the EVC to see if the recipient address is a known non-owner address (a virtual sub-account address). If so, it will refuse to transfer the assets. If the underlying asset is EVC-aware (perhaps a [nested vault](#nesting)), then the `CFG_EVC_COMPATIBLE_ASSET` config flag can be enabled, which prevents this check.
 
@@ -288,7 +290,7 @@ IRMs return the interest rate that _borrowers_ must pay. Depositors (aka supplie
 
 The IRM interface specifies interest rates in terms of "second percent yield" (SPY) values which are per-second compounded interest rates scaled by `1e27`. Although not used by the contracts themselves, for consistency we recommend that conversion of SPY to annualised equivalents (in UIs and elsewhere) should use the number of seconds in the average Gregorian calendar year of 365.2425 days.
 
-When a vault has `address(0)` installed as an IRM, an interest rate of `0%` is assumed. If a call to the vault's IRM fails, the vault will ignore this failure and continue with the previous interest rate. An operation that runs out of gas in the IRM call but otherwise has enough gas to successfully complete could delay updating the interest rate, but this will be corrected on the next interaction with the vault.
+When a vault has `address(0)` installed as an IRM, an interest rate of `0%` is assumed. If a call to the vault's IRM fails, the vault will ignore this failure and continue with the previous interest rate. If an IRM fails immediately after install, `0%` will be used. An operation that runs out of gas in the IRM call but otherwise has enough gas to successfully complete could delay updating the interest rate, but this will be corrected on the next interaction with the vault.
 
 Although most IRMs implement pure functions, when re-targeting the interest rate, vaults do not invoke them with `staticcall` in order to support stateful or reactive IRMs. The `computeInterestRate()` method should verify that `msg.sender == vault`. IRMs also must implement a corresponding `computeInterestRateView()` method which does not update state. Even though vaults store the current interest rate in their storage, `computeInterestRateView()` is useful for obtaining updated interest rates mid-batch (especially during a simulation) since the stored rate may be stale.
 
@@ -330,6 +332,8 @@ In order for it to detect impermissible user actions, the EVC requires that vaul
 
 These methods are invoked by the EVC at [appropriate times](https://evc.wtf/docs/whitepaper#account-status-checks). Often this will be after all operations in a batch have been performed, because the EVC allows users to defer these checks as a type of flash liquidity. If a vault would like to indicate that a status check has failed, it reverts, aborting the transaction and all performed operations.
 
+`checkAccountStatus` is a `view` method (invoked with `STATICCALL`) in order to prevent malicious users from executing code on a regular `transfer` operation of vault shares, potentially protecting 3rd party contracts that don't properly implement reentrancy locks. On the other hand, `checkVaultStatus` is never invoked in this context so it can be invoked with regular `CALL`. The EVK takes advantage of this in order to record an initial snapshot of the vault's state.
+
 ### LTV
 
 In order for borrowing to occur, the governor of the liability vault must decide on a set of collateral assets and their maximum allowed Loan To Value ratios (from here on just called LTVs). LTVs should be chosen carefully. In addition to the risk inherent in the underlying asset, the vault that contains the asset should also be considered. If the collateral itself can be loaned out against risky collateral or uses unsafe pricing oracles, lower LTVs may be appropriate.
@@ -368,21 +372,17 @@ Using vaults with illiquid or manipulable underlying assets could threaten the s
 
 It is also critical to evaluate the smart contract code that implements each collateral vault. A badly coded or malicious vault could refuse to release funds in a liquidation event, or simply lie about the value of its holdings. For this reason it is recommended to only use vaults created by a known-good factory. A vault can be verified to have been created by a factory by calling the factory's `isProxy()` function.
 
+Care should also be taken when using collateral vaults with [hooks](#hooks) installed. Hooks can implement condition checks that (maliciously or not) could prevent liquidations from succeeding.
+
 When evaluating whether a new or customised vault implementation is trustworthy, all the usual checks should be performed, such as verifying the code was audited, does not contain backdoors, etc. In addition, it is very important to verify that the `transfer` method does not invoke any external contracts that could run attacker code. This is because the EVK implementation [forgives](https://evc.wtf/docs/whitepaper#forgiveness) the account status check of an account after liquidation, and a malicious user could perform actions that get unexpectedly forgiven.
 
-For this reason, an important property of liquidation is that assets without an LTV can never be seized by liquidation (users can install any vaults in their EVC collateral set, trusted or not).
-
-#### Cleared versus 0 LTVs
-
-By default, all prospective collaterals are considered to have unset, or _cleared_ LTVs. Only by calling `setLTV()` do they become available as collateral. If a governor decides that a vault is no longer suitable as collateral, it can either have its liquidation LTV (and necessarily its borrowing LTV) set to 0, or it can be cleared with the `clearLTV()` function.
-
-There is a subtle but important difference between the two: Former collaterals with a 0 LTV are still eligible to be seized in a liquidation, but cleared ones are not, for the reason described in [Untrusted Collaterals](#untrusted-collaterals).
-
-So, if a vault can no longer be collateral for economic/market reasons, its LTV should be set to 0 (either with a ramp or in drastic cases without). On the other hand, if the vault's code is discovered to be buggy or malicious, its LTV should be cleared immediately.
+For this reason, an important property of liquidation is that assets without an LTV can never be seized by the liquidator (users can install any vaults in their EVC collateral set, trusted or not). Collateral assets can have their LTVs reduced back to `0`, but this does not remove the ability to liquidate them, so this cannot be used to recover a vault that was installed as a collateral but then was subsequently found to be unsafe (because of a bug in its `transfer` method).
 
 #### Non-collateral Deposits
 
 Although only vaults that were explicitly configured with an LTV can be used as collateral to support debt, when an account is not healthy the account's functionality will become limited. This includes failing withdrawals of non-collateral assets. Each account is considered a single position and when the position is unhealthy, the controller vault is considered within its rights to incentivize the user to repay their debt by any means. To fully segregate assets, use different sub-accounts to store deposits even when they aren't used as collateral.
+
+However, even when a user is in violation and access to non-collateral deposits are blocked, the EVC still prevents the controller vault from actually seizing those assets for liquidation. Even though technically possible, the EVK also does not attempt to seize a violator's shares in the liability vault itself (considering there is no reason to hold both shares and debt in the same vault).
 
 ### LTV Ramping
 
@@ -408,6 +408,8 @@ Even though it can't be the direct result of a user action, in some cases caps c
 
 Note that this behaviour can in principle be exploited by opportunistically wrapping [gasless transactions](#gasless-transactions) that withdraw/repay into a surrounding batch that deposits/borrows an equivalent amount. The executor is effectively able to transfer the user's supply/borrow quota into their own account instead of reducing the capped value.
 
+In some very unusual circumstances, it has been discovered by auditors that due to rounding, a `repay()` operation could fail while a vault's supply cap is exceeded. In this event, a user should ensure they are not repaying multiple sub-accounts in the same batch, and/or pull all of their debt except for some dust to another sub-account and repay from there. Since these circumstances are so rare (we don't expect them to ever arise in the real world), it was not considered necessary to prevent this in the contracts.
+
 ### Hooks
 
 Vaults support a limited hooking functionality. In order to make use of this, the governor should install a hook config, which consists of two parameters:
@@ -418,6 +420,8 @@ Vaults support a limited hooking functionality. In order to make use of this, th
 Most user-invokable external functions are allocated constants. For example, the deposit function has `OP_DEPOSIT`. The hooked ops bitfield is the bitwise OR of these constants.
 
 When a function is invoked, the vault checks if the corresponding operation is set in hooked ops. If so, the hook target is `call`ed using the same `msg.data` that was provided to the vault, along with the EVC-authenticated caller appended as trailing calldata. If the call to the hook target fails, then the vault operation will fail too. If the hook target is `address(0)` (or any non-contract address), then the operation fails unconditionally.
+
+When a vault is first created, all hooks are enabled, and the hook target is `address(0)`. Attempting to interact with the vault in this state will throw the `E_OperationDisabled` error. In order to make the vault functional, the desired hooks should be disabled, for example by calling `setHookConfig(address(0), 0)` to enable all operations. Vaults start in this disabled state to avoid a race condition where users could begin interacting with a partially configured vault, for instance by depositing before a supply cap has been configured.
 
 In addition to user-invokable functions, hooks can also hook `checkVaultStatus`. This will be invoked when the EVC calls `checkVaultStatus` on the vault, which is typically at the end of any batch that has interacted with the vault. This hook can be used to reject operations that violate "post-condition" properties of the vault.
 
@@ -445,11 +449,9 @@ The main purpose of the hook system is to disable vault functionality, either pe
 
 Inside a vault, each collateral is configured as the address of another vault, not the underlying asset (unless the asset is specially constructed to also function as a collateral vault). This means that the value of a user's collateral is in fact the value of the vault's shares. A vault share is not necessarily equal to a unit of the underlying asset because of the [exchange rate](#exchange-rate).
 
-Because converting quantities of shares to underlying asset amounts is itself a pricing operation, this responsibility is delegated to the price oracle.
+Because converting quantities of shares to underlying asset amounts is itself a pricing operation, this responsibility is delegated to the price oracle. In some cross-chain designs, the price oracle may also be responsible for determining the exchange rate of a corresponding vault on a separate chain.
 
-For vaults created with the Euler Vault Kit, the ERC-4626 `convertToAssets` function can be used to price shares in units of the underlying asset. This function is designed to be a reliable oracle. [Internal balance tracking](#internal-balance-tracking) prevents manipulation with direct transfer donations, and the [virtual deposit](#exchange-rate) minimises the impact of rounding-based "stealth deposits". See our [article](https://www.euler.finance/blog/exchange-rate-manipulation-in-erc4626-vaults) for more details on these protections.
-
-In some cross-chain designs, the price oracle is also responsible for determining the exchange rate of a corresponding vault on a separate chain.
+For vaults created with the Euler Vault Kit, the ERC-4626 `convertToAssets` function can be used to price shares in units of the underlying asset. This function is designed to be a reliable oracle. [Internal balance tracking](#internal-balance-tracking) prevents manipulation with direct transfer donations, and the [virtual deposit](#exchange-rate) minimises the impact of rounding-based "stealth deposits". See our [article](https://www.euler.finance/blog/exchange-rate-manipulation-in-erc4626-vaults) for more details on these protections. As an additional layer of defense, it is recommended that vaults have some small amount deposited into them at all times, since most hypothetical rounding-based attack vectors rely on empty or near-empty vaults.
 
 ### `IPriceOracle`
 
@@ -560,15 +562,17 @@ In essence, a liquidation is equivalent to a stop-loss order. As long as you set
 
 **This section is still a work-in-progress and is subject to change**
 
-Since the EVK is a *kit*, it attempts to be maximally flexible and doesn't enforce policy decisions on vault creators. This means that it is possible to create vaults with insecure or malicious configurations. Furthermore, an otherwise secure vault may be insecure because it accapts an [insecure collateral as collateral](#untrusted-collaterals) (or a collateral vault itself accepts insecure collateral, etc, recursively).
+Since the EVK is a *kit*, it attempts to be maximally flexible and doesn't enforce policy decisions on vault creators. This means that it is possible to create vaults with insecure or malicious configurations. Furthermore, an otherwise secure vault may be insecure because it accepts an [insecure collateral as collateral](#untrusted-collaterals) (or a collateral vault itself accepts insecure collateral, etc, recursively).
 
 Perspectives provide a mechanism for validating properties of a vault using on-chain verifiable logic. A perspective is any contract that implements the following interface:
 
-    interface IPerspective {
-        function perspectiveVerify(address vault, bool failEarly) external;
+```solidity
+interface IPerspective {
+    function perspectiveVerify(address vault, bool failEarly) external;
 
-        function isVerified(address vault) external view returns (bool);
-    }
+    function isVerified(address vault) external view returns (bool);
+}
+```
 
 `perspectiveVerify()` will inspect the configuration of the provided vault and determine whether it meets the desired properties of this particular perspective and, if so, will record this fact in its storage. This recorded fact can be thought of as a cached or memoised value, so the gas-expensive verification only needs to happen once. Afterwards, `isVerified()` can be used to cheaply read this cached result.
 
@@ -580,34 +584,58 @@ The primary use-case of perspectives is to provide a permissionless, on-chain ap
 
 Just like with Token Lists, user interfaces will allow users to import which perspectives they would like to use to filter vaults that don't meet their trust criteria. Advanced UIs may support special filtering features, such as "all vaults that meet 2 or more of the configured perspectives", or "all vaults on this perspective but *not* on this perspective".
 
-Although any contract that conforms to `IPerspective` can be used as a perspective, we will be publishing a flexible reference implementation that users or projects can adapt to fit their requirements.
+Although any contract that conforms to `IPerspective` can be used as a perspective, we have created a [flexible reference implementation](https://github.com/euler-xyz/evk-periphery/tree/master?tab=readme-ov-file#perspectives) that users or projects can adapt to fit their requirements.
 
-### Whitelist Perspective
+### Custom Whitelist Perspective
 
-The simplest form of perspective is a whitelist. This could be curated by a trusted operator, or could simply have a hard-coded list of a few vaults. Projects that have built custom vaults that don't pass the default perspectives could require users to import their own perspective address in order to use their vaults. As with Token List and other permissionless approaches, users must take caution to not import malicious phishing perspectives.
+The simplest form of perspective is a whitelist. This implementation is an ungoverned, immutable perspective that has a static list of vaults provided at creation.
 
-### Escrow Perspective
+Immutable projects that have a set of custom vaults which don't pass the default perspectives could require users to import a custom perspective in order to use their vaults. As with Token List and other permissionless approaches, users must take caution to not import malicious phishing perspectives.
 
-Another simple perspective is called "escrow". These verify that vaults are configured to not allow borrowing, and are immutable and finalised. Since such vaults do not earn yield, they are only useful to store tokens for use as collateral in other vaults.
+### Governed Perspective
 
-Escrow vaults cannot have any collaterals configured, so an escrow perspective never needs to recurse into other vaults.
+This is a type of whitelist perspective that has an active governor who can add or remove vaults according to whatever criteria they desire.
 
-### Cluster Perspective
+These perspectives are intended to be operated by trusted parties that have been given a responsibility to curate vaults, such as UIs that must show a default list of vaults.
 
-The most general-purpose perspective implementation class is called a "cluster". These types of perspectives first verify various desired properties about the queried vault. Typically they will require vaults to be finalised.
+### Escrowed Collateral Perspective
 
-Next, cluster perspectives attempt to verify each of the vault's configured collaterals. To do so, a cluster perspective uses a list of acceptable perspectives, which may or may not include itself. For each collateral, it recurses into each perspective, stopping as soon as one perspective accepts the collateral. If none do, the perspective itself will fail.
+Another simple perspective is called "escrowed collateral". These verify that vaults are configured to not allow borrowing, and are immutable and finalised. Since such vaults do not earn yield, they are only useful to store tokens for use as collateral in other vaults.
 
-This method allows perspectives to delegate some decisions to other perspectives. This reduces the amount of work needed to create a perspective, and takes advantage of the fact that verification of vaults may already be cached in these other perspectives.
+Escrow vaults cannot have any collaterals configured, so an escrowed collateral perspective never needs to recurse into other vaults.
 
-For instance, a perspective that wants to fully contain [rehypothecation risk](#collateral-interest) may only accept vaults that match [escrow perspectives](#escrow-perspective) as collateral.
+### Ungoverned Perspective
+
+The most sophisticated perspective implementation class is called an ungoverned perspective. This type of perspectives comprehensively verify various desired properties about the candiate vault. Typically they will require vaults to be finalised, and not have any unusual or unexpected configurations.
+
+Next, cluster perspectives attempt to verify each of the vault's configured collaterals. To do so, a cluster perspective uses a list of acceptable perspectives, which may or may not include itself. For each collateral, it recurses into each perspective, stopping as soon as one perspective accepts the collateral. If none do, the perspective itself will fail. This method allows perspectives to delegate some decisions to other perspectives. This reduces the amount of work needed to create a perspective, and takes advantage of the fact that verification of vaults may already be cached in these other perspectives.
+
+There are two sub-classes of ungoverned perspectives: "0x" and "nzx".
+
+#### 0x Perspective
+
+In this context, "0x" refers to *zero exposure*, where exposure refers to governance exposure. Vaults that match this perspective can only use as collateral vaults that match one of the following perspectives:
+
+* Escrow
+* The 0x perspective itself
+
+This means that not only is there no governance risk in a 0x vault itself, but neither in its collateral, or its transient collateral, etc.
+
+#### Nzx Perspective
+
+In some circumstances the 0x perspective may be too constraining, and there may be a set of vaults that are acceptable as collateral, even if they are governed. For this purpose a *non-zero exposure* perspective may be used. These vaults allow the following as collateral:
+
+* A Governed Perspective
+* Escrow
+* The Nzx perspective itself
+
 
 
 ## Composing Vaults
 
 ### Collateral Interest
 
-With [escrow](#escrow-perspective) vaults as collateral, borrowers will not earn any interest on their collateral even though they are paying interest on their borrow. Especially when employing leverage, where interest payments are magnified, having collateral interest offset the borrow interest often makes the difference between a profitable and unprofitable activity. Without interest on collateral, arbitraging interest rates by borrowing low-yielding assets collateralised by high-yielding assets (a "[carry trade](https://www.investopedia.com/terms/c/currencycarrytrade.asp)") would not be possible, leading to inefficient interest rate markets.
+With [escrow](#escrowed-collateral-perspective) vaults as collateral, borrowers will not earn any interest on their collateral even though they are paying interest on their borrow. Especially when employing leverage, where interest payments are magnified, having collateral interest offset the borrow interest often makes the difference between a profitable and unprofitable activity. Without interest on collateral, arbitraging interest rates by borrowing low-yielding assets collateralised by high-yielding assets (a "[carry trade](https://www.investopedia.com/terms/c/currencycarrytrade.asp)") would not be possible, leading to inefficient interest rate markets.
 
 For borrowers to earn interest on their collateral, vaults must accept an interest-bearing vault as collateral. This is sometimes called rehypothecation. By creating vaults that do, mutually-collateralised ecosystems such as (original) Compound or selectively-collateralised ecosystems such as AAVE/Euler V1 can be constructed.
 
@@ -636,6 +664,10 @@ In order to set up a leveraged position, users who borrow `cXYZ` from the `ecXYZ
 Nested vaults follow the same principle, however they are more convenient to use because of EVC batching and flash liquidity, and are more gas-efficient than interacting with entirely separate systems. Euler Vaults have been designed to allow nesting for all viable configurations without triggering re-entrancy problems, and `convertToAssets` can be safely used as a [pricing oracle](#pricing-shares).
 
 Nested vaults can have `CFG_EVC_COMPATIBLE_ASSET` set, which disables a protection used by vaults to ensure that non-EVC-compatible tokens are not transferred to known sub-account addresses, where they would be lost.
+
+Since [bad debt socialisation](#bad-debt-socialisation) represents a sudden but predictable (on MEV time-scales) price change, opportunistic market participants may take advantage of this by borrowing and shorting the shares of bad-debt vault using a nested vault configuration. In some situations this could have adverse effects on vault depositors.
+
+Similar to the case of [Non-collateral Deposits](#non-collateral-deposits), accounts may have certain operations restricted on nested vaults when they are unhealthy. For example, a `repay()` operation on a nested vault that is insufficient to restore the account to health may fail, because an account status check is scheduled by the parent vault when its shares are moved.
 
 ### Bootstrapping
 
@@ -666,11 +698,15 @@ The owner can allocate synthetic assets held by the synthetic asset itself to a 
 
 #### Deallocating from a vault
 
-The owner can deallocatice synthetic assets from the vault by calling `deallocate(address vault, uint256 amount)` which serves as a protocol withdraw from the synthetic asset vault. Assets deallocated from the vault will be transfered into the synthetic asset contract itself and be burned by the owner seperately.
+The owner can deallocate synthetic assets from the vault by calling `deallocate(address vault, uint256 amount)` which serves as a protocol withdraw from the synthetic asset vault. Assets deallocated from the vault will be transfered into the synthetic asset contract itself and be burned by the owner seperately.
 
 #### Total Supply adjustments
 
-Since protocol deposits into synthetic vaults are not backed by any collateral and are not in circulation they are excluded from the totalSupply calculation. After calling `allocate()`, target vaults are automatically excluded. Additional addresses whose balances should be ignored can be managed by the owner by calling `addIgnoredForTotalSupply(address account)` and `removeIgnoredForTotalSupply(address account)`.
+Since protocol deposits into synthetic vaults are not in circulation, they are excluded from the `totalSupply` calculation. After calling `allocate()`, target vaults are automatically excluded, as is the synth contract itself. Additional addresses whose balances should be ignored can be managed by the owner by calling `addIgnoredForTotalSupply(address account)` and `removeIgnoredForTotalSupply(address account)`.
+
+Since accrued interest is held by the vault, and therefore not directly in circulation, it is also excluded from the `totalSupply` calculation. If users accidentally transfer their synth tokens to an ignored contract they will also be considered out of circulation. For example, accidentally transferring synths to a synth vault would effectively burn them (as with transferring to any unprepared address), and remove them from `totalSupply`.
+
+Note that while performing a flash loan from a synth vault (or indeed a regular borrow), the `totalSupply` will reflect that the borrowed amount has in fact entered circulation for the duration of the loan. This can be considered a "flash mint" of the synth.
 
 ### `IRMSynth`
 
@@ -688,26 +724,25 @@ Synthetic assets use a different interest rate model than the standard vaults. T
 #### Mechanism
 
 1. If adjust interval did not pass, return previous rate
-2. If the oracle returns a zero quote, return previous rate
-3. If the synth trades below the target quote, raise the rate by 10% (proportional to the previous rate)
-4. If the synth is trading at the target quote or below, lower the rate by 10% (proportional to the previous rate)
-5. Enforce the minimum base rate
-6. Enforce the maximum rate
-7. Save the updated rate and when it last updated
+1. If the synth trades below the target quote, raise the rate by 10% (proportional to the previous rate)
+1. If the synth is trading at the target quote or greater, lower the rate by 10% (proportional to the previous rate)
+1. Enforce the minimum base rate
+1. Enforce the maximum rate
+1. Save the updated rate and when it last updated
 
 
 ### `EulerSavingsRate`
 
 `EulerSavingsRate` is a ERC-4626 compatible vault which allows users to deposit the underlying asset and receive interest in the form of the same underlying asset. On withdraw, redeem and transfers the accountStatus of the user is checked by calling the EVC, allowing it to be used as collateral by other vaults.
 
-Any address can transfer the underlying asset into the vault and call `gulp()` which will distribute it to share holders in the vault over a "smeared" two week period. Accrued interest is added to the `totalAssets` of the vault, adjusting the exchange rate accordingly. On deposit and redeem accrued interest is added to the `totalDeposited` variable which tracks all deposits in the vault in a donation attack resistent manner.
+Any address can transfer the underlying asset into the vault and call `gulp()` which will distribute it to share holders in the vault over a "smeared" two week period. Accrued interest is reflected in the `totalAssets()` of the vault, adjusting the exchange rate accordingly. On deposit and redeem accrued interest is added to the internal `_totalAssets` variable which tracks all deposits in the vault in a donation attack resistent manner.
 
-On `gulp` any interest which has not been distributed is smeared for an additional two weeks, in theory this means that interest could be smeared indefinitely by continiously calling `gulp`, in practice it is expected that the interest will keep accruing, negating any negative side effects which may come from the smearing mechanism.
+On `gulp()` any interest which has not been distributed is smeared for an additional two weeks, in theory this means that interest could be smeared indefinitely by continiously calling `gulp()`, in practice it is expected that the interest will keep accruing, negating any negative side effects which may come from the smearing mechanism. Furthermore, the amount of interest that is delayed decreases exponentially over time.
 
 
 ### `PegStabilityModule`
 
-The `PegStabilityModule` will be granted minting rights on a `ESynth` and will allow slippage-free conversion from and to the underlying asset. On deployment a fee for swaps to synth and to underlying are set. These fees accrue to the `PegStabilityModule` contract and can not be withdrawn, serving as a permanent reserve to support the peg.
+The `PegStabilityModule` will be granted minting rights on a `ESynth` and will allow slippage-free conversion from and to the underlying asset. On deployment, a fee for swaps to synth and to underlying are set. These fees accrue to the `PegStabilityModule` contract and can not be withdrawn, serving as a permanent reserve to support the peg.
 
 Swapping to the synthetic asset is possible up to the minting cap granted for the `PegStabilityModule` in the `ESynth`. Swapping to the underlying asset is possible up to the amount of the underlying asset held by the `PegStabilityModule`.
 
@@ -729,7 +764,7 @@ Perhaps most surprising is that neither the EVC nor the vault need to know anyth
 
 EVC Operators are a way to delegate control over your account to another address. Typically this will be a smart contract with limited, specialised capabilities.
 
-The most obvious immediate application of operators is delegating permission to open, modify, or close a position depending on an on-chain indicator. For example, stop losses can be placed onto an order giving "keepers" the ability to close your position if a particular price oracle indicates a price level has been reached, in exchange for a execution fee.
+The most obvious immediate application of operators is delegating permissions to open, modify, or close a position depending on an on-chain indicator. For example, stop losses can be placed onto an order giving "keepers" the ability to close your position if a particular price oracle indicates a price level has been reached, in exchange for a execution fee.
 
 ### Gasless Transactions
 
@@ -781,7 +816,7 @@ Modules are static, meaning they cannot be upgraded. Code upgrades require deplo
 
 #### Delegatecall into view functions
 
-Solidity doesn't allow for view functions to invoke `delegatecall`. To be able to remove view functions from the dispatcher codebase and `delegatecall` them instead into the modules, the dispatching mechanism uses the `useView` modifier. This modifier makes the view function `staticcall` back into the dispatcher to a `viewDelegate` function which is `non-payable`. This `viewDelegate` function can now `delegatecall` into the implementation of the view function in the module.
+Solidity doesn't allow for view functions to invoke `delegatecall`. To be able to remove view functions from the dispatcher codebase and `delegatecall` them instead into the modules, the dispatching mechanism uses the `useView` modifier. This modifier makes the view function `staticcall` back into the dispatcher to a `viewDelegate` function which is `payable` (potentially state-modifying). This `viewDelegate` function can now `delegatecall` into the implementation of the view function in the module.
 
 To address this, a proposed patch to the Solidity compiler is available in [this solc issue](https://github.com/ethereum/solidity/issues/14577).
 

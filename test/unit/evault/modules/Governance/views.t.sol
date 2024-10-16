@@ -6,12 +6,25 @@ import {EVaultTestBase} from "../../EVaultTestBase.t.sol";
 
 contract Governance_views is EVaultTestBase {
     function test_protocolFeeShare() public {
-        assertEq(eTST.protocolFeeShare(), 0.1e4);
+        assertEq(eTST.feeReceiver(), feeReceiver);
+        assertEq(eTST.protocolFeeShare(), 0.5e4);
 
-        startHoax(admin);
+        vm.prank(admin);
         protocolConfig.setProtocolFeeShare(0.4e4);
-
         assertEq(eTST.protocolFeeShare(), 0.4e4);
+
+        vm.prank(admin);
+        protocolConfig.setProtocolFeeShare(0.8e4);
+        assertEq(eTST.protocolFeeShare(), 0.5e4);
+
+        eTST.setFeeReceiver(address(0));
+        assertEq(eTST.feeReceiver(), address(0));
+        assertEq(eTST.protocolFeeShare(), 1e4);
+
+        vm.prank(admin);
+        protocolConfig.setProtocolFeeShare(0.4e4);
+        assertEq(eTST.feeReceiver(), address(0));
+        assertEq(eTST.protocolFeeShare(), 1e4);
     }
 
     function test_protocolFeeReceiver() public {

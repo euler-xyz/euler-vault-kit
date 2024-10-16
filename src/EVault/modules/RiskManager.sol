@@ -64,10 +64,11 @@ abstract contract RiskManagerModule is IRiskManager, LiquidityUtils {
     /// @dev The function doesn't have a reentrancy lock, because onlyEVCChecks provides equivalent behaviour. It
     /// ensures that the caller is the EVC, in 'checks in progress' state. In this state EVC will not accept any calls.
     /// Since all the functions which modify vault state use callThroughEVC modifier, they are effectively blocked while
-    /// the function executes. There are non-view functions without callThroughEVC modifier (`flashLoan`,
-    /// `disableCollateral`), but they don't change the vault's storage.
+    /// the function executes. There are non-view functions without `callThroughEVC` modifier (`flashLoan`,
+    /// `disableController`), but they don't change the vault's storage.
     function checkAccountStatus(address account, address[] calldata collaterals)
         public
+        view
         virtual
         reentrantOK
         onlyEVCChecks
@@ -108,6 +109,8 @@ abstract contract RiskManagerModule is IRiskManager, LiquidityUtils {
             // Borrows are rounded down, because total assets could increase during repays.
             // This could happen when repaid user debt is rounded up to assets and used to increase cash,
             // while totalBorrows would be adjusted by only the exact debt, less than the increase in cash.
+            // If multiple accounts need to repay while the supply cap is exceeded they should do so in
+            // separate batches.
             uint256 supply = vaultCache.cash.toUint() + vaultCache.totalBorrows.toAssetsDown().toUint();
 
             if (supply > vaultCache.supplyCap && supply > prevSupply) revert E_SupplyCapExceeded();

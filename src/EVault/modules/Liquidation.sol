@@ -16,6 +16,11 @@ import "../shared/types/Types.sol";
 abstract contract LiquidationModule is ILiquidation, BalanceUtils, LiquidityUtils {
     using TypesLib for uint256;
 
+    // Minimum debt value, before liquidation, which enables debt socialization.
+    // With small debt positions, when vault is nearly empty, rounding in the pricing oracle
+    // may have an outsized impact on vault's shares to assets exchange rate after debt socialization.
+    uint256 constant MIN_SOCIALIZATION_LIABILITY_VALUE = 1e6;
+
     struct LiquidationCache {
         address liquidator;
         address violator;
@@ -24,6 +29,7 @@ abstract contract LiquidationModule is ILiquidation, BalanceUtils, LiquidityUtil
         Assets liability;
         Assets repay;
         uint256 yieldBalance;
+        uint256 liabilityValue;
     }
 
     /// @inheritdoc ILiquidation
@@ -62,7 +68,7 @@ abstract contract LiquidationModule is ILiquidation, BalanceUtils, LiquidityUtil
         address violator,
         address collateral,
         uint256 desiredRepay
-    ) private view returns (LiquidationCache memory liqCache) {
+    ) internal view returns (LiquidationCache memory liqCache) {
         // Init cache
 
         liqCache.liquidator = liquidator;
@@ -118,16 +124,19 @@ abstract contract LiquidationModule is ILiquidation, BalanceUtils, LiquidityUtil
     {
         // Check account health
 
-        (uint256 collateralAdjustedValue, uint256 liabilityValue) =
+        uint256 collateralAdjustedValue;
+        (collateralAdjustedValue, liqCache.liabilityValue) =
             calculateLiquidity(vaultCache, liqCache.violator, liqCache.collaterals, true);
 
         // no violation
-        if (collateralAdjustedValue > liabilityValue) return liqCache;
+        if (collateralAdjustedValue > liqCache.liabilityValue || liqCache.liabilityValue == 0) {
+            return liqCache;
+        }
 
         // Compute discount
 
         // discountFactor = health score = 1 - discount
-        uint256 discountFactor = collateralAdjustedValue * 1e18 / liabilityValue;
+        uint256 discountFactor = collateralAdjustedValue * 1e18 / liqCache.liabilityValue;
         {
             uint256 minDiscountFactor;
             unchecked {
@@ -154,18 +163,20 @@ abstract contract LiquidationModule is ILiquidation, BalanceUtils, LiquidityUtil
             return liqCache;
         }
 
-        uint256 maxRepayValue = liabilityValue;
+        uint256 maxRepayValue = liqCache.liabilityValue;
         uint256 maxYieldValue = maxRepayValue * 1e18 / discountFactor;
 
-        // Limit yield to borrower's available collateral, and reduce repay if necessary. This can happen when borrower
-        // has multiple collaterals and seizing all of this one won't bring the violator back to solvency
+        // Limit yield to borrower's available collateral, and reduce repay if necessary. This can happen when
+        // seizing all of the collateral won't bring the violator back to solvency. It can happen simply because
+        // the account health is very low, or because borrower has multiple collaterals and liquidating this one
+        // is not sufficient.
 
         if (collateralValue < maxYieldValue) {
             maxRepayValue = collateralValue * discountFactor / 1e18;
             maxYieldValue = collateralValue;
         }
 
-        liqCache.repay = (maxRepayValue * liqCache.liability.toUint() / liabilityValue).toAssets();
+        liqCache.repay = (maxRepayValue * liqCache.liability.toUint() / liqCache.liabilityValue).toAssets();
         liqCache.yieldBalance = maxYieldValue * collateralBalance / collateralValue;
 
         return liqCache;
@@ -209,7 +220,8 @@ abstract contract LiquidationModule is ILiquidation, BalanceUtils, LiquidityUtil
         // Handle debt socialization
 
         if (
-            vaultCache.configFlags.isNotSet(CFG_DONT_SOCIALIZE_DEBT) && liqCache.liability > liqCache.repay
+            liqCache.liabilityValue >= MIN_SOCIALIZATION_LIABILITY_VALUE
+                && vaultCache.configFlags.isNotSet(CFG_DONT_SOCIALIZE_DEBT) && liqCache.liability > liqCache.repay
                 && checkNoCollateral(liqCache.violator, liqCache.collaterals)
         ) {
             Assets owedRemaining = liqCache.liability.subUnchecked(liqCache.repay);
