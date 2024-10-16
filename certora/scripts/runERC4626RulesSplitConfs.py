@@ -20,7 +20,7 @@ erc4626_confs = {
     "-totalsMonotonicity",
     "-vaultSolvency-most",
     "-vaultSolvency-redeem",
-    "-vaultSolvency-withdraw"
+    "-vaultSolvency-withdraw",
     # In case the invariant times out for withdraw
     "-vaultSolvency-withdraw-as-rule"
 }

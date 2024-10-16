@@ -21,4 +21,5 @@ _corpus/
 
 # Coverage directory
 coverage/
+.certora_internal/
 *.info
