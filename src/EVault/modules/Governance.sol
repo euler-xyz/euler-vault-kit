@@ -290,7 +290,7 @@ abstract contract GovernanceModule is IGovernance, BalanceUtils, BorrowUtils, LT
         ConfigAmount newBorrowLTV = borrowLTV.toConfigAmount();
         ConfigAmount newLiquidationLTV = liquidationLTV.toConfigAmount();
 
-        // The borrow LTV must be lower than or equal to the the converged liquidation LTV
+        // The borrow LTV must be lower than or equal to the converged liquidation LTV
         if (newBorrowLTV > newLiquidationLTV) revert E_LTVBorrow();
 
         LTVConfig memory currentLTV = vaultStorage.ltvLookup[collateral];
