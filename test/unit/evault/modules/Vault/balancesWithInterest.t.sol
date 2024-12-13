@@ -207,7 +207,7 @@ contract VaultTest_BalancesWithInterest is EVaultTestBase {
         // Get new APYs:
         (borrowAPY, supplyAPY) = getVaultInfo(address(eTST));
         assertEq(borrowAPY, 0.105244346078570209478701625e27);
-        assertEq(supplyAPY, 0.049727551487822095964714620e27);
+        assertEq(supplyAPY, 0.04972755148782209596471462e27);
 
         skip(365.2425 days);
 
@@ -475,13 +475,14 @@ contract VaultTest_BalancesWithInterest is EVaultTestBase {
         (uint256 borrowAPY, uint256 supplyAPY) = getVaultInfo(address(eTST));
 
         assertApproxEqAbs(borrowAPY, 0.3e27, 0.0000001e27);
-        assertApproxEqAbs(supplyAPY, 0.1350e27, 0.0001e27); // 30% APY * 0.5 * (1 - 0.1) = 13.50% return
+        assertApproxEqAbs(supplyAPY, 0.135e27, 0.0001e27); // 30% APY * 0.5 * (1 - 0.1) = 13.50% return
 
         skip(365.2425 days);
 
         assertApproxEqAbs(eTST.debtOf(user3), 0.65e18, 0.0001e18); // 0.5 + 30% * 0.5
-        assertApproxEqAbs(eTST.convertToAssets(eTST.balanceOf(user1)), 1.1350e18, 0.0001e18); // 13.50%, as computed above
-        assertApproxEqAbs(eTST.accumulatedFeesAssets(), 0.0150e18, 0.0001e18); // 30% APY * 0.5 * 0.1 = 1.5%
+        assertApproxEqAbs(eTST.convertToAssets(eTST.balanceOf(user1)), 1.135e18, 0.0001e18); // 13.50%, as computed
+            // above
+        assertApproxEqAbs(eTST.accumulatedFeesAssets(), 0.015e18, 0.0001e18); // 30% APY * 0.5 * 0.1 = 1.5%
     }
 
     function test_basicInterestLinearKink2() public {
@@ -502,7 +503,7 @@ contract VaultTest_BalancesWithInterest is EVaultTestBase {
         (uint256 borrowAPY, uint256 supplyAPY) = getVaultInfo(address(eTST));
 
         assertApproxEqAbs(borrowAPY, 0.1556e27, 0.0001e27);
-        assertApproxEqAbs(supplyAPY, 0.0700e27, 0.0001e27);
+        assertApproxEqAbs(supplyAPY, 0.07e27, 0.0001e27);
 
         skip(365.2425 days);
 
@@ -510,9 +511,8 @@ contract VaultTest_BalancesWithInterest is EVaultTestBase {
         assertApproxEqAbs(eTST.debtOf(user3), 0.5e18 * 1.1556e18 / 1e18, 0.0001e18);
 
         // Depositor has earned 7.00%
-        assertApproxEqAbs(eTST.convertToAssets(eTST.balanceOf(user1)), 1.0700e18, 0.0001e18);
+        assertApproxEqAbs(eTST.convertToAssets(eTST.balanceOf(user1)), 1.07e18, 0.0001e18);
     }
-
 
     function getVaultInfo(address vault)
         internal
@@ -538,6 +538,7 @@ contract VaultTest_BalancesWithInterest is EVaultTestBase {
         if (overflowBorrow) return (0, 0);
         borrowAPY -= ONE;
 
-        supplyAPY = totalAssets == 0 ? 0 : borrowAPY * borrows * (CONFIG_SCALE - interestFee) / totalAssets / CONFIG_SCALE;
+        supplyAPY =
+            totalAssets == 0 ? 0 : borrowAPY * borrows * (CONFIG_SCALE - interestFee) / totalAssets / CONFIG_SCALE;
     }
 }
