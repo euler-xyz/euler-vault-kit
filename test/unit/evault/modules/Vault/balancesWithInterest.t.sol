@@ -9,6 +9,7 @@ import {SafeERC20Lib} from "../../../../../src/EVault/shared/lib/SafeERC20Lib.so
 import {IAllowanceTransfer} from "permit2/src/interfaces/IAllowanceTransfer.sol";
 import {IRMTestFixed} from "../../../../mocks/IRMTestFixed.sol";
 import {IRMTestZero} from "../../../../mocks/IRMTestZero.sol";
+import {IRMLinearKink} from "../../../../../src/InterestRateModels/IRMLinearKink.sol";
 import {RPow} from "../../../../../src/EVault/shared/lib/RPow.sol";
 import {IEVault} from "../../../../../src/EVault/IEVault.sol";
 
@@ -133,7 +134,7 @@ contract VaultTest_BalancesWithInterest is EVaultTestBase {
 
         (uint256 borrowAPY, uint256 supplyAPY) = getVaultInfo(address(eTST));
         assertEq(borrowAPY, 0.105244346078570209478701625e27);
-        assertEq(supplyAPY, 0.094239711147365655602112334e27);
+        assertEq(supplyAPY, 0.094719911470713188530831462e27);
 
         // Go ahead 1 year, with no reserve credits in between
         skip(365.2425 days);
@@ -186,7 +187,7 @@ contract VaultTest_BalancesWithInterest is EVaultTestBase {
 
         (uint256 borrowAPY, uint256 supplyAPY) = getVaultInfo(address(eTST));
         assertEq(borrowAPY, 0.105244346078570209478701625e27);
-        assertEq(supplyAPY, 0.046059133709789858497725776e27);
+        assertEq(supplyAPY, 0.047359955735356594265415731e27);
 
         // Go ahead 1 year
         skip(365.2425 days);
@@ -206,7 +207,7 @@ contract VaultTest_BalancesWithInterest is EVaultTestBase {
         // Get new APYs:
         (borrowAPY, supplyAPY) = getVaultInfo(address(eTST));
         assertEq(borrowAPY, 0.105244346078570209478701625e27);
-        assertEq(supplyAPY, 0.048416583057772105811320948e27);
+        assertEq(supplyAPY, 0.04972755148782209596471462e27);
 
         skip(365.2425 days);
 
@@ -234,7 +235,7 @@ contract VaultTest_BalancesWithInterest is EVaultTestBase {
 
         (uint256 borrowAPY, uint256 supplyAPY) = getVaultInfo(address(eTST));
         assertEq(borrowAPY, 0.105244346078570209478701625e27);
-        assertEq(supplyAPY, 0.094239711147365655602112334e27);
+        assertEq(supplyAPY, 0.094719911470713188530831462e27);
 
         startHoax(user2);
         assetTST.transfer(address(eTST), 1e18);
@@ -242,7 +243,7 @@ contract VaultTest_BalancesWithInterest is EVaultTestBase {
         // no change
         (borrowAPY, supplyAPY) = getVaultInfo(address(eTST));
         assertEq(borrowAPY, 0.105244346078570209478701625e27);
-        assertEq(supplyAPY, 0.094239711147365655602112334e27);
+        assertEq(supplyAPY, 0.094719911470713188530831462e27);
 
         // Go ahead 1 year
         skip(365.2425 days);
@@ -458,6 +459,61 @@ contract VaultTest_BalancesWithInterest is EVaultTestBase {
         eTST.disableController();
     }
 
+    function test_basicInterestLinearKink() public {
+        startHoax(user1);
+        eTST.deposit(1e18, user1);
+
+        startHoax(address(this));
+        eTST.setInterestFee(0.1e4);
+
+        // Base=0% APY,  Kink(50%)=30% APY  Max=100% APY
+        eTST.setInterestRateModel(address(new IRMLinearKink(0, 3871504476, 6356726949, 2147483648)));
+
+        startHoax(user3);
+        eTST.borrow(0.5e18, user3);
+
+        (uint256 borrowAPY, uint256 supplyAPY) = getVaultInfo(address(eTST));
+
+        assertApproxEqAbs(borrowAPY, 0.3e27, 0.0000001e27);
+        assertApproxEqAbs(supplyAPY, 0.135e27, 0.0001e27); // 30% APY * 0.5 * (1 - 0.1) = 13.50% return
+
+        skip(365.2425 days);
+
+        assertApproxEqAbs(eTST.debtOf(user3), 0.65e18, 0.0001e18); // 0.5 + 30% * 0.5
+        assertApproxEqAbs(eTST.convertToAssets(eTST.balanceOf(user1)), 1.135e18, 0.0001e18); // 13.50%, as computed
+            // above
+        assertApproxEqAbs(eTST.accumulatedFeesAssets(), 0.015e18, 0.0001e18); // 30% APY * 0.5 * 0.1 = 1.5%
+    }
+
+    function test_basicInterestLinearKink2() public {
+        startHoax(user1);
+        eTST.deposit(1e18, user1);
+
+        startHoax(address(this));
+        eTST.setInterestFee(0.1e4);
+
+        // Values generated with: node calculate-irm-linear-kink.js supply 0 7 90 50 10
+        //   7% supply APY is scaled up to 15.56 borrow APY
+        // Base=0.00% APY,  Kink(50.00%)=15.56% APY  Max=100.00% APY
+        eTST.setInterestRateModel(address(new IRMLinearKink(0, 2133472229, 8094759195, 2147483648)));
+
+        startHoax(user3);
+        eTST.borrow(0.5e18, user3);
+
+        (uint256 borrowAPY, uint256 supplyAPY) = getVaultInfo(address(eTST));
+
+        assertApproxEqAbs(borrowAPY, 0.1556e27, 0.0001e27);
+        assertApproxEqAbs(supplyAPY, 0.07e27, 0.0001e27);
+
+        skip(365.2425 days);
+
+        // Borrower's debt has increased by 15.56%
+        assertApproxEqAbs(eTST.debtOf(user3), 0.5e18 * 1.1556e18 / 1e18, 0.0001e18);
+
+        // Depositor has earned 7.00%
+        assertApproxEqAbs(eTST.convertToAssets(eTST.balanceOf(user1)), 1.07e18, 0.0001e18);
+    }
+
     function getVaultInfo(address vault)
         internal
         view
@@ -477,16 +533,12 @@ contract VaultTest_BalancesWithInterest is EVaultTestBase {
     {
         uint256 totalAssets = cash + borrows;
         bool overflowBorrow;
-        bool overflowSupply;
 
-        uint256 supplySPY =
-            totalAssets == 0 ? 0 : borrowSPY * borrows * (CONFIG_SCALE - interestFee) / totalAssets / CONFIG_SCALE;
         (borrowAPY, overflowBorrow) = RPow.rpow(borrowSPY + ONE, SECONDS_PER_YEAR, ONE);
-        (supplyAPY, overflowSupply) = RPow.rpow(supplySPY + ONE, SECONDS_PER_YEAR, ONE);
-
-        if (overflowBorrow || overflowSupply) return (0, 0);
-
+        if (overflowBorrow) return (0, 0);
         borrowAPY -= ONE;
-        supplyAPY -= ONE;
+
+        supplyAPY =
+            totalAssets == 0 ? 0 : borrowAPY * borrows * (CONFIG_SCALE - interestFee) / totalAssets / CONFIG_SCALE;
     }
 }
