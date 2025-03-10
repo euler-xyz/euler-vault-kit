@@ -5,8 +5,10 @@ import "forge-std/Test.sol";
 import {EthereumVaultConnector as EVC} from "ethereum-vault-connector/EthereumVaultConnector.sol";
 import {EulerSavingsRate} from "../../../../src/Synths/EulerSavingsRate.sol";
 import {MockToken} from "./MockToken.sol";
+import {DeployPermit2} from "permit2/test/utils/DeployPermit2.sol";
 
-contract ESRTest is Test {
+contract ESRTest is Test, DeployPermit2 {
+    address permit2;
     EVC public evc;
     EulerSavingsRate public esr;
     MockToken public asset;
@@ -18,9 +20,10 @@ contract ESRTest is Test {
     string public constant SYMBOL = "ESR";
 
     function setUp() public virtual {
+        permit2 = deployPermit2();
         asset = new MockToken();
         evc = new EVC();
-        esr = new EulerSavingsRate(address(evc), address(asset), NAME, SYMBOL);
+        esr = new EulerSavingsRate(address(evc), permit2, address(asset), NAME, SYMBOL);
 
         // Set a non zero timestamp
         vm.warp(420);
