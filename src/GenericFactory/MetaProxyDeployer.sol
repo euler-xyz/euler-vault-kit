@@ -11,7 +11,7 @@ pragma solidity ^0.8.0;
 contract MetaProxyDeployer {
     error E_DeploymentFailed();
 
-    // Meta proxy bytecode from EIP-3488 https://eips.ethereum.org/EIPS/eip-3448
+    // Meta proxy bytecode from EIP-3448 https://eips.ethereum.org/EIPS/eip-3448
     bytes constant BYTECODE_HEAD = hex"600b380380600b3d393df3363d3d373d3d3d3d60368038038091363936013d73";
     bytes constant BYTECODE_TAIL = hex"5af43d3d93803e603457fd5bf3";
 
