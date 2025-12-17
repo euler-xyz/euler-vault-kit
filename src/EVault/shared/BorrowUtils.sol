@@ -108,6 +108,8 @@ abstract contract BorrowUtils is Base {
         logBorrow(to, borrowAssets, toPrevAssets, toAssets);
     }
 
+    //TODO: need interest rate controller with IIRM.computeInterestRate support
+
     function computeInterestRate(VaultCache memory vaultCache) internal virtual returns (uint256) {
         // single sload
         address irm = vaultStorage.interestRateModel;
@@ -130,6 +132,8 @@ abstract contract BorrowUtils is Base {
 
         return newInterestRate;
     }
+
+    //TODO: need interest rate controller with IIRM.computeInterestRateView support
 
     function computeInterestRateView(VaultCache memory vaultCache) internal view virtual returns (uint256) {
         // single sload
