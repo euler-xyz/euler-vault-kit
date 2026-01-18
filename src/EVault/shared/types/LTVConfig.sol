@@ -7,7 +7,7 @@ import {ConfigAmount} from "./Types.sol";
 /// @title LTVConfig
 /// @notice This packed struct is used to store LTV configuration of a collateral
 struct LTVConfig {
-    // Packed slot: 2 + 2 + 2 + 6 + 4 = 16
+    // Packed slot: 2 + 2 + 2 + 6 + 4 + 9 = 25
     // The value of borrow LTV for originating positions
     ConfigAmount borrowLTV;
     // The value of fully converged liquidation LTV
@@ -18,6 +18,8 @@ struct LTVConfig {
     uint48 targetTimestamp;
     // The time it takes for the liquidation LTV to converge from the initial value to the fully converged value
     uint32 rampDuration;
+    // Risk premium rate in SPY (1e27 scale) - additional interest charged for using this collateral
+    uint72 riskPremium;
 }
 
 /// @title LTVConfigLib
@@ -66,6 +68,7 @@ library LTVConfigLib {
         newLTV.initialLiquidationLTV = self.getLTV(true);
         newLTV.targetTimestamp = uint48(block.timestamp + rampDuration);
         newLTV.rampDuration = rampDuration;
+        newLTV.riskPremium = self.riskPremium; // preserve existing risk premium
     }
 }
 

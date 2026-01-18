@@ -59,6 +59,11 @@ abstract contract GovernanceModule is IGovernance, BalanceUtils, BorrowUtils, LT
         uint32 rampDuration
     );
 
+    /// @notice Set risk premium for a collateral
+    /// @param collateral Address of the collateral
+    /// @param riskPremium Risk premium rate in SPY (1e27 scale) for this collateral
+    event GovSetCollateralRiskPremium(address indexed collateral, uint72 riskPremium);
+
     /// @notice Set an interest rate model contract address
     /// @param newInterestRateModel Address of the new IRM
     event GovSetInterestRateModel(address newInterestRateModel);
@@ -312,6 +317,26 @@ abstract contract GovernanceModule is IGovernance, BalanceUtils, BorrowUtils, LT
             newLTV.targetTimestamp,
             newLTV.rampDuration
         );
+    }
+
+    /// @inheritdoc IGovernance
+    /// @dev Sets the risk premium for borrowers using this collateral. The premium is an additional interest rate
+    /// on top of the base rate, expressed in SPY (Second Percent Yield), scaled by 1e27.
+    function setCollateralRiskPremium(address collateral, uint72 riskPremium)
+        public
+        virtual
+        nonReentrant
+        governorOnly
+    {
+        // self-collateralization and zero address are not allowed
+        if (collateral == address(0) || collateral == address(this)) revert E_InvalidLTVAsset();
+
+        // cap premium rate same as base interest rate (1,000,000% APY)
+        if (riskPremium > MAX_ALLOWED_INTEREST_RATE) revert E_BadCollateralRiskPremium();
+
+        vaultStorage.ltvLookup[collateral].riskPremium = riskPremium;
+
+        emit GovSetCollateralRiskPremium(collateral, riskPremium);
     }
 
     /// @inheritdoc IGovernance

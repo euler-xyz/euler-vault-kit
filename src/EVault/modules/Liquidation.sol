@@ -8,6 +8,7 @@ import {BalanceUtils} from "../shared/BalanceUtils.sol";
 import {LiquidityUtils} from "../shared/LiquidityUtils.sol";
 
 import "../shared/types/Types.sol";
+import {UserBorrowCache} from "../shared/types/UserBorrowCache.sol";
 
 /// @title LiquidationModule
 /// @custom:security-contact security@euler.xyz
@@ -70,6 +71,7 @@ abstract contract LiquidationModule is ILiquidation, BalanceUtils, LiquidityUtil
         uint256 desiredRepay
     ) internal view returns (LiquidationCache memory liqCache) {
         // Init cache
+        UserBorrowCache memory userCache = loadUserBorrow(vaultCache, violator);
 
         liqCache.liquidator = liquidator;
         liqCache.violator = violator;
@@ -77,7 +79,7 @@ abstract contract LiquidationModule is ILiquidation, BalanceUtils, LiquidityUtil
 
         liqCache.repay = Assets.wrap(0);
         liqCache.yieldBalance = 0;
-        liqCache.liability = getCurrentOwed(vaultCache, violator).toAssetsUp();
+        liqCache.liability = userCache.newOwed.toAssetsUp();
         liqCache.collaterals = getCollaterals(violator);
 
         // Checks
@@ -102,7 +104,7 @@ abstract contract LiquidationModule is ILiquidation, BalanceUtils, LiquidityUtil
 
         // Calculate max yield and repay
 
-        liqCache = calculateMaxLiquidation(liqCache, vaultCache);
+        liqCache = calculateMaxLiquidation(liqCache, vaultCache, userCache);
 
         // Adjust for desired repay
 
@@ -117,7 +119,7 @@ abstract contract LiquidationModule is ILiquidation, BalanceUtils, LiquidityUtil
         }
     }
 
-    function calculateMaxLiquidation(LiquidationCache memory liqCache, VaultCache memory vaultCache)
+    function calculateMaxLiquidation(LiquidationCache memory liqCache, VaultCache memory vaultCache, UserBorrowCache memory userCache)
         private
         view
         returns (LiquidationCache memory)
@@ -126,7 +128,7 @@ abstract contract LiquidationModule is ILiquidation, BalanceUtils, LiquidityUtil
 
         uint256 collateralAdjustedValue;
         (collateralAdjustedValue, liqCache.liabilityValue) =
-            calculateLiquidity(vaultCache, liqCache.violator, liqCache.collaterals, true);
+            calculateLiquidity(vaultCache, userCache, liqCache.collaterals, true);
 
         // no violation
         if (collateralAdjustedValue > liqCache.liabilityValue || liqCache.liabilityValue == 0) {

@@ -219,6 +219,16 @@ interface IBorrowing {
     /// @return The interest rate in yield-per-second, scaled by 10**27
     function interestRate() external view returns (uint256);
 
+    /// @notice Get the interest rate including risk premium for borrowers using a specific collateral
+    /// @param collateral The collateral address to query
+    /// @return baseRate The utilization-based rate from IRM in SPY (1e27 scale)
+    /// @return premiumRate The risk premium for this collateral in SPY (1e27 scale)
+    /// @return totalRate The combined rate (baseRate + premiumRate) in SPY (1e27 scale)
+    function interestRateWithPremium(address collateral)
+        external
+        view
+        returns (uint256 baseRate, uint256 premiumRate, uint256 totalRate);
+
     /// @notice Retrieves the current interest rate accumulator for an asset
     /// @return An opaque accumulator that increases as interest is accrued
     function interestAccumulator() external view returns (uint256);
@@ -266,6 +276,10 @@ interface IBorrowing {
     /// @notice Updates interest accumulator and totalBorrows, credits reserves, re-targets interest rate, and logs
     /// vault status
     function touch() external;
+
+    /// @notice Force premium accrual for an account and update the account state
+    /// @param account The account to touch
+    function touchAccount(address account) external;
 }
 
 /// @title ILiquidation
@@ -490,6 +504,11 @@ interface IGovernance {
     /// @param liquidationLTV New liquidation LTV after ramp ends in 1e4 scale
     /// @param rampDuration Ramp duration in seconds
     function setLTV(address collateral, uint16 borrowLTV, uint16 liquidationLTV, uint32 rampDuration) external;
+
+    /// @notice Set the risk premium for a collateral
+    /// @param collateral Address of collateral to set risk premium for
+    /// @param riskPremium Risk premium rate in SPY (1e27 scale) - additional interest charged for this collateral
+    function setCollateralRiskPremium(address collateral, uint72 riskPremium) external;
 
     /// @notice Set a new maximum liquidation discount
     /// @param newDiscount New maximum liquidation discount in 1e4 scale

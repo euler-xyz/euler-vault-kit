@@ -44,6 +44,8 @@ struct VaultCache {
     Flags hookedOps;
     // A bitfield of vault configuration options
     Flags configFlags;
+    // Current interest fee
+    uint256 interestFee;
 
     // Runtime
 

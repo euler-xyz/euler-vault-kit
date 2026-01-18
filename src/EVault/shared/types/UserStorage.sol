@@ -14,6 +14,12 @@ struct UserStorage {
     PackedUserSlot data;
     // Snapshot of the interest accumulator from the last change to account's liability
     uint256 interestAccumulator;
+    // Snapshot of the interest accumulator premium from the last change to account's liability
+    uint256 premiumAccumulator;
+    // Timestamp of the last premium accrual
+    uint48 premiumLastUpdate;
+    // The single collateral backing this user's debt
+    address designatedCollateral;
     // A mapping with allowances for the vault shares token (eToken)
     mapping(address spender => uint256 allowance) eTokenAllowance;
 }

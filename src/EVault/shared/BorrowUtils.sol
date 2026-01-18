@@ -5,105 +5,169 @@ pragma solidity ^0.8.0;
 import {Base} from "./Base.sol";
 import {DToken} from "../DToken.sol";
 import {IIRM} from "../../InterestRateModels/IIRM.sol";
+import {RPow} from "./lib/RPow.sol";
 
 import "./types/Types.sol";
+import {UserBorrowCache} from "./types/UserBorrowCache.sol";
 
 /// @title BorrowUtils
 /// @custom:security-contact security@euler.xyz
 /// @author Euler Labs (https://www.eulerlabs.com/)
 /// @notice Utilities for tracking debt and interest rates
 abstract contract BorrowUtils is Base {
-    function getCurrentOwed(VaultCache memory vaultCache, address account, Owed owed) internal view returns (Owed) {
-        // Don't bother loading the user's accumulator
-        if (owed.isZero()) return Owed.wrap(0);
-
-        // Can't divide by 0 here: If owed is non-zero, we must've initialized the user's interestAccumulator
-        return owed.mulDiv(vaultCache.interestAccumulator, vaultStorage.users[account].interestAccumulator);
-    }
-
+    /// @notice Get current owed amount including base interest and risk premium
     function getCurrentOwed(VaultCache memory vaultCache, address account) internal view returns (Owed) {
-        return getCurrentOwed(vaultCache, account, vaultStorage.users[account].getOwed());
+        return loadUserBorrow(vaultCache, account).newOwed;
     }
 
+    /// @notice Load user borrow state and compute current owed (view only, no state changes)
     function loadUserBorrow(VaultCache memory vaultCache, address account)
-        private
+        internal
         view
-        returns (Owed newOwed, Owed prevOwed)
+        returns (UserBorrowCache memory userCache)
     {
-        prevOwed = vaultStorage.users[account].getOwed();
-        newOwed = getCurrentOwed(vaultCache, account, prevOwed);
-    }
-
-    function setUserBorrow(VaultCache memory vaultCache, address account, Owed newOwed) private {
         UserStorage storage user = vaultStorage.users[account];
 
-        user.setOwed(newOwed);
+        userCache.account = account;
+        userCache.prevOwed = user.getOwed();
+        userCache.newOwed = userCache.prevOwed;
+        userCache.premiumInterest = Owed.wrap(0);
+        userCache.premiumAccumulator = 1e27;
+
+        if (!userCache.prevOwed.isZero()) {
+            Owed baseOwed = userCache.prevOwed.mulDiv(vaultCache.interestAccumulator, user.interestAccumulator);
+            
+            userCache.newOwed = baseOwed;
+            userCache.premiumAccumulator = user.premiumAccumulator;
+
+            uint256 premiumRate = vaultStorage.ltvLookup[user.designatedCollateral].riskPremium;
+
+            if (premiumRate != 0) {
+                uint256 deltaT = block.timestamp - user.premiumLastUpdate;
+
+                if (deltaT > 0) {
+                    unchecked {
+                        (uint256 multiplier, bool overflow) = RPow.rpow(premiumRate + 1e27, deltaT, 1e27);
+
+                        if (!overflow) {
+                            uint256 intermediate = userCache.premiumAccumulator * multiplier;
+                            if (userCache.premiumAccumulator == intermediate / multiplier) {
+                                userCache.premiumAccumulator = intermediate / 1e27;
+                            }
+                        }
+                    }
+                }
+
+                userCache.newOwed = baseOwed.mulDiv(userCache.premiumAccumulator, user.premiumAccumulator);
+                userCache.premiumInterest = userCache.newOwed - baseOwed;
+            }
+        }
+    }
+
+    /// @notice Write user borrow state to storage and handle premium fee accrual
+    function setUserBorrow(VaultCache memory vaultCache, UserBorrowCache memory userCache) internal {
+        // Accrue premium interest to totalBorrows and calculate fee
+        if (!userCache.premiumInterest.isZero()) {
+            uint256 newTotalBorrows = vaultCache.totalBorrows.toUint() + userCache.premiumInterest.toUint();
+
+            // Only update if no overflow
+            if (newTotalBorrows <= MAX_SANE_DEBT_AMOUNT) {
+                uint256 feeAssets = userCache.premiumInterest.toUint() * vaultCache.interestFee
+                    / (uint256(CONFIG_SCALE) << INTERNAL_DEBT_PRECISION_SHIFT);
+
+                if (feeAssets != 0) {
+                    uint256 totalShares = vaultCache.totalShares.toUint();
+                    uint256 newTotalAssets = vaultCache.cash.toUint() + OwedLib.toAssetsUpUint(newTotalBorrows);
+                    uint256 newTotalShares = newTotalAssets * totalShares / (newTotalAssets - feeAssets);
+
+                    if (newTotalShares <= MAX_SANE_AMOUNT) {
+                        uint256 newAccumulatedFees = vaultCache.accumulatedFees.toUint() + newTotalShares - totalShares;
+                        vaultStorage.accumulatedFees = vaultCache.accumulatedFees = TypesLib.toShares(newAccumulatedFees);
+                        vaultStorage.totalShares = vaultCache.totalShares = TypesLib.toShares(newTotalShares);
+                    }
+                }
+
+                vaultStorage.totalBorrows = vaultCache.totalBorrows = TypesLib.toOwed(newTotalBorrows);
+            }
+        }
+
+        // Update user storage
+        UserStorage storage user = vaultStorage.users[userCache.account];
+        user.setOwed(userCache.newOwed);
         user.interestAccumulator = vaultCache.interestAccumulator;
+        user.premiumAccumulator = userCache.premiumAccumulator;
+        user.premiumLastUpdate = uint48(block.timestamp);
+
+        if (!userCache.newOwed.isZero()) {
+            address[] memory collaterals = getCollaterals(userCache.account);
+            user.designatedCollateral = collaterals.length > 0 ? collaterals[0] : address(0);
+        }
     }
 
     function increaseBorrow(VaultCache memory vaultCache, address account, Assets assets) internal virtual {
-        (Owed owed, Owed prevOwed) = loadUserBorrow(vaultCache, account);
+        UserBorrowCache memory userCache = loadUserBorrow(vaultCache, account);
 
         Owed amount = assets.toOwed();
-        owed = owed + amount;
+        userCache.newOwed = userCache.newOwed + amount;
 
-        setUserBorrow(vaultCache, account, owed);
+        setUserBorrow(vaultCache, userCache);
         vaultStorage.totalBorrows = vaultCache.totalBorrows = vaultCache.totalBorrows + amount;
 
-        logBorrow(account, assets, prevOwed.toAssetsUp(), owed.toAssetsUp());
+        logBorrow(account, assets, userCache.prevOwed.toAssetsUp(), userCache.newOwed.toAssetsUp());
     }
 
     /// @dev Contrary to `increaseBorrow` and `transferBorrow` this function does the accounting in Assets
     /// by first rounding up the user's debt. The rounding is an additional cost to the user and is recorded
     /// both in user's account and in `totalBorrows`
     function decreaseBorrow(VaultCache memory vaultCache, address account, Assets assets) internal virtual {
-        (Owed owedExact, Owed prevOwed) = loadUserBorrow(vaultCache, account);
+        UserBorrowCache memory userCache = loadUserBorrow(vaultCache, account);
+        Owed owedExact = userCache.newOwed;
         Assets owed = owedExact.toAssetsUp();
 
         if (assets > owed) revert E_RepayTooMuch();
 
-        Owed owedRemaining = owed.subUnchecked(assets).toOwed();
+        userCache.newOwed = owed.subUnchecked(assets).toOwed();
 
-        setUserBorrow(vaultCache, account, owedRemaining);
+        setUserBorrow(vaultCache, userCache);
         vaultStorage.totalBorrows = vaultCache.totalBorrows = vaultCache.totalBorrows > owedExact
-            ? vaultCache.totalBorrows.subUnchecked(owedExact).addUnchecked(owedRemaining)
-            : owedRemaining;
+            ? vaultCache.totalBorrows.subUnchecked(owedExact).addUnchecked(userCache.newOwed)
+            : userCache.newOwed;
 
-        logRepay(account, assets, prevOwed.toAssetsUp(), owedRemaining.toAssetsUp());
+        logRepay(account, assets, userCache.prevOwed.toAssetsUp(), userCache.newOwed.toAssetsUp());
     }
 
     function transferBorrow(VaultCache memory vaultCache, address from, address to, Assets assets) internal virtual {
         Owed amount = assets.toOwed();
 
-        (Owed fromOwed, Owed fromOwedPrev) = loadUserBorrow(vaultCache, from);
+        UserBorrowCache memory fromUserCache = loadUserBorrow(vaultCache, from);
 
         // If amount was rounded up, or dust is left over, transfer exact amount owed
         if (
-            (amount > fromOwed && amount.subUnchecked(fromOwed).isDust())
-                || (amount < fromOwed && fromOwed.subUnchecked(amount).isDust())
+            (amount > fromUserCache.newOwed && amount.subUnchecked(fromUserCache.newOwed).isDust())
+                || (amount < fromUserCache.newOwed && fromUserCache.newOwed.subUnchecked(amount).isDust())
         ) {
-            amount = fromOwed;
+            amount = fromUserCache.newOwed;
         }
 
-        if (amount > fromOwed) revert E_InsufficientDebt();
+        if (amount > fromUserCache.newOwed) revert E_InsufficientDebt();
 
-        fromOwed = fromOwed.subUnchecked(amount);
-        setUserBorrow(vaultCache, from, fromOwed);
+        fromUserCache.newOwed = fromUserCache.newOwed.subUnchecked(amount);
+        setUserBorrow(vaultCache, fromUserCache);
 
-        (Owed toOwed, Owed toOwedPrev) = loadUserBorrow(vaultCache, to);
+        UserBorrowCache memory toUserCache = loadUserBorrow(vaultCache, to);
 
-        toOwed = toOwed + amount;
-        setUserBorrow(vaultCache, to, toOwed);
+        toUserCache.newOwed = toUserCache.newOwed + amount;
+        setUserBorrow(vaultCache, toUserCache);
 
         // with small fractional debt amounts the interest calculation could be negative in `logRepay`
-        Assets fromPrevAssets = fromOwedPrev.toAssetsUp();
-        Assets fromAssets = fromOwed.toAssetsUp();
+        Assets fromPrevAssets = fromUserCache.prevOwed.toAssetsUp();
+        Assets fromAssets = fromUserCache.newOwed.toAssetsUp();
         Assets repayAssets = fromPrevAssets > assets + fromAssets ? fromPrevAssets.subUnchecked(fromAssets) : assets;
         logRepay(from, repayAssets, fromPrevAssets, fromAssets);
 
         // with small fractional debt amounts the interest calculation could be negative in `logBorrow`
-        Assets toPrevAssets = toOwedPrev.toAssetsUp();
-        Assets toAssets = toOwed.toAssetsUp();
+        Assets toPrevAssets = toUserCache.prevOwed.toAssetsUp();
+        Assets toAssets = toUserCache.newOwed.toAssetsUp();
         Assets borrowAssets = assets + toPrevAssets > toAssets ? toAssets.subUnchecked(toPrevAssets) : assets;
         logBorrow(to, borrowAssets, toPrevAssets, toAssets);
     }

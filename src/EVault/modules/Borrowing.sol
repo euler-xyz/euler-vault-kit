@@ -12,6 +12,7 @@ import {ProxyUtils} from "../shared/lib/ProxyUtils.sol";
 import {IFlashLoan} from "../../interfaces/IFlashLoan.sol";
 
 import "../shared/types/Types.sol";
+import {UserBorrowCache} from "../shared/types/UserBorrowCache.sol";
 
 /// @title BorrowingModule
 /// @custom:security-contact security@euler.xyz
@@ -49,6 +50,19 @@ abstract contract BorrowingModule is IBorrowing, AssetTransfers, BalanceUtils, L
     /// @inheritdoc IBorrowing
     function interestRate() public view virtual nonReentrantView returns (uint256) {
         return computeInterestRateView(loadVault());
+    }
+
+    /// @inheritdoc IBorrowing
+    function interestRateWithPremium(address collateral)
+        public
+        view
+        virtual
+        nonReentrantView
+        returns (uint256 baseRate, uint256 premiumRate, uint256 totalRate)
+    {
+        baseRate = computeInterestRateView(loadVault());
+        premiumRate = vaultStorage.ltvLookup[collateral].riskPremium;
+        totalRate = baseRate + premiumRate + (baseRate * premiumRate) / 1e27;
     }
 
     /// @inheritdoc IBorrowing
@@ -160,6 +174,12 @@ abstract contract BorrowingModule is IBorrowing, AssetTransfers, BalanceUtils, L
     /// @inheritdoc IBorrowing
     function touch() public virtual nonReentrant {
         initOperation(OP_TOUCH, CHECKACCOUNT_NONE);
+    }
+
+    /// @inheritdoc IBorrowing
+    function touchAccount(address account) public virtual nonReentrant {
+        (VaultCache memory vaultCache,) = initOperation(OP_TOUCH, CHECKACCOUNT_NONE);
+        setUserBorrow(vaultCache, loadUserBorrow(vaultCache, account));
     }
 }
 

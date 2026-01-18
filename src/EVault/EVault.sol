@@ -111,6 +111,8 @@ contract EVault is Dispatch {
 
     function interestRate() public view virtual override returns (uint256) { return super.interestRate(); }
 
+    function interestRateWithPremium(address collateral) public view virtual override useView(MODULE_BORROWING) returns (uint256 baseRate, uint256 premiumRate, uint256 totalRate) {}
+
     function interestAccumulator() public view virtual override useView(MODULE_BORROWING) returns (uint256) {}
 
     function dToken() public view virtual override useView(MODULE_BORROWING) returns (address) {}
@@ -128,6 +130,7 @@ contract EVault is Dispatch {
 
     function touch() public virtual override callThroughEVC use(MODULE_BORROWING) {}
 
+    function touchAccount(address account) public virtual override use(MODULE_BORROWING) {}
 
 
     ///////////////////////////////////////////////////////////////////////////////////////////////
@@ -226,6 +229,8 @@ contract EVault is Dispatch {
     function setHookConfig(address newHookTarget, uint32 newHookedOps) public virtual override use(MODULE_GOVERNANCE) {}
 
     function setLTV(address collateral, uint16 borrowLTV, uint16 liquidationLTV, uint32 rampDuration) public virtual override use(MODULE_GOVERNANCE) {}
+
+    function setCollateralRiskPremium(address collateral, uint72 riskPremium) public virtual override use(MODULE_GOVERNANCE) {}
 
     function setMaxLiquidationDiscount(uint16 newDiscount) public virtual override use(MODULE_GOVERNANCE) {}
 

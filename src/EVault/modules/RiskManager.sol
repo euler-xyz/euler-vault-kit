@@ -7,6 +7,7 @@ import {Base} from "../shared/Base.sol";
 import {LiquidityUtils} from "../shared/LiquidityUtils.sol";
 
 import "../shared/types/Types.sol";
+import {UserBorrowCache} from "../shared/types/UserBorrowCache.sol";
 
 /// @title RiskManagerModule
 /// @custom:security-contact security@euler.xyz
@@ -22,11 +23,12 @@ abstract contract RiskManagerModule is IRiskManager, LiquidityUtils {
         returns (uint256 collateralValue, uint256 liabilityValue)
     {
         VaultCache memory vaultCache = loadVault();
+        UserBorrowCache memory userCache = loadUserBorrow(vaultCache, account);
 
         validateController(account);
         address[] memory collaterals = getCollaterals(account);
 
-        return calculateLiquidity(vaultCache, account, collaterals, liquidation);
+        return calculateLiquidity(vaultCache, userCache, collaterals, liquidation);
     }
 
     /// @inheritdoc IRiskManager
@@ -44,11 +46,13 @@ abstract contract RiskManagerModule is IRiskManager, LiquidityUtils {
         collaterals = getCollaterals(account);
         collateralValues = new uint256[](collaterals.length);
 
+        UserBorrowCache memory userCache = loadUserBorrow(vaultCache, account);
+
         for (uint256 i; i < collaterals.length; ++i) {
-            collateralValues[i] = getCollateralValue(vaultCache, account, collaterals[i], liquidation);
+            collateralValues[i] = getCollateralValue(vaultCache, userCache, collaterals[i], liquidation);
         }
 
-        liabilityValue = getLiabilityValue(vaultCache, account, vaultStorage.users[account].getOwed(), liquidation);
+        liabilityValue = getLiabilityValue(vaultCache, userCache, liquidation);
     }
 
     /// @inheritdoc IRiskManager
@@ -74,7 +78,8 @@ abstract contract RiskManagerModule is IRiskManager, LiquidityUtils {
         onlyEVCChecks
         returns (bytes4 magicValue)
     {
-        checkLiquidity(loadVault(), account, collaterals);
+        VaultCache memory vaultCache = loadVault();
+        checkLiquidity(vaultCache, loadUserBorrow(vaultCache, account), collaterals);
 
         magicValue = IEVCVault.checkAccountStatus.selector;
     }

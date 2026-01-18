@@ -6,6 +6,7 @@ import {BorrowUtils} from "./BorrowUtils.sol";
 import {LTVUtils} from "./LTVUtils.sol";
 
 import "./types/Types.sol";
+import {UserBorrowCache} from "./types/UserBorrowCache.sol";
 
 /// @title LiquidityUtils
 /// @custom:security-contact security@euler.xyz
@@ -17,37 +18,39 @@ abstract contract LiquidityUtils is BorrowUtils, LTVUtils {
     // Calculate the value of liabilities, and the liquidation or borrowing LTV adjusted collateral value.
     function calculateLiquidity(
         VaultCache memory vaultCache,
-        address account,
+        UserBorrowCache memory userCache,
         address[] memory collaterals,
         bool liquidation
     ) internal view virtual returns (uint256 collateralValue, uint256 liabilityValue) {
         validateOracle(vaultCache);
 
         for (uint256 i; i < collaterals.length; ++i) {
-            collateralValue += getCollateralValue(vaultCache, account, collaterals[i], liquidation);
+            collateralValue += getCollateralValue(vaultCache, userCache, collaterals[i], liquidation);
         }
 
-        liabilityValue = getLiabilityValue(vaultCache, account, vaultStorage.users[account].getOwed(), liquidation);
+        liabilityValue = getLiabilityValue(vaultCache, userCache, liquidation);
     }
 
     // Check that there is no liability, or the value of the collateral, adjusted for borrowing LTV, is greater than the
     // liability value. Since this function uses bid/ask prices, it should only be used within the account status check,
     // and not for determining whether an account can be liquidated (which uses mid-point prices).
-    function checkLiquidity(VaultCache memory vaultCache, address account, address[] memory collaterals)
+    function checkLiquidity(VaultCache memory vaultCache, UserBorrowCache memory userCache, address[] memory collaterals)
         internal
         view
         virtual
     {
         validateOracle(vaultCache);
 
-        Owed owed = vaultStorage.users[account].getOwed();
-        if (owed.isZero()) return;
+        if (userCache.newOwed.isZero()) return;
 
-        uint256 liabilityValue = getLiabilityValue(vaultCache, account, owed, false);
+        if (collaterals.length != 1) revert E_SingleCollateralRequired();
+        if (collaterals[0] != vaultStorage.users[userCache.account].designatedCollateral) revert E_CollateralMismatch();
+
+        uint256 liabilityValue = getLiabilityValue(vaultCache, userCache, false);
 
         uint256 collateralValue;
         for (uint256 i; i < collaterals.length; ++i) {
-            collateralValue += getCollateralValue(vaultCache, account, collaterals[i], false);
+            collateralValue += getCollateralValue(vaultCache, userCache, collaterals[i], false);
             if (collateralValue > liabilityValue) return;
         }
 
@@ -70,14 +73,14 @@ abstract contract LiquidityUtils is BorrowUtils, LTVUtils {
         return true;
     }
 
-    function getLiabilityValue(VaultCache memory vaultCache, address account, Owed owed, bool liquidation)
+    function getLiabilityValue(VaultCache memory vaultCache, UserBorrowCache memory userCache, bool liquidation)
         internal
         view
         virtual
         returns (uint256 value)
     {
         // update owed with interest accrued
-        uint256 owedAssets = getCurrentOwed(vaultCache, account, owed).toAssetsUp().toUint();
+        uint256 owedAssets = userCache.newOwed.toAssetsUp().toUint();
 
         if (owedAssets == 0) return 0;
 
@@ -94,7 +97,7 @@ abstract contract LiquidityUtils is BorrowUtils, LTVUtils {
         }
     }
 
-    function getCollateralValue(VaultCache memory vaultCache, address account, address collateral, bool liquidation)
+    function getCollateralValue(VaultCache memory vaultCache, UserBorrowCache memory userCache, address collateral, bool liquidation)
         internal
         view
         virtual
@@ -103,7 +106,7 @@ abstract contract LiquidityUtils is BorrowUtils, LTVUtils {
         ConfigAmount ltv = getLTV(collateral, liquidation);
         if (ltv.isZero()) return 0;
 
-        uint256 balance = IERC20(collateral).balanceOf(account);
+        uint256 balance = IERC20(collateral).balanceOf(userCache.account);
         if (balance == 0) return 0;
 
         uint256 currentCollateralValue;

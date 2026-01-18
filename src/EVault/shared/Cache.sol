@@ -61,6 +61,8 @@ contract Cache is Storage, Errors {
         vaultCache.accumulatedFees = vaultStorage.accumulatedFees;
         vaultCache.configFlags = vaultStorage.configFlags;
 
+        vaultCache.interestFee = vaultStorage.interestFee.toUint16();
+
         vaultCache.interestAccumulator = vaultStorage.interestAccumulator;
 
         // Update interest accumulator and fees balance
@@ -71,7 +73,6 @@ contract Cache is Storage, Errors {
 
             // Compute new cache values. Use full precision for intermediate results.
 
-            ConfigAmount interestFee = vaultStorage.interestFee;
             uint256 interestRate = vaultStorage.interestRate;
 
             uint256 newInterestAccumulator = vaultCache.interestAccumulator;
@@ -97,7 +98,7 @@ contract Cache is Storage, Errors {
 
             uint256 newAccumulatedFees = vaultCache.accumulatedFees.toUint();
             uint256 newTotalShares = vaultCache.totalShares.toUint();
-            uint256 feeAssets = (newTotalBorrows - vaultCache.totalBorrows.toUint()) * interestFee.toUint16()
+            uint256 feeAssets = (newTotalBorrows - vaultCache.totalBorrows.toUint()) * vaultCache.interestFee
                 / (uint256(CONFIG_SCALE) << INTERNAL_DEBT_PRECISION_SHIFT);
 
             if (feeAssets != 0) {
