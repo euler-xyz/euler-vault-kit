@@ -183,10 +183,10 @@ rule accountsStayHealthy_strategy (method f) filtered { f ->
 
     bool healthyBefore = checkLiquidityReturning(e, account, collaterals);
     f(e, args);
-    // The only way to call a vault funciton is through EVC's call, batch, 
+    // The only way to call a vault function is through EVC's call, batch, 
     // or permit. During all of these status checks are deferred and at the end
     // these call restoreExecutionContext which triggers the deferred checks.
-    // This excplicit call to checkStatusAll is a way to get a setup that
+    // This explicit call to checkStatusAll is a way to get a setup that
     // approximates the real situation.
     // We proved separately that EVC really does always call checkStatus all
     // at the end of a call/batch.

@@ -323,7 +323,7 @@ rule liquidateAccountsStayHealthy_not_violator {
 
     bool healthyBefore = checkLiquidityReturning(e, account, collaterals);
     currentContract.liquidate(e, violator, collateral, repayAssets, minYieldBalance);
-    // The only way to call a vault funciton is through EVC's call, batch, 
+    // The only way to call a vault function is through EVC's call, batch, 
     // or permit. During all of these status checks are deferred and at the end
     // these call restoreExecutionContext which triggers the deferred checks.
     // Replace the real call path involving the EVC calling back into the
@@ -382,7 +382,7 @@ rule liquidateAccountsStayHealthy_account_cur_contract {
 
     bool healthyBefore = checkLiquidityReturning(e, account, collaterals);
     currentContract.liquidate(e, violator, collateral, repayAssets, minYieldBalance);
-    // The only way to call a vault funciton is through EVC's call, batch, 
+    // The only way to call a vault function is through EVC's call, batch, 
     // or permit. During all of these status checks are deferred and at the end
     // these call restoreExecutionContext which triggers the deferred checks.
     // Replace the real call path involving the EVC calling back into the
