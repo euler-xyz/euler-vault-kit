@@ -93,7 +93,7 @@ abstract contract LiquidationModule is ILiquidation, BalanceUtils, LiquidityUtil
         // Violator's health check must not be deferred, meaning no prior operations on violator's account
         // would possibly be forgiven after the enforced collateral transfer to the liquidator
         if (isAccountStatusCheckDeferred(violator)) revert E_ViolatorLiquidityDeferred();
-        // A cool off time must elapse since successful account status check in order to mitigate self-liquidaition
+        // A cool off time must elapse since successful account status check in order to mitigate self-liquidation
         // attacks
         if (isInLiquidationCoolOff(violator)) revert E_LiquidationCoolOff();
 
