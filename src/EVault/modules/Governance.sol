@@ -272,7 +272,7 @@ abstract contract GovernanceModule is IGovernance, BalanceUtils, BorrowUtils, LT
     /// liquidations with maximum discounts and gives them a chance to close their positions in an orderly fashion.
     /// The choice of `rampDuration` depends on market conditions assessed by the governor. They may decide to forgo
     /// the ramp entirely by setting the duration to zero, presumably in light of extreme market conditions, where
-    /// ramping  would pose a threat to the vault's solvency. In any case, when the liquidation LTV reaches its target
+    /// ramping would pose a threat to the vault's solvency. In any case, when the liquidation LTV reaches its target
     /// of 0, this asset will no longer support the debt, but it will still be possible to liquidate it at a discount
     /// and use the proceeds to repay an unhealthy loan.
     /// Setting the LTV to zero will not be sufficient if the collateral is found to be unsafe to call liquidation on,
