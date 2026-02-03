@@ -4,7 +4,7 @@ pragma solidity >=0.8.0;
 
 import {IVault as IEVCVault} from "ethereum-vault-connector/interfaces/IVault.sol";
 
-// Full interface of EVault and all it's modules
+// Full interface of EVault and all its modules
 
 /// @title IInitialize
 /// @notice Interface of the initialization module of EVault
@@ -523,8 +523,8 @@ interface IGovernance {
     function setConfigFlags(uint32 newConfigFlags) external;
 
     /// @notice Set new supply and borrow caps in AmountCap format
-    /// @param supplyCap The new supply cap in AmountCap fromat
-    /// @param borrowCap The new borrow cap in AmountCap fromat
+    /// @param supplyCap The new supply cap in AmountCap format
+    /// @param borrowCap The new borrow cap in AmountCap format
     function setCaps(uint16 supplyCap, uint16 borrowCap) external;
 
     /// @notice Set a new interest fee
