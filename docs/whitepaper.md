@@ -144,7 +144,7 @@ At this point, the creator should configure the vault as desired and then decide
 
 If limited governance is desired, the creator can transfer ownership to a smart contract that can only invoke a sub-set of governance methods, perhaps with only certain parameters, or under certain conditions.
 
-Using governance methods for vault configuration even for vaults that ultimately will be finalised simplifies the initialisation interface, and is inspired by unix's [fork-exec separation](https://stackoverflow.com/questions/5090731/why-fork-and-exec-are-kept-2-seperate-calls/5117197#5117197).
+Using governance methods for vault configuration even for vaults that ultimately will be finalised simplifies the initialisation interface, and is inspired by unix's [fork-exec separation](https://stackoverflow.com/questions/5090731/why-fork-and-exec-are-kept-2-separate-calls/5117197#5117197).
 
 The vault uses EVC authentication for the governor, which means that governor actions can be batched together and simulated. However, the vault does not accept advanced EVC authentication methods like operators, sub-accounts, and `controlCollateral`.
 
@@ -274,7 +274,7 @@ A general-purpose system called [Reward Streams](https://github.com/euler-xyz/re
 
 ### Compounding
 
-Interest is accumulated on the first transaction in a block: Actual time must elapse for any interest to be accrued. However, a new interest rate is targetted whenever balance or debt amounts change. This is done in the `checkVaultStatus` function so that batches that interact with a vault multiple times only need to re-target the interest rate once.
+Interest is accumulated on the first transaction in a block: Actual time must elapse for any interest to be accrued. However, a new interest rate is targeted whenever balance or debt amounts change. This is done in the `checkVaultStatus` function so that batches that interact with a vault multiple times only need to re-target the interest rate once.
 
 Vaults compound interest deterministically every second using exponentation. Because accrued interest is added to `totalBorrows`, it increases utilisation (the proportion of the vault's assets that are loaned out). Other than this (and the effect of accumulator rounding), the amount of interest owed/earned is independent of how frequently the contract is interacted with.
 
@@ -282,7 +282,7 @@ Vaults compound interest deterministically every second using exponentation. Bec
 
 Interest Rate Models (IRMs) are contracts which determine the interest rate that should be charged given the state of a vault. Typically they are pure functions based on the utilisation, but this is not required. Today the most common function is a "linear-kink" model, which starts off with a gradual slope and then suddenly becomes steep at a particular target utilisation value. The `computeInterestRate` function of the `IIRM` interface accepts the bare minimum necessary to compute utilisation.
 
-Vaults invoke their IRMs during the vault status check. This means that if a vault is interacted with multiple times in an EVC batch, the IRM only needs to be called once, at the end of the batch. Vaults cache this interest rate in their storage so that on the first operation of a subsequent block the interest can be accrued. The interest rate must be pre-computed and cached so that non-pure IRMs will not be able to retroactively change observed interest accurals. Non-pure IRMs can be invoked to re-target the interest rate at any time with the `touch` method (depositors should touch when it would re-target upwards, borrowers otherwise).
+Vaults invoke their IRMs during the vault status check. This means that if a vault is interacted with multiple times in an EVC batch, the IRM only needs to be called once, at the end of the batch. Vaults cache this interest rate in their storage so that on the first operation of a subsequent block the interest can be accrued. The interest rate must be pre-computed and cached so that non-pure IRMs will not be able to retroactively change observed interest accruals. Non-pure IRMs can be invoked to re-target the interest rate at any time with the `touch` method (depositors should touch when it would re-target upwards, borrowers otherwise).
 
 IRMs can query the vault for additional information without triggering read-only re-entrancy protection because this lock is released at the time of the vault status check. Examples where this might be useful are with [nested vaults](#nesting) which may partially derive their interest rates from their parent vaults' state, or with vaults that implement synthetic assets.
 
@@ -489,7 +489,7 @@ Note that the pricing oracle configuration is always local to the liability vaul
 
 ### Unit of Account
 
-Vaults also specify a _unit of account_ parameter (sometimes called a "reference asset"). This parameter is immutable and cannot be changed, even by the vault governor. The unit of account is passed to the price oracle as the `quote` parameter in all queries so that all collaterals and liabilities are priced in a common asset. If the unit of account is the same as the vault's underlying asset then one fewer price conversion is required. For some risk configurations this may also improve price quality: Consider borrowing USDC with DAI, or stETH with ETH. In these cases, pricing via an unrelated intermediate asset could result in unnecessary extra volaitilty. By pricing directly, spurious liquidations can be avoided and higher LTV ratios can be configured.
+Vaults also specify a _unit of account_ parameter (sometimes called a "reference asset"). This parameter is immutable and cannot be changed, even by the vault governor. The unit of account is passed to the price oracle as the `quote` parameter in all queries so that all collaterals and liabilities are priced in a common asset. If the unit of account is the same as the vault's underlying asset then one fewer price conversion is required. For some risk configurations this may also improve price quality: Consider borrowing USDC with DAI, or stETH with ETH. In these cases, pricing via an unrelated intermediate asset could result in unnecessary extra volatility. By pricing directly, spurious liquidations can be avoided and higher LTV ratios can be configured.
 
 
 
@@ -606,7 +606,7 @@ Escrow vaults cannot have any collaterals configured, so an escrowed collateral 
 
 ### Ungoverned Perspective
 
-The most sophisticated perspective implementation class is called an ungoverned perspective. This type of perspectives comprehensively verify various desired properties about the candiate vault. Typically they will require vaults to be finalised, and not have any unusual or unexpected configurations.
+The most sophisticated perspective implementation class is called an ungoverned perspective. This type of perspectives comprehensively verify various desired properties about the candidate vault. Typically they will require vaults to be finalised, and not have any unusual or unexpected configurations.
 
 Next, cluster perspectives attempt to verify each of the vault's configured collaterals. To do so, a cluster perspective uses a list of acceptable perspectives, which may or may not include itself. For each collateral, it recurses into each perspective, stopping as soon as one perspective accepts the collateral. If none do, the perspective itself will fail. This method allows perspectives to delegate some decisions to other perspectives. This reduces the amount of work needed to create a perspective, and takes advantage of the fact that verification of vaults may already be cached in these other perspectives.
 
@@ -698,7 +698,7 @@ The owner can allocate synthetic assets held by the synthetic asset itself to a 
 
 #### Deallocating from a vault
 
-The owner can deallocate synthetic assets from the vault by calling `deallocate(address vault, uint256 amount)` which serves as a protocol withdraw from the synthetic asset vault. Assets deallocated from the vault will be transfered into the synthetic asset contract itself and be burned by the owner seperately.
+The owner can deallocate synthetic assets from the vault by calling `deallocate(address vault, uint256 amount)` which serves as a protocol withdraw from the synthetic asset vault. Assets deallocated from the vault will be transferred into the synthetic asset contract itself and be burned by the owner separately.
 
 #### Total Supply adjustments
 
@@ -735,9 +735,9 @@ Synthetic assets use a different interest rate model than the standard vaults. T
 
 `EulerSavingsRate` is a ERC-4626 compatible vault which allows users to deposit the underlying asset and receive interest in the form of the same underlying asset. On withdraw, redeem and transfers the accountStatus of the user is checked by calling the EVC, allowing it to be used as collateral by other vaults.
 
-Any address can transfer the underlying asset into the vault and call `gulp()` which will distribute it to share holders in the vault over a "smeared" two week period. Accrued interest is reflected in the `totalAssets()` of the vault, adjusting the exchange rate accordingly. On deposit and redeem accrued interest is added to the internal `_totalAssets` variable which tracks all deposits in the vault in a donation attack resistent manner.
+Any address can transfer the underlying asset into the vault and call `gulp()` which will distribute it to share holders in the vault over a "smeared" two week period. Accrued interest is reflected in the `totalAssets()` of the vault, adjusting the exchange rate accordingly. On deposit and redeem accrued interest is added to the internal `_totalAssets` variable which tracks all deposits in the vault in a donation attack resistant manner.
 
-On `gulp()` any interest which has not been distributed is smeared for an additional two weeks, in theory this means that interest could be smeared indefinitely by continiously calling `gulp()`, in practice it is expected that the interest will keep accruing, negating any negative side effects which may come from the smearing mechanism. Furthermore, the amount of interest that is delayed decreases exponentially over time.
+On `gulp()` any interest which has not been distributed is smeared for an additional two weeks, in theory this means that interest could be smeared indefinitely by continuously calling `gulp()`, in practice it is expected that the interest will keep accruing, negating any negative side effects which may come from the smearing mechanism. Furthermore, the amount of interest that is delayed decreases exponentially over time.
 
 
 ### `PegStabilityModule`
