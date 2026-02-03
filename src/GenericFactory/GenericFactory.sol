@@ -105,7 +105,7 @@ contract GenericFactory is MetaProxyDeployer {
         emit SetUpgradeAdmin(admin);
     }
 
-    /// @notice A permissionless funtion to deploy new proxies
+    /// @notice A permissionless function to deploy new proxies
     /// @param desiredImplementation Address of the implementation contract expected to be registered in the factory
     /// during proxy creation
     /// @param upgradeable If true, the proxy will be an instance of the BeaconProxy. If false, a minimal meta proxy
