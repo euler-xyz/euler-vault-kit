@@ -63,6 +63,10 @@ abstract contract GovernanceModule is IGovernance, BalanceUtils, BorrowUtils, LT
     /// @param newInterestRateModel Address of the new IRM
     event GovSetInterestRateModel(address newInterestRateModel);
 
+    /// @notice Set a minimum liquidation discount
+    /// @param newDiscount The new minimum liquidation discount in 1e4 scale
+    event GovSetMinLiquidationDiscount(uint16 newDiscount);
+
     /// @notice Set a maximum liquidation discount
     /// @param newDiscount The new maximum liquidation discount in 1e4 scale
     event GovSetMaxLiquidationDiscount(uint16 newDiscount);
@@ -172,6 +176,11 @@ abstract contract GovernanceModule is IGovernance, BalanceUtils, BorrowUtils, LT
     /// @inheritdoc IGovernance
     function LTVList() public view virtual reentrantOK returns (address[] memory) {
         return vaultStorage.ltvList;
+    }
+
+    /// @inheritdoc IGovernance
+    function minLiquidationDiscount() public view virtual reentrantOK returns (uint16) {
+        return vaultStorage.minLiquidationDiscount.toUint16();
     }
 
     /// @inheritdoc IGovernance
@@ -315,9 +324,22 @@ abstract contract GovernanceModule is IGovernance, BalanceUtils, BorrowUtils, LT
     }
 
     /// @inheritdoc IGovernance
+    function setMinLiquidationDiscount(uint16 newDiscount) public virtual nonReentrant governorOnly {
+        // Discount equal 1e4 would cause division by zero error during liquidation
+        if (newDiscount > vaultStorage.maxLiquidationDiscount.toUint16() || newDiscount == CONFIG_SCALE) {
+            revert E_BadMinLiquidationDiscount();
+        }
+
+        vaultStorage.minLiquidationDiscount = newDiscount.toConfigAmount();
+        emit GovSetMinLiquidationDiscount(newDiscount);
+    }
+
+    /// @inheritdoc IGovernance
     function setMaxLiquidationDiscount(uint16 newDiscount) public virtual nonReentrant governorOnly {
         // Discount equal 1e4 would cause division by zero error during liquidation
-        if (newDiscount == CONFIG_SCALE) revert E_BadMaxLiquidationDiscount();
+        if (newDiscount < vaultStorage.minLiquidationDiscount.toUint16() || newDiscount == CONFIG_SCALE) {
+            revert E_BadMaxLiquidationDiscount();
+        }
 
         vaultStorage.maxLiquidationDiscount = newDiscount.toConfigAmount();
         emit GovSetMaxLiquidationDiscount(newDiscount);

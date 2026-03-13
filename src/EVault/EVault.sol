@@ -200,6 +200,8 @@ contract EVault is Dispatch {
 
     function LTVList() public view virtual override useView(MODULE_GOVERNANCE) returns (address[] memory) {}
 
+    function minLiquidationDiscount() public view virtual override useView(MODULE_GOVERNANCE) returns (uint16) {}
+
     function maxLiquidationDiscount() public view virtual override useView(MODULE_GOVERNANCE) returns (uint16) {}
 
     function liquidationCoolOffTime() public view virtual override useView(MODULE_GOVERNANCE) returns (uint16) {}
@@ -226,6 +228,8 @@ contract EVault is Dispatch {
     function setHookConfig(address newHookTarget, uint32 newHookedOps) public virtual override use(MODULE_GOVERNANCE) {}
 
     function setLTV(address collateral, uint16 borrowLTV, uint16 liquidationLTV, uint32 rampDuration) public virtual override use(MODULE_GOVERNANCE) {}
+
+    function setMinLiquidationDiscount(uint16 newDiscount) public virtual override use(MODULE_GOVERNANCE) {}
 
     function setMaxLiquidationDiscount(uint16 newDiscount) public virtual override use(MODULE_GOVERNANCE) {}
 

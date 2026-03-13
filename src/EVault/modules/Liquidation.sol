@@ -139,11 +139,14 @@ abstract contract LiquidationModule is ILiquidation, BalanceUtils, LiquidityUtil
         uint256 discountFactor = collateralAdjustedValue * 1e18 / liqCache.liabilityValue;
         {
             uint256 minDiscountFactor;
+            uint256 maxDiscountFactor;
             unchecked {
                 // discount <= config scale, so discount factor >= 0
                 minDiscountFactor = 1e18 - uint256(1e18) * vaultStorage.maxLiquidationDiscount.toUint16() / CONFIG_SCALE;
+                maxDiscountFactor = 1e18 - uint256(1e18) * vaultStorage.minLiquidationDiscount.toUint16() / CONFIG_SCALE;
             }
             if (discountFactor < minDiscountFactor) discountFactor = minDiscountFactor;
+            if (discountFactor > maxDiscountFactor) discountFactor = maxDiscountFactor;
         }
 
         // Compute maximum yield using mid-point prices

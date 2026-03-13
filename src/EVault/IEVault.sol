@@ -434,6 +434,10 @@ interface IGovernance {
     /// @dev Returned assets could have the ltv disabled (set to zero)
     function LTVList() external view returns (address[] memory);
 
+    /// @notice Retrieves the minimum liquidation discount
+    /// @return The minimum liquidation discount in 1e4 scale
+    function minLiquidationDiscount() external view returns (uint16);
+
     /// @notice Retrieves the maximum liquidation discount
     /// @return The maximum liquidation discount in 1e4 scale
     /// @dev The default value, which is zero, is deliberately bad, as it means there would be no incentive to liquidate
@@ -490,6 +494,10 @@ interface IGovernance {
     /// @param liquidationLTV New liquidation LTV after ramp ends in 1e4 scale
     /// @param rampDuration Ramp duration in seconds
     function setLTV(address collateral, uint16 borrowLTV, uint16 liquidationLTV, uint32 rampDuration) external;
+
+    /// @notice Set a new minimum liquidation discount
+    /// @param newDiscount New minimum liquidation discount in 1e4 scale
+    function setMinLiquidationDiscount(uint16 newDiscount) external;
 
     /// @notice Set a new maximum liquidation discount
     /// @param newDiscount New maximum liquidation discount in 1e4 scale
