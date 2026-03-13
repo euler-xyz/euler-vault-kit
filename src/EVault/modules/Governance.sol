@@ -382,14 +382,29 @@ abstract contract GovernanceModule is IGovernance, BalanceUtils, BorrowUtils, LT
     }
 
     /// @inheritdoc IGovernance
-    function setInterestFee(uint16 newInterestFee) public virtual nonReentrant governorOnly {
+    function setInterestFee(uint16 newInterestFee) public virtual nonReentrant {
+        address caller = EVCAuthenticateGovernor();
+        if (vaultStorage.governorAdmin != caller && protocolConfig.admin() != caller) revert E_Unauthorized();
+
         // Update vault to apply the current interest fee to the pending interest
         VaultCache memory vaultCache = updateVault();
         logVaultStatus(vaultCache, vaultStorage.interestRate);
 
-        // Interest fees in guaranteed range are always allowed, otherwise ask protocolConfig
-        if (newInterestFee < GUARANTEED_INTEREST_FEE_MIN || newInterestFee > GUARANTEED_INTEREST_FEE_MAX) {
-            if (!protocolConfig.isValidInterestFee(address(this), newInterestFee)) revert E_BadFee();
+        if (vaultStorage.governorAdmin == caller) {
+            // If set by the vault governor, interest fees in guaranteed range are always allowed,
+            // otherwise ask protocolConfig
+            if (newInterestFee < GUARANTEED_INTEREST_FEE_MIN || newInterestFee > GUARANTEED_INTEREST_FEE_MAX) {
+                if (!protocolConfig.isValidInterestFee(address(this), newInterestFee)) revert E_BadFee();
+            }
+        } else {
+            // If set by the protocolConfig admin, interest fees can be set to at most the global
+            // protocolConfig min interest fee but not higher than the guaranteed min interest fee
+            // or lower than the current fee level
+            if (
+                newInterestFee < vaultStorage.interestFee.toUint16()
+                    || newInterestFee > GUARANTEED_INTEREST_FEE_MIN
+                    || newInterestFee > protocolConfig.minInterestFee()
+            ) revert E_BadFee();
         }
 
         vaultStorage.interestFee = newInterestFee.toConfigAmount();

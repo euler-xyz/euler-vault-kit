@@ -31,12 +31,12 @@ contract ProtocolConfig is IProtocolConfig {
     /// @dev protocol fee receiver, unless a vault has it configured otherwise
     address public feeReceiver;
     /// @dev protocol fee share, except for vaults configured otherwise
-    uint16 internal protocolFeeShare;
+    uint16 public protocolFeeShare;
 
     /// @dev min interest fee, except for vaults configured otherwise
-    uint16 internal minInterestFee;
+    uint16 public minInterestFee;
     /// @dev max interest fee, except for vaults configured otherwise
-    uint16 internal maxInterestFee;
+    uint16 public maxInterestFee;
 
     /// @dev per-vault configuration of min/max interest fee range, takes priority over defaults
     mapping(address vault => InterestFeeRange) internal _interestFeeRanges;

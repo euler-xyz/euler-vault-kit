@@ -7,6 +7,14 @@ pragma solidity >=0.8.0;
 /// @author Euler Labs (https://www.eulerlabs.com/)
 /// @notice Interface of the contract centralizing the protocol's (DAO's) configuration for all the EVault deployments
 interface IProtocolConfig {
+    /// @notice Get the address of the protocol admin
+    /// @return The admin address
+    function admin() external view returns (address);
+
+    /// @notice Get the global minimum interest fee
+    /// @return The minimum interest fee in 1e4 scale
+    function minInterestFee() external view returns (uint16);
+
     /// @notice check if a vault's interest fee is valid
     /// @param vault address of the vault
     /// @param interestFee an interest fee value to check

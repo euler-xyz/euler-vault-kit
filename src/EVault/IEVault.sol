@@ -529,6 +529,8 @@ interface IGovernance {
 
     /// @notice Set a new interest fee
     /// @param newFee The new interest fee
+    /// @dev Can be called by the vault governor (within guaranteed or protocolConfig-approved range)
+    /// or by the protocolConfig admin (to enforce the global minimum interest fee)
     function setInterestFee(uint16 newFee) external;
 }
 
