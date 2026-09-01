@@ -21,7 +21,7 @@ jobs:
             - name: Install foundry
               uses: foundry-rs/foundry-toolchain@82dee4ba654bd2146511f85f0d013af94670c4de # v1.4.0
               with:
-                  version: nightly-a998dbf027db7ff4284465ca0b525affd55cc915
+                  version: nightly-c99854277c346fa6de7a8f9837230b36fd85850e
 
             - name: Run foundry build
               run: |
@@ -39,7 +39,7 @@ jobs:
                   persist-credentials: false
             - uses: foundry-rs/foundry-toolchain@82dee4ba654bd2146511f85f0d013af94670c4de # v1.4.0
               with:
-                  version: nightly-a998dbf027db7ff4284465ca0b525affd55cc915
+                  version: nightly-c99854277c346fa6de7a8f9837230b36fd85850e
 
             - name: Run foundry fmt check
               run: |
@@ -56,7 +56,7 @@ jobs:
                   persist-credentials: false
             - uses: foundry-rs/foundry-toolchain@82dee4ba654bd2146511f85f0d013af94670c4de # v1.4.0
               with:
-                  version: nightly-a998dbf027db7ff4284465ca0b525affd55cc915
+                  version: nightly-c99854277c346fa6de7a8f9837230b36fd85850e
             - name: Run foundry tests
               # --ast tests enables inline configs to work https://github.com/foundry-rs/foundry/issues/7310#issuecomment-1978088200
               run: |
@@ -73,7 +73,7 @@ jobs:
                   persist-credentials: false
             - uses: foundry-rs/foundry-toolchain@82dee4ba654bd2146511f85f0d013af94670c4de # v1.4.0
               with:
-                  version: nightly-a998dbf027db7ff4284465ca0b525affd55cc915
+                  version: nightly-c99854277c346fa6de7a8f9837230b36fd85850e
             - name: Run foundry overrides test mode
               # --ast tests enables inline configs to work https://github.com/foundry-rs/foundry/issues/7310#issuecomment-1978088200
               run: |
@@ -90,7 +90,7 @@ jobs:
                   persist-credentials: false
             - uses: foundry-rs/foundry-toolchain@82dee4ba654bd2146511f85f0d013af94670c4de # v1.4.0
               with:
-                  version: nightly-a998dbf027db7ff4284465ca0b525affd55cc915
+                  version: nightly-c99854277c346fa6de7a8f9837230b36fd85850e
             - name: Run foundry coverage
               run: |
                   FOUNDRY_PROFILE=coverage forge coverage --report summary
