@@ -1,3 +1,5 @@
+[![License](https://img.shields.io/badge/License-Business%20Source-green.svg)](https://github.com/euler-xyz/euler-vault-kit/blob/master/LICENSE)
+
 # Euler Vault Kit
 
 The Euler Vault Kit is a system for constructing credit vaults. Credit vaults are ERC-4626 vaults with added borrowing functionality. Unlike typical ERC-4626 vaults which earn yield by actively investing deposited funds, credit vaults are passive lending pools. See the [whitepaper](https://docs.euler.finance/euler-vault-kit-white-paper/) for more details.
