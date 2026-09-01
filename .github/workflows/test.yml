@@ -6,18 +6,22 @@ on:
             - master
     pull_request:
 
+permissions:
+    contents: read
+
 jobs:
     build:
         runs-on: ubuntu-latest
         steps:
-            - uses: actions/checkout@v3
+            - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
               with:
                   submodules: recursive
+                  persist-credentials: false
 
             - name: Install foundry
-              uses: foundry-rs/foundry-toolchain@v1
+              uses: foundry-rs/foundry-toolchain@82dee4ba654bd2146511f85f0d013af94670c4de # v1.4.0
               with:
-                  version: nightly
+                  version: nightly-c99854277c346fa6de7a8f9837230b36fd85850e
 
             - name: Run foundry build
               run: |
@@ -29,12 +33,13 @@ jobs:
         runs-on: ubuntu-latest
         needs: build
         steps:
-            - uses: actions/checkout@v3
+            - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
               with:
                   submodules: recursive
-            - uses: foundry-rs/foundry-toolchain@v1
+                  persist-credentials: false
+            - uses: foundry-rs/foundry-toolchain@82dee4ba654bd2146511f85f0d013af94670c4de # v1.4.0
               with:
-                  version: nightly
+                  version: nightly-c99854277c346fa6de7a8f9837230b36fd85850e
 
             - name: Run foundry fmt check
               run: |
@@ -45,12 +50,13 @@ jobs:
         runs-on: ubuntu-latest
         needs: lint-check
         steps:
-            - uses: actions/checkout@v3
+            - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
               with:
                   submodules: recursive
-            - uses: foundry-rs/foundry-toolchain@v1
+                  persist-credentials: false
+            - uses: foundry-rs/foundry-toolchain@82dee4ba654bd2146511f85f0d013af94670c4de # v1.4.0
               with:
-                  version: nightly
+                  version: nightly-c99854277c346fa6de7a8f9837230b36fd85850e
             - name: Run foundry tests
               # --ast tests enables inline configs to work https://github.com/foundry-rs/foundry/issues/7310#issuecomment-1978088200
               run: |
@@ -61,12 +67,13 @@ jobs:
         runs-on: ubuntu-latest
         needs: lint-check
         steps:
-            - uses: actions/checkout@v3
+            - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
               with:
                   submodules: recursive
-            - uses: foundry-rs/foundry-toolchain@v1
+                  persist-credentials: false
+            - uses: foundry-rs/foundry-toolchain@82dee4ba654bd2146511f85f0d013af94670c4de # v1.4.0
               with:
-                  version: nightly
+                  version: nightly-c99854277c346fa6de7a8f9837230b36fd85850e
             - name: Run foundry overrides test mode
               # --ast tests enables inline configs to work https://github.com/foundry-rs/foundry/issues/7310#issuecomment-1978088200
               run: |
@@ -77,12 +84,13 @@ jobs:
         runs-on: ubuntu-latest
         needs: lint-check
         steps:
-            - uses: actions/checkout@v3
+            - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
               with:
                   submodules: recursive
-            - uses: foundry-rs/foundry-toolchain@v1
+                  persist-credentials: false
+            - uses: foundry-rs/foundry-toolchain@82dee4ba654bd2146511f85f0d013af94670c4de # v1.4.0
               with:
-                  version: nightly
+                  version: nightly-c99854277c346fa6de7a8f9837230b36fd85850e
             - name: Run foundry coverage
               run: |
                   FOUNDRY_PROFILE=coverage forge coverage --report summary

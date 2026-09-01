@@ -1,0 +1,17 @@
+version: 2
+updates:
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    open-pull-requests-limit: 5
+    cooldown:
+      default-days: 7
+    groups:
+      github-actions:
+        patterns:
+          - "*"
+  # gitsubmodule is deliberately not enabled: Solidity dependencies are
+  # pinned submodules whose bumps change deployed bytecode and must be
+  # reviewed/audited intentionally, not proposed automatically.
