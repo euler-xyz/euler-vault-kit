@@ -3,10 +3,11 @@ pragma solidity ^0.8.0;
 
 import {Context} from "openzeppelin-contracts/utils/Context.sol";
 import {Math} from "openzeppelin-contracts/utils/math/Math.sol";
-import {IERC20} from "openzeppelin-contracts/token/ERC20/IERC20.sol";
+import {IERC20 as IERC20_OZ} from "openzeppelin-contracts/token/ERC20/IERC20.sol";
 import {ERC20} from "openzeppelin-contracts/token/ERC20/ERC20.sol";
 import {ERC4626} from "openzeppelin-contracts/token/ERC20/extensions/ERC4626.sol";
 import {EVCUtil} from "ethereum-vault-connector/utils/EVCUtil.sol";
+import {SafeERC20Lib, IERC20} from "../EVault/shared/lib/SafeERC20Lib.sol";
 
 /// @title EulerSavingsRate
 /// @custom:security-contact security@euler.xyz
@@ -28,6 +29,8 @@ contract EulerSavingsRate is EVCUtil, ERC4626 {
 
     uint256 public constant INTEREST_SMEAR = 2 weeks;
 
+    address public immutable PERMIT2;
+
     struct ESRSlot {
         uint40 lastInterestUpdate;
         uint40 interestSmearEnd;
@@ -40,6 +43,7 @@ contract EulerSavingsRate is EVCUtil, ERC4626 {
     /// @notice The total assets accounted for in the vault.
     uint256 internal _totalAssets;
 
+    error InvalidAsset();
     error Reentrancy();
 
     event Gulped(uint256 gulped, uint256 interestLeft);
@@ -53,11 +57,13 @@ contract EulerSavingsRate is EVCUtil, ERC4626 {
         esrSlot.locked = UNLOCKED;
     }
 
-    constructor(address _evc, address _asset, string memory _name, string memory _symbol)
+    constructor(address _evc, address _permit2, address _asset, string memory _name, string memory _symbol)
         EVCUtil(_evc)
-        ERC4626(IERC20(_asset))
+        ERC4626(IERC20_OZ(_asset))
         ERC20(_name, _symbol)
     {
+        if (_asset.code.length == 0) revert InvalidAsset();
+        PERMIT2 = _permit2;
         esrSlot.locked = UNLOCKED;
     }
 
@@ -116,7 +122,9 @@ contract EulerSavingsRate is EVCUtil, ERC4626 {
     }
 
     function _deposit(address caller, address receiver, uint256 assets, uint256 shares) internal override {
-        super._deposit(caller, receiver, assets, shares);
+        SafeERC20Lib.safeTransferFrom(IERC20(asset()), caller, address(this), assets, PERMIT2);
+        _mint(receiver, shares);
+        emit Deposit(caller, receiver, assets, shares);
         _totalAssets = _totalAssets + assets;
     }
 
