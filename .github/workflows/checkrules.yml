@@ -46,6 +46,14 @@ jobs:
           ln -s "$RUNNER_TEMP/solc-bin/solc8.24" "$RUNNER_TEMP/solc-bin/solc"
           echo "$RUNNER_TEMP/solc-bin" >> "$GITHUB_PATH"
 
+      - name: setup java
+        # certora-cli runs the CVL typechecker locally to find the internal functions a spec calls and
+        # generate their harnesses; it needs Java 19+, and without it those specs fail on the server.
+        uses: actions/setup-java@de7274f081f381c8f8158605e0321c36c376e2e6 # v6.0.1
+        with:
+          distribution: temurin
+          java-version: '21'
+
       - name: setup cvt
         run: pip install certora-cli==8.19.1
 
