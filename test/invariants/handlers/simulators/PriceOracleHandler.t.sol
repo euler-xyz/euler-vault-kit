@@ -25,7 +25,7 @@ contract PriceOracleHandler is BaseHandler {
         oracle.setPrice(baseAsset, unitOfAccount, price);
     }
 
-    /*  
+    /*
     /// @notice This function simulates changes in the interest rate model
     function setResolvedAsset(uint256 i) external {
         address vaultAddress = address(eTST);

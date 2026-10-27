@@ -35,7 +35,7 @@ contract EVaultExtended is EVault {
     function isFlagSet(uint32 bitMask) external view returns (bool) {
         return vaultStorage.configFlags.isSet(bitMask);
     }
-    /* 
+    /*
     function initOperation(uint32 operation, address accountToCheck)
         internal
         override (Base, FunctionOverrides)

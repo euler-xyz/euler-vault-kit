@@ -481,7 +481,7 @@ contract VaultTest_BalancesWithInterest is EVaultTestBase {
 
         assertApproxEqAbs(eTST.debtOf(user3), 0.65e18, 0.0001e18); // 0.5 + 30% * 0.5
         assertApproxEqAbs(eTST.convertToAssets(eTST.balanceOf(user1)), 1.135e18, 0.0001e18); // 13.50%, as computed
-            // above
+        // above
         assertApproxEqAbs(eTST.accumulatedFeesAssets(), 0.015e18, 0.0001e18); // 30% APY * 0.5 * 0.1 = 1.5%
     }
 

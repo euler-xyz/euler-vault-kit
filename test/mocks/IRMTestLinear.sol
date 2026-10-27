@@ -13,7 +13,7 @@ contract IRMTestLinear is IIRM {
         uint256 totalAssets = cash + borrows;
 
         uint32 utilisation = totalAssets == 0
-            ? 0 // empty pool arbitrarily given utilisation of 0
+            ? 0  // empty pool arbitrarily given utilisation of 0
             : uint32(borrows * type(uint32).max / totalAssets);
 
         return MAX_IR * utilisation / type(uint32).max;

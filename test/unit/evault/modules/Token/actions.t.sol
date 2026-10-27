@@ -114,9 +114,8 @@ contract ERC20Test_Actions is EVaultTestBase {
         vm.prank(alice);
         eTST.enableBalanceForwarder();
 
-        MockBalanceTracker(balanceTracker).setReentrantCall(
-            address(eTST), abi.encodeCall(eTST.transfer, (bob, 0.5 ether))
-        );
+        MockBalanceTracker(balanceTracker)
+            .setReentrantCall(address(eTST), abi.encodeCall(eTST.transfer, (bob, 0.5 ether)));
 
         assertEq(eTST.balanceOf(bob), 0);
         vm.prank(alice);

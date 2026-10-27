@@ -24,6 +24,11 @@ ignore = [
     "src/EVault/EVault.sol",
     "src/EVault/shared/types/VaultStorage.sol",
     "src/EVault/shared/types/VaultCache.sol",
+    # kept byte-identical to the release, which an earlier forge formatted
+    "src/InterestRateModels/IRMLinearKink.sol",
+    "src/EVault/shared/types/UserStorage.sol",
+    "src/EVault/shared/types/LTVConfig.sol",
+    "src/EVault/shared/types/Types.sol",
     "test/mocks/TestERC20.sol"
 ]
 
