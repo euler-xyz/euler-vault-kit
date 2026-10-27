@@ -97,14 +97,20 @@ def loadConfigDependencies(filename: str) -> set[str]:
         return set()
 
 def listChangedConfigs() -> list[str]:
-    """List config files that have changed w.r.t. the base branch. If we are not
-    within a PR branch, or a shared input changed, list all config files."""
-    BASEREF = os.environ.get('GITHUB_BASE_REF', '')
-    if BASEREF == '':
+    """List config files that the PR changes. Outside a PR, when a shared input
+    changed, or when the diff fails, list all config files."""
+    # The base commit from the triggering event, not the base branch's tip: a run
+    # approved after the merge must still see the PR's changes.
+    BASESHA = os.environ.get('BASE_SHA', '')
+    if BASESHA == '':
         return listConfigs()
     print('::group::Identifying changed configurations', flush=True)
-    subprocess.run(['git', 'fetch', 'origin', BASEREF])
-    diff = subprocess.run(['git', '-P', 'diff', '--name-only', f'origin/{BASEREF}', 'HEAD'], capture_output=True)
+    fetch = subprocess.run(['git', 'fetch', '--depth=1', 'origin', BASESHA])
+    diff = subprocess.run(['git', '-P', 'diff', '--name-only', BASESHA, 'HEAD'], capture_output=True)
+    if fetch.returncode != 0 or diff.returncode != 0:
+        print('could not diff against the base commit, running all configs')
+        print('::endgroup::')
+        return listConfigs()
     changed = set(diff.stdout.decode().splitlines())
     shared = sorted(c for c in changed if c.startswith(SHARED_PATHS))
     if shared:
