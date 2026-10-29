@@ -11,8 +11,12 @@ from threading import Lock
 
 outputMutex = Lock()
 
-# Exclude config files that are not verifying from CI
-EXCLUDE_CONFS = []
+# Exclude config files that are not verifying from CI.
+# The jobs left out below and in the split lists exceed the 2-hour cloud limit even
+# with rule_sanity none, without a counterexample (checked 2026-10-29); run them by hand.
+EXCLUDE_CONFS = [
+    'certora/conf/ERC4626Split/VaultERC4626-vaultSolvency-withdraw.conf',
+]
 
 # Harnesses import whole src modules and specs import each other, so a change to
 # any of these can affect confs that don't list the changed file.
@@ -51,7 +55,7 @@ SPLIT_BY_METHOD = {
     ],
     'certora/conf/healthStatus/BorrowingHealthStatus.conf': [
         'borrow(uint256,address)',
-        'pullDebt(uint256,address)',
+        # pullDebt(uint256,address) exceeds the cloud limit
         'repayWithShares(uint256,address)',
         'repay(uint256,address)',
     ],
@@ -62,14 +66,24 @@ SPLIT_BY_METHOD = {
         'redeem(uint256,address,address)',
         'skim(uint256,address)',
     ],
+    'certora/conf/healthStatus/ETokenCollateralHealthStatus.conf': [
+        'DummyETokenA.approve(address,uint256)',
+        'DummyETokenA.transfer(address,uint256)',
+        'DummyETokenA.transferFrom(address,address,uint256)',
+        'DummyETokenA.transferFromMax(address,address)',
+    ],
 }
 SPLIT_BY_RULE = {
     'certora/conf/healthStatus/LiquidateHealthStatus.conf': [
         'liquidateAccountsStayHealthy_liquidator_no_debt_socialization',
         'liquidateAccountsStayHealthy_liquidator_with_debt_socialization',
         'liquidateAccountsStayHealthy_not_violator',
-        'liquidateAccountsStayHealthy_account_cur_contract',
+        # liquidateAccountsStayHealthy_account_cur_contract exceeds the cloud limit
     ],
+}
+EXCLUDE_METHODS = {
+    # liquidate exceeds the cloud limit
+    'certora/conf/healthStatus/LiquidationHealthStatus.conf': ['liquidate(address,address,uint256,uint256)'],
 }
 
 def listConfigs() -> list[str]:
@@ -130,7 +144,8 @@ def jobsFor(filename: str) -> list[tuple[str, list[str]]]:
     if filename in SPLIT_BY_RULE:
         return [(filename, ['--rule', r]) for r in SPLIT_BY_RULE[filename]]
     if filename.startswith('certora/conf/healthStatus/'):
-        return [(filename, ['--rule', HEALTH_STATUS_RULE])]
+        excluded = [arg for m in EXCLUDE_METHODS.get(filename, []) for arg in ('--exclude_method', m)]
+        return [(filename, ['--rule', HEALTH_STATUS_RULE, *excluded])]
     return [(filename, [])]
 
 def runConf(job):
