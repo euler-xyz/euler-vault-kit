@@ -283,7 +283,10 @@ abstract contract StdAsserts is PropertiesAsserts {
         uint256 a,
         uint256 b,
         uint256 maxPercentDelta // An 18 decimal fixed point number, where 1e18 == 100%
-    ) internal virtual {
+    )
+        internal
+        virtual
+    {
         if (b == 0) return assertEq(a, b); // If the left is 0, right must be too.
 
         uint256 percentDelta = stdMath.percentDelta(a, b);
@@ -303,7 +306,10 @@ abstract contract StdAsserts is PropertiesAsserts {
         uint256 b,
         uint256 maxPercentDelta, // An 18 decimal fixed point number, where 1e18 == 100%
         string memory err
-    ) internal virtual {
+    )
+        internal
+        virtual
+    {
         if (b == 0) return assertEq(a, b, err); // If the left is 0, right must be too.
 
         uint256 percentDelta = stdMath.percentDelta(a, b);
@@ -319,7 +325,10 @@ abstract contract StdAsserts is PropertiesAsserts {
         uint256 b,
         uint256 maxPercentDelta, // An 18 decimal fixed point number, where 1e18 == 100%
         uint256 decimals
-    ) internal virtual {
+    )
+        internal
+        virtual
+    {
         if (b == 0) return assertEq(a, b); // If the left is 0, right must be too.
 
         uint256 percentDelta = stdMath.percentDelta(a, b);

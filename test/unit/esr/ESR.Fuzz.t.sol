@@ -48,7 +48,7 @@ contract ESRFuzzTest is ESRTest {
         uint256 MIN_SHARES_FOR_GULP = 10 * 1e6;
         depositAmount = bound(depositAmount, 0, type(uint112).max);
         interestAmount = bound(interestAmount, 0, type(uint256).max - depositAmount); // this makes sure that the mint
-            // won't cause overflow
+        // won't cause overflow
 
         asset.mint(address(esr), interestAmount);
         doDeposit(user, depositAmount);

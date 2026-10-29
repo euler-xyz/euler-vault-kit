@@ -371,8 +371,9 @@ contract Governance_HookedOps is EVaultTestBase {
         }
 
         if (hookedOps & OP_FLASHLOAN != 0) {
-            bytes memory data =
-                getHookCalldata(abi.encodeCall(IEVault(eTST).flashLoan, (amount, abi.encode(address1, amount))), sender);
+            bytes memory data = getHookCalldata(
+                abi.encodeCall(IEVault(eTST).flashLoan, (amount, abi.encode(address1, amount))), sender
+            );
             MockHookTarget(hookTarget).setExpectedDataHash(keccak256(data));
             vm.expectRevert(MockHookTarget.ExpectedData.selector);
             eTST.flashLoan(amount, abi.encode(address1, amount));

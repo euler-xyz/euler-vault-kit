@@ -145,7 +145,7 @@ abstract contract VaultModuleInvariants is HandlerAggregator {
 
     function _max_withdraw(address from) internal view virtual returns (uint256) {
         return eTST.convertToAssets(eTST.balanceOf(from)); // may be different from
-            // maxWithdraw(from)
+        // maxWithdraw(from)
     }
 
     function _max_redeem(address from) internal view virtual returns (uint256) {

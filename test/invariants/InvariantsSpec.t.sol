@@ -20,7 +20,8 @@ abstract contract InvariantsSpec {
 
     string constant INTERNAL_INVARIANT_A = "INTERNAL_INVARIANT_A: initOperation is called in low-level functions";
 
-    string constant INTERNAL_INVARIANT_B = "INTERNAL_INVARIANT_B: vault status check is deferred in low-level functions";
+    string constant INTERNAL_INVARIANT_B =
+        "INTERNAL_INVARIANT_B: vault status check is deferred in low-level functions";
 
     string constant INTERNAL_INVARIANT_C = "INTERNAL_INVARIANT_C: account status check is deferred if needed";
 

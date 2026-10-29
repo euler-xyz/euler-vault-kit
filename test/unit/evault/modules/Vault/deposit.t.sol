@@ -289,10 +289,7 @@ contract VaultTest_Deposit is EVaultTestBase {
         // build permit2 object
         IAllowanceTransfer.PermitSingle memory permitSingle = IAllowanceTransfer.PermitSingle({
             details: IAllowanceTransfer.PermitDetails({
-                token: address(assetTST),
-                amount: type(uint160).max,
-                expiration: type(uint48).max,
-                nonce: 0
+                token: address(assetTST), amount: type(uint160).max, expiration: type(uint48).max, nonce: 0
             }),
             spender: address(eTST),
             sigDeadline: type(uint256).max
