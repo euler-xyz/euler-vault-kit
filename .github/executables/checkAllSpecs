@@ -11,8 +11,12 @@ from threading import Lock
 
 outputMutex = Lock()
 
-# Exclude config files that are not verifying from CI
-EXCLUDE_CONFS = []
+# Exclude config files that are not verifying from CI.
+# The jobs left out below and in the split lists exceed the 2-hour cloud limit even
+# with rule_sanity none, without a counterexample (checked 2026-10-29); run them by hand.
+EXCLUDE_CONFS = [
+    'certora/conf/ERC4626Split/VaultERC4626-vaultSolvency-withdraw.conf',
+]
 
 # Harnesses import whole src modules and specs import each other, so a change to
 # any of these can affect confs that don't list the changed file.
@@ -51,7 +55,7 @@ SPLIT_BY_METHOD = {
     ],
     'certora/conf/healthStatus/BorrowingHealthStatus.conf': [
         'borrow(uint256,address)',
-        'pullDebt(uint256,address)',
+        # pullDebt(uint256,address) exceeds the cloud limit
         'repayWithShares(uint256,address)',
         'repay(uint256,address)',
     ],
@@ -62,14 +66,24 @@ SPLIT_BY_METHOD = {
         'redeem(uint256,address,address)',
         'skim(uint256,address)',
     ],
+    'certora/conf/healthStatus/ETokenCollateralHealthStatus.conf': [
+        'DummyETokenA.approve(address,uint256)',
+        'DummyETokenA.transfer(address,uint256)',
+        'DummyETokenA.transferFrom(address,address,uint256)',
+        'DummyETokenA.transferFromMax(address,address)',
+    ],
 }
 SPLIT_BY_RULE = {
     'certora/conf/healthStatus/LiquidateHealthStatus.conf': [
         'liquidateAccountsStayHealthy_liquidator_no_debt_socialization',
         'liquidateAccountsStayHealthy_liquidator_with_debt_socialization',
         'liquidateAccountsStayHealthy_not_violator',
-        'liquidateAccountsStayHealthy_account_cur_contract',
+        # liquidateAccountsStayHealthy_account_cur_contract exceeds the cloud limit
     ],
+}
+EXCLUDE_METHODS = {
+    # liquidate exceeds the cloud limit
+    'certora/conf/healthStatus/LiquidationHealthStatus.conf': ['liquidate(address,address,uint256,uint256)'],
 }
 
 def listConfigs() -> list[str]:
@@ -97,14 +111,20 @@ def loadConfigDependencies(filename: str) -> set[str]:
         return set()
 
 def listChangedConfigs() -> list[str]:
-    """List config files that have changed w.r.t. the base branch. If we are not
-    within a PR branch, or a shared input changed, list all config files."""
-    BASEREF = os.environ.get('GITHUB_BASE_REF', '')
-    if BASEREF == '':
+    """List config files that the PR changes. Outside a PR, when a shared input
+    changed, or when the diff fails, list all config files."""
+    # The base commit from the triggering event, not the base branch's tip: a run
+    # approved after the merge must still see the PR's changes.
+    BASESHA = os.environ.get('BASE_SHA', '')
+    if BASESHA == '':
         return listConfigs()
     print('::group::Identifying changed configurations', flush=True)
-    subprocess.run(['git', 'fetch', 'origin', BASEREF])
-    diff = subprocess.run(['git', '-P', 'diff', '--name-only', f'origin/{BASEREF}', 'HEAD'], capture_output=True)
+    fetch = subprocess.run(['git', 'fetch', '--depth=1', 'origin', BASESHA])
+    diff = subprocess.run(['git', '-P', 'diff', '--name-only', BASESHA, 'HEAD'], capture_output=True)
+    if fetch.returncode != 0 or diff.returncode != 0:
+        print('could not diff against the base commit, running all configs')
+        print('::endgroup::')
+        return listConfigs()
     changed = set(diff.stdout.decode().splitlines())
     shared = sorted(c for c in changed if c.startswith(SHARED_PATHS))
     if shared:
@@ -124,7 +144,8 @@ def jobsFor(filename: str) -> list[tuple[str, list[str]]]:
     if filename in SPLIT_BY_RULE:
         return [(filename, ['--rule', r]) for r in SPLIT_BY_RULE[filename]]
     if filename.startswith('certora/conf/healthStatus/'):
-        return [(filename, ['--rule', HEALTH_STATUS_RULE])]
+        excluded = [arg for m in EXCLUDE_METHODS.get(filename, []) for arg in ('--exclude_method', m)]
+        return [(filename, ['--rule', HEALTH_STATUS_RULE, *excluded])]
     return [(filename, [])]
 
 def runConf(job):

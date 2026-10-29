@@ -46,6 +46,10 @@ methods {
     // there is also the nonreentrant modifier in most places.
     function _.onFlashLoan(bytes data) external => NONDET;
     function EVCHarness.getCollaterals(address) external returns (address[] memory) envfree;
+    // Unresolved low-level calls (the hook target, permit2) would otherwise havoc every contract
+    // and ghost, including the oracle and prices. Like the hook summaries above, they can't change
+    // vault state, so they return arbitrary data without side effects.
+    unresolved external in _._ => DISPATCH [] default NONDET;
 
     // EVC
     function _.requireVaultStatusCheck() external => DISPATCHER(true);
@@ -148,6 +152,7 @@ function CVLEnforceCollateralTransfer(address collateral, uint256 amount, addres
 // the prover will model it as a function so it will always return the same
 // value when given the same arguments.
 rule accountsStayHealthy_strategy (method f) filtered { f -> 
+    !f.isView &&
     // Literal selectors are used to avoid compilation errors when
     // only some of the modules are in the verification scene
     // sig:GovernanceModule.clearLTV(address).selector
@@ -157,7 +162,9 @@ rule accountsStayHealthy_strategy (method f) filtered { f ->
     // sig:InitializeModule.initialize(address).selector
     f.selector != 0xc4d66de8 &&
     // sig:TokenHarnes.transferFromInternalHarnessed (this is a harness method only)
-    f.selector != 0xd3110e86
+    f.selector != 0xd3110e86 &&
+    // sig:AbstractBaseHarness.checkLiquidityReturning(address,address[]).selector (harness only)
+    f.selector != 0x0b14b474
 }{
     env e;
     calldataarg args;
